@@ -78,7 +78,7 @@
 }
 
 /* ══ LIGHT TOKENS ══ */
-body.light {
+:is(html.light, body.light) {
   --bg:        #f7fafc;
   --bg-2:      #ffffff;
   --bg-3:      #eef2f7;
@@ -130,7 +130,7 @@ body.light {
 
 /* ══ BASE ══ */
 body                    { background-color: var(--bg); color: var(--tx); }
-body.light              { background-color: #f7fafc; }
+:is(html.light, body.light)              { background-color: #f7fafc; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--sc-t); }
 ::selection             { background: rgba(8,145,168,0.25); color: var(--tx); }
@@ -166,9 +166,9 @@ body.light              { background-color: #f7fafc; }
 .orb-1  { background: radial-gradient(circle, var(--env-orb1) 0%, transparent 70%); }
 .orb-2  { background: radial-gradient(circle, var(--env-orb2) 0%, transparent 70%); }
 .orb-3  { background: radial-gradient(circle, rgba(8,145,168,0.10) 0%, transparent 70%); }
-body.light .orb-3 { background: radial-gradient(circle, rgba(8,145,168,0.05) 0%, transparent 70%); }
+:is(html.light, body.light) .orb-3 { background: radial-gradient(circle, rgba(8,145,168,0.05) 0%, transparent 70%); }
 .geo    { border-color: rgba(8,145,168,0.07); }
-body.light .geo { border-color: rgba(8,145,168,0.09); }
+:is(html.light, body.light) .geo { border-color: rgba(8,145,168,0.09); }
 .ray    { background: linear-gradient(to bottom, transparent, var(--env-ray), transparent); }
 .pt     { background: var(--env-pt); }
 
@@ -200,11 +200,11 @@ body.light .geo { border-color: rgba(8,145,168,0.09); }
 .hero-eyebrow   { background: var(--bg-teal); border-color: var(--bd-teal); }
 .hero-eyebrow span { color: var(--pr-2); }
 .hero-card      { background: var(--bg-card-2); border-color: var(--bd-2); box-shadow: var(--sh-lg), var(--gw-md); }
-body.light .hero-card { background: rgba(255,255,255,0.88); box-shadow: var(--sh-lg); }
+:is(html.light, body.light) .hero-card { background: rgba(255,255,255,0.88); box-shadow: var(--sh-lg); }
 .hero-card-top-glow { background: radial-gradient(ellipse 80% 40% at 50% 0%, var(--bg-teal-2) 0%, transparent 55%); }
 .hero-card-lbl  { color: var(--pr-2); }
 .hero-card-img-overlay { background: linear-gradient(to bottom, transparent 30%, var(--bg) 100%); }
-body.light .hero-card-img-overlay { background: linear-gradient(to bottom, transparent 30%, rgba(255,255,255,0.88) 100%); }
+:is(html.light, body.light) .hero-card-img-overlay { background: linear-gradient(to bottom, transparent 30%, rgba(255,255,255,0.88) 100%); }
 .div-row        { background: var(--bg-card); border-color: var(--bd); }
 .div-row:hover  { background: var(--bg-teal); border-color: var(--bd-teal); }
 .div-name       { color: var(--tx); }
@@ -246,8 +246,8 @@ body.light .hero-card-img-overlay { background: linear-gradient(to bottom, trans
 .svc-link       { color: var(--pr-2); }
 .svc-num        { color: var(--bg-teal-2); }
 .svc-glow       { background: radial-gradient(ellipse 80% 50% at 50% -15%, var(--bg-teal-2) 0%, transparent 55%); }
-body.light .svc-card { box-shadow: var(--sh-sm); }
-body.light .svc-card:hover { box-shadow: var(--sh-lg), var(--gw-sm); }
+:is(html.light, body.light) .svc-card { box-shadow: var(--sh-sm); }
+:is(html.light, body.light) .svc-card:hover { box-shadow: var(--sh-lg), var(--gw-sm); }
 
 /* ══ MACHINES ══ */
 .machine-card   { background: var(--bg-card); border-color: var(--bd); }
@@ -255,8 +255,8 @@ body.light .svc-card:hover { box-shadow: var(--sh-lg), var(--gw-sm); }
 .machine-name   { color: var(--tx); }
 .machine-desc   { color: var(--tx-4); }
 .machine-img    { background: var(--bg-2); }
-body.light .machine-card { box-shadow: var(--sh-sm); }
-body.light .machine-card:hover { box-shadow: var(--sh-md), var(--gw-xs); }
+:is(html.light, body.light) .machine-card { box-shadow: var(--sh-sm); }
+:is(html.light, body.light) .machine-card:hover { box-shadow: var(--sh-md), var(--gw-xs); }
 
 /* ══ STATS ══ */
 .stats-grid     { background: var(--bd); }
@@ -265,7 +265,7 @@ body.light .machine-card:hover { box-shadow: var(--sh-md), var(--gw-xs); }
 .stat-box-v     { color: var(--tx); }
 .stat-box-v em  { color: var(--pr-2); }
 .stat-box-l     { color: var(--tx-4); }
-body.light .stat-box { background: #ffffff; }
+:is(html.light, body.light) .stat-box { background: #ffffff; }
 
 /* ══ CERTS ══ */
 .cert-card      { background: var(--bg-card); border-color: var(--bd); }
@@ -275,14 +275,14 @@ body.light .stat-box { background: #ffffff; }
 .cert-name      { color: var(--tx); }
 .cert-auth      { color: var(--tx-4); }
 .cert-view      { color: var(--pr-2); }
-body.light .cert-card { box-shadow: var(--sh-sm); }
+:is(html.light, body.light) .cert-card { box-shadow: var(--sh-sm); }
 
 /* ══ GALLERY ══ */
 .flt            { background: var(--bg-card); border-color: var(--bd); color: var(--tx-3); }
 .flt:hover      { color: var(--tx); border-color: var(--bd-2); background: var(--bg-card-2); }
 .flt.active     { background: var(--bg-teal-2); border-color: var(--bd-teal); color: var(--pr-2); box-shadow: var(--gw-xs); }
 .gal-overlay    { background: linear-gradient(to top, rgba(0,0,0,0.80), transparent 55%); }
-body.light .gal-overlay { background: linear-gradient(to top, rgba(15,23,42,0.75), transparent 55%); }
+:is(html.light, body.light) .gal-overlay { background: linear-gradient(to top, rgba(15,23,42,0.75), transparent 55%); }
 
 /* ══ ABOUT ══ */
 .pillar         { background: var(--bg-card); border-color: var(--bd); }
@@ -291,7 +291,7 @@ body.light .gal-overlay { background: linear-gradient(to top, rgba(15,23,42,0.75
 .pillar-txt     { color: var(--tx-4); }
 .about-visual   { border-color: var(--bd); }
 .about-visual-overlay { background: linear-gradient(to top, var(--bg) 0%, transparent 100%); }
-body.light .about-visual-overlay { background: linear-gradient(to top, rgba(247,250,252,0.97) 0%, transparent 100%); }
+:is(html.light, body.light) .about-visual-overlay { background: linear-gradient(to top, rgba(247,250,252,0.97) 0%, transparent 100%); }
 .ov-v           { color: var(--tx); }
 .ov-v em        { color: var(--pr-2); }
 .ov-l           { color: var(--tx-4); }
@@ -303,7 +303,7 @@ body.light .about-visual-overlay { background: linear-gradient(to top, rgba(247,
 .cinfo-val      { color: var(--tx); }
 .cinfo-sub      { color: var(--tx-4); }
 .contact-form-wrap { background: var(--bg-card-2); border-color: var(--bd-2); backdrop-filter: blur(24px); }
-body.light .contact-form-wrap { background: rgba(255,255,255,0.92); box-shadow: var(--sh-lg); }
+:is(html.light, body.light) .contact-form-wrap { background: rgba(255,255,255,0.92); box-shadow: var(--sh-lg); }
 .form-lbl       { color: var(--tx-3); }
 .form-ctrl      { background: var(--fm-bg); border-color: var(--fm-bd); color: var(--tx); }
 .form-ctrl::placeholder { color: var(--fm-ph); }
@@ -312,7 +312,7 @@ body.light .contact-form-wrap { background: rgba(255,255,255,0.92); box-shadow: 
 
 /* ══ V2030 ══ */
 .v2030          { border-color: var(--bd); background: radial-gradient(ellipse 80% 60% at 50% 50%, var(--bg-teal) 0%, transparent 65%); }
-body.light .v2030 { background: linear-gradient(135deg, #ecfeff, #f0fdf4); }
+:is(html.light, body.light) .v2030 { background: linear-gradient(135deg, #ecfeff, #f0fdf4); }
 .v2030-badge    { background: var(--bg-teal); border-color: var(--bd-teal); color: var(--pr-2); }
 
 /* ══ PAGE HERO ══ */
@@ -320,11 +320,11 @@ body.light .v2030 { background: linear-gradient(135deg, #ecfeff, #f0fdf4); }
 .page-hero-title span { background: linear-gradient(100deg, var(--pr-2), var(--ac-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 /* ══ SERVICES PAGE ══ */
-body.light .svc-hero-bg { background: linear-gradient(160deg, rgba(8,145,168,0.06) 0%, rgba(247,250,252,0.80) 70%); }
+:is(html.light, body.light) .svc-hero-bg { background: linear-gradient(160deg, rgba(8,145,168,0.06) 0%, rgba(247,250,252,0.80) 70%); }
 .process-step   { background: var(--bg); }
 .process-step:hover { background: var(--bg-teal); }
-body.light .process-step { background: #ffffff; }
-body.light .process-step:hover { background: var(--bg-teal); }
+:is(html.light, body.light) .process-step { background: #ffffff; }
+:is(html.light, body.light) .process-step:hover { background: var(--bg-teal); }
 .ps-name        { color: var(--tx); }
 .ps-desc        { color: var(--tx-4); }
 .ps-num         { color: rgba(8,145,168,0.25); }
@@ -349,26 +349,26 @@ body.light .process-step:hover { background: var(--bg-teal); }
 
 /* ══ LIGHTBOX ══ */
 .lightbox       { background: rgba(7,9,12,0.97); }
-body.light .lightbox { background: rgba(15,23,42,0.96); }
+:is(html.light, body.light) .lightbox { background: rgba(15,23,42,0.96); }
 .lb-close       { background: var(--bg-card-2); border-color: var(--bd-2); color: var(--tx); }
 
 /* ══ PRELOADER ══ */
 #preloader      { background: var(--bg); }
-body.light #preloader { background: #f7fafc; }
+:is(html.light, body.light) #preloader { background: #f7fafc; }
 .preloader-bar  { background: var(--bd); }
 .preloader-text { color: var(--tx-4); }
 #progress-bar   { background: linear-gradient(90deg, var(--pr), var(--ac-2)); box-shadow: 0 0 8px var(--bg-teal-2); }
 
 /* ══ SECTION BACKGROUNDS (light) ══ */
-body.light                      { background-color: #f7fafc; }
-body.light #home                { background: linear-gradient(180deg,#fff 0%,#f7fafc 60%,#eef2f7 100%); }
-body.light #services            { background: #ffffff; }
-body.light #services-preview    { background: #ffffff; }
-body.light #machinery           { background: #f7fafc; }
-body.light #gallery-preview     { background: #eef2f7; }
-body.light #certifications      { background: #ffffff; }
-body.light #about               { background: #ffffff; }
-body.light #certs-section       { background: #f7fafc; }
+:is(html.light, body.light)                      { background-color: #f7fafc; }
+:is(html.light, body.light) #home                { background: linear-gradient(180deg,#fff 0%,#f7fafc 60%,#eef2f7 100%); }
+:is(html.light, body.light) #services            { background: #ffffff; }
+:is(html.light, body.light) #services-preview    { background: #ffffff; }
+:is(html.light, body.light) #machinery           { background: #f7fafc; }
+:is(html.light, body.light) #gallery-preview     { background: #eef2f7; }
+:is(html.light, body.light) #certifications      { background: #ffffff; }
+:is(html.light, body.light) #about               { background: #ffffff; }
+:is(html.light, body.light) #certs-section       { background: #f7fafc; }
 
 /* ══════════════════════════════════════
    FLOATING GLASS CONTROLS
@@ -432,7 +432,7 @@ html[dir="rtl"] .float-controls { right: auto; left: 20px; align-items: flex-sta
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
-body.light .glass-ctrl {
+:is(html.light, body.light) .glass-ctrl {
   background: rgba(255,255,255,0.78);
   border-color: rgba(0,0,0,0.10);
   box-shadow: 0 4px 16px rgba(0,0,0,0.09);
@@ -444,7 +444,7 @@ body.light .glass-ctrl {
   box-shadow: 0 8px 28px rgba(0,0,0,0.28), var(--gw-xs);
   transform: translateY(-2px);
 }
-body.light .glass-ctrl:hover {
+:is(html.light, body.light) .glass-ctrl:hover {
   background: var(--bg-teal);
   box-shadow: 0 8px 20px rgba(0,0,0,0.10), var(--gw-xs);
 }
@@ -467,7 +467,7 @@ body.light .glass-ctrl:hover {
     box-shadow: 0 8px 32px rgba(0,0,0,0.28);
   }
   .glass-ctrl .ctrl-label { display: none; }
-  body.light .glass-ctrl  { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  :is(html.light, body.light) .glass-ctrl  { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
 }
 
 /* ── Language switcher pill ── */
@@ -482,7 +482,7 @@ body.light .glass-ctrl:hover {
   backdrop-filter: blur(20px);
   flex-shrink: 0;
 }
-body.light .lang-switcher { background: rgba(255,255,255,0.70); border-color: rgba(0,0,0,0.10); }
+:is(html.light, body.light) .lang-switcher { background: rgba(255,255,255,0.70); border-color: rgba(0,0,0,0.10); }
 .lang-btn {
   padding: 7px 12px;
   font-size: 11px;
@@ -503,7 +503,7 @@ body.light .lang-switcher { background: rgba(255,255,255,0.70); border-color: rg
   font-size: 12px;
   border-left: 1px solid var(--bd);
 }
-body.light .lang-btn.ar-btn { border-color: rgba(0,0,0,0.07); }
+:is(html.light, body.light) .lang-btn.ar-btn { border-color: rgba(0,0,0,0.07); }
 html[dir="rtl"] .lang-btn.ar-btn { border-left: none; border-right: 1px solid var(--bd); }
 
 /* Mobile lang switcher in float cluster */

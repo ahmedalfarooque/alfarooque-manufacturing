@@ -258,15 +258,9 @@ $$('a[href^="#"]').forEach(a=>{
   });
 });
 
-/* ═══ EARLY THEME CLASS SYNC ═══
-   Syncs the documentElement pre-class to body for CSS targeting */
-(function(){
-  var t = localStorage.getItem('alfarouqi_theme');
-  if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
-  if (t === 'light') {
+/* ── Sync body class from html class on DOM ready ── */
+(function() {
+  if (document.documentElement.classList.contains('light')) {
     document.body.classList.add('light');
-    document.body.setAttribute('data-theme', 'light');
-  } else {
-    document.body.setAttribute('data-theme', 'dark');
   }
 })();
