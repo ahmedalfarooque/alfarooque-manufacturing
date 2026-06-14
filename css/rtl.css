@@ -1,0 +1,331 @@
+/* ═══════════════════════════════════════════════════════════
+   ALFAROUQI MANUFACTURING — RTL / ARABIC DESIGN SYSTEM
+   Arabic fonts: Tajawal (headings) + Cairo (body)
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
+
+/* ── Override fonts for Arabic ── */
+:root {
+  --font-display: 'Tajawal', 'Noto Sans Arabic', sans-serif;
+  --font-body:    'Cairo', 'Noto Sans Arabic', sans-serif;
+}
+
+/* ── Base RTL ── */
+html[dir="rtl"],
+body {
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-body);
+}
+
+/* ── Typography adjustments ── */
+html[dir="rtl"] .hero-headline,
+html[dir="rtl"] .section-title,
+html[dir="rtl"] .page-hero-title {
+  font-family: 'Tajawal', 'Noto Sans Arabic', sans-serif;
+  font-weight: 800;
+  line-height: 1.15; /* Arabic needs more line height */
+  letter-spacing: 0; /* No letter spacing for Arabic */
+}
+
+html[dir="rtl"] .section-body,
+html[dir="rtl"] .hero-body,
+html[dir="rtl"] .about-body,
+html[dir="rtl"] .svc-desc,
+html[dir="rtl"] .footer-tag {
+  font-family: 'Cairo', sans-serif;
+  line-height: 2.0; /* Arabic body needs more breathing room */
+}
+
+/* ── Eyebrow — flip the line from right side ── */
+html[dir="rtl"] .eyebrow {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .eyebrow::before {
+  /* line moves to right side */
+}
+
+/* ── Navigation flip ── */
+html[dir="rtl"] .nav {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .nav-links {
+  margin-left: 0;
+  margin-right: auto;
+}
+html[dir="rtl"] .nav-cta {
+  margin-left: 0;
+  margin-right: 14px;
+}
+html[dir="rtl"] .nav-links a::after {
+  left: auto;
+  right: 50%;
+  transform: translateX(50%);
+}
+html[dir="rtl"] .nav-brand { text-align: right; }
+
+/* ── Hero layout flip ── */
+html[dir="rtl"] .hero {
+  direction: rtl;
+}
+html[dir="rtl"] .hero-eyebrow {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .hero-stats {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .stat-i {
+  border-right: none;
+  border-left: 1px solid var(--border-1);
+  padding-right: 0;
+  padding-left: 32px;
+  margin-right: 0;
+  margin-left: 32px;
+  text-align: right;
+}
+html[dir="rtl"] .stat-i:last-child {
+  border-left: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+/* ── Buttons — flip arrow direction ── */
+html[dir="rtl"] .btn {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .btn .arrow {
+  transform: scaleX(-1);
+  display: inline-block;
+}
+html[dir="rtl"] .btn:hover .arrow {
+  transform: scaleX(-1) translateX(-5px);
+}
+
+/* ── Service cards ── */
+html[dir="rtl"] .svc-link {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .svc-tags {
+  justify-content: flex-end;
+}
+html[dir="rtl"] .svc-num {
+  right: auto;
+  left: 22px;
+}
+
+/* ── Division rows in hero card ── */
+html[dir="rtl"] .div-row {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .div-row:hover {
+  transform: translateX(-4px);
+}
+html[dir="rtl"] .div-info { text-align: right; }
+html[dir="rtl"] .div-pill { margin-right: auto; margin-left: 0; }
+
+/* ── Float chips ── */
+html[dir="rtl"] .chip-1 {
+  right: auto;
+  left: -32px;
+}
+html[dir="rtl"] .chip-2 {
+  left: auto;
+  right: -44px;
+}
+
+/* ── Marquee ── */
+html[dir="rtl"] .marquee-track {
+  animation-direction: reverse;
+}
+html[dir="rtl"] .marquee-item {
+  flex-direction: row-reverse;
+}
+
+/* ── About section ── */
+html[dir="rtl"] .about-pillars { direction: rtl; }
+html[dir="rtl"] .pillar { text-align: right; }
+html[dir="rtl"] .about-visual-overlay { direction: rtl; }
+html[dir="rtl"] .ov-stat { text-align: right; }
+
+/* ── Certification cards ── */
+html[dir="rtl"] .cert-live {
+  right: auto;
+  left: 16px;
+}
+html[dir="rtl"] .cert-view {
+  flex-direction: row-reverse;
+}
+
+/* ── Gallery filters ── */
+html[dir="rtl"] .gallery-filters {
+  justify-content: flex-end;
+}
+
+/* ── Machine cards ── */
+html[dir="rtl"] .machine-body { text-align: right; }
+
+/* ── Contact form ── */
+html[dir="rtl"] .contact-grid { direction: rtl; }
+html[dir="rtl"] .cinfo-item { flex-direction: row-reverse; }
+html[dir="rtl"] .cinfo-item > div { text-align: right; }
+html[dir="rtl"] .form-grp { text-align: right; }
+html[dir="rtl"] .form-ctrl { text-align: right; direction: rtl; }
+
+/* ── Footer ── */
+html[dir="rtl"] .footer { direction: rtl; }
+html[dir="rtl"] .footer-brand { text-align: right; }
+html[dir="rtl"] .footer-logo-row { flex-direction: row-reverse; }
+html[dir="rtl"] .footer-social { justify-content: flex-start; }
+html[dir="rtl"] .footer-bottom {
+  flex-direction: row-reverse;
+}
+html[dir="rtl"] .footer-badges {
+  justify-content: flex-end;
+}
+
+/* ── Stats grid ── */
+html[dir="rtl"] .stats-grid { direction: rtl; }
+html[dir="rtl"] .stat-box { direction: rtl; }
+
+/* ── Services page hero ── */
+html[dir="rtl"] .svc-hero-content { direction: rtl; text-align: right; }
+html[dir="rtl"] .svc-hero-num {
+  right: auto;
+  left: var(--px);
+}
+
+/* ── Process steps ── */
+html[dir="rtl"] .process-grid { direction: rtl; }
+html[dir="rtl"] .process-step { text-align: right; }
+html[dir="rtl"] .cap-grid { direction: rtl; }
+html[dir="rtl"] .cap-item { flex-direction: row-reverse; }
+
+/* ── Nav mobile ── */
+html[dir="rtl"] .nav-mobile a { text-align: right; }
+
+/* ── Vision 2030 badge ── */
+html[dir="rtl"] .v2030-badge { flex-direction: row-reverse; }
+
+/* ── Pillar card ── */
+html[dir="rtl"] .pillar-ico { text-align: right; }
+
+/* ── Hero orbit chips (language-specific positioning) ── */
+html[dir="rtl"] .float-chip.chip-1 {
+  right: auto;
+  left: -32px;
+  top: -22px;
+}
+html[dir="rtl"] .float-chip.chip-2 {
+  left: auto;
+  right: -44px;
+  bottom: 30px;
+}
+
+/* ── Language switcher component ── */
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: 20px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+html[dir="rtl"] .lang-switcher { margin-left: 0; margin-right: 20px; }
+
+.lang-btn {
+  padding: 7px 13px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--grey-500);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--t2);
+  border-radius: 0;
+  font-family: var(--font-body);
+}
+.lang-btn:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.lang-btn.active {
+  color: var(--teal-300);
+  background: var(--glass-teal);
+}
+.lang-btn.ar-btn {
+  font-family: 'Cairo', sans-serif;
+  font-size: 12px;
+  border-left: 1px solid var(--border-1);
+}
+html[dir="rtl"] .lang-btn.ar-btn {
+  border-left: none;
+  border-right: 1px solid var(--border-1);
+}
+html[dir="rtl"] .lang-btn.en-btn {
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Animate entrance (RTL version — from left) ── */
+html[dir="rtl"] .reveal {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+html[dir="rtl"] .reveal.in {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* ── Responsive RTL ── */
+@media (max-width: 768px) {
+  html[dir="rtl"] .nav {
+    flex-direction: row-reverse;
+  }
+  html[dir="rtl"] .nav-burger {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  html[dir="rtl"] .hero-stats {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── Updated lang-switcher compact style ── */
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--t-border-1, rgba(255,255,255,0.06));
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+html[dir="rtl"] .lang-switcher { margin-left: 0; margin-right: 10px; }
+
+.lang-btn {
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--t-text-sub, #6B7280);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+.lang-btn:hover { color: var(--t-text, #fff); background: var(--t-glass-1, rgba(255,255,255,0.04)); }
+.lang-btn.active {
+  color: var(--t-primary-2, #0EA5C0);
+  background: var(--t-glass-teal, rgba(8,145,168,0.08));
+}
+.lang-btn.ar-btn {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 13px;
+  border-left: 1px solid var(--t-border-1, rgba(255,255,255,0.06));
+}
+html[dir="rtl"] .lang-btn.ar-btn {
+  border-left: none;
+  border-right: 1px solid var(--t-border-1, rgba(255,255,255,0.06));
+}
