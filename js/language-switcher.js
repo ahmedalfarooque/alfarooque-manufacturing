@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════
-   ALFAROUQI MANUFACTURING — LANGUAGE SWITCHER v4.0
+﻿/* ═══════════════════════════════════════════════════════
+   AL FAROOQUE MANUFACTURING — LANGUAGE SWITCHER v4.0
    ▸ English is ALWAYS default for first-time visitors
    ▸ Reads localStorage key: "language" ("en"|"ar")
    ▸ Smooth redirect to counterpart page

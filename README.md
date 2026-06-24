@@ -1,4 +1,4 @@
-# Alfarouqi Manufacturing Website v5.0
+﻿# AL FAROOQUE Manufacturing Website v5.0
 ## Glassmorphism 4.0 | Luxury Industrial Design System
 
 ---
@@ -6,7 +6,7 @@
 ## 📁 Project Structure
 
 ```
-alfarouqi-website/
+AL FAROOQUE-website/
 ├── index.html              ← Home page (open directly in browser)
 ├── pages/
 │   ├── about.html          ← About + All Certifications
@@ -80,7 +80,7 @@ Search for these placeholders and replace with real data from your company profi
 | Placeholder | Replace With |
 |-------------|-------------|
 | `+966 (0) XXX XXXX` | Real phone number |
-| `info@alfarouqi.com` | Real email |
+| `info@alfarooque.com` | Real email |
 | `Est. Since 2000` | Real establishment year |
 | `20+` years counter | Correct number |
 | Certificate `href="#"` links | Real PDF links or modal |
@@ -161,5 +161,5 @@ If integrating into your existing Next.js project:
 
 ---
 
-*Alfarouqi Manufacturing v5.0 — Glassmorphism 4.0 Design System*
-*Brand: IAA / Alfarouqi Industries (IAAE) — Jeddah, Saudi Arabia*
+*AL FAROOQUE Manufacturing v5.0 — Glassmorphism 4.0 Design System*
+*Brand: IAA / AL FAROOQUE Industries (IAAE) — Jeddah, Saudi Arabia*

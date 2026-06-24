@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════
-   ALFAROUQI MANUFACTURING — THEME SWITCHER v4.0
+﻿/* ═══════════════════════════════════════════════════════
+   AL FAROOQUE MANUFACTURING — THEME SWITCHER v4.0
    ▸ Dark is ALWAYS default for first-time visitors
    ▸ Reads localStorage key: "theme" ("dark"|"light")
    ▸ No system-preference override — dark always wins

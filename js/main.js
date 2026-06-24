@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════
-   ALFAROUQI MANUFACTURING — MAIN JS v5.0
+﻿/* ═══════════════════════════════════════════════════════════════
+   AL FAROOQUE MANUFACTURING — MAIN JS v5.0
    Preloader · Nav · Reveal · Counters · Gallery · Cursor · Form
    ═══════════════════════════════════════════════════════════════ */
 'use strict';

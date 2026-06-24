@@ -1,10 +1,10 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Premium corporate website for **Alfarouqi Manufacturing** (IAAE - Alfarouqi Industries), a Saudi company with three manufacturing divisions: Wood Works, Steel Works, and Aluminium Works. Pure static site — no build tools, no npm packages, no frameworks.
+Premium corporate website for **AL FAROOQUE Manufacturing** (IAAE - AL FAROOQUE Industries), a Saudi company with three manufacturing divisions: Wood Works, Steel Works, and Aluminium Works. Pure static site — no build tools, no npm packages, no frameworks.
 
 ## Running Locally
 
