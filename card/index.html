@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+<!-- Flash-free theme: applied before CSS render -->
+<script>(function(){var t=localStorage.getItem('bc-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Mohammed Alfarooque — Finance Manager, Alfarooque Manufacturing. +966 56 446 6661 · mohammed@alfarooque.com · Jeddah, Saudi Arabia.">
+<meta name="keywords" content="Mohammed Alfarooque, Finance Manager, Alfarooque Manufacturing, IAAE, Jeddah, Saudi Arabia">
+<meta property="og:type" content="profile">
+<meta property="og:title" content="Mohammed Alfarooque — Finance Manager">
+<meta property="og:description" content="Alfarooque Manufacturing (IAAE) · Jeddah, Saudi Arabia · Est. 1980">
+<meta property="og:image" content="https://mohammed.alfarooque.com/assets/images/logo/IAA_LOGO.png">
+<meta property="og:url" content="https://mohammed.alfarooque.com">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mohammed Alfarooque — Finance Manager">
+<meta name="twitter:description" content="Alfarooque Manufacturing · +966 56 446 6661">
+<meta name="theme-color" content="#14181A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EEF0EF" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Mohammed Alfarooque — Finance Manager · Alfarooque Manufacturing</title>
+<link rel="icon" href="assets/images/logo/IAA_LOGO.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/images/logo/IAA_LOGO.png">
+<link rel="canonical" href="https://mohammed.alfarooque.com">
+
+<!-- Schema.org structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://mohammed.alfarooque.com/#person",
+      "name": "Mohammed Alfarooque",
+      "jobTitle": "Finance Manager",
+      "telephone": "+966564466661",
+      "email": "mohammed@alfarooque.com",
+      "url": "https://mohammed.alfarooque.com",
+      "image": "https://mohammed.alfarooque.com/assets/images/logo/IAA_LOGO.png",
+      "worksFor": { "@id": "https://alfarooque.com/#organization" },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "JNIA4974, 3rd Industrial City",
+        "addressLocality": "Jeddah",
+        "postalCode": "22766",
+        "addressCountry": "SA"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://alfarooque.com/#organization",
+      "name": "Alfarooque Manufacturing",
+      "legalName": "Ismail Al Farooque Wooden Industries LLC",
+      "url": "https://alfarooque.com",
+      "logo": "https://mohammed.alfarooque.com/assets/images/logo/IAA_LOGO.png",
+      "foundingDate": "1980",
+      "telephone": "+966564466661",
+      "email": "mohammed@alfarooque.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "JNIA4974, 3rd Industrial City",
+        "addressLocality": "Jeddah",
+        "postalCode": "22766",
+        "addressCountry": "SA"
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════
+   Mohammed Alfarooque — Digital Business Card
+   Brand: Alfarooque Manufacturing (IAAE)
+   Design: Executive Luxury Dark / Animated Digital
+   ═══════════════════════════════════════════════════ */
+
+/* ── CSS Reset & Variables ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+:root {
+  /* Brand palette — from approved business card */
+  --ink:        #14181A;
+  --ink-2:      #0c0f10;
+  --ink-3:      #1a1f22;
+  --teal-deep:  #006078;
+  --teal:       #0090A8;
+  --teal-b:     #21b3c9;
+  --teal-grad:  linear-gradient(90deg, #0090A8, #006078);
+
+  /* Text hierarchy */
+  --tx-1: #ffffff;
+  --tx-2: #aeb6ba;
+  --tx-3: #8a949a;
+  --tx-4: #6f7a80;
+  --tx-5: #50585C;
+
+  /* Glass surfaces */
+  --glass-bg:     rgba(255,255,255,0.05);
+  --glass-bg-m:   rgba(255,255,255,0.09);
+  --glass-bd:     rgba(255,255,255,0.11);
+  --glass-teal:   rgba(33,179,201,0.08);
+  --glass-teal-bd:rgba(33,179,201,0.26);
+
+  /* Blur */
+  --blur: blur(20px);
+  --blur-h: blur(40px);
+
+  /* Typography */
+  --ff-name:  'Space Grotesk', sans-serif;
+  --ff-label: 'Space Mono', monospace;
+  --ff-body:  'Manrope', sans-serif;
+
+  /* Geometry */
+  --r-card: 32px;
+  --r-btn:  14px;
+  --r-sm:   11px;
+  --r-pill: 100px;
+
+  /* Motion */
+  --t-mid:    0.25s ease;
+  --t-spring: 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ── Light theme overrides ── */
+[data-theme="light"] {
+  --ink:   #EEF0EF;
+  --ink-2: #e3e7e5;
+  --ink-3: #dde1df;
+  --teal-b: #007890;
+  --tx-1: #14181A;
+  --tx-2: #3a4145;
+  --tx-3: #50585C;
+  --tx-4: #7a838a;
+  --tx-5: #9aa3a7;
+  --glass-bg:     rgba(20,24,26,0.05);
+  --glass-bg-m:   rgba(20,24,26,0.09);
+  --glass-bd:     rgba(20,24,26,0.13);
+  --glass-teal:   rgba(0,120,144,0.06);
+  --glass-teal-bd:rgba(0,120,144,0.22);
+}
+
+/* ── RTL / Arabic font swap ── */
+html[dir="rtl"] {
+  --ff-name:  'Cairo', sans-serif;
+  --ff-label: 'Cairo', sans-serif;
+  --ff-body:  'Tajawal', sans-serif;
+}
+
+/* ── Base ── */
+html, body {
+  min-height: 100dvh;
+  background: var(--ink-2);
+  color: var(--tx-1);
+  font-family: var(--ff-body);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+img { display: block; max-width: 100%; }
+
+/* ── Background environment ── */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bg-glow {
+  position: absolute;
+  top: -35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180%;
+  height: 90%;
+  background: radial-gradient(ellipse at 50% 0%,
+    rgba(0,144,168,.20) 0%,
+    rgba(0,144,168,.06) 35%,
+    transparent 65%);
+}
+[data-theme="light"] .bg-glow {
+  background: radial-gradient(ellipse at 50% 0%,
+    rgba(0,120,144,.12) 0%,
+    transparent 60%);
+}
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+[data-theme="light"] .bg-grid {
+  background-image:
+    linear-gradient(rgba(20,24,26,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20,24,26,.035) 1px, transparent 1px);
+}
+
+/* ── Layout ── */
+.wrap {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px calc(40px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Card ── */
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--ink);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,.18),
+    0 40px 80px -28px rgba(0,0,0,.60);
+  animation: fadein 0.55s ease both;
+}
+[data-theme="light"] .card {
+  box-shadow:
+    0 1px 3px rgba(20,24,26,.07),
+    0 24px 60px -24px rgba(20,24,26,.22);
+}
+
+/* Top edge bar */
+.card-edge {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: var(--teal-grad);
+  z-index: 5;
+}
+
+/* Radial glow inside card */
+.card-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(130% 80% at 50% -5%,
+    rgba(0,144,168,.18) 0%,
+    transparent 55%);
+  pointer-events: none;
+  z-index: 1;
+}
+[data-theme="light"] .card-glow {
+  background: radial-gradient(130% 80% at 50% -5%,
+    rgba(0,120,144,.09) 0%,
+    transparent 55%);
+}
+
+/* Diagonal sheen sweep */
+.card-sheen {
+  position: absolute;
+  top: -50%;
+  left: -65%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.055),
+    transparent);
+  transform: rotate(8deg);
+  animation: sheenmove 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Watermark logo */
+.card-watermark {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%,-50%) rotate(0deg);
+  height: 300px;
+  width: auto;
+  opacity: .045;
+  pointer-events: none;
+  z-index: 1;
+  animation: slowspin 90s linear infinite;
+}
+
+/* Card content */
+.card-inner {
+  position: relative;
+  z-index: 2;
+  padding: 40px 28px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* ── NFC live badge ── */
+.nfc-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.nfc-ring-wrap {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nfc-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(33,179,201,.55);
+  animation: ringpulse 2.4s ease-out infinite;
+}
+.nfc-ring:nth-child(2) { animation-delay: 1.2s; }
+.nfc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal-b);
+  position: relative;
+  z-index: 1;
+  animation: pulsedot 2s ease-in-out infinite;
+}
+.nfc-label {
+  font-family: var(--ff-label);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tx-4);
+}
+html[dir="rtl"] .nfc-label { letter-spacing: 0.04em; }
+
+/* ── Logo ── */
+.bc-logo {
+  height: 72px;
+  width: auto;
+  margin: 0 auto 28px;
+  animation: floaty 5s ease-in-out infinite;
+  filter: drop-shadow(0 4px 18px rgba(33,179,201,.28));
+}
+
+/* ── Name ── */
+.bc-name {
+  font-family: var(--ff-name);
+  font-weight: 600;
+  font-size: clamp(28px, 8vw, 36px);
+  letter-spacing: -0.02em;
+  color: var(--tx-1);
+  line-height: 1.08;
+}
+html[dir="rtl"] .bc-name { letter-spacing: 0; }
+
+/* ── Teal divider ── */
+.bc-divider {
+  width: 56px;
+  height: 3px;
+  background: var(--teal-grad);
+  border-radius: 2px;
+  margin: 18px auto;
+}
+
+/* ── Title & company ── */
+.bc-title {
+  font-family: var(--ff-label);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--teal-b);
+  margin-bottom: 6px;
+}
+html[dir="rtl"] .bc-title { letter-spacing: 0.06em; }
+
+.bc-company {
+  font-family: var(--ff-label);
+  font-size: 9px;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--tx-4);
+  line-height: 1.7;
+}
+html[dir="rtl"] .bc-company { letter-spacing: 0.04em; }
+
+/* ── Save Contact (primary CTA) ── */
+.save-btn {
+  width: 100%;
+  height: 52px;
+  background: linear-gradient(135deg, var(--teal), var(--teal-deep));
+  color: #fff;
+  border: none;
+  border-radius: var(--r-btn);
+  font-family: var(--ff-name);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform var(--t-spring), box-shadow var(--t-mid);
+  box-shadow: 0 4px 22px rgba(0,144,168,.38);
+  cursor: pointer;
+  margin-top: 28px;
+}
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,144,168,.52);
+}
+.save-btn:active { transform: scale(.98); }
+
+/* ── Action buttons grid ── */
+.btn-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ac-btn {
+  height: 60px;
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--r-sm);
+  background: var(--glass-bg);
+  color: var(--tx-2);
+  font-family: var(--ff-label);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--t-mid);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  cursor: pointer;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+html[dir="rtl"] .ac-btn { letter-spacing: 0.04em; }
+.ac-btn svg { opacity: .72; flex-shrink: 0; transition: opacity var(--t-mid); }
+.ac-btn:hover {
+  background: rgba(33,179,201,.12);
+  border-color: var(--glass-teal-bd);
+  color: var(--tx-1);
+  transform: translateY(-2px);
+}
+.ac-btn:hover svg { opacity: 1; }
+.ac-btn:active { transform: scale(.97); }
+
+/* Span columns */
+.ac-btn-span2 {
+  grid-column: span 2;
+  flex-direction: row;
+  height: 50px;
+  font-size: 10px;
+}
+.ac-btn-full {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  height: 46px;
+  font-size: 10px;
+}
+
+/* ── QR Section ── */
+.qr-section {
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+[data-theme="light"] .qr-section { border-top-color: rgba(20,24,26,.10); }
+
+.qr-label {
+  font-family: var(--ff-label);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--teal-b);
+}
+html[dir="rtl"] .qr-label { letter-spacing: 0.04em; }
+
+.qr-wrap {
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  line-height: 0;
+  box-shadow: 0 8px 26px -10px rgba(0,0,0,.50);
+}
+#bc-qr { width: 116px; height: 116px; }
+#bc-qr img,
+#bc-qr canvas {
+  width: 116px !important;
+  height: 116px !important;
+  display: block;
+}
+
+/* ── Contact grid (phone/email/website) ── */
+.contact-grid {
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.contact-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+html[dir="rtl"] .contact-row { text-align: right; }
+.contact-lbl {
+  font-family: var(--ff-label);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--tx-4);
+}
+html[dir="rtl"] .contact-lbl { letter-spacing: 0.04em; }
+.contact-val {
+  font-family: var(--ff-body);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--tx-1);
+  letter-spacing: 0.01em;
+}
+
+/* ── Footer ── */
+.bc-footer {
+  width: 100%;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+[data-theme="light"] .bc-footer { border-top-color: rgba(20,24,26,.09); }
+
+.footer-line {
+  font-family: var(--ff-label);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-4);
+  text-align: center;
+  line-height: 1.7;
+}
+html[dir="rtl"] .footer-line { letter-spacing: 0.03em; }
+.footer-line.bright { color: var(--tx-3); font-size: 9.5px; }
+
+/* ── Controls bar ── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  animation: fadein 0.55s ease 0.20s both;
+}
+
+.ctrl-btn {
+  height: 36px;
+  padding: 0 15px;
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--r-pill);
+  background: var(--glass-bg);
+  color: var(--tx-3);
+  font-family: var(--ff-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all var(--t-mid);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  -webkit-tap-highlight-color: transparent;
+}
+html[dir="rtl"] .ctrl-btn { letter-spacing: 0.04em; }
+.ctrl-btn:hover {
+  border-color: var(--glass-teal-bd);
+  color: var(--tx-1);
+  background: var(--glass-teal);
+}
+.ctrl-btn:active { transform: scale(.96); }
+
+/* ── Back to site link ── */
+.back-link {
+  margin-top: 14px;
+  font-family: var(--ff-label);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--tx-5);
+  transition: color var(--t-mid);
+  animation: fadein 0.55s ease 0.30s both;
+}
+.back-link:hover { color: var(--teal-b); }
+
+/* ── Specialty line (from design: Doors · Furniture · Joinery) ── */
+.bc-specialty {
+  font-family: var(--ff-label);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal-b);
+  margin-top: 10px;
+  opacity: .9;
+}
+html[dir="rtl"] .bc-specialty { letter-spacing: 0.04em; }
+
+/* ── Floating WhatsApp button ── */
+.wa-fab {
+  position: fixed;
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(37,211,102,.42);
+  z-index: 9000;
+  transition: transform var(--t-spring), box-shadow var(--t-mid);
+  animation: fadein 0.55s ease 0.45s both;
+  -webkit-tap-highlight-color: transparent;
+}
+html[dir="rtl"] .wa-fab {
+  right: auto;
+  left: calc(18px + env(safe-area-inset-left, 0px));
+}
+.wa-fab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(37,211,102,.55);
+  animation: wapulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+.wa-fab:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 30px rgba(37,211,102,.55);
+}
+.wa-fab:active { transform: scale(.95); }
+@keyframes wapulse {
+  0%   { transform: scale(1);   opacity: .7; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wa-fab::before { animation: none; }
+  .bc-logo, .card-sheen, .card-watermark, .nfc-ring, .nfc-dot { animation: none !important; }
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--ink-3);
+  border: 1px solid var(--glass-teal-bd);
+  color: var(--tx-1);
+  font-family: var(--ff-label);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  padding: 10px 20px;
+  border-radius: var(--r-pill);
+  box-shadow: 0 8px 32px rgba(0,0,0,.45);
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.28s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: calc(100vw - 48px);
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Animations ── */
+@keyframes sheenmove {
+  0%    { transform: translateX(-180%) rotate(8deg); }
+  65%, 100% { transform: translateX(450%) rotate(8deg); }
+}
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes slowspin {
+  from { transform: translate(-50%,-50%) rotate(0deg); }
+  to   { transform: translate(-50%,-50%) rotate(360deg); }
+}
+@keyframes ringpulse {
+  0%   { transform: scale(.5); opacity: .75; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+@keyframes pulsedot {
+  0%, 100% { opacity: .5; transform: scale(1); }
+  50%       { opacity: 1; transform: scale(1.45); }
+}
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (min-width: 480px) {
+  .wrap { padding-top: 40px; padding-left: 24px; padding-right: 24px; }
+  .card-inner { padding: 44px 34px 36px; }
+}
+@media (min-width: 768px) {
+  .wrap { padding-top: 60px; padding-bottom: 80px; }
+}
+
+/* ── Print ── */
+@media print {
+  .bg, .card-sheen, .card-watermark, .controls, .back-link, .toast { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Background ── -->
+<div class="bg" aria-hidden="true">
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+</div>
+
+<!-- ── Main wrapper ── -->
+<div class="wrap">
+
+  <!-- ═══ CARD ═══ -->
+  <main class="card" role="main" aria-label="Mohammed Alfarooque Digital Business Card">
+
+    <!-- Top teal edge bar -->
+    <div class="card-edge" aria-hidden="true"></div>
+    <!-- Radial glow -->
+    <div class="card-glow" aria-hidden="true"></div>
+    <!-- Sheen sweep -->
+    <div class="card-sheen" aria-hidden="true"></div>
+    <!-- Watermark logo -->
+    <img src="assets/images/logo/IAA_LOGO.png" alt="" class="card-watermark" aria-hidden="true">
+
+    <div class="card-inner">
+
+      <!-- NFC badge -->
+      <div class="nfc-badge" aria-hidden="true">
+        <div class="nfc-ring-wrap">
+          <span class="nfc-ring"></span>
+          <span class="nfc-ring"></span>
+          <span class="nfc-dot"></span>
+        </div>
+        <span class="nfc-label" data-i18n="nfc">NFC Enabled · Live</span>
+      </div>
+
+      <!-- Logo (floating) -->
+      <img src="assets/images/logo/IAA_LOGO.png"
+           alt="Alfarooque Manufacturing"
+           class="bc-logo"
+           width="72" height="72">
+
+      <!-- Name -->
+      <h1 class="bc-name" id="bc-name">Mohammed Alfarooque</h1>
+
+      <!-- Teal divider -->
+      <div class="bc-divider" aria-hidden="true"></div>
+
+      <!-- Title -->
+      <div class="bc-title" data-i18n="title">Finance Manager</div>
+
+      <!-- Company & location -->
+      <div class="bc-company">
+        <span data-i18n="company">Alfarooque Manufacturing · Est. 1980</span><br>
+        <span data-i18n="city">Jeddah · Saudi Arabia</span>
+      </div>
+
+      <!-- Specialty -->
+      <div class="bc-specialty" data-i18n="specialty">Doors · Furniture · Joinery</div>
+
+      <!-- ── Save Contact (primary CTA) ── -->
+      <button class="save-btn" id="bc-save" onclick="saveContact()" aria-label="Save Mohammed Alfarooque to contacts">
+        <!-- Person+ icon -->
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="8.5" cy="7" r="4"/>
+          <line x1="20" y1="8" x2="20" y2="14"/>
+          <line x1="23" y1="11" x2="17" y2="11"/>
+        </svg>
+        <span data-i18n="save">Add to Contacts</span>
+      </button>
+
+      <!-- ── Button grid ── -->
+      <div class="btn-grid" role="list">
+
+        <!-- Call -->
+        <a class="ac-btn" href="tel:+966564466661" role="listitem"
+           aria-label="Call Mohammed Alfarooque at +966 56 446 6661">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 11.9 19.79 19.79 0 0 1 1.63 3.3 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          <span data-i18n="call">Call</span>
+        </a>
+
+        <!-- WhatsApp -->
+        <a class="ac-btn" role="listitem"
+           href="https://wa.me/966564466661?text=Hello%20Mohammed%2C%20I%20got%20your%20contact%20via%20your%20digital%20card."
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Message Mohammed on WhatsApp">
+          <!-- WhatsApp icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/>
+          </svg>
+          <span data-i18n="whatsapp">WhatsApp</span>
+        </a>
+
+        <!-- Email -->
+        <a class="ac-btn" role="listitem"
+           href="mailto:mohammed@alfarooque.com?subject=Alfarooque%20Manufacturing%20Enquiry"
+           aria-label="Email Mohammed Alfarooque">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          <span data-i18n="email">Email</span>
+        </a>
+
+        <!-- Website -->
+        <a class="ac-btn" role="listitem"
+           href="https://alfarooque.com" target="_blank" rel="noopener noreferrer"
+           aria-label="Visit Alfarooque Manufacturing website">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span data-i18n="website">Website</span>
+        </a>
+
+        <!-- Location -->
+        <a class="ac-btn" role="listitem"
+           href="https://maps.google.com/?q=JNIA4974+3rd+Industrial+City+Jeddah+22766+Saudi+Arabia"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="View Alfarooque Manufacturing location on Google Maps">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span data-i18n="location">Location</span>
+        </a>
+
+        <!-- Company Profile download -->
+        <a class="ac-btn" role="listitem"
+           href="assets/company-profile.pdf"
+           download="Alfarooque-Manufacturing-Profile.pdf"
+           id="bc-profile-btn"
+           aria-label="Download Alfarooque Manufacturing company profile">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span data-i18n="profile">Company<br>Profile</span>
+        </a>
+
+        <!-- Share card -->
+        <button class="ac-btn ac-btn-span2" onclick="shareCard(event)"
+                aria-label="Share Mohammed Alfarooque's digital business card">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <span data-i18n="share">Share Card</span>
+        </button>
+
+        <!-- Copy link -->
+        <button class="ac-btn" onclick="copyLink()"
+                aria-label="Copy link to this digital business card">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span data-i18n="copy">Copy Link</span>
+        </button>
+
+      </div><!-- /btn-grid -->
+
+      <!-- ── Contact details ── -->
+      <div class="contact-grid" aria-label="Contact information">
+        <div class="contact-row">
+          <div class="contact-lbl" data-i18n="lbl-mobile">Mobile</div>
+          <a class="contact-val" href="tel:+966564466661">+966 56 446 6661</a>
+        </div>
+        <div class="contact-row">
+          <div class="contact-lbl" data-i18n="lbl-email">Email</div>
+          <a class="contact-val" href="mailto:mohammed@alfarooque.com">mohammed@alfarooque.com</a>
+        </div>
+        <div class="contact-row">
+          <div class="contact-lbl" data-i18n="lbl-web">Website</div>
+          <a class="contact-val" href="https://alfarooque.com" target="_blank" rel="noopener">alfarooque.com</a>
+        </div>
+      </div>
+
+      <!-- ── QR Code ── -->
+      <div class="qr-section" aria-label="QR code to save contact">
+        <div class="qr-label" data-i18n="scan">Scan · Save Contact</div>
+        <div class="qr-wrap">
+          <div id="bc-qr"></div>
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="bc-footer">
+        <div class="footer-line bright">Ismail Al Farooque Wooden Industries LLC</div>
+        <div class="footer-line">JNIA4974 · 3rd Industrial City · 22766 Jeddah · KSA</div>
+        <div class="footer-line" style="margin-top:2px;">CR 4031098279 &nbsp;·&nbsp; VAT 3120487009</div>
+      </div>
+
+    </div><!-- /card-inner -->
+  </main>
+
+  <!-- ── Controls: Lang + Theme ── -->
+  <div class="controls" role="group" aria-label="Card controls">
+    <button class="ctrl-btn" id="bc-lang-btn" onclick="toggleLang()"
+            aria-label="Switch language between English and Arabic">
+      <span id="bc-lang-icon" aria-hidden="true">ع</span>
+      <span id="bc-lang-text">عربي</span>
+    </button>
+    <button class="ctrl-btn" id="bc-theme-btn" onclick="toggleTheme()"
+            aria-label="Toggle dark and light theme">
+      <span id="bc-theme-icon" aria-hidden="true">☀️</span>
+      <span id="bc-theme-text">Light</span>
+    </button>
+  </div>
+
+  <!-- ── Back to main site ── -->
+  <a class="back-link" href="https://alfarooque.com" aria-label="Return to Alfarooque Manufacturing website">
+    alfarooque.com →
+  </a>
+
+</div><!-- /wrap -->
+
+<!-- Floating WhatsApp button -->
+<a class="wa-fab"
+   href="https://wa.me/966564466661?text=Hello%20Mohammed%2C%20I%20got%20your%20contact%20via%20your%20digital%20card."
+   target="_blank" rel="noopener noreferrer"
+   aria-label="Chat with Mohammed Alfarooque on WhatsApp">
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/>
+  </svg>
+</a>
+
+<!-- Toast notification -->
+<div class="toast" id="bc-toast" role="status" aria-live="polite"></div>
+
+<!-- QR Code library (qrcodejs) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   Mohammed Alfarooque — Digital Business Card JS
+   ═══════════════════════════════════════════════ */
+
+/* ── i18n strings ── */
+var I18N = {
+  en: {
+    'nfc':        'NFC Enabled · Live',
+    'title':      'Finance Manager',
+    'specialty':  'Doors · Furniture · Joinery',
+    'company':    'Alfarooque Manufacturing · Est. 1980',
+    'city':       'Jeddah · Saudi Arabia',
+    'save':       'Add to Contacts',
+    'call':       'Call',
+    'whatsapp':   'WhatsApp',
+    'email':      'Email',
+    'website':    'Website',
+    'location':   'Location',
+    'profile':    'Company<br>Profile',
+    'share':      'Share Card',
+    'copy':       'Copy Link',
+    'scan':       'Scan · Save Contact',
+    'lbl-mobile': 'Mobile',
+    'lbl-email':  'Email',
+    'lbl-web':    'Website'
+  },
+  ar: {
+    'nfc':        'بطاقة NFC · مباشر',
+    'title':      'مدير الشؤون المالية',
+    'specialty':  'أبواب · أثاث · نجارة',
+    'company':    'شركة الفاروق للتصنيع · تأسست 1980',
+    'city':       'جدة · المملكة العربية السعودية',
+    'save':       'إضافة إلى جهات الاتصال',
+    'call':       'اتصال',
+    'whatsapp':   'واتساب',
+    'email':      'بريد إلكتروني',
+    'website':    'الموقع',
+    'location':   'الموقع',
+    'profile':    'ملف<br>الشركة',
+    'share':      'مشاركة البطاقة',
+    'copy':       'نسخ الرابط',
+    'scan':       'امسح · احفظ جهة اتصال',
+    'lbl-mobile': 'هاتف',
+    'lbl-email':  'بريد إلكتروني',
+    'lbl-web':    'الموقع'
+  }
+};
+
+/* ── State ── */
+var lang  = localStorage.getItem('bc-lang')  || 'en';
+var theme = localStorage.getItem('bc-theme') || 'dark';
+var qrDrawn = false;
+
+/* ── vCard ── */
+function vcard() {
+  return [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    'N:Alfarooque;Mohammed;;;',
+    'FN:Mohammed Alfarooque',
+    'ORG:Alfarooque Manufacturing (Ismail Al Farooque Wooden Industries LLC)',
+    'TITLE:Finance Manager',
+    'TEL;TYPE=CELL:+966564466661',
+    'EMAIL;TYPE=WORK:mohammed@alfarooque.com',
+    'URL:https://alfarooque.com',
+    'ADR;TYPE=WORK:;;JNIA4974 3rd Industrial City;Jeddah;;22766;Saudi Arabia',
+    'NOTE:CR 4031098279 · VAT 3120487009',
+    'END:VCARD'
+  ].join('\r\n');
+}
+
+/* ── Save Contact ── */
+function saveContact() {
+  var data = vcard();
+  var blob = new Blob([data], { type: 'text/vcard;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'Mohammed-Alfarooque.vcf';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function() { URL.revokeObjectURL(url); }, 2500);
+  showToast(lang === 'ar'
+    ? '✓ جاري تنزيل جهة الاتصال'
+    : '✓ Contact saved');
+}
+
+/* ── QR Code ── */
+function drawQR() {
+  if (qrDrawn) return;
+  var el = document.getElementById('bc-qr');
+  if (!el || !window.QRCode) return;
+  try {
+    el.innerHTML = '';
+    new QRCode(el, {
+      text: vcard(),
+      width: 300,
+      height: 300,
+      colorDark:  '#14181A',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    /* Scale the generated img/canvas to the display size */
+    var child = el.firstElementChild;
+    if (child) {
+      child.style.width  = '116px';
+      child.style.height = '116px';
+    }
+    qrDrawn = true;
+  } catch(e) {
+    console.warn('QR generation failed:', e);
+  }
+}
+
+/* ── Share Card ── */
+function shareCard(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  var shareData = {
+    title: 'Mohammed Alfarooque — Finance Manager',
+    text:  'Mohammed Alfarooque — Finance Manager, Alfarooque Manufacturing\n+966 56 446 6661 · mohammed@alfarooque.com',
+    url:   'https://mohammed.alfarooque.com'
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(function() {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareData.url).then(function() {
+      showToast(lang === 'ar'
+        ? '✓ تم نسخ الرابط'
+        : '✓ Link copied to clipboard');
+    }).catch(function() {
+      showToast('mohammed.alfarooque.com');
+    });
+  } else {
+    showToast('mohammed.alfarooque.com');
+  }
+}
+
+/* ── Copy Link ── */
+function copyLink() {
+  var url = 'https://mohammed.alfarooque.com';
+  var ok = function() {
+    showToast(lang === 'ar' ? '✓ تم نسخ الرابط' : '✓ Link copied to clipboard');
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(ok).catch(function() { fallbackCopy(url, ok); });
+  } else {
+    fallbackCopy(url, ok);
+  }
+}
+function fallbackCopy(text, done) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    done();
+  } catch (e) {
+    showToast('mohammed.alfarooque.com');
+  }
+}
+
+/* ── Language ── */
+function applyLang(l) {
+  lang = l;
+  localStorage.setItem('bc-lang', l);
+  var html = document.documentElement;
+  html.setAttribute('lang', l);
+  html.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
+
+  /* Update all i18n text nodes */
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    if (I18N[l] && I18N[l][key] !== undefined) {
+      el.innerHTML = I18N[l][key];
+    }
+  });
+
+  /* Update lang button */
+  var icon  = document.getElementById('bc-lang-icon');
+  var text  = document.getElementById('bc-lang-text');
+  if (l === 'ar') {
+    icon.textContent = 'EN';
+    text.textContent = 'English';
+  } else {
+    icon.textContent = 'ع';
+    text.textContent = 'عربي';
+  }
+
+  /* Update theme button labels for language */
+  updateThemeBtn();
+}
+
+function toggleLang() { applyLang(lang === 'en' ? 'ar' : 'en'); }
+
+/* ── Theme ── */
+function applyTheme(t) {
+  theme = t;
+  localStorage.setItem('bc-theme', t);
+  document.documentElement.setAttribute('data-theme', t);
+  updateThemeBtn();
+}
+
+function updateThemeBtn() {
+  var icon  = document.getElementById('bc-theme-icon');
+  var text  = document.getElementById('bc-theme-text');
+  if (theme === 'light') {
+    icon.textContent = '🌙';
+    text.textContent = lang === 'ar' ? 'داكن' : 'Dark';
+  } else {
+    icon.textContent = '☀️';
+    text.textContent = lang === 'ar' ? 'فاتح' : 'Light';
+  }
+}
+
+function toggleTheme() { applyTheme(theme === 'dark' ? 'light' : 'dark'); }
+
+/* ── Company profile (graceful missing PDF) ── */
+function initProfileBtn() {
+  var btn = document.getElementById('bc-profile-btn');
+  if (!btn) return;
+  btn.addEventListener('click', function(e) {
+    fetch('assets/company-profile.pdf', { method: 'HEAD' })
+      .then(function(r) {
+        if (!r.ok) {
+          e.preventDefault();
+          showToast(lang === 'ar'
+            ? 'ملف الشركة قريباً'
+            : 'Company profile coming soon');
+        }
+      })
+      .catch(function() {
+        e.preventDefault();
+        showToast(lang === 'ar'
+          ? 'ملف الشركة قريباً'
+          : 'Company profile coming soon');
+      });
+  });
+}
+
+/* ── Toast ── */
+var _toastTimer = null;
+function showToast(msg) {
+  var el = document.getElementById('bc-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2800);
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  /* Apply persisted prefs */
+  applyLang(lang);
+  applyTheme(theme);
+
+  /* Draw QR code */
+  if (window.QRCode) {
+    drawQR();
+  } else {
+    /* Wait for qrcodejs to load */
+    var scr = document.querySelector('script[src*="qrcode"]');
+    if (scr) {
+      scr.addEventListener('load', drawQR);
+    } else {
+      setTimeout(drawQR, 800);
+    }
+  }
+
+  /* Company profile btn */
+  initProfileBtn();
+});
+</script>
+
+</body>
+</html>
