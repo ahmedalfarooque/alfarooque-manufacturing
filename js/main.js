@@ -145,14 +145,25 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 /* ═══ CARD TILT ═══ */
 (function(){
   if(window.innerWidth<768) return;
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   $$('[data-tilt]').forEach(card=>{
+    let rect=null,px=0,py=0,raf=0;
+    const apply=()=>{
+      raf=0;
+      card.style.transform=`perspective(700px) rotateY(${px*8}deg) rotateX(${-py*8}deg) translateY(-6px)`;
+    };
+    card.addEventListener('mouseenter',()=>{ rect=card.getBoundingClientRect(); });
     card.addEventListener('mousemove',e=>{
-      const r=card.getBoundingClientRect();
-      const x=(e.clientX-r.left)/r.width-0.5;
-      const y=(e.clientY-r.top)/r.height-0.5;
-      card.style.transform=`perspective(700px) rotateY(${x*8}deg) rotateX(${-y*8}deg) translateY(-6px)`;
+      if(!rect) rect=card.getBoundingClientRect();
+      px=(e.clientX-rect.left)/rect.width-0.5;
+      py=(e.clientY-rect.top)/rect.height-0.5;
+      if(!raf) raf=requestAnimationFrame(apply);  /* coalesce to one write per frame */
+    },{passive:true});
+    card.addEventListener('mouseleave',()=>{
+      rect=null;
+      if(raf){ cancelAnimationFrame(raf); raf=0; }
+      card.style.transform='';
     });
-    card.addEventListener('mouseleave',()=>{ card.style.transform=''; });
   });
 })();
 

@@ -560,7 +560,7 @@ input,textarea,select{font-family:inherit;}
   transition:border-color var(--t3),transform var(--t3) var(--spring),box-shadow var(--t3);
 }
 .svc-card:hover{border-color:var(--border-teal);transform:translateY(-10px);box-shadow:var(--shadow-lg),var(--glow-sm);}
-.svc-glow{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -15%,rgba(8,145,168,0.10) 0%,transparent 55%);opacity:0;transition:opacity var(--t3);}
+.svc-glow{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -15%,rgba(8,145,168,0.10) 0%,transparent 55%);opacity:0;transition:opacity var(--t3);transform:translateZ(0);will-change:opacity;pointer-events:none;}
 .svc-card:hover .svc-glow{opacity:1;}
 .svc-num{position:absolute;top:22px;right:22px;font-family:var(--font-display);font-size:56px;font-weight:800;color:rgba(255,255,255,0.025);line-height:1;}
 .svc-icon{
