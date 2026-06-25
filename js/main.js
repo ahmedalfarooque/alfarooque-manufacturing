@@ -21,10 +21,15 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 (function(){
   const bar = $('#progress-bar');
   if(!bar) return;
+  let ticking=false;
   window.addEventListener('scroll',()=>{
-    const h = document.documentElement;
-    const pct = (h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
-    bar.style.width = pct+'%';
+    if(ticking) return; ticking=true;
+    requestAnimationFrame(()=>{
+      ticking=false;
+      const h = document.documentElement;
+      const pct = (h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+      bar.style.width = pct+'%';
+    });
   },{passive:true});
 })();
 
@@ -67,17 +72,30 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
     }));
   }
 
-  // Active link highlight
+  // Active link highlight — cache section offsets, batch in rAF (no per-scroll reflow)
   const sections = $$('section[id]');
   const navAs = $$('.nav-links a, .nav-mobile a');
-  window.addEventListener('scroll',()=>{
-    const y = window.scrollY+100;
-    sections.forEach(s=>{
-      if(s.offsetTop<=y && s.offsetTop+s.offsetHeight>y){
-        navAs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+s.id));
-      }
-    });
-  },{passive:true});
+  if(sections.length && navAs.length){
+    let offsets=[];
+    const measure=()=>{ offsets=sections.map(s=>({id:s.id,top:s.offsetTop,bottom:s.offsetTop+s.offsetHeight})); };
+    measure();
+    window.addEventListener('resize',measure,{passive:true});
+    window.addEventListener('load',measure);
+    let ticking=false;
+    window.addEventListener('scroll',()=>{
+      if(ticking) return; ticking=true;
+      requestAnimationFrame(()=>{
+        ticking=false;
+        const y = window.scrollY+100;
+        for(const o of offsets){
+          if(o.top<=y && o.bottom>y){
+            navAs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+o.id));
+            break;
+          }
+        }
+      });
+    },{passive:true});
+  }
 })();
 
 /* ═══ SCROLL REVEAL ═══ */
@@ -131,14 +149,18 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 
 /* ═══ MAGNETIC BUTTONS ═══ */
 (function(){
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   $$('[data-mag]').forEach(btn=>{
+    let rect=null,mx=0,my=0,raf=0;
+    const apply=()=>{ raf=0; btn.style.transform=`translate(${mx}px,${my}px)`; };
+    btn.addEventListener('mouseenter',()=>{ rect=btn.getBoundingClientRect(); });
     btn.addEventListener('mousemove',e=>{
-      const r=btn.getBoundingClientRect();
-      const x=(e.clientX-r.left-r.width/2)*0.22;
-      const y=(e.clientY-r.top-r.height/2)*0.22;
-      btn.style.transform=`translate(${x}px,${y}px)`;
-    });
-    btn.addEventListener('mouseleave',()=>{ btn.style.transform=''; });
+      if(!rect) rect=btn.getBoundingClientRect();
+      mx=(e.clientX-rect.left-rect.width/2)*0.22;
+      my=(e.clientY-rect.top-rect.height/2)*0.22;
+      if(!raf) raf=requestAnimationFrame(apply);
+    },{passive:true});
+    btn.addEventListener('mouseleave',()=>{ rect=null; if(raf){cancelAnimationFrame(raf);raf=0;} btn.style.transform=''; });
   });
 })();
 
@@ -171,13 +193,16 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 (function(){
   const hero = $('.hero');
   if(!hero||window.innerWidth<768) return;
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let rect=null,hx='50%',hy='50%',raf=0;
+  const apply=()=>{ raf=0; hero.style.setProperty('--mx',hx); hero.style.setProperty('--my',hy); };
+  hero.addEventListener('mouseenter',()=>{ rect=hero.getBoundingClientRect(); });
   hero.addEventListener('mousemove',e=>{
-    const r=hero.getBoundingClientRect();
-    const x=((e.clientX-r.left)/r.width*100).toFixed(1);
-    const y=((e.clientY-r.top)/r.height*100).toFixed(1);
-    hero.style.setProperty('--mx',x+'%');
-    hero.style.setProperty('--my',y+'%');
-  });
+    if(!rect) rect=hero.getBoundingClientRect();
+    hx=((e.clientX-rect.left)/rect.width*100).toFixed(1)+'%';
+    hy=((e.clientY-rect.top)/rect.height*100).toFixed(1)+'%';
+    if(!raf) raf=requestAnimationFrame(apply);
+  },{passive:true});
 })();
 
 /* ═══ GALLERY — Filter + Lightbox ═══ */
