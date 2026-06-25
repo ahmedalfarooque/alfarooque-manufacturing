@@ -507,13 +507,7 @@ html[dir="rtl"] .qr-label { letter-spacing: 0.04em; }
   line-height: 0;
   box-shadow: 0 8px 26px -10px rgba(0,0,0,.50);
 }
-#bc-qr { width: 116px; height: 116px; }
-#bc-qr img,
-#bc-qr canvas {
-  width: 116px !important;
-  height: 116px !important;
-  display: block;
-}
+#bc-qr { width: 150px; height: 150px; display: block; }
 
 /* ── Contact grid (phone/email/website) ── */
 .contact-grid {
@@ -937,7 +931,9 @@ html[dir="rtl"] .wa-fab {
       <div class="qr-section" aria-label="QR code to save contact">
         <div class="qr-label" data-i18n="scan">Scan · Save Contact</div>
         <div class="qr-wrap">
-          <div id="bc-qr"></div>
+          <img id="bc-qr" src="assets/qr-vcard.png" width="150" height="150"
+               alt="QR code — scan to save Mohammed Alfarooque's contact"
+               loading="lazy" decoding="async">
         </div>
       </div>
 
@@ -984,9 +980,6 @@ html[dir="rtl"] .wa-fab {
 
 <!-- Toast notification -->
 <div class="toast" id="bc-toast" role="status" aria-live="polite"></div>
-
-<!-- QR Code library (qrcodejs) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
 'use strict';
@@ -1042,7 +1035,6 @@ var I18N = {
 /* ── State ── */
 var lang  = localStorage.getItem('bc-lang')  || 'en';
 var theme = localStorage.getItem('bc-theme') || 'dark';
-var qrDrawn = false;
 
 /* ── vCard ── */
 function vcard() {
@@ -1077,33 +1069,6 @@ function saveContact() {
   showToast(lang === 'ar'
     ? '✓ جاري تنزيل جهة الاتصال'
     : '✓ Contact saved');
-}
-
-/* ── QR Code ── */
-function drawQR() {
-  if (qrDrawn) return;
-  var el = document.getElementById('bc-qr');
-  if (!el || !window.QRCode) return;
-  try {
-    el.innerHTML = '';
-    new QRCode(el, {
-      text: vcard(),
-      width: 300,
-      height: 300,
-      colorDark:  '#14181A',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    /* Scale the generated img/canvas to the display size */
-    var child = el.firstElementChild;
-    if (child) {
-      child.style.width  = '116px';
-      child.style.height = '116px';
-    }
-    qrDrawn = true;
-  } catch(e) {
-    console.warn('QR generation failed:', e);
-  }
 }
 
 /* ── Share Card ── */
@@ -1252,19 +1217,6 @@ document.addEventListener('DOMContentLoaded', function() {
   /* Apply persisted prefs */
   applyLang(lang);
   applyTheme(theme);
-
-  /* Draw QR code */
-  if (window.QRCode) {
-    drawQR();
-  } else {
-    /* Wait for qrcodejs to load */
-    var scr = document.querySelector('script[src*="qrcode"]');
-    if (scr) {
-      scr.addEventListener('load', drawQR);
-    } else {
-      setTimeout(drawQR, 800);
-    }
-  }
 
   /* Company profile btn */
   initProfileBtn();
