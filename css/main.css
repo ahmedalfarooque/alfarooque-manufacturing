@@ -797,3 +797,84 @@ input,textarea,select{font-family:inherit;}
   .stat-i{border-right:none;padding-right:0;margin-right:0;border-bottom:1px solid var(--border-1);padding-bottom:16px;}
   .stat-i:last-child{border-bottom:none;padding-bottom:0;}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   DIVISION PAGES (Wood / Steel / Aluminium) — split from services
+   Component styles moved here so each dedicated page can use them.
+   ═══════════════════════════════════════════════════════════ */
+.svc-hero{position:relative;min-height:48vh;display:flex;align-items:flex-end;padding:calc(var(--nav-h) + 60px) var(--px) 60px;overflow:hidden;border-bottom:1px solid var(--border-1);}
+.svc-hero-bg{position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,145,168,0.09) 0%,rgba(11,15,22,0.75) 70%);z-index:0;}
+.svc-hero-img{position:absolute;top:-18%;left:0;right:0;height:136%;z-index:-1;will-change:transform;}
+.svc-hero-img img{width:100%;height:100%;object-fit:cover;opacity:0.25;}
+.svc-hero-num{position:absolute;right:var(--px);bottom:48px;font-family:var(--font-display);font-size:200px;font-weight:800;color:rgba(255,255,255,0.022);line-height:1;pointer-events:none;z-index:0;}
+.svc-hero-content{position:relative;z-index:1;}
+
+.cap-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:32px;}
+.cap-item{padding:18px 20px;background:var(--glass-1);border:1px solid var(--border-1);border-radius:var(--r-md);display:flex;align-items:flex-start;gap:12px;transition:transform var(--t2),box-shadow var(--t2),border-color var(--t2),background var(--t2);}
+.cap-item:hover{border-color:var(--border-teal);background:var(--glass-teal);transform:translateY(-4px);box-shadow:0 14px 34px -16px rgba(0,0,0,0.55);}
+.cap-dot{width:6px;height:6px;border-radius:50%;background:var(--teal-400);flex-shrink:0;margin-top:6px;}
+.cap-text{font-size:13px;color:var(--grey-400);line-height:1.5;}
+
+.machines-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:32px;}
+/* machinery card hover lift (base .machine-card styles live above) */
+.machine-card{transition:transform var(--t2),box-shadow var(--t2),border-color var(--t2);}
+.machine-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px -18px rgba(0,0,0,0.6);border-color:var(--border-teal);}
+
+/* ── Process: horizontal stepper w/ connecting line (vertical on mobile) ── */
+.process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:none;border:none;border-radius:0;overflow:visible;margin-top:40px;}
+.process-step{position:relative;background:none;padding:0 16px;text-align:center;transition:transform var(--t2);}
+.process-step::before{content:"";position:absolute;top:25px;right:50%;width:100%;height:2px;background:var(--border-1);z-index:0;}
+.process-step:first-child::before{display:none;}
+.process-step:hover{background:none;transform:translateY(-4px);}
+.ps-num{position:relative;z-index:1;width:52px;height:52px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--bg-base);border:1.5px solid var(--border-teal);font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--teal-300);transition:border-color var(--t2),box-shadow var(--t2);}
+.process-step:hover .ps-num{border-color:var(--teal-400);box-shadow:0 0 18px rgba(8,145,168,0.45);}
+.ps-name{font-size:14px;font-weight:600;color:#fff;margin-bottom:7px;}
+.ps-desc{font-size:12px;line-height:1.65;color:var(--grey-600);}
+
+/* ── Sticky breadcrumb / back to services ── */
+.breadcrumb{position:sticky;top:var(--nav-h);z-index:50;background:rgba(11,15,22,0.92);border-bottom:1px solid var(--border-1);padding:12px var(--px);}
+.breadcrumb-inner{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:0.04em;color:var(--grey-600);}
+.breadcrumb a{color:var(--grey-400);transition:color var(--t2);display:inline-flex;align-items:center;gap:6px;}
+.breadcrumb a:hover{color:var(--teal-300);}
+.breadcrumb .sep{color:var(--grey-700,#444);}
+.breadcrumb .current{color:var(--teal-300);}
+
+/* ── Tag/badge glow on hover ── */
+.tag{transition:box-shadow var(--t2),border-color var(--t2),background var(--t2),color var(--t2);}
+.tag:hover{border-color:var(--teal-400);box-shadow:0 0 14px rgba(8,145,168,0.45);color:#bdeef7;}
+
+/* ── Nav dropdown (Services → divisions) ── */
+.nav-links .has-dropdown{position:relative;}
+.nav-links .has-dropdown > a .caret{display:inline-block;margin-left:5px;font-size:9px;opacity:0.7;transition:transform var(--t2);}
+.nav-links .has-dropdown:hover > a .caret{transform:rotate(180deg);}
+.nav-dropdown{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(8px);min-width:188px;list-style:none;margin:0;padding:8px;background:var(--bg-base);border:1px solid var(--border-1);border-radius:var(--r-md);box-shadow:0 24px 60px -18px rgba(0,0,0,0.7);opacity:0;visibility:hidden;transition:opacity var(--t2),transform var(--t2),visibility var(--t2);}
+.nav-links .has-dropdown:hover .nav-dropdown,.nav-links .has-dropdown:focus-within .nav-dropdown{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
+.nav-dropdown li{margin:0;}
+.nav-dropdown a{display:block;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:500;letter-spacing:0.02em;color:var(--grey-400);white-space:nowrap;}
+.nav-dropdown a::after{display:none;}
+.nav-dropdown a:hover,.nav-dropdown a.active{background:rgba(8,145,168,0.10);color:var(--teal-300);}
+
+/* mobile sub-links under Services */
+.nav-mobile .nav-mobile-sub{display:block;font-size:13px;padding-left:18px;color:var(--grey-500);}
+.nav-mobile .nav-mobile-sub::before{content:"– ";opacity:0.5;}
+
+@media(max-width:900px){
+  .process-grid{grid-template-columns:repeat(2,1fr);gap:28px 0;}
+  .machines-mini{grid-template-columns:repeat(2,1fr);}
+  .cap-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .machines-mini{grid-template-columns:1fr;}
+  /* stepper → vertical with left connecting line */
+  .process-grid{grid-template-columns:1fr;gap:0;}
+  .process-step{display:grid;grid-template-columns:52px 1fr;grid-template-rows:auto auto;column-gap:16px;text-align:left;padding:0 0 26px;}
+  .process-step .ps-num{grid-row:1 / 3;margin:0;}
+  .process-step .ps-name{grid-column:2;align-self:center;}
+  .process-step .ps-desc{grid-column:2;}
+  .process-step::before{top:52px;left:25px;right:auto;width:2px;height:100%;}
+  .process-step:last-child::before{display:none;}
+}
+
+@media(prefers-reduced-motion: reduce){
+  .svc-hero-img{transform:none !important;}
+}
