@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<script>/* AL FAROOQUE: dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="تسوق منتجات الفاروقي للتصنيع — أعمال خشبية وحديدية وألومنيوم فاخرة. اطلب عبر الإنترنت مع توصيل من جدة، المملكة العربية السعودية.">
+<meta name="keywords" content="منتجات خشبية السعودية، حديد جدة، نوافذ ألومنيوم أبواب، الفاروقي للتصنيع، متجر IAAE">
+<meta property="og:title" content="المنتجات — الفاروقي للتصنيع">
+<meta property="og:description" content="اطلب منتجات الخشب والحديد والألومنيوم الفاخرة من الفاروقي للتصنيع، جدة.">
+<meta property="og:image" content="assets/images/gallery/gallery-01.jpg">
+<meta property="og:type" content="website">
+<title>المنتجات — الفاروقي للتصنيع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/rtl.css">
+<link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/products.css">
+<link rel="icon" href="assets/images/logo/IAA_LOGO.png" type="image/png">
+</head>
+<body>
+
+<!-- ── Scroll progress ── -->
+<div id="progress-bar"></div>
+<!-- ── Cursor glow ── -->
+<div id="cursor-glow"></div>
+
+<!-- ═══ PRELOADER ═══ -->
+<div id="preloader">
+  <img src="assets/images/logo/IAA_LOGO.png" alt="الفاروقي" width="72" class="preloader-logo">
+  <div class="preloader-bar"><div class="preloader-fill"></div></div>
+  <div class="preloader-text" style="font-family:'Cairo',sans-serif;">الفاروقي للتصنيع</div>
+</div>
+
+<!-- ═══ BACKGROUND ENV ═══ -->
+<div class="bg-env">
+  <div class="bg-grad"></div>
+  <div class="bg-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="geo g1"></div><div class="geo g2"></div><div class="geo g3"></div>
+  <div class="geo g4"></div><div class="geo g5"></div>
+  <div class="ray r1"></div><div class="ray r2"></div><div class="ray r3"></div>
+  <div class="particles"></div>
+</div>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav">
+  <a href="index-ar.html" class="nav-logo">
+    <img src="assets/images/logo/IAA_LOGO.png" alt="الفاروقي للصناعات">
+    <div class="nav-brand">
+      <span class="nav-brand-name">الفاروقي</span>
+      <span class="nav-brand-sub">للتصنيع · IAAE</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index-ar.html">الرئيسية</a></li>
+    <li><a href="pages/about-ar.html">من نحن</a></li>
+    <li class="has-dropdown"><a href="pages/services-ar.html">خدماتنا<span class="caret">▼</span></a>
+      <ul class="nav-dropdown">
+        <li><a href="pages/woodworks-ar.html">أعمال الخشب</a></li>
+        <li><a href="pages/steelworks-ar.html">أعمال الحديد</a></li>
+        <li><a href="pages/aluminium-ar.html">أعمال الألومنيوم</a></li>
+      </ul>
+    </li>
+    <li><a href="pages/gallery-ar.html">المعرض</a></li>
+    <li><a href="products-ar.html" class="active">المنتجات</a></li>
+    <li><a href="pages/contact-ar.html" class="nav-cta">تواصل معنا</a></li>
+  </ul>
+  <button class="nav-burger" aria-label="فتح القائمة">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-mobile">
+  <a href="index-ar.html">الرئيسية</a>
+  <a href="pages/about-ar.html">من نحن</a>
+  <a href="pages/services-ar.html">خدماتنا</a>
+  <a href="pages/woodworks-ar.html" class="nav-mobile-sub">أعمال الخشب</a>
+  <a href="pages/steelworks-ar.html" class="nav-mobile-sub">أعمال الحديد</a>
+  <a href="pages/aluminium-ar.html" class="nav-mobile-sub">أعمال الألومنيوم</a>
+  <a href="pages/gallery-ar.html">المعرض</a>
+  <a href="products-ar.html">المنتجات</a>
+  <a href="pages/contact-ar.html">تواصل معنا</a>
+</div>
+
+<!-- ═══ HERO SLIDER ═══ -->
+<section class="ph-hero" aria-label="عرض المنتجات">
+  <div class="ph-slider" id="phSlider">
+
+    <!-- Slide 1 — أعمال الخشب -->
+    <div class="ph-slide active" data-index="0">
+      <div class="ph-slide-bg" style="background-image:url('assets/images/gallery/gallery-01.jpg')"></div>
+      <div class="ph-slide-overlay"></div>
+      <div class="ph-slide-content">
+        <span class="ph-eyebrow">أعمال الخشب &middot; القسم 01</span>
+        <h1 class="ph-headline">حلول<br><span class="accent">نجارة فاخرة</span><br>متكاملة</h1>
+        <p class="ph-sub">نجارة مخصصة وأثاث وأعمال خشبية معمارية بأعلى المعايير السعودية والدولية.</p>
+        <div class="ph-cta">
+          <a href="#products" class="btn btn-primary">تسوق المنتجات <span class="arrow">→</span></a>
+          <a href="pages/contact-ar.html" class="btn btn-ghost">احصل على عرض <span class="arrow">→</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2 — أعمال الحديد -->
+    <div class="ph-slide" data-index="1">
+      <div class="ph-slide-bg" style="background-image:url('assets/images/gallery/gallery-10.jpg')"></div>
+      <div class="ph-slide-overlay"></div>
+      <div class="ph-slide-content">
+        <span class="ph-eyebrow">أعمال الحديد &middot; القسم 02</span>
+        <h1 class="ph-headline">تصنيع<br><span class="accent">حديد</span><br>مخصص</h1>
+        <p class="ph-sub">حديد هيكلي ودرابزين ومكونات معدنية دقيقة للمشاريع التجارية والصناعية.</p>
+        <div class="ph-cta">
+          <a href="#products" class="btn btn-primary">تسوق المنتجات <span class="arrow">→</span></a>
+          <a href="pages/contact-ar.html" class="btn btn-ghost">احصل على عرض <span class="arrow">→</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3 — أعمال الألومنيوم -->
+    <div class="ph-slide" data-index="2">
+      <div class="ph-slide-bg" style="background-image:url('assets/images/gallery/company-01.jpg')"></div>
+      <div class="ph-slide-overlay"></div>
+      <div class="ph-slide-content">
+        <span class="ph-eyebrow">أعمال الألومنيوم &middot; القسم 03</span>
+        <h1 class="ph-headline">تركيبات<br><span class="accent">ألومنيوم</span><br>حديثة</h1>
+        <p class="ph-sub">نوافذ وأبواب وواجهات زجاجية ألومنيوم معتمدة SASO بأعلى معايير الجودة.</p>
+        <div class="ph-cta">
+          <a href="#products" class="btn btn-primary">تسوق المنتجات <span class="arrow">→</span></a>
+          <a href="pages/contact-ar.html" class="btn btn-ghost">احصل على عرض <span class="arrow">→</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrows -->
+    <button class="ph-arrow ph-prev" id="phPrev" aria-label="الشريحة السابقة">&#8594;</button>
+    <button class="ph-arrow ph-next" id="phNext" aria-label="الشريحة التالية">&#8592;</button>
+
+    <!-- Dots -->
+    <div class="ph-dots" role="tablist" aria-label="تنقل الشرائح">
+      <button class="ph-dot active" data-index="0" role="tab" aria-label="الشريحة 1"></button>
+      <button class="ph-dot" data-index="1" role="tab" aria-label="الشريحة 2"></button>
+      <button class="ph-dot" data-index="2" role="tab" aria-label="الشريحة 3"></button>
+    </div>
+
+    <!-- Progress -->
+    <div class="ph-progress" id="phProgress"></div>
+  </div>
+</section>
+
+<!-- ═══ PRODUCTS ═══ -->
+<section class="products-section" id="products" style="border-top:1px solid var(--bd);">
+  <div class="container">
+
+    <!-- Section header -->
+    <div class="prod-section-header reveal">
+      <div class="section-label" style="justify-content:center;">منتجاتنا</div>
+      <h2 class="section-title" style="margin-bottom:12px;">مُصنَّع ليبهر <span class="accent">عيونكم</span></h2>
+      <p class="section-body" style="max-width:560px;margin:0 auto;">
+        اطلب منتجات خشبية وحديدية وألومنيوم مُصنَّعة بدقة عالية مباشرةً من مصنعنا في جدة. أحجام وتشطيبات ومواصفات مخصصة متاحة.
+      </p>
+    </div>
+
+    <!-- Filters -->
+    <div class="prod-filters" role="group" aria-label="فلاتر الفئات">
+      <button class="prod-filter active" data-cat="all">جميع المنتجات</button>
+      <button class="prod-filter" data-cat="wood">أعمال الخشب</button>
+      <button class="prod-filter" data-cat="steel">أعمال الحديد</button>
+      <button class="prod-filter" data-cat="aluminium">أعمال الألومنيوم</button>
+    </div>
+
+    <!-- Product Grid — populated by products.js -->
+    <div class="prod-grid" id="prodGrid"></div>
+
+  </div>
+</section>
+
+<!-- ═══ CTA BAND ═══ -->
+<section style="position:relative;z-index:1;padding:80px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);">
+  <div class="container">
+    <div style="text-align:center;max-width:640px;margin:0 auto;">
+      <div class="section-label reveal" style="justify-content:center;">طلبات مخصصة</div>
+      <h2 class="section-title reveal d1">تحتاج مواصفات <span class="accent">مخصصة؟</span></h2>
+      <p class="section-body reveal d2" style="margin:0 auto 36px;text-align:center;">فريق خبرائنا يمكنه تصنيع منتجات حسب أبعادك وتشطيباتك ومتطلباتك الهندسية الدقيقة. تواصل معنا للحصول على عرض سعر مخصص.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;" class="reveal d3">
+        <a href="pages/contact-ar.html" class="btn btn-primary" data-mag>اطلب عرض سعر مخصص <span class="arrow">→</span></a>
+        <a href="pages/services-ar.html" class="btn btn-ghost">خدماتنا <span class="arrow">↗</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRODUCT MODAL ═══ -->
+<div class="prod-modal" id="prodModal" role="dialog" aria-modal="true" aria-label="تفاصيل المنتج">
+  <div class="prod-modal-bd" id="prodModalBd"></div>
+  <div class="pm-inner">
+    <button class="pm-close" id="pmClose" aria-label="إغلاق">&#215;</button>
+
+    <!-- Gallery Side -->
+    <div class="pm-gallery-side">
+      <div class="pm-main-img">
+        <img id="pmMainImg" src="" alt="صورة المنتج">
+      </div>
+      <div class="pm-thumbs" id="pmThumbs"></div>
+    </div>
+
+    <!-- Info Side -->
+    <div class="pm-info-side">
+      <div class="pm-cat" id="pmCat"></div>
+      <div class="pm-title" id="pmTitle"></div>
+      <div class="pm-price" id="pmPrice"></div>
+      <p class="pm-desc" id="pmDesc"></p>
+      <div class="pm-specs" id="pmSpecs"></div>
+      <div class="pm-qty-row">
+        <span class="pm-qty-label">الكمية</span>
+        <div class="pm-qty-ctrl">
+          <button class="pm-qty-btn" id="pmQtyMinus" aria-label="تقليل">&#8722;</button>
+          <div class="pm-qty-num" id="pmQtyNum">1</div>
+          <button class="pm-qty-btn" id="pmQtyPlus" aria-label="زيادة">&#43;</button>
+        </div>
+        <div class="pm-total" id="pmTotal"></div>
+      </div>
+      <div class="pm-actions">
+        <button class="btn-add-cart" id="pmAddCart">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+          أضف إلى السلة
+        </button>
+        <button class="btn-order-now" id="pmOrderNow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          اطلب الآن
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CART FAB ═══ -->
+<button class="cart-fab" id="cartFab" aria-label="فتح سلة التسوق">
+  <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+  <span class="cart-fab-badge" id="cartFabBadge">0</span>
+</button>
+
+<!-- ═══ CART BACKDROP + DRAWER ═══ -->
+<div class="cart-backdrop" id="cartBackdrop"></div>
+<aside class="cart-drawer" id="cartDrawer" role="dialog" aria-label="سلة التسوق">
+  <div class="cart-dr-header">
+    <div>
+      <div class="cart-dr-title">سلة التسوق</div>
+      <div class="cart-dr-count" id="cartDrCount">0 منتج</div>
+    </div>
+    <button class="cart-dr-close" id="cartClose" aria-label="إغلاق السلة">&#215;</button>
+  </div>
+  <div class="cart-dr-items" id="cartItemsList"></div>
+  <div class="cart-dr-footer">
+    <div class="cart-total-rows">
+      <div class="cart-total-row">
+        <span>المجموع الجزئي</span>
+        <span id="cartSubtotal">0 ريال</span>
+      </div>
+      <div class="cart-total-row">
+        <span>التوصيل</span>
+        <span style="color:var(--pr-2);">عند الطلب</span>
+      </div>
+      <div class="cart-total-row grand">
+        <span>الإجمالي</span>
+        <span id="cartGrandTotal">0 ريال</span>
+      </div>
+    </div>
+    <button class="cart-proceed-btn" id="cartProceed" disabled>
+      متابعة الطلب →
+    </button>
+  </div>
+</aside>
+
+<!-- ═══ ORDER MODAL ═══ -->
+<div class="order-modal" id="orderModal" role="dialog" aria-modal="true" aria-label="تقديم الطلب">
+  <div class="order-modal-bd" id="orderModalBd"></div>
+  <div class="om-inner">
+    <div class="om-hd">
+      <div class="om-hd-text">
+        <div class="om-title">تقديم طلبك</div>
+        <div class="om-sub">سنؤكد طلبك عبر واتساب أو البريد الإلكتروني</div>
+      </div>
+      <button class="om-close" id="omClose" aria-label="إغلاق">&#215;</button>
+    </div>
+
+    <!-- Product Preview -->
+    <div class="om-product-preview">
+      <img id="omProdImg" src="" alt="المنتج">
+      <div>
+        <div class="om-pp-name" id="omProdName"></div>
+        <div class="om-pp-price" id="omProdPrice"></div>
+        <div class="om-pp-note" id="omProdNote"></div>
+      </div>
+    </div>
+
+    <!-- Order Form -->
+    <form class="om-form" id="omForm" onsubmit="return false;">
+      <div class="om-row">
+        <div class="om-field">
+          <label class="om-label" for="omName">الاسم الكامل *</label>
+          <input class="om-input" type="text" id="omName" name="name" placeholder="اسمك" required autocomplete="name">
+        </div>
+        <div class="om-field">
+          <label class="om-label" for="omPhone">رقم الهاتف *</label>
+          <input class="om-input" type="tel" id="omPhone" name="phone" placeholder="+966 5X XXX XXXX" required autocomplete="tel">
+        </div>
+      </div>
+      <div class="om-field">
+        <label class="om-label" for="omEmail">البريد الإلكتروني</label>
+        <input class="om-input" type="email" id="omEmail" name="email" placeholder="your@email.com" autocomplete="email">
+      </div>
+
+      <!-- Quantity -->
+      <div id="omQtySection">
+        <div class="om-label" style="margin-bottom:8px;">الكمية</div>
+        <div class="om-qty-wrap">
+          <div class="om-qty-ctrl">
+            <button class="om-qty-btn" id="omQtyMinus" type="button">&#8722;</button>
+            <div class="om-qty-val" id="omQtyVal">1</div>
+            <button class="om-qty-btn" id="omQtyPlus" type="button">&#43;</button>
+          </div>
+          <div class="om-total-line" id="omTotalLine" style="flex:1;">
+            <span>الإجمالي</span><span>0 ريال</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="om-field">
+        <label class="om-label" for="omMsg">رسالة (اختياري)</label>
+        <textarea class="om-textarea" id="omMsg" name="message" placeholder="متطلبات خاصة، أبعاد، تشطيبات مفضلة..."></textarea>
+      </div>
+
+      <div class="om-actions">
+        <button class="om-wa-btn" id="omWaBtn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          واتساب
+        </button>
+        <button class="om-em-btn" id="omEmBtn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          بريد إلكتروني
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-brand">
+    <div class="footer-logo-row">
+      <img src="assets/images/logo/IAA_LOGO.png" alt="IAA Logo">
+      <span class="footer-name">الفاروقي للتصنيع</span>
+    </div>
+    <p class="footer-tag">تصنيع دقيق يشمل أعمال الخشب والحديد والألومنيوم — نخدم المملكة العربية السعودية والمنطقة. جزء من مجموعة الفاروقي للصناعات (IAAE).</p>
+    <div class="footer-social">
+      <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+      <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
+      <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+      <a href="https://wa.me/966563000051" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+    </div>
+  </div>
+  <div>
+    <div class="footer-col-h">التنقل</div>
+    <ul class="footer-links">
+      <li><a href="index-ar.html">الرئيسية</a></li>
+      <li><a href="pages/about-ar.html">من نحن</a></li>
+      <li><a href="pages/services-ar.html">خدماتنا</a></li>
+      <li><a href="pages/gallery-ar.html">المعرض</a></li>
+      <li><a href="products-ar.html">المنتجات</a></li>
+      <li><a href="pages/contact-ar.html">تواصل معنا</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-h">المنتجات</div>
+    <ul class="footer-links">
+      <li><a href="products-ar.html">منتجات الخشب</a></li>
+      <li><a href="products-ar.html">منتجات الحديد</a></li>
+      <li><a href="products-ar.html">منتجات الألومنيوم</a></li>
+      <li><a href="pages/about-ar.html#certifications">الشهادات</a></li>
+      <li><a href="pages/contact-ar.html">اطلب عرض سعر</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-h">تواصل معنا</div>
+    <ul class="footer-links">
+      <li><a href="pages/contact-ar.html">المكتب الرئيسي – جدة</a></li>
+      <li><a href="pages/contact-ar.html">مصنع أعمال الخشب</a></li>
+      <li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li>
+      <li><a href="tel:+966563000051">+966 56 300 0051</a></li>
+      <li><a href="https://wa.me/966563000051">واتساب</a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© <span id="current-year"></span> الفاروقي للتصنيع — الفاروقي للصناعات (IAAE). جميع الحقوق محفوظة. جدة، المملكة العربية السعودية.</span>
+    <div class="footer-badges">
+      <span class="footer-badge">SASO</span>
+      <span class="footer-badge">FD60</span>
+      <span class="footer-badge">MIM</span>
+      <span class="footer-badge">ISO</span>
+      <span class="footer-badge">رؤية 2030</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script src="js/language-switcher.js"></script>
+<script src="js/theme-switcher.js"></script>
+<script src="js/products.js"></script>
+</body>
+</html>

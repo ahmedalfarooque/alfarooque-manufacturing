@@ -329,3 +329,19 @@ html[dir="rtl"] .lang-btn.ar-btn {
   border-left: none;
   border-right: 1px solid var(--t-border-1, rgba(255,255,255,0.06));
 }
+
+/* ── Division pages (Wood/Steel/Aluminium) — RTL overrides ── */
+html[dir="rtl"] .svc-hero-num { right: auto; left: var(--px); }
+html[dir="rtl"] .svc-hero-content { text-align: right; }
+html[dir="rtl"] .nav-links .has-dropdown > a .caret { margin-left: 0; margin-right: 5px; }
+html[dir="rtl"] .breadcrumb-inner { direction: rtl; }
+html[dir="rtl"] .cap-item { flex-direction: row-reverse; text-align: right; }
+html[dir="rtl"] .cap-text { text-align: right; }
+html[dir="rtl"] .process-step::before { right: auto; left: 50%; }
+@media (max-width: 600px) {
+  html[dir="rtl"] .process-step { grid-template-columns: 1fr 52px; text-align: right; }
+  html[dir="rtl"] .process-step .ps-num { grid-column: 2; }
+  html[dir="rtl"] .process-step .ps-name,
+  html[dir="rtl"] .process-step .ps-desc { grid-column: 1; }
+  html[dir="rtl"] .process-step::before { left: auto; right: 25px; }
+}

@@ -1,9 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <script>/* AL FAROOQUE: dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="description" content="خدمات الفاروقي للتصنيع — الأعمال الخشبية والأعمال الحديدية والأعمال الألومنيوم في جدة، المملكة العربية السعودية.">
+<meta name="description" content="خدمات الفاروقي للتصنيع — ثلاثة أقسام متخصصة: الأعمال الخشبية والأعمال الحديدية والأعمال الألومنيوم في جدة، المملكة العربية السعودية.">
+<meta name="keywords" content="أقسام التصنيع, الأعمال الخشبية, الأعمال الحديدية, الأعمال الألومنيوم, جدة, الفاروقي, IAAE">
+<meta property="og:title" content="خدماتنا — الفاروقي للتصنيع">
+<meta property="og:description" content="ثلاثة أقسام متخصصة. معيار واحد موحد للدقة والجودة والحرفية.">
+<meta property="og:image" content="../assets/images/gallery/profile-01.jpg">
+<meta property="og:type" content="website">
 <title>خدماتنا — الفاروقي للتصنيع</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -11,38 +16,35 @@
 <link rel="stylesheet" href="../css/rtl.css">
 <link rel="stylesheet" href="../css/themes.css">
 <link rel="icon" href="../assets/images/logo/IAA_LOGO.png">
-<style>
-.svc-hero{position:relative;min-height:48vh;display:flex;align-items:flex-end;padding:calc(var(--nav-h)+60px) var(--px) 60px;overflow:hidden;border-bottom:1px solid var(--border-1);}
-.svc-hero-bg{position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,145,168,0.09) 0%,rgba(11,15,22,0.75) 70%);z-index:0;}
-.svc-hero-img{position:absolute;inset:0;z-index:-1;}
-.svc-hero-img img{width:100%;height:100%;object-fit:cover;opacity:0.25;}
-.svc-hero-num{position:absolute;left:var(--px);bottom:48px;font-family:'Tajawal',sans-serif;font-size:200px;font-weight:800;color:rgba(255,255,255,0.022);line-height:1;pointer-events:none;z-index:0;}
-.svc-hero-content{position:relative;z-index:1;text-align:right;}
-.process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-1);border-radius:var(--r-lg);overflow:hidden;margin-top:40px;direction:rtl;}
-.process-step{background:var(--bg-base);padding:30px 24px;transition:background var(--t2);text-align:right;}
-.process-step:hover{background:rgba(8,145,168,0.05);}
-.ps-num{font-family:'Tajawal',sans-serif;font-size:40px;font-weight:800;color:rgba(8,145,168,0.20);margin-bottom:12px;line-height:1;}
-.ps-name{font-size:14px;font-weight:600;color:#fff;margin-bottom:7px;}
-.ps-desc{font-size:12px;line-height:1.75;color:var(--grey-600);}
-.cap-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:32px;direction:rtl;}
-.cap-item{padding:18px 20px;background:var(--glass-1);border:1px solid var(--border-1);border-radius:var(--r-md);display:flex;align-items:flex-start;gap:12px;flex-direction:row-reverse;transition:all var(--t2);}
-.cap-item:hover{border-color:var(--border-teal);background:var(--glass-teal);}
-.cap-dot{width:6px;height:6px;border-radius:50%;background:var(--teal-400);flex-shrink:0;margin-top:6px;}
-.cap-text{font-size:13px;color:var(--grey-400);line-height:1.6;text-align:right;}
-@media(max-width:900px){.process-grid{grid-template-columns:repeat(2,1fr);}.cap-grid{grid-template-columns:1fr;}}
-@media(max-width:600px){.process-grid{grid-template-columns:1fr;}}
-</style>
 </head>
 <body>
 <div id="progress-bar"></div><div id="cursor-glow"></div>
 <div class="bg-env"><div class="bg-grad"></div><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="geo g1"></div><div class="ray r1"></div><div class="particles"></div></div>
-
 <nav class="nav">
   <a href="../index-ar.html" class="nav-logo"><img src="../assets/images/logo/IAA_LOGO.png" alt="الفاروقي"><div class="nav-brand"><span class="nav-brand-name">الفاروقي</span><span class="nav-brand-sub">للتصنيع · IAAE</span></div></a>
-  <ul class="nav-links"><li><a href="../index-ar.html">الرئيسية</a></li><li><a href="about-ar.html">من نحن</a></li><li><a href="services-ar.html" class="active">خدماتنا</a></li><li><a href="gallery-ar.html">معرض الأعمال</a></li><li><a href="contact-ar.html" class="nav-cta">اتصل بنا</a></li></ul>
+  <ul class="nav-links">
+    <li><a href="../index-ar.html">الرئيسية</a></li>
+    <li><a href="about-ar.html">من نحن</a></li>
+    <li class="has-dropdown"><a href="services-ar.html" class="active">خدماتنا<span class="caret">▼</span></a>
+      <ul class="nav-dropdown">
+        <li><a href="woodworks-ar.html">الأعمال الخشبية</a></li>
+        <li><a href="steelworks-ar.html">الأعمال الحديدية</a></li>
+        <li><a href="aluminium-ar.html">الأعمال الألومنيوم</a></li>
+      </ul>
+    </li>
+    <li><a href="gallery-ar.html">معرض الأعمال</a></li>
+    <li><a href="../products-ar.html">المنتجات</a></li>
+    <li><a href="contact-ar.html" class="nav-cta">اتصل بنا</a></li>
+  </ul>
   <button class="nav-burger"><span></span><span></span><span></span></button>
 </nav>
-<div class="nav-mobile"><a href="../index-ar.html">الرئيسية</a><a href="about-ar.html">من نحن</a><a href="services-ar.html">خدماتنا</a><a href="gallery-ar.html">معرض الأعمال</a><a href="contact-ar.html">اتصل بنا</a></div>
+<div class="nav-mobile">
+  <a href="../index-ar.html">الرئيسية</a><a href="about-ar.html">من نحن</a><a href="services-ar.html">خدماتنا</a>
+  <a href="woodworks-ar.html" class="nav-mobile-sub">الأعمال الخشبية</a>
+  <a href="steelworks-ar.html" class="nav-mobile-sub">الأعمال الحديدية</a>
+  <a href="aluminium-ar.html" class="nav-mobile-sub">الأعمال الألومنيوم</a>
+  <a href="gallery-ar.html">معرض الأعمال</a><a href="../products-ar.html">المنتجات</a><a href="contact-ar.html">اتصل بنا</a>
+</div>
 
 <div class="page-hero">
   <div class="container">
@@ -52,133 +54,59 @@
   </div>
 </div>
 
-<!-- الأعمال الخشبية -->
-<section id="wood" style="position:relative;z-index:1;">
-  <div class="svc-hero">
-    <div class="svc-hero-img"><img src="../assets/images/gallery/gallery-01.jpg" alt="الأعمال الخشبية"></div>
-    <div class="svc-hero-bg"></div>
-    <div class="svc-hero-num">١</div>
-    <div class="svc-hero-content container">
-      <div class="eyebrow">القسم الأول</div>
-      <h2 style="font-family:'Tajawal',sans-serif;font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1.1;letter-spacing:0;">الأعمال <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">الخشبية</span></h2>
-    </div>
-  </div>
-  <div class="section-pad" style="border-bottom:1px solid var(--border-1);">
-    <div class="container">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;direction:rtl;" class="reveal">
-        <div>
-          <h3 style="font-family:'Tajawal',sans-serif;font-size:28px;font-weight:700;margin-bottom:16px;">نجارة دقيقة وتجهيزات داخلية</h3>
-          <p style="font-size:15px;line-height:2.0;color:var(--grey-500);margin-bottom:16px;">ينتج قسم الأعمال الخشبية لدينا نجارة مخصصة وأعمالاً خشبية معمارية وأثاثاً مدمجاً وتجهيزات داخلية كاملة وأبواباً خشبية مقاومة للحريق باستخدام أحدث آلات CNC وعلى يد حرفيين مهرة في مصنعنا المخصص بجدة.</p>
-          <p style="font-size:15px;line-height:2.0;color:var(--grey-500);">كل منتج يصنَّع وفق معايير SASO وشروط السلامة من الحريق FD60.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;justify-content:flex-end;">
-            <span class="tag">تصنيع CNC</span><span class="tag">نجارة مخصصة</span><span class="tag">تجهيزات داخلية</span><span class="tag">أبواب مقاومة للحريق</span><span class="tag">معتمد SASO</span>
-          </div>
+<section class="section-pad" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="svc-grid">
+      <a href="woodworks-ar.html" class="svc-card sweep reveal d1" data-tilt style="text-decoration:none;">
+        <div class="svc-glow"></div>
+        <span class="svc-num">١</span>
+        <div class="svc-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
         </div>
-        <div class="cap-grid">
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">نجارة مخصصة للمشاريع السكنية والتجارية</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">تجهيزات داخلية شاملة تضمّ الأسقف والتجليد</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أبواب خشبية مقاومة للحريق FD60 معتمدة من الدفاع المدني</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أثاث مدمج وخزانات مكتبية وطاولات استقبال</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">لوحات وشاشات زخرفية بتقنية CNC</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أعمال القشرة الخشبية وإنهاء الأسطح الفاخرة</span></div>
+        <h2 class="svc-title">الأعمال الخشبية</h2>
+        <p class="svc-desc">حلول متكاملة في النجارة المعمارية والأثاث المخصص والتجهيزات الداخلية وأبواب مقاومة للحريق باستخدام أحدث تقنيات التصنيع.</p>
+        <div class="svc-tags">
+          <span class="tag">تصنيع CNC</span>
+          <span class="tag">نجارة مخصصة</span>
+          <span class="tag">تجهيزات داخلية</span>
+          <span class="tag">أبواب FD60</span>
         </div>
-      </div>
-      <div class="reveal" style="margin-top:60px;">
-        <h3 style="font-family:'Tajawal',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px;">مراحل التصنيع</h3>
-        <div class="process-grid">
-          <div class="process-step"><div class="ps-num">١</div><div class="ps-name">التصميم والهندسة</div><div class="ps-desc">الرسومات التقنية واختيار المواد وضمان الجودة.</div></div>
-          <div class="process-step"><div class="ps-num">٢</div><div class="ps-name">القطع بتقنية CNC</div><div class="ps-desc">تصنيع دقيق للألواح والملفات بآلات CNC.</div></div>
-          <div class="process-step"><div class="ps-num">٣</div><div class="ps-name">الإنهاء والتجميع</div><div class="ps-desc">صنفرة وطلاء وقشرة وتغليف حواف.</div></div>
-          <div class="process-step"><div class="ps-num">٤</div><div class="ps-name">مراقبة الجودة والتسليم</div><div class="ps-desc">فحص جودة كامل وتركيب في الموقع.</div></div>
-        </div>
-      </div>
-      <div style="margin-top:48px;" class="reveal"><a href="contact-ar.html" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر للأعمال الخشبية <span class="arrow">←</span></a></div>
-    </div>
-  </div>
-</section>
+        <span class="svc-link">اكتشف القسم ←</span>
+      </a>
 
-<!-- الأعمال الحديدية -->
-<section id="steel" style="position:relative;z-index:1;background:rgba(255,255,255,0.012);">
-  <div class="svc-hero">
-    <div class="svc-hero-img"><img src="../assets/images/gallery/gallery-09.jpg" alt="الأعمال الحديدية"></div>
-    <div class="svc-hero-bg"></div>
-    <div class="svc-hero-num">٢</div>
-    <div class="svc-hero-content container">
-      <div class="eyebrow">القسم الثاني</div>
-      <h2 style="font-family:'Tajawal',sans-serif;font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1.1;letter-spacing:0;">الأعمال <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">الحديدية</span></h2>
-    </div>
-  </div>
-  <div class="section-pad" style="border-bottom:1px solid var(--border-1);">
-    <div class="container">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;direction:rtl;" class="reveal">
-        <div>
-          <h3 style="font-family:'Tajawal',sans-serif;font-size:28px;font-weight:700;margin-bottom:16px;">هياكل معدنية وتصنيع متخصص</h3>
-          <p style="font-size:15px;line-height:2.0;color:var(--grey-500);margin-bottom:16px;">يتخصص قسم الأعمال الحديدية في تصنيع الهياكل المعدنية وأبواب الفولاذ المقاومة للحريق والكسوات المعدنية والسلالم والدرابزين والمكونات المعدنية المخصصة للمشاريع التجارية والصناعية والسكنية في جميع أنحاء المملكة.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;justify-content:flex-end;">
-            <span class="tag">هياكل معدنية</span><span class="tag">أبواب FD60</span><span class="tag">كسوات معدنية</span><span class="tag">سلالم</span><span class="tag">درابزين</span>
-          </div>
+      <a href="steelworks-ar.html" class="svc-card sweep reveal d2" data-tilt style="text-decoration:none;">
+        <div class="svc-glow"></div>
+        <span class="svc-num">٢</span>
+        <div class="svc-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
         </div>
-        <div class="cap-grid">
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أعمدة وعوارض وتجميعات فولاذية هيكلية مخصصة</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أبواب فولاذية مقاومة للحريق FD60 وفق مواصفات الدفاع المدني</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أنظمة كسوة معدنية خارجية وداخلية للواجهات</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">سلالم فولاذية مخصصة وأنظمة درابزين وحواجز حماية</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">قطع بتقنيات البلازما والليزر للدقة القصوى</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">طلاء بودرة وتشطيبات مطلية وفق المواصفات</span></div>
+        <h2 class="svc-title">الأعمال الحديدية</h2>
+        <p class="svc-desc">حلول متقدمة في تصنيع الهياكل المعدنية والأبواب المقاومة للحريق والكسوات المعدنية والسلالم والدرابزين للمشاريع التجارية والصناعية.</p>
+        <div class="svc-tags">
+          <span class="tag">هياكل معدنية</span>
+          <span class="tag">أبواب مقاومة للحريق</span>
+          <span class="tag">كسوات معدنية</span>
+          <span class="tag">سلالم</span>
         </div>
-      </div>
-      <div class="reveal" style="margin-top:60px;">
-        <div class="process-grid">
-          <div class="process-step"><div class="ps-num">١</div><div class="ps-name">التصميم الهندسي</div><div class="ps-desc">رسومات المصنع والحسابات الإنشائية والمشتريات.</div></div>
-          <div class="process-step"><div class="ps-num">٢</div><div class="ps-name">القطع والتشكيل</div><div class="ps-desc">قطع بلازما/ليزر والثني وتدحريج المعادن.</div></div>
-          <div class="process-step"><div class="ps-num">٣</div><div class="ps-name">اللحام والتجميع</div><div class="ps-desc">لحام MIG/TIG بواسطة ملحامين معتمدين.</div></div>
-          <div class="process-step"><div class="ps-num">٤</div><div class="ps-name">الطلاء والتركيب</div><div class="ps-desc">صرامة وتمهيد وطلاء وتركيب في الموقع.</div></div>
-        </div>
-      </div>
-      <div style="margin-top:48px;" class="reveal"><a href="contact-ar.html" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر للأعمال الحديدية <span class="arrow">←</span></a></div>
-    </div>
-  </div>
-</section>
+        <span class="svc-link">اكتشف القسم ←</span>
+      </a>
 
-<!-- الأعمال الألومنيوم -->
-<section id="aluminium" style="position:relative;z-index:1;">
-  <div class="svc-hero">
-    <div class="svc-hero-img"><img src="../assets/images/gallery/gallery-15.jpg" alt="الأعمال الألومنيوم"></div>
-    <div class="svc-hero-bg"></div>
-    <div class="svc-hero-num">٣</div>
-    <div class="svc-hero-content container">
-      <div class="eyebrow">القسم الثالث</div>
-      <h2 style="font-family:'Tajawal',sans-serif;font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1.1;letter-spacing:0;">الأعمال <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">الألومنيوم</span></h2>
-    </div>
-  </div>
-  <div class="section-pad">
-    <div class="container">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;direction:rtl;" class="reveal">
-        <div>
-          <h3 style="font-family:'Tajawal',sans-serif;font-size:28px;font-weight:700;margin-bottom:16px;">واجهات وتزجيج وفواصل</h3>
-          <p style="font-size:15px;line-height:2.0;color:var(--grey-500);margin-bottom:16px;">يقدم قسم الأعمال الألومنيوم أنظمة واجهات ألومنيوم عالية الأداء وستائر زجاجية وفواصل زجاجية وأبواباً ونوافذ وعناصر ألومنيوم معمارية — معتمدة وفق المعايير السعودية SASO للسوق المحلي.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;justify-content:flex-end;">
-            <span class="tag">واجهات زجاجية</span><span class="tag">معتمد SASO</span><span class="tag">تزجيج</span><span class="tag">فواصل</span><span class="tag">عزل حراري</span>
-          </div>
+      <a href="aluminium-ar.html" class="svc-card sweep reveal d3" data-tilt style="text-decoration:none;">
+        <div class="svc-glow"></div>
+        <span class="svc-num">٣</span>
+        <div class="svc-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
         </div>
-        <div class="cap-grid">
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أنظمة الستائر الزجاجية الموحّدة والعصوية للأبراج التجارية</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">كسوة ألومنيوم معمارية وأنظمة واجهات ذات تهوية طبيعية</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أبواب ونوافذ ألومنيوم ذات عزل حراري مزدوج وشبكات تهوية</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أنظمة فواصل زجاجية مؤطرة وبدون إطار للمكاتب</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">تزجيج مزدوج وثلاثي لأداء حراري متميز</span></div>
-          <div class="cap-item"><span class="cap-dot"></span><span class="cap-text">أكسدة أو طلاء بودرة بمواصفات RAL اللونية</span></div>
+        <h2 class="svc-title">الأعمال الألومنيوم</h2>
+        <p class="svc-desc">أنظمة واجهات ألومنيوم عالية الأداء وستائر زجاجية وفواصل زجاجية وأبواب ونوافذ وعناصر ألومنيوم معمارية — معتمدة وفق المعايير السعودية.</p>
+        <div class="svc-tags">
+          <span class="tag">واجهات زجاجية</span>
+          <span class="tag">معتمد SASO</span>
+          <span class="tag">تزجيج</span>
+          <span class="tag">أنظمة ستائر</span>
         </div>
-      </div>
-      <div class="reveal" style="margin-top:60px;">
-        <div class="process-grid">
-          <div class="process-step"><div class="ps-num">١</div><div class="ps-name">تصميم النظام</div><div class="ps-desc">هندسة الواجهات والنمذجة الحرارية وتحليل أحمال الرياح.</div></div>
-          <div class="process-step"><div class="ps-num">٢</div><div class="ps-name">البثق والقطع</div><div class="ps-desc">قطع ألومنيوم دقيق وتصنيع CNC.</div></div>
-          <div class="process-step"><div class="ps-num">٣</div><div class="ps-name">معالجة السطح</div><div class="ps-desc">أكسدة أو طلاء بودرة وفق مواصفات اللون.</div></div>
-          <div class="process-step"><div class="ps-num">٤</div><div class="ps-name">التزجيج والتركيب</div><div class="ps-desc">ختم السيليكون والتركيب في الموقع.</div></div>
-        </div>
-      </div>
-      <div style="margin-top:48px;" class="reveal"><a href="contact-ar.html" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر للأعمال الألومنيوم <span class="arrow">←</span></a></div>
+        <span class="svc-link">اكتشف القسم ←</span>
+      </a>
     </div>
   </div>
 </section>
@@ -186,12 +114,11 @@
 <footer class="footer">
   <div class="footer-brand"><div class="footer-logo-row"><img src="../assets/images/logo/IAA_LOGO.png" alt="الفاروقي" style="width:36px;"><span class="footer-name">الفاروقي للتصنيع</span></div><p class="footer-tag">الفاروقي للصناعات (IAAE) — جدة، المملكة العربية السعودية.</p></div>
   <div><div class="footer-col-h">التنقل</div><ul class="footer-links"><li><a href="../index-ar.html">الرئيسية</a></li><li><a href="about-ar.html">من نحن</a></li><li><a href="services-ar.html">خدماتنا</a></li><li><a href="gallery-ar.html">معرض الأعمال</a></li><li><a href="contact-ar.html">اتصل بنا</a></li></ul></div>
-  <div><div class="footer-col-h">الأقسام</div><ul class="footer-links"><li><a href="#wood">الأعمال الخشبية</a></li><li><a href="#steel">الأعمال الحديدية</a></li><li><a href="#aluminium">الأعمال الألومنيوم</a></li></ul></div>
-  <div><div class="footer-col-h">اتصل بنا</div><ul class="footer-links"><li><a href="contact-ar.html">المكتب الرئيسي – جدة</a></li><li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li></ul></div>
+  <div><div class="footer-col-h">الأقسام</div><ul class="footer-links"><li><a href="woodworks-ar.html">الأعمال الخشبية</a></li><li><a href="steelworks-ar.html">الأعمال الحديدية</a></li><li><a href="aluminium-ar.html">الأعمال الألومنيوم</a></li></ul></div>
+  <div><div class="footer-col-h">اتصل بنا</div><ul class="footer-links"><li><a href="contact-ar.html">المكتب الرئيسي – جدة</a></li><li><a href="mailto:info@alfarooque.com">info@alfarooque.com</a></li></ul></div>
   <div class="footer-bottom"><span class="footer-copy">جميع الحقوق محفوظة © <span id="current-year"></span> الفاروقي للتصنيع — IAAE.</span><div class="footer-badges"><span class="footer-badge">SASO</span><span class="footer-badge">FD60</span><span class="footer-badge">MIM</span><span class="footer-badge">رؤية 2030</span></div></div>
 </footer>
 <script src="../js/main.js"></script>
-
 <script src="../js/language-switcher.js"></script>
 <script src="../js/theme-switcher.js"></script>
 </body>
