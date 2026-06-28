@@ -1,0 +1,10 @@
+{
+  "name": "alfarooque-manufacturing",
+  "version": "1.0.0",
+  "description": "AL FAROOQUE Manufacturing — static website with Node.js dev server",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "private": true
+}

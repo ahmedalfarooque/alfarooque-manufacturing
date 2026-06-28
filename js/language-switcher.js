@@ -1,11 +1,14 @@
 /* ═══════════════════════════════════════════════════════
-   AL FAROOQUE MANUFACTURING — LANGUAGE SWITCHER v5.0
-   ▸ English is ALWAYS the landing language (every page opens in English)
-   ▸ Arabic is opt-in only — loads when the user clicks ع / uses AR links
-   ▸ No auto-redirect: a saved choice is never forced on load
-   ▸ Convention-based pairing  x.html ⇄ x-ar.html
-     → switcher works on EVERY page automatically (incl. future pages)
+   AL FAROOQUE MANUFACTURING — LANGUAGE SWITCHER v7.0
+   ▸ English is ALWAYS the landing language
+   ▸ Arabic pages use the -ar filename convention:
+       /                    ⇄  /index-ar.html
+       /pages/about.html    ⇄  /pages/about-ar.html
+       /products.html       ⇄  /products-ar.html
    ▸ Keeps the user on the SAME page when switching
+   ▸ Saves selected language to localStorage("language")
+   ▸ Works with both file paths (/pages/x.html) and
+     Vercel clean URLs (/pages/x) — extension is preserved
    ═══════════════════════════════════════════════════════ */
 'use strict';
 
@@ -23,25 +26,34 @@
     return document.documentElement.lang === 'ar' ? 'ar' : 'en';
   }
 
-  /* Convention-based counterpart, EXTENSION-AGNOSTIC so it works with clean URLs
-     (/pages/services-ar) and explicit ones (/pages/services-ar.html) alike:
-        /                    ⇄ /index-ar (or /)
-        /pages/services      ⇄ /pages/services-ar
-        /pages/services.html ⇄ /pages/services-ar.html
+  /* Filename-based counterpart convention:
+       /                 → /index-ar.html   (home special case)
+       /index-ar.html    → /                (home special case)
+       /pages/about.html → /pages/about-ar.html
+       /pages/about-ar   → /pages/about     (Vercel clean URL, no extension)
      Query string and hash are preserved. */
   function counterpartURL() {
     var path = window.location.pathname;
-    var slash = path.lastIndexOf('/');
-    var dir = path.substring(0, slash + 1);          /* "/" or "/pages/" */
-    var file = path.substring(slash + 1);            /* "services-ar" | "services-ar.html" | "" */
-    var hasExt = /\.html$/i.test(file);
-    var name = hasExt ? file.replace(/\.html$/i, '') : file;
-    if (!name) name = 'index';                       /* root */
-    var other = /-ar$/i.test(name) ? name.replace(/-ar$/i, '') : name + '-ar';
-    var rebuilt = (other === 'index')
-      ? dir                                          /* clean English root "/" */
-      : dir + other + (hasExt ? '.html' : '');
-    return rebuilt + window.location.search + window.location.hash;
+    var qs   = window.location.search + window.location.hash;
+
+    /* Normalise trailing slash */
+    if (path !== '/' && path.charAt(path.length - 1) === '/') {
+      path = path.slice(0, -1);
+    }
+
+    /* Home page: / or /index.html  ⇄  /index-ar.html */
+    if (path === '/' || path === '/index.html') return '/index-ar.html' + qs;
+    if (path === '/index-ar.html')              return '/' + qs;
+
+    /* All other pages: x.html ↔ x-ar.html   (or x ↔ x-ar for clean URLs) */
+    var hasExt = /\.html$/i.test(path);
+    var base   = hasExt ? path.slice(0, -5) : path;
+
+    var other = /-ar$/i.test(base)
+      ? base.replace(/-ar$/i, '')
+      : base + '-ar';
+
+    return other + (hasExt ? '.html' : '') + qs;
   }
 
   function go(lang) {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>/* AL FAROOQUE: dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
@@ -6,10 +6,11 @@
 <meta name="description" content="AL FAROOQUE Manufacturing Gallery – Wood Works, Steel Works, Aluminium Works projects and factory images.">
 <title>Gallery — AL FAROOQUE Manufacturing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/main.css">
-<link rel="stylesheet" href="../css/themes.css">
-<link rel="icon" href="../assets/images/logo/IAA_LOGO.png" type="image/png">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/themes.css">
+<link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
 <body>
 <div id="progress-bar"></div>
@@ -23,113 +24,103 @@
 </div>
 
 <nav class="nav">
-  <a href="../index.html" class="nav-logo">
-    <img src="../assets/images/logo/IAA_LOGO.png" alt="IAA">
-    <div class="nav-brand"><span class="nav-brand-name">AL FAROOQUE</span><span class="nav-brand-sub">Manufacturing · IAAE</span></div>
+  <a href="/" class="nav-logo">
+    <img src="/assets/images/logo/IAA_LOGO.png" alt="IAA">
+    <div class="nav-brand"><span class="nav-brand-name">AL FAROOQUE</span><span class="nav-brand-sub">Manufacturing</span></div>
   </a>
   <ul class="nav-links">
-    <li><a href="../index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li class="has-dropdown"><a href="services.html">Services<span class="caret">▼</span></a>
+    <li><a href="/">Home</a></li>
+    <li><a href="/pages/about.html">About</a></li>
+    <li class="has-dropdown"><a href="/pages/services.html">Services<span class="caret">▼</span></a>
       <ul class="nav-dropdown">
-        <li><a href="woodworks.html">Wood Works</a></li>
-        <li><a href="steelworks.html">Steel Works</a></li>
-        <li><a href="aluminium.html">Aluminium Works</a></li>
+        <li><a href="/pages/woodworks.html">Wood Works</a></li>
+        <li><a href="/pages/steelworks.html">Steel Works</a></li>
+        <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
       </ul>
     </li>
-    <li><a href="gallery.html" class="active">Gallery</a></li>
-    <li><a href="../products.html">Products</a></li>
-    <li><a href="contact.html" class="nav-cta">Contact Us</a></li>
+    <li><a href="/pages/gallery.html" class="active">Gallery</a></li>
+    <li><a href="/products.html">Products</a></li>
+    <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
   </ul>
   <button class="nav-burger"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-mobile">
-  <a href="../index.html">Home</a><a href="about.html">About</a><a href="services.html">Services</a><a href="woodworks.html" class="nav-mobile-sub">Wood Works</a><a href="steelworks.html" class="nav-mobile-sub">Steel Works</a><a href="aluminium.html" class="nav-mobile-sub">Aluminium Works</a><a href="gallery.html">Gallery</a><a href="../products.html">Products</a><a href="contact.html">Contact Us</a>
+  <a href="/">Home</a><a href="/pages/about.html">About</a><a href="/pages/services.html">Services</a><a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a><a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a><a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a><a href="/pages/gallery.html">Gallery</a><a href="/products.html">Products</a><a href="/pages/contact.html">Contact Us</a>
 </div>
 
-<div class="page-hero">
+<div class="page-hero" data-slider>
+  <div class="ph-slider-bg" aria-hidden="true">
+    <div class="ph-slide-bg active" style="background-image:url('/assets/images/gallery/gallery-27.jpg')"></div>
+    <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/gallery-15.jpg')"></div>
+    <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/company-04.jpg')"></div>
+  </div>
+  <div class="ph-overlay" aria-hidden="true"></div>
   <div class="container">
-    <div class="eyebrow reveal" style="justify-content:center;">Our Portfolio</div>
-    <h1 class="page-hero-title reveal d1">Work That <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Speaks for Itself</span></h1>
-    <p class="page-hero-body reveal d2">Projects across Wood Works, Steel Works and Aluminium Works — delivered with precision across Saudi Arabia.</p>
+    <div class="eyebrow reveal ph-hero-el" style="justify-content:center;">Our Portfolio</div>
+    <h1 class="page-hero-title reveal d1 ph-hero-el ph-d2">Work That <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Speaks for Itself</span></h1>
+    <p class="page-hero-body reveal d2 ph-hero-el ph-d3">Projects across Wood Works, Steel Works and Aluminium Works — delivered with precision across Saudi Arabia.</p>
   </div>
 </div>
 
 <section class="section-pad" style="position:relative;z-index:1;padding-top:0;">
   <div class="container">
     <div class="gallery-filters reveal">
-      <button class="flt active" data-filter="all">All Work</button>
+      <button class="flt active" data-filter="all">All Works</button>
       <button class="flt" data-filter="wood">Wood Works</button>
       <button class="flt" data-filter="steel">Steel Works</button>
       <button class="flt" data-filter="aluminium">Aluminium Works</button>
-      <button class="flt" data-filter="factory">Factory</button>
-      <button class="flt" data-filter="machinery">Machinery</button>
-      <button class="flt" data-filter="projects">Projects</button>
     </div>
 
     <div class="gallery-masonry">
-      <!-- Gallery images – all 31 WhatsApp photos -->
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-01.jpg" alt="Wood Works" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Wood Works</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-02.jpg" alt="Factory" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Factory Operations</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-03.jpg" alt="Joinery" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Custom Joinery</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-04.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Completed Project</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-05.jpg" alt="Woodwork" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Precision Woodwork</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-06.jpg" alt="Production" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Production Line</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-07.jpg" alt="Installation" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Site Installation</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-08.jpg" alt="Furniture" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Custom Furniture</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-09.jpg" alt="Workshop" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Workshop Floor</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-10.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Residential Project</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-11.jpg" alt="Cabinets" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Cabinet Manufacturing</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-12.jpg" alt="Factory" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Factory Operations</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-13.jpg" alt="Interior" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Interior Fit-out</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-14.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Commercial Project</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-15.jpg" alt="Doors" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Custom Doors</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-16.jpg" alt="Production" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Production Area</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-17.jpg" alt="Fit-out" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Office Fit-out</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-18.jpg" alt="Joinery" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Fine Joinery</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-19.jpg" alt="CNC" loading="lazy"><div class="gal-overlay"><span class="gal-cap">CNC Operations</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-20.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Luxury Project</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-21.jpg" alt="Workshop" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Finishing Work</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-22.jpg" alt="Factory" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Factory Floor</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-23.jpg" alt="Installation" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Installation Work</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-24.jpg" alt="Wood" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Wood Production</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-25.jpg" alt="Operations" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Manufacturing Ops</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-26.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Completed Work</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-27.jpg" alt="Woodwork" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Premium Woodwork</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-28.jpg" alt="Production" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Production Zone</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/gallery-29.jpg" alt="Handover" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Project Handover</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/gallery-30.jpg" alt="Quality" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Quality Inspection</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/gallery-31.jpg" alt="Warehouse" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Warehouse</span></div></div>
+      <!-- Wood Works -->
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-02.jpg" alt="Wooden Doors" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Fire-Rated Wooden Door</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-03.jpg" alt="Joinery" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Custom Joinery</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-04.jpg" alt="Furniture" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Solid Wood Furniture</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-05.jpg" alt="Woodwork" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Precision Woodwork</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-06.jpg" alt="Media Unit" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">TV Media Unit</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-07.jpg" alt="Wardrobe" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Custom Wardrobe</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-08.jpg" alt="Flooring" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Engineered Flooring</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-09.jpg" alt="Workshop" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Workshop Floor</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-11.jpg" alt="Cabinets" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Cabinet Manufacturing</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-12.jpg" alt="Reception" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Reception Counter</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-13.jpg" alt="Interior" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Interior Fit-out</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-14.jpg" alt="Pergola" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Wooden Pergola</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-26.jpg" alt="Project" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Completed Work</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-27.jpg" alt="Woodwork" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Premium Woodwork</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-28.jpg" alt="Production" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Production Zone</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-29.jpg" alt="Handover" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Project Handover</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-30.jpg" alt="Quality" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Quality Inspection</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/gallery-31.jpg" alt="Warehouse" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Warehouse</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-01.jpg" alt="AL FAROOQUE" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">AL FAROOQUE Manufacturing</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-02.jpg" alt="Project" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Featured Project</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-03.jpg" alt="Factory" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Factory View</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-04.jpg" alt="Wood" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Wood Division</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-05.jpg" alt="Work" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Completed Work</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-06.jpg" alt="Operations" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Operations</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-07.jpg" alt="Project" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Luxury Interior</span></div></div>
+      <div class="gal-item" data-cat="wood"><img src="/assets/images/gallery/profile-08.jpg" alt="Joinery" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Custom Joinery</span></div></div>
 
-      <!-- Profile images -->
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/profile-01.jpg" alt="AL FAROOQUE" loading="lazy"><div class="gal-overlay"><span class="gal-cap">AL FAROOQUE Manufacturing</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/profile-02.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Featured Project</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/profile-03.jpg" alt="Factory" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Factory View</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/profile-04.jpg" alt="Wood" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Wood Division</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/profile-05.jpg" alt="Work" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Completed Work</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/profile-06.jpg" alt="Operations" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Operations</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/profile-07.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Luxury Interior</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/profile-08.jpg" alt="Joinery" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Custom Joinery</span></div></div>
+      <!-- Steel Works -->
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-10.jpg" alt="Steel Railing" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Steel Stair Railing</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-15.jpg" alt="Steel Frame" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Structural Steel Frame</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-16.jpg" alt="Steel Gate" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Steel Entrance Gate</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-17.jpg" alt="Warehouse Frame" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Warehouse Frame</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-18.jpg" alt="Roof Truss" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Roof Truss System</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-19.jpg" alt="Steel Balcony" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Steel Balcony</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-20.jpg" alt="Platform" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Industrial Platform</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-21.jpg" alt="Mezzanine" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Mezzanine Floor</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-22.jpg" alt="Fencing" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Security Fencing</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-23.jpg" alt="Stairs" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Fire Escape Stairs</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-24.jpg" alt="Steel Door" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">FD60 Steel Door</span></div></div>
+      <div class="gal-item" data-cat="steel"><img src="/assets/images/gallery/gallery-25.jpg" alt="Canopy" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Steel Canopy</span></div></div>
 
-      <!-- Company images -->
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/company-01.jpg" alt="Company" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Company Profile</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/company-02.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Wood Works Project</span></div></div>
-      <div class="gal-item" data-cat="wood"><img src="../assets/images/gallery/company-03.jpg" alt="Production" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Production</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/company-04.jpg" alt="Installation" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Site Work</span></div></div>
-      <div class="gal-item" data-cat="factory"><img src="../assets/images/gallery/company-05.jpg" alt="Factory" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Factory Floor</span></div></div>
-      <div class="gal-item" data-cat="projects"><img src="../assets/images/gallery/company-06.jpg" alt="Project" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Commercial Work</span></div></div>
-
-      <!-- Machinery images -->
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/edgeband-machine.jpg" alt="Edge Banding" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Edge Banding Machine</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/scm-beam-saw.jpg" alt="Beam Saw" loading="lazy"><div class="gal-overlay"><span class="gal-cap">SCM Gabbiani Beam Saw</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/sanding-machine.jpg" alt="Sanding" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Sanding Machine</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/sliding-table-saw.jpg" alt="Table Saw" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Sliding Table Saw</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/boring-machine.jpg" alt="Boring" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Boring Machine</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/spindle-moulder.jpg" alt="Moulder" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Spindle Moulder</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/band-saw.jpg" alt="Band Saw" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Band Saw</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/thickness-planer.jpg" alt="Planer" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Thickness Planer</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/drill-press.jpg" alt="Drill" loading="lazy"><div class="gal-overlay"><span class="gal-cap">BACO Drill Press</span></div></div>
-      <div class="gal-item" data-cat="machinery"><img src="../assets/images/machines/surface-planer.jpg" alt="Planer" loading="lazy"><div class="gal-overlay"><span class="gal-cap">Surface Planer</span></div></div>
+      <!-- Aluminium Works -->
+      <div class="gal-item" data-cat="aluminium"><img src="/assets/images/gallery/company-01.jpg" alt="Aluminium Window" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Aluminium Sliding Window</span></div></div>
+      <div class="gal-item" data-cat="aluminium"><img src="/assets/images/gallery/company-02.jpg" alt="Aluminium Window" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Aluminium Hinged Window</span></div></div>
+      <div class="gal-item" data-cat="aluminium"><img src="/assets/images/gallery/company-03.jpg" alt="Bi-Fold Door" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Bi-Fold Door</span></div></div>
+      <div class="gal-item" data-cat="aluminium"><img src="/assets/images/gallery/company-04.jpg" alt="Curtain Wall" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Curtain Wall System</span></div></div>
+      <div class="gal-item" data-cat="aluminium"><img src="/assets/images/gallery/company-05.jpg" alt="Glass Door" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Aluminium Glass Door</span></div></div>
+      <div class="gal-item" data-cat="aluminium"><img src="/assets/images/gallery/company-06.jpg" alt="Glass Facade" loading="lazy" decoding="async"><div class="gal-overlay"><span class="gal-cap">Structural Glass Facade</span></div></div>
     </div>
   </div>
 </section>
@@ -142,17 +133,17 @@
 
 <footer class="footer">
   <div class="footer-brand">
-    <div class="footer-logo-row"><img src="../assets/images/logo/IAA_LOGO.png" alt="IAA" style="width:36px;"><span class="footer-name">AL FAROOQUE Manufacturing</span></div>
-    <p class="footer-tag">Precision manufacturing across Wood Works, Steel Works, and Aluminium Works — AL FAROOQUE Industries (IAAE).</p>
+    <div class="footer-logo-row"><img src="/assets/images/logo/IAA_LOGO.png" alt="IAA" style="width:36px;"><span class="footer-name">AL FAROOQUE Manufacturing</span></div>
+    <p class="footer-tag">Precision manufacturing across Wood Works, Steel Works, and Aluminium Works — AL FAROOQUE Industries.</p>
   </div>
-  <div><div class="footer-col-h">Navigation</div><ul class="footer-links"><li><a href="../index.html">Home</a></li><li><a href="about.html">About Us</a></li><li><a href="services.html">Services</a></li><li><a href="gallery.html">Gallery</a></li><li><a href="contact.html">Contact</a></li></ul></div>
-  <div><div class="footer-col-h">Services</div><ul class="footer-links"><li><a href="woodworks.html">Wood Works</a></li><li><a href="steelworks.html">Steel Works</a></li><li><a href="aluminium.html">Aluminium Works</a></li><li><a href="contact.html">Request a Quote</a></li></ul></div>
-  <div><div class="footer-col-h">Contact</div><ul class="footer-links"><li><a href="contact.html">Head Office – Jeddah</a></li><li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li></ul></div>
-  <div class="footer-bottom"><span class="footer-copy">© <span id="current-year"></span> AL FAROOQUE Manufacturing — IAAE. All rights reserved.</span><div class="footer-badges"><span class="footer-badge">SASO</span><span class="footer-badge">FD60</span><span class="footer-badge">MIM</span><span class="footer-badge">Vision 2030</span></div></div>
+  <div><div class="footer-col-h">Navigation</div><ul class="footer-links"><li><a href="/">Home</a></li><li><a href="/pages/about.html">About Us</a></li><li><a href="/pages/services.html">Services</a></li><li><a href="/pages/gallery.html">Gallery</a></li><li><a href="/pages/contact.html">Contact</a></li></ul></div>
+  <div><div class="footer-col-h">Services</div><ul class="footer-links"><li><a href="/pages/woodworks.html">Wood Works</a></li><li><a href="/pages/steelworks.html">Steel Works</a></li><li><a href="/pages/aluminium.html">Aluminium Works</a></li><li><a href="/pages/contact.html">Request a Quote</a></li></ul></div>
+  <div><div class="footer-col-h">Contact</div><ul class="footer-links"><li><a href="/pages/contact.html">Head Office – Jeddah</a></li><li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li></ul></div>
+  <div class="footer-bottom"><span class="footer-copy">© <span id="current-year"></span> AL FAROOQUE Manufacturing. All rights reserved.</span><div class="footer-badges"><span class="footer-badge">SASO</span><span class="footer-badge">FD60</span><span class="footer-badge">MIM</span><span class="footer-badge">Vision 2030</span></div></div>
 </footer>
-<script src="../js/main.js"></script>
+<script src="/js/main.js"></script>
 
-<script src="../js/language-switcher.js"></script>
-<script src="../js/theme-switcher.js"></script>
+<script src="/js/language-switcher.js"></script>
+<script src="/js/theme-switcher.js"></script>
 </body>
 </html>

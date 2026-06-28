@@ -4,59 +4,67 @@
 <script>/* AL FAROOQUE: dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="description" content="Our manufacturing divisions — AL FAROOQUE Manufacturing. Three specialised divisions: Wood Works, Steel Works and Aluminium Works, in Jeddah, Saudi Arabia.">
-<meta name="keywords" content="manufacturing divisions, wood works, steel works, aluminium works, Jeddah, AL FAROOQUE, IAAE">
+<meta name="keywords" content="manufacturing divisions, wood works, steel works, aluminium works, Jeddah, AL FAROOQUE">
 <meta property="og:title" content="Services — AL FAROOQUE Manufacturing">
 <meta property="og:description" content="Three specialised divisions. One unified standard of precision, quality and craftsmanship.">
-<meta property="og:image" content="../assets/images/gallery/profile-01.jpg">
+<meta property="og:image" content="/assets/images/gallery/profile-01.jpg">
 <meta property="og:type" content="website">
 <title>Services — AL FAROOQUE Manufacturing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/main.css">
-<link rel="stylesheet" href="../css/themes.css">
-<link rel="icon" href="../assets/images/logo/IAA_LOGO.png">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/machinery.css">
+<link rel="icon" href="/assets/images/logo/IAA_LOGO.png">
 </head>
 <body>
 <div id="progress-bar"></div><div id="cursor-glow"></div>
 <div class="bg-env"><div class="bg-grad"></div><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="geo g1"></div><div class="ray r1"></div><div class="particles"></div></div>
 <nav class="nav">
-  <a href="../index.html" class="nav-logo"><img src="../assets/images/logo/IAA_LOGO.png" alt="IAA"><div class="nav-brand"><span class="nav-brand-name">AL FAROOQUE</span><span class="nav-brand-sub">Manufacturing · IAAE</span></div></a>
+  <a href="/" class="nav-logo"><img src="/assets/images/logo/IAA_LOGO.png" alt="IAA"><div class="nav-brand"><span class="nav-brand-name">AL FAROOQUE</span><span class="nav-brand-sub">Manufacturing</span></div></a>
   <ul class="nav-links">
-    <li><a href="../index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li class="has-dropdown"><a href="services.html" class="active">Services<span class="caret">▼</span></a>
+    <li><a href="/">Home</a></li>
+    <li><a href="/pages/about.html">About</a></li>
+    <li class="has-dropdown"><a href="/pages/services.html" class="active">Services<span class="caret">▼</span></a>
       <ul class="nav-dropdown">
-        <li><a href="woodworks.html">Wood Works</a></li>
-        <li><a href="steelworks.html">Steel Works</a></li>
-        <li><a href="aluminium.html">Aluminium Works</a></li>
+        <li><a href="/pages/woodworks.html">Wood Works</a></li>
+        <li><a href="/pages/steelworks.html">Steel Works</a></li>
+        <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
       </ul>
     </li>
-    <li><a href="gallery.html">Gallery</a></li>
-    <li><a href="../products.html">Products</a></li>
-    <li><a href="contact.html" class="nav-cta">Contact Us</a></li>
+    <li><a href="/pages/gallery.html">Gallery</a></li>
+    <li><a href="/products.html">Products</a></li>
+    <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
   </ul>
   <button class="nav-burger"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-mobile">
-  <a href="../index.html">Home</a><a href="about.html">About</a><a href="services.html">Services</a>
-  <a href="woodworks.html" class="nav-mobile-sub">Wood Works</a>
-  <a href="steelworks.html" class="nav-mobile-sub">Steel Works</a>
-  <a href="aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
-  <a href="gallery.html">Gallery</a><a href="../products.html">Products</a><a href="contact.html">Contact Us</a>
+  <a href="/">Home</a><a href="/pages/about.html">About</a><a href="/pages/services.html">Services</a>
+  <a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a>
+  <a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a>
+  <a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
+  <a href="/pages/gallery.html">Gallery</a><a href="/products.html">Products</a><a href="/pages/contact.html">Contact Us</a>
 </div>
 
-<div class="page-hero">
+<div class="page-hero" data-slider>
+  <div class="ph-slider-bg" aria-hidden="true">
+    <div class="ph-slide-bg active" style="background-image:url('/assets/images/gallery/gallery-03.jpg')"></div>
+    <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/gallery-15.jpg')"></div>
+    <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/company-01.jpg')"></div>
+  </div>
+  <div class="ph-overlay" aria-hidden="true"></div>
   <div class="container">
-    <div class="eyebrow reveal" style="justify-content:center;">What We Make</div>
-    <h1 class="page-hero-title reveal d1">Our <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Manufacturing</span> Divisions</h1>
-    <p class="page-hero-body reveal d2">Three specialised divisions. One unified standard of precision, quality and craftsmanship.</p>
+    <div class="eyebrow reveal ph-hero-el" style="justify-content:center;">What We Make</div>
+    <h1 class="page-hero-title reveal d1 ph-hero-el ph-d2">Our <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Manufacturing</span> Divisions</h1>
+    <p class="page-hero-body reveal d2 ph-hero-el ph-d3">Three specialised divisions. One unified standard of precision, quality and craftsmanship.</p>
   </div>
 </div>
 
 <section class="section-pad" style="position:relative;z-index:1;">
   <div class="container">
     <div class="svc-grid">
-      <a href="woodworks.html" class="svc-card sweep reveal d1" data-tilt style="text-decoration:none;">
+      <a href="/pages/woodworks.html" class="svc-card sweep reveal d1" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">01</span>
         <div class="svc-icon">
@@ -73,7 +81,7 @@
         <span class="svc-link">Explore Division →</span>
       </a>
 
-      <a href="steelworks.html" class="svc-card sweep reveal d2" data-tilt style="text-decoration:none;">
+      <a href="/pages/steelworks.html" class="svc-card sweep reveal d2" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">02</span>
         <div class="svc-icon">
@@ -90,7 +98,7 @@
         <span class="svc-link">Explore Division →</span>
       </a>
 
-      <a href="aluminium.html" class="svc-card sweep reveal d3" data-tilt style="text-decoration:none;">
+      <a href="/pages/aluminium.html" class="svc-card sweep reveal d3" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">03</span>
         <div class="svc-icon">
@@ -110,15 +118,26 @@
   </div>
 </section>
 
+<!-- ═══ OUR MACHINERY ═══ -->
+<section class="machinery-section">
+  <div class="container">
+    <div class="eyebrow reveal">Our Equipment</div>
+    <h2 class="section-title reveal d1">Our <span class="accent">Machinery</span></h2>
+    <p class="reveal d2" style="font-size:15px;line-height:1.85;color:var(--grey-500);max-width:600px;margin-bottom:0;">Advanced manufacturing equipment across our Wood Works division — CNC routers, precision saws, edge banders and more, operated by skilled technicians to the highest standards.</p>
+    <div class="mach-grid" id="mach-grid"></div>
+  </div>
+</section>
+
 <footer class="footer">
-  <div class="footer-brand"><div class="footer-logo-row"><img src="../assets/images/logo/IAA_LOGO.png" alt="IAA" style="width:36px;"><span class="footer-name">AL FAROOQUE Manufacturing</span></div><p class="footer-tag">AL FAROOQUE Industries (IAAE) — Jeddah, Saudi Arabia.</p></div>
-  <div><div class="footer-col-h">Navigation</div><ul class="footer-links"><li><a href="../index.html">Home</a></li><li><a href="about.html">About Us</a></li><li><a href="services.html">Services</a></li><li><a href="gallery.html">Gallery</a></li><li><a href="contact.html">Contact</a></li></ul></div>
-  <div><div class="footer-col-h">Divisions</div><ul class="footer-links"><li><a href="woodworks.html">Wood Works</a></li><li><a href="steelworks.html">Steel Works</a></li><li><a href="aluminium.html">Aluminium Works</a></li></ul></div>
-  <div><div class="footer-col-h">Contact</div><ul class="footer-links"><li><a href="contact.html">Head Office – Jeddah</a></li><li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li></ul></div>
-  <div class="footer-bottom"><span class="footer-copy">© <span id="current-year"></span> AL FAROOQUE Manufacturing — IAAE. All rights reserved.</span><div class="footer-badges"><span class="footer-badge">SASO</span><span class="footer-badge">FD60</span><span class="footer-badge">MIM</span><span class="footer-badge">Vision 2030</span></div></div>
+  <div class="footer-brand"><div class="footer-logo-row"><img src="/assets/images/logo/IAA_LOGO.png" alt="IAA" style="width:36px;"><span class="footer-name">AL FAROOQUE Manufacturing</span></div><p class="footer-tag">AL FAROOQUE Industries — Jeddah, Saudi Arabia.</p></div>
+  <div><div class="footer-col-h">Navigation</div><ul class="footer-links"><li><a href="/">Home</a></li><li><a href="/pages/about.html">About Us</a></li><li><a href="/pages/services.html">Services</a></li><li><a href="/pages/gallery.html">Gallery</a></li><li><a href="/pages/contact.html">Contact</a></li></ul></div>
+  <div><div class="footer-col-h">Divisions</div><ul class="footer-links"><li><a href="/pages/woodworks.html">Wood Works</a></li><li><a href="/pages/steelworks.html">Steel Works</a></li><li><a href="/pages/aluminium.html">Aluminium Works</a></li></ul></div>
+  <div><div class="footer-col-h">Contact</div><ul class="footer-links"><li><a href="/pages/contact.html">Head Office – Jeddah</a></li><li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li></ul></div>
+  <div class="footer-bottom"><span class="footer-copy">© <span id="current-year"></span> AL FAROOQUE Manufacturing. All rights reserved.</span><div class="footer-badges"><span class="footer-badge">SASO</span><span class="footer-badge">FD60</span><span class="footer-badge">MIM</span><span class="footer-badge">Vision 2030</span></div></div>
 </footer>
-<script src="../js/main.js"></script>
-<script src="../js/language-switcher.js"></script>
-<script src="../js/theme-switcher.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/machinery.js"></script>
+<script src="/js/language-switcher.js"></script>
+<script src="/js/theme-switcher.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
-﻿/* ═══════════════════════════════════════════════════════
-   AL FAROOQUE MANUFACTURING — THEME SWITCHER v4.0
+/* ═══════════════════════════════════════════════════════
+   AL FAROOQUE MANUFACTURING — THEME SWITCHER v4.1
    ▸ Dark is ALWAYS default for first-time visitors
    ▸ Reads localStorage key: "theme" ("dark"|"light")
    ▸ No system-preference override — dark always wins
@@ -10,13 +10,19 @@
 (function() {
   var STORE = 'theme';
 
-  /* ── Initialise defaults ── */
   if (!localStorage.getItem(STORE)) {
     localStorage.setItem(STORE, 'dark');
   }
 
   function current() {
     return localStorage.getItem(STORE) || 'dark';
+  }
+
+  /* Cached button list — populated once after DOMContentLoaded */
+  var _buttons = null;
+  function buttons() {
+    if (!_buttons) _buttons = document.querySelectorAll('.theme-toggle-btn');
+    return _buttons;
   }
 
   function apply(theme, animate) {
@@ -48,7 +54,7 @@
   function updateButtons(theme) {
     var isLight = theme === 'light';
     var isAr    = document.documentElement.lang === 'ar';
-    document.querySelectorAll('.theme-toggle-btn').forEach(function(btn) {
+    buttons().forEach(function(btn) {
       var icon  = btn.querySelector('.ctrl-icon');
       var lbl   = btn.querySelector('.ctrl-label');
       if (icon)  icon.textContent  = isLight ? '🌙' : '☀️';
@@ -80,9 +86,7 @@
       'position:fixed;inset:0;z-index:9990;pointer-events:none;' +
       'background:#0b0f14;opacity:0;transition:opacity 0.18s ease;';
     document.body.appendChild(d);
-    /* Trigger active state */
-    document.head.insertAdjacentHTML('beforeend',
-      '<style>#theme-overlay.flash{opacity:0.50!important;}</style>');
+    /* Style already defined in themes.css — no dynamic <style> injection needed */
   }
 
   function injectNav() {
@@ -96,6 +100,7 @@
       burger ? nav.insertBefore(ctrl, burger) : nav.appendChild(ctrl);
     }
     ctrl.appendChild(createBtn());
+    _buttons = null; /* invalidate cache after adding new button */
   }
 
   function injectFloat() {
@@ -106,11 +111,11 @@
       document.body.appendChild(cluster);
     }
     cluster.appendChild(createBtn());
+    _buttons = null; /* invalidate cache after adding new button */
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     createOverlay();
-    /* Ensure correct state after DOM ready */
     _apply(current());
     injectNav();
     injectFloat();

@@ -17,80 +17,215 @@ var BASE_PATH = IS_AR ? '' : '';        // Both files in root; assets path same
 /* ════════════════════════════════════════════
    PRODUCT DATA
    ════════════════════════════════════════════ */
+/* Image naming convention in assets/images/Products/:
+   "[Product Name] 1.png"  "[Product Name] 2.png"  "[Product Name] 3.png"
+   Add matching images to the folder to replace placeholder fallbacks.       */
+var _DOOR_TEAK = [
+  'assets/images/Products/Premium Solid Teak Exterior Door 1.png',
+  'assets/images/Products/Premium Solid Teak Exterior Door 2.png',
+  'assets/images/Products/Premium Solid Teak Exterior Door 3.png'
+];
+var _DOOR_HARD = [
+  'assets/images/Products/Premium Solid Hardwood Exterior Door 1.png',
+  'assets/images/Products/Premium Solid Hardwood Exterior Door 2.png',
+  'assets/images/Products/Premium Solid Hardwood Exterior Door 3.png'
+];
+var _DOOR_MDF = [
+  'assets/images/Products/Semi-Solid Interior Door (MDF Veneer Finish) 1.png',
+  'assets/images/Products/Semi-Solid Interior Door (MDF Veneer Finish) 2.png',
+  'assets/images/Products/Semi-Solid Interior Door (MDF Veneer Finish) 3.png'
+];
+var _DOOR_PLY = [
+  'assets/images/Products/Semi-Solid Interior Door (Plywood Finish) 1.png',
+  'assets/images/Products/Semi-Solid Interior Door (Plywood Finish) 2.png',
+  'assets/images/Products/Semi-Solid Interior Door (Plywood Finish) 3.png'
+];
+var _DOOR_HC_MDF = [
+  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 1.png',
+  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 2.png',
+  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 3.png',
+  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 4.png'
+];
+var _DOOR_HC_PLY = [
+  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 1.png',
+  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 2.png',
+  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 3.png',
+  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 4.png'
+];
+var _DOOR_HONEY = [
+  'assets/images/Products/Honeycomb Hollow Core Interior Door 1.png',
+  'assets/images/Products/Honeycomb Hollow Core Interior Door 2.png',
+  'assets/images/Products/Honeycomb Hollow Core Interior Door 3.png',
+  'assets/images/Products/Honeycomb Hollow Core Interior Door 4.png'
+];
+var _DOOR_ECO = [
+  'assets/images/Products/Economy Interior Door 1.png',
+  'assets/images/Products/Economy Interior Door 2.png',
+  'assets/images/Products/Economy Interior Door 3.png',
+  'assets/images/Products/Economy Interior Door 4.png'
+];
+
+var _DOOR_SIZES = ['2100 × 900 mm', '2100 × 1000 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')];
+
 var PRODUCTS = [
   {
-    id: 1, cat: 'wood',
-    name: 'Premium Wooden Dining Table',
-    nameAr: 'طاولة طعام خشبية فاخرة',
-    desc: 'Handcrafted solid oak dining table with a premium satin finish. Features mortise-and-tenon joinery, available in custom sizes with a choice of natural to ebony stains.',
-    descAr: 'طاولة طعام مصنوعة يدوياً من خشب البلوط الصلب بتشطيب ساتان فاخر. تتميز بوصلات متينة وأحجام مخصصة مع مجموعة من التشطيبات.',
-    price: 2500,
-    img: 'assets/images/gallery/gallery-01.jpg',
-    imgs: ['assets/images/gallery/gallery-01.jpg','assets/images/gallery/gallery-05.jpg','assets/images/gallery/company-03.jpg'],
-    specs: {'Material':'Solid Oak','Dimensions':'180 × 90 × 75 cm','Finish':'Satin Lacquer','Capacity':'6 – 8 Persons','Lead Time':'3 – 4 Weeks'},
-    specsAr: {'المادة':'خشب البلوط الصلب','الأبعاد':'180 × 90 × 75 سم','التشطيب':'طلاء ساتان','السعة':'6 – 8 أشخاص','مدة التسليم':'3 – 4 أسابيع'}
+    id: 1, cat: 'doors',
+    name: 'Premium Solid Teak Exterior Door',
+    nameAr: 'باب خارجي من خشب التيك الصلب الفاخر',
+    desc: 'Premium exterior door crafted with a solid teak wood door jamb, cast jamb, and main frame. Finished with high-quality varnish, sealer & lacquer, or paint for maximum durability. Includes a 5-year warranty.',
+    descAr: 'باب خارجي فاخر مصنوع من خشب التيك الصلب مع إطار وأطراف وهيكل رئيسي متكامل. تشطيب بورنيش عالي الجودة أو سيلر ولاكيه أو دهان لمتانة قصوى. يشمل ضمان 5 سنوات.',
+    price: 9500,
+    img: _DOOR_TEAK[0], imgs: _DOOR_TEAK,
+    warrantyLabel: '5-Year Warranty', warrantyLabelAr: 'ضمان 5 سنوات',
+    features: ['Premium solid teak construction','Solid teak door jamb and main frame','Cast iron jamb for enhanced durability','Superior moisture and weather resistance','Anti-termite and corrosion treatment','Varnish, sealer & lacquer, or paint finish','Elegant natural teak grain appearance','5-year manufacturer warranty'],
+    featuresAr: ['بناء متين من خشب التيك الصلب الفاخر','إطار باب ورئيسي من خشب التيك الصلب','إطار مصبوب لمتانة فائقة','مقاومة فائقة للرطوبة والعوامل الجوية','معالجة مضادة للحشرات والتآكل','تشطيب ورنيش أو سيلر ولاكيه أو دهان','مظهر أنيق بحبوب التيك الطبيعية','ضمان المصنع لمدة 5 سنوات'],
+    specs: {'Product Type':'Door','Door Type':'Exterior – Solid Core','Frame Material':'Solid Teak Wood','Core Material':'Solid Teak Wood','Surface Finish':'Varnish / Sealer & Lacquer / Paint','Wood Species':'Teak','Warranty':'5 Years','Application':'Residential & Commercial','Installation':'Exterior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'خارجي – قلب صلب','مادة الإطار':'خشب التيك الصلب','مادة القلب':'خشب التيك الصلب','التشطيب السطحي':'ورنيش / سيلر ولاكيه / دهان','نوع الخشب':'تيك','الضمان':'5 سنوات','التطبيق':'سكني وتجاري','التركيب':'خارجي','البلد':'المملكة العربية السعودية'},
+    applications: ['Villas','Luxury Residences','Commercial Buildings','Hotels & Resorts','Government Projects','High-End Offices'],
+    applicationsAr: ['الفلل','المساكن الفاخرة','المباني التجارية','الفنادق والمنتجعات','المشاريع الحكومية','المكاتب الراقية'],
+    finishes: ['Natural Teak Varnish','Sealer & Lacquer','Paint Finish','Custom Colors'],
+    finishesAr: ['ورنيش التيك الطبيعي','سيلر ولاكيه','تشطيب دهان','ألوان مخصصة'],
+    sizes: _DOOR_SIZES
   },
   {
-    id: 2, cat: 'wood',
-    name: 'Custom Wood Cabinet',
-    nameAr: 'خزانة خشبية مخصصة',
-    desc: 'Floor-to-ceiling built-in cabinet with soft-close drawers and adjustable shelving. Available in melamine, veneer, or solid wood facings with concealed LED lighting.',
-    descAr: 'خزانة مدمجة من الأرض للسقف مع أدراج إغلاق ناعم وأرفف قابلة للتعديل. متوفرة بوجوه ميلامين أو قشرة أو خشب صلب مع إضاءة LED خفية.',
-    price: 3200,
-    img: 'assets/images/gallery/gallery-05.jpg',
-    imgs: ['assets/images/gallery/gallery-05.jpg','assets/images/gallery/gallery-01.jpg','assets/images/gallery/company-05.jpg'],
-    specs: {'Material':'MDF + Veneer Face','Hardware':'Blum Soft-Close','Lighting':'LED Strip (optional)','Finish':'Lacquered Veneer','Lead Time':'4 – 5 Weeks'},
-    specsAr: {'المادة':'MDF بوجه قشرة','المعدات':'بلوم إغلاق ناعم','الإضاءة':'شريط LED (اختياري)','التشطيب':'قشرة مطلية','مدة التسليم':'4 – 5 أسابيع'}
+    id: 2, cat: 'doors',
+    name: 'Premium Solid Hardwood Exterior Door',
+    nameAr: 'باب خارجي من الخشب الصلب الفاخر',
+    desc: 'Exterior door manufactured from premium solid hardwood options including Oak, Mahogany, Beech, or Walnut. Finished with varnish, sealer & lacquer, or paint. Includes a 5-year warranty.',
+    descAr: 'باب خارجي مصنوع من أخشاب صلبة فاخرة تشمل البلوط والماهوجني والزان أو الجوز. تشطيب بورنيش أو سيلر ولاكيه أو دهان. يشمل ضمان 5 سنوات.',
+    price: 6500,
+    img: _DOOR_HARD[0], imgs: _DOOR_HARD,
+    warrantyLabel: '5-Year Warranty', warrantyLabelAr: 'ضمان 5 سنوات',
+    features: ['Premium hardwood species selection','Outstanding weather resistance','Solid core construction throughout','Multiple premium finish options','Heavy-duty jamb and main frame','Classic elegant natural design','Long service life and durability','5-year manufacturer warranty'],
+    featuresAr: ['اختيار أجود أنواع الأخشاب الصلبة','مقاومة ممتازة لعوامل الطقس','بناء ذو قلب صلب بالكامل','خيارات تشطيب فاخرة متعددة','إطار وهيكل رئيسي متين','تصميم كلاسيكي راقٍ وأنيق','عمر خدمة طويل ومتانة فائقة','ضمان المصنع لمدة 5 سنوات'],
+    specs: {'Product Type':'Door','Door Type':'Exterior – Solid Core','Frame Material':'Solid Hardwood','Core Material':'Solid Hardwood','Surface Finish':'Varnish / Sealer & Lacquer / Paint','Wood Species':'Oak / Mahogany / Beech / Walnut','Warranty':'5 Years','Application':'Residential & Commercial','Installation':'Exterior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'خارجي – قلب صلب','مادة الإطار':'خشب صلب فاخر','مادة القلب':'خشب صلب فاخر','التشطيب السطحي':'ورنيش / سيلر ولاكيه / دهان','نوع الخشب':'بلوط / ماهوجني / زان / جوز','الضمان':'5 سنوات','التطبيق':'سكني وتجاري','التركيب':'خارجي','البلد':'المملكة العربية السعودية'},
+    applications: ['Villas','Residential Buildings','Commercial Offices','Hotels','Government Projects','Schools & Hospitals'],
+    applicationsAr: ['الفلل','المباني السكنية','المكاتب التجارية','الفنادق','المشاريع الحكومية','المدارس والمستشفيات'],
+    finishes: ['Natural Wood Varnish','Sealer & Lacquer','Paint Finish','PU Finish','Custom Colors'],
+    finishesAr: ['ورنيش الخشب الطبيعي','سيلر ولاكيه','تشطيب دهان','تشطيب PU','ألوان مخصصة'],
+    sizes: _DOOR_SIZES
   },
   {
-    id: 3, cat: 'steel',
-    name: 'Steel Stair Railing',
-    nameAr: 'درابزين درج فولاذي',
-    desc: 'Precision-fabricated steel stair railing with powder-coated finish and tempered glass infill. Designed to BS 6180 standard for commercial and residential projects.',
-    descAr: 'درابزين درج فولاذي مصنوع بدقة مع طلاء بودرة ولوحات زجاج مقسى. مصمم وفق معيار BS 6180 للمشاريع التجارية والسكنية.',
-    price: 1850,
-    img: 'assets/images/gallery/gallery-10.jpg',
-    imgs: ['assets/images/gallery/gallery-10.jpg','assets/images/gallery/gallery-15.jpg','assets/images/gallery/company-10.jpg'],
-    specs: {'Material':'S235 Structural Steel','Infill':'Tempered Glass / Solid','Finish':'Powder Coat','Standard':'BS 6180:2011','Lead Time':'2 – 3 Weeks'},
-    specsAr: {'المادة':'فولاذ هيكلي S235','الحشو':'زجاج مقسى / صلب','التشطيب':'طلاء بودرة','المعيار':'BS 6180:2011','مدة التسليم':'2 – 3 أسابيع'}
+    id: 3, cat: 'doors',
+    name: 'Semi-Solid Interior Door (MDF Veneer Finish)',
+    nameAr: 'باب داخلي شبه صلب (تشطيب قشرة MDF)',
+    desc: 'Interior door with Swedish wood frame, full chipboard core, waterproof MDF pressing, premium wood veneer, and sealer & lacquer or painted finish. Includes a 1-year warranty.',
+    descAr: 'باب داخلي بإطار خشب سويدي وقلب رقاقة خشبية كامل وضغط MDF مقاوم للماء وقشرة خشب فاخرة وتشطيب سيلر ولاكيه أو دهان. يشمل ضمان سنة واحدة.',
+    price: 1050,
+    img: _DOOR_MDF[0], imgs: _DOOR_MDF,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: ['Swedish wood frame for structural stability','Full chipboard core for rigidity','Waterproof MDF pressing layer','Premium natural wood veneer surface','Sealer & lacquer or paint finish','Smooth and precise surface quality','Suitable for residential & commercial','1-year manufacturer warranty'],
+    featuresAr: ['إطار خشب سويدي لثبات هيكلي ممتاز','قلب رقاقة خشبية كاملة للصلابة','طبقة ضغط MDF مقاومة للماء','سطح قشرة خشب طبيعية فاخرة','تشطيب سيلر ولاكيه أو دهان','جودة سطح ناعمة ودقيقة','مناسب للاستخدام السكني والتجاري','ضمان المصنع لمدة سنة واحدة'],
+    specs: {'Product Type':'Door','Door Type':'Interior – Semi-Solid Core','Frame Material':'Swedish Wood','Core Material':'Full Chipboard','Surface Finish':'Wood Veneer + Sealer & Lacquer / Paint','Wood Species':'Swedish Wood + MDF Veneer','Warranty':'1 Year','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب شبه صلب','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة خشبية كاملة','التشطيب السطحي':'قشرة خشب + سيلر ولاكيه / دهان','نوع الخشب':'خشب سويدي + قشرة MDF','الضمان':'سنة واحدة','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
+    applications: ['Residences & Villas','Apartments','Hotels & Resorts','Commercial Offices','Healthcare Facilities','Educational Buildings'],
+    applicationsAr: ['المنازل والفلل','الشقق السكنية','الفنادق والمنتجعات','المكاتب التجارية','المرافق الصحية','المباني التعليمية'],
+    finishes: ['Natural Wood Veneer','Sealer & Lacquer','Paint Finish','Custom Colors'],
+    finishesAr: ['قشرة خشب طبيعية','سيلر ولاكيه','تشطيب دهان','ألوان مخصصة'],
+    sizes: _DOOR_SIZES
   },
   {
-    id: 4, cat: 'steel',
-    name: 'Structural Steel Frame',
-    nameAr: 'إطار فولاذي هيكلي',
-    desc: 'Heavy-duty structural steel frame fabricated to engineering drawings. Includes full MIG/MMA welding, zinc primer coating, and SASO-certified quality inspection.',
-    descAr: 'إطار فولاذي هيكلي ثقيل مصنوع وفق الرسومات الهندسية. يشمل اللحام الكامل وطلاء زنك أساسي وفحص جودة معتمد SASO.',
-    price: 4900,
-    img: 'assets/images/gallery/gallery-15.jpg',
-    imgs: ['assets/images/gallery/gallery-15.jpg','assets/images/gallery/gallery-10.jpg','assets/images/gallery/company-15.jpg'],
-    specs: {'Material':'S355 Structural Steel','Process':'MIG / MMA Welding','Coating':'Zinc Primer','Inspection':'SASO Certified','Lead Time':'3 – 6 Weeks'},
-    specsAr: {'المادة':'فولاذ هيكلي S355','العملية':'لحام MIG / MMA','الطلاء':'تزنيك أساسي','الفحص':'معتمد SASO','مدة التسليم':'3 – 6 أسابيع'}
+    id: 4, cat: 'doors',
+    name: 'Semi-Solid Interior Door (Plywood Finish)',
+    nameAr: 'باب داخلي شبه صلب (تشطيب خشب رقائقي)',
+    desc: 'Swedish wood frame with full chipboard core, plywood pressing, and painted or Talveen finish. Designed for residential and commercial interiors. Includes a 1-year warranty.',
+    descAr: 'إطار خشب سويدي مع قلب رقاقة خشبية كامل وضغط خشب رقائقي وتشطيب دهان أو تالفين. مصمم للديكورات الداخلية السكنية والتجارية. يشمل ضمان سنة واحدة.',
+    price: 950,
+    img: _DOOR_PLY[0], imgs: _DOOR_PLY,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: ['Swedish wood structural frame','Full chipboard solid core','Plywood pressing for durability','Paint or Talveen surface finish','Durable and cost-effective','Precision engineered construction','Suitable for residential & commercial','1-year manufacturer warranty'],
+    featuresAr: ['إطار هيكلي من الخشب السويدي','قلب رقاقة خشبية صلبة كاملة','ضغط خشب رقائقي للمتانة','تشطيب دهان أو تالفين','متين وفعّال من حيث التكلفة','بناء مهندس بدقة','مناسب للاستخدام السكني والتجاري','ضمان المصنع لمدة سنة واحدة'],
+    specs: {'Product Type':'Door','Door Type':'Interior – Semi-Solid Core','Frame Material':'Swedish Wood','Core Material':'Full Chipboard','Surface Finish':'Plywood + Paint / Talveen','Wood Species':'Swedish Wood','Warranty':'1 Year','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب شبه صلب','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة خشبية كاملة','التشطيب السطحي':'خشب رقائقي + دهان / تالفين','نوع الخشب':'خشب سويدي','الضمان':'سنة واحدة','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
+    applications: ['Residential Buildings','Apartments','Schools','Hospitals','Commercial Buildings','Government Facilities'],
+    applicationsAr: ['المباني السكنية','الشقق','المدارس','المستشفيات','المباني التجارية','المرافق الحكومية'],
+    finishes: ['Paint Finish','Talveen Finish','Custom Colors'],
+    finishesAr: ['تشطيب دهان','تشطيب تالفين','ألوان مخصصة'],
+    sizes: _DOOR_SIZES
   },
   {
-    id: 5, cat: 'aluminium',
-    name: 'Aluminium Sliding Window',
-    nameAr: 'نافذة ألومنيوم منزلقة',
-    desc: 'SASO-certified aluminium sliding window with double-glazed units and thermal break profile. Available in custom sizes, powder-coat or anodised finish.',
-    descAr: 'نافذة ألومنيوم منزلقة معتمدة SASO بوحدات زجاجية مزدوجة ومقطع عازل حراري. متوفرة بأحجام مخصصة وطلاء بودرة أو أنودة.',
-    price: 1450,
-    img: 'assets/images/gallery/company-01.jpg',
-    imgs: ['assets/images/gallery/company-01.jpg','assets/images/gallery/company-05.jpg','assets/images/gallery/company-08.jpg'],
-    specs: {'Profile':'Thermal Break 6063-T5','Glazing':'Double 6+12+6 mm','Certification':'SASO','Finish':'Powder Coat / Anodised','Lead Time':'2 – 4 Weeks'},
-    specsAr: {'الملف':'مقطع عازل حراري 6063-T5','الزجاج':'مزدوج 6+12+6 ملم','الشهادة':'SASO','التشطيب':'طلاء بودرة / أنودة','مدة التسليم':'2 – 4 أسابيع'}
+    id: 5, cat: 'doors',
+    name: 'Hollow Core Interior Door (MDF Veneer Finish)',
+    nameAr: 'باب داخلي بقلب أجوف (تشطيب قشرة MDF)',
+    desc: 'Interior hollow-core door featuring a Swedish wood frame, chipboard core with 5 cm spacing, waterproof MDF pressing, wood veneer finish, and sealer & lacquer or paint. Includes a 1-year warranty.',
+    descAr: 'باب داخلي بقلب أجوف بإطار خشب سويدي وقلب رقاقة خشبية بفراغات 5 سم وضغط MDF مقاوم للماء وقشرة خشب وتشطيب سيلر ولاكيه أو دهان. يشمل ضمان سنة واحدة.',
+    price: 1000,
+    img: _DOOR_HC_MDF[0], imgs: _DOOR_HC_MDF,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: ['Swedish wood perimeter frame','Hollow chipboard core (5 cm spacing)','Waterproof MDF pressing layer','Premium natural wood veneer surface','Lightweight yet structurally sound','Good sound insulation properties','Elegant and smooth finish','1-year manufacturer warranty'],
+    featuresAr: ['إطار محيطي من الخشب السويدي','قلب رقاقة أجوف (فراغات 5 سم)','طبقة ضغط MDF مقاومة للماء','سطح قشرة خشب طبيعية فاخرة','خفيف الوزن ومتين هيكلياً','خصائص جيدة لعزل الصوت','تشطيب أنيق وناعم','ضمان المصنع لمدة سنة واحدة'],
+    specs: {'Product Type':'Door','Door Type':'Interior – Hollow Core','Frame Material':'Swedish Wood','Core Material':'Hollow Chipboard (5 cm spacing)','Surface Finish':'Wood Veneer + Sealer & Lacquer / Paint','Wood Species':'Swedish Wood + MDF Veneer','Warranty':'1 Year','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب أجوف','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة أجوف (فراغات 5 سم)','التشطيب السطحي':'قشرة خشب + سيلر ولاكيه / دهان','نوع الخشب':'خشب سويدي + قشرة MDF','الضمان':'سنة واحدة','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
+    applications: ['Bedrooms & Living Rooms','Apartments','Hotels','Commercial Offices','Healthcare Facilities','Educational Buildings'],
+    applicationsAr: ['غرف النوم والمعيشة','الشقق السكنية','الفنادق','المكاتب التجارية','المرافق الصحية','المباني التعليمية'],
+    finishes: ['Natural Wood Veneer','Sealer & Lacquer','Paint Finish','Custom Colors'],
+    finishesAr: ['قشرة خشب طبيعية','سيلر ولاكيه','تشطيب دهان','ألوان مخصصة'],
+    sizes: _DOOR_SIZES
   },
   {
-    id: 6, cat: 'aluminium',
-    name: 'Aluminium Glass Door',
-    nameAr: 'باب ألومنيوم زجاجي',
-    desc: 'Full-height aluminium-framed glass door with multi-point locking, hydraulic soft-close, and 10mm tempered safety glass. Ideal for commercial interiors.',
-    descAr: 'باب زجاجي بإطار ألومنيوم بارتفاع كامل مع قفل متعدد النقاط وإغلاق هيدروليكي ناعم وزجاج أمان مقسى 10 ملم. مثالي للديكورات التجارية.',
-    price: 2100,
-    img: 'assets/images/gallery/company-05.jpg',
-    imgs: ['assets/images/gallery/company-05.jpg','assets/images/gallery/company-01.jpg','assets/images/gallery/company-08.jpg'],
-    specs: {'Frame':'Aluminium 6063-T5','Glass':'Tempered 10mm Safety','Lock':'Multi-Point Secure','Closer':'Hydraulic Soft-Close','Lead Time':'3 – 4 Weeks'},
-    specsAr: {'الإطار':'ألومنيوم 6063-T5','الزجاج':'مقسى أمان 10 ملم','القفل':'متعدد النقاط','الإغلاق':'هيدروليكي ناعم','مدة التسليم':'3 – 4 أسابيع'}
+    id: 6, cat: 'doors',
+    name: 'Hollow Core Interior Door (Plywood Finish)',
+    nameAr: 'باب داخلي بقلب أجوف (تشطيب خشب رقائقي)',
+    desc: 'Hollow-core interior door with Swedish wood frame, chipboard core, plywood pressing, and painted or Talveen finish. Includes a 6-month warranty.',
+    descAr: 'باب داخلي بقلب أجوف بإطار خشب سويدي وقلب رقاقة خشبية وضغط خشب رقائقي وتشطيب دهان أو تالفين. يشمل ضمان 6 أشهر.',
+    price: 850,
+    img: _DOOR_HC_PLY[0], imgs: _DOOR_HC_PLY,
+    warrantyLabel: '6-Month Warranty', warrantyLabelAr: 'ضمان 6 أشهر',
+    features: ['Swedish wood frame construction','Hollow chipboard core','Plywood pressing layer','Paint or Talveen surface finish','Lightweight design for easy handling','Cost-effective door solution','Easy and fast installation','6-month manufacturer warranty'],
+    featuresAr: ['بناء إطار من الخشب السويدي','قلب رقاقة خشبية أجوف','طبقة ضغط خشب رقائقي','تشطيب دهان أو تالفين','تصميم خفيف الوزن لسهولة التعامل','حل اقتصادي للأبواب','تركيب سهل وسريع','ضمان المصنع لمدة 6 أشهر'],
+    specs: {'Product Type':'Door','Door Type':'Interior – Hollow Core','Frame Material':'Swedish Wood','Core Material':'Hollow Chipboard','Surface Finish':'Plywood + Paint / Talveen','Wood Species':'Swedish Wood','Warranty':'6 Months','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب أجوف','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة خشبية أجوف','التشطيب السطحي':'خشب رقائقي + دهان / تالفين','نوع الخشب':'خشب سويدي','الضمان':'6 أشهر','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
+    applications: ['Residential Buildings','Apartments','Budget Hotels','Schools','Warehouses','Utility Rooms'],
+    applicationsAr: ['المباني السكنية','الشقق','الفنادق الاقتصادية','المدارس','المستودعات','الغرف الخدمية'],
+    finishes: ['Paint Finish','Talveen Finish','Custom Colors'],
+    finishesAr: ['تشطيب دهان','تشطيب تالفين','ألوان مخصصة'],
+    sizes: _DOOR_SIZES
+  },
+  {
+    id: 7, cat: 'doors',
+    name: 'Honeycomb Hollow Core Interior Door',
+    nameAr: 'باب داخلي بقلب أجوف خلوي',
+    desc: 'Lightweight interior door with Swedish wood frame, honeycomb core construction, plywood pressing, and painted or Talveen finish. Includes a 6-month warranty.',
+    descAr: 'باب داخلي خفيف الوزن بإطار خشب سويدي وبنية قلب خلوي وضغط خشب رقائقي وتشطيب دهان أو تالفين. يشمل ضمان 6 أشهر.',
+    price: 700,
+    img: _DOOR_HONEY[0], imgs: _DOOR_HONEY,
+    warrantyLabel: '6-Month Warranty', warrantyLabelAr: 'ضمان 6 أشهر',
+    features: ['Swedish wood perimeter frame','Ultra-lightweight honeycomb core','Plywood pressing for surface rigidity','Paint or Talveen surface finish','Eco-friendly lightweight construction','Ideal for partition applications','Quick and easy installation','6-month manufacturer warranty'],
+    featuresAr: ['إطار محيطي من الخشب السويدي','قلب خلوي خفيف الوزن للغاية','ضغط خشب رقائقي لصلابة السطح','تشطيب دهان أو تالفين','بناء بيئي خفيف الوزن','مثالي لتطبيقات الفواصل','تركيب سريع وسهل','ضمان المصنع لمدة 6 أشهر'],
+    specs: {'Product Type':'Door','Door Type':'Interior – Honeycomb Core','Frame Material':'Swedish Wood','Core Material':'Honeycomb','Surface Finish':'Plywood + Paint / Talveen','Wood Species':'Swedish Wood','Warranty':'6 Months','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب خلوي','مادة الإطار':'خشب سويدي','مادة القلب':'خلوي','التشطيب السطحي':'خشب رقائقي + دهان / تالفين','نوع الخشب':'خشب سويدي','الضمان':'6 أشهر','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
+    applications: ['Residential Buildings','Apartments','Lightweight Partitions','Offices','Schools','Utility Areas'],
+    applicationsAr: ['المباني السكنية','الشقق','الفواصل الخفيفة','المكاتب','المدارس','المناطق الخدمية'],
+    finishes: ['Paint Finish','Talveen Finish','Custom Colors'],
+    finishesAr: ['تشطيب دهان','تشطيب تالفين','ألوان مخصصة'],
+    sizes: _DOOR_SIZES
+  },
+  {
+    id: 8, cat: 'doors',
+    name: 'Economy Interior Door',
+    nameAr: 'باب داخلي اقتصادي',
+    desc: 'Budget-friendly interior door suitable for standard residential applications. Supplied without warranty.',
+    descAr: 'باب داخلي اقتصادي مناسب للتطبيقات السكنية القياسية. يُورَّد بدون ضمان.',
+    price: 550,
+    img: _DOOR_ECO[0], imgs: _DOOR_ECO,
+    warrantyLabel: 'No Warranty', warrantyLabelAr: 'بدون ضمان',
+    features: ['Budget-friendly construction','Standard residential grade quality','Paint surface finish','Lightweight design','Easy installation','Suitable for standard applications','Cost-effective solution','Functional and practical'],
+    featuresAr: ['بناء اقتصادي ميسور التكلفة','جودة سكنية قياسية','تشطيب دهان سطحي','تصميم خفيف الوزن','تركيب سهل','مناسب للتطبيقات القياسية','حل فعّال من حيث التكلفة','عملي ونافع'],
+    specs: {'Product Type':'Door','Door Type':'Interior – Standard','Frame Material':'Standard Wood','Core Material':'Standard Core','Surface Finish':'Paint','Wood Species':'Standard Wood','Warranty':'No Warranty','Application':'Residential','Installation':'Interior','Country':'Saudi Arabia'},
+    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قياسي','مادة الإطار':'خشب قياسي','مادة القلب':'قلب قياسي','التشطيب السطحي':'دهان','نوع الخشب':'خشب قياسي','الضمان':'بدون ضمان','التطبيق':'سكني','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
+    applications: ['Standard Residential Buildings','Apartments','Budget Housing Projects','Utility Rooms','Storage Areas'],
+    applicationsAr: ['المباني السكنية القياسية','الشقق','مشاريع الإسكان الميسور','الغرف الخدمية','مناطق التخزين'],
+    finishes: ['Paint Finish'],
+    finishesAr: ['تشطيب دهان'],
+    sizes: _DOOR_SIZES
   }
 ];
+
+/* ════ O(1) product lookup map ════ */
+var PRODUCTS_MAP = {};
+PRODUCTS.forEach(function(p){ PRODUCTS_MAP[p.id] = p; });
+function getProduct(id) { return PRODUCTS_MAP[id] || null; }
 
 /* ════ Helper ════ */
 function t(en, ar) { return IS_AR ? ar : en; }
@@ -142,18 +277,26 @@ var slider = {
     this.show(0);
     this.startAuto();
 
-    // Parallax on scroll
-    window.addEventListener('scroll', function() {
-      var y = window.scrollY;
-      var hero = document.querySelector('.ph-hero');
-      if (!hero) return;
-      var heroH = hero.offsetHeight;
-      if (y > heroH) return;
-      var ratio = y / heroH;
-      document.querySelectorAll('.ph-slide-bg').forEach(function(bg) {
-        bg.style.transform = 'translateY(' + (ratio * 30) + '%)';
-      });
-    }, {passive: true});
+    // Parallax on scroll — cache references once
+    var phHero = document.querySelector('.ph-hero');
+    var phBgs  = document.querySelectorAll('.ph-slide-bg');
+    if (phHero && phBgs.length) {
+      var phTicking = false;
+      window.addEventListener('scroll', function() {
+        if (phTicking) return; phTicking = true;
+        requestAnimationFrame(function() {
+          phTicking = false;
+          var y = window.scrollY;
+          var heroH = phHero.offsetHeight;
+          if (y > heroH) return;
+          var ratio = y / heroH;
+          var val = 'translateY(' + (ratio * 30) + '%)';
+          for (var i = 0; i < phBgs.length; i++) {
+            phBgs[i].style.transform = val;
+          }
+        });
+      }, {passive: true});
+    }
   },
 
   go: function(idx) {
@@ -201,125 +344,345 @@ var slider = {
 var grid = document.getElementById('prodGrid');
 
 function catLabel(cat) {
-  var map = {wood: t('Wood Works','أعمال الخشب'), steel: t('Steel Works','أعمال الحديد'), aluminium: t('Aluminium Works','أعمال الألومنيوم')};
+  var map = {
+    doors: t('Doors','الأبواب'),
+    wood:  t('Wood Works','أعمال الخشب'),
+    steel: t('Steel Works','أعمال الحديد'),
+    aluminium: t('Aluminium Works','أعمال الألومنيوم')
+  };
   return map[cat] || cat;
 }
 
+/* ════════════════════════════════════════════
+   PRODUCT IMAGE STACK
+   ════════════════════════════════════════════ */
+function ProductImageStack(container, imgs, name, productId) {
+  this.container   = container;
+  this.imgs        = imgs;
+  this.name        = name;
+  this.productId   = productId;
+  this.frontIdx    = 0;
+  this.locked      = false;
+  this._touchStartX = 0;
+  /* true on devices that have a real pointer and support CSS :hover */
+  this._hasHover   = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  this._build();
+}
+
+/* Returns 'front'|'left'|'right'|'back' for image at imgIdx given current frontIdx.
+   n=1: only front
+   n=2: front + right
+   n=3: front, left(1), right(2)
+   n=4: front, left(1), back(2), right(3) */
+ProductImageStack.prototype._posOf = function(imgIdx) {
+  var n    = this.imgs.length;
+  var diff = (imgIdx - this.frontIdx + n) % n;
+  if (diff === 0) return 'front';
+  if (n === 2)    return 'right';
+  if (diff === 1) return 'left';
+  if (n === 3)    return 'right';
+  if (diff === 2) return 'back';
+  return 'right';
+};
+
+ProductImageStack.prototype._build = function() {
+  var self = this;
+  var n = this.imgs.length;
+  this.container.innerHTML = '';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'iss-wrap';
+  this.container.appendChild(wrap);
+  this._wrap = wrap;
+
+  this._cards = this.imgs.map(function(src, i) {
+    var card = document.createElement('div');
+    card.className    = 'iss-card';
+    card.dataset.pos  = self._posOf(i);
+    card.dataset.idx  = i;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', self.name + ' — ' + t('Image', 'صورة') + ' ' + (i + 1));
+    card.setAttribute('tabindex', i === 0 ? '0' : '-1');
+    var img       = document.createElement('img');
+    img.src        = src;
+    img.alt        = self.name + ' ' + (i + 1);
+    img.loading    = i === 0 ? 'eager' : 'lazy';
+    img.decoding   = 'async';
+    card.appendChild(img);
+    wrap.appendChild(card);
+    return card;
+  });
+
+  /* Counter: "1/3" top-right — only shown when n > 1 */
+  if (n > 1) {
+    var counter = document.createElement('div');
+    counter.className = 'iss-counter';
+    counter.setAttribute('aria-hidden', 'true');
+    counter.textContent = '1/' + n;
+    this.container.appendChild(counter);
+    this._counter = counter;
+  } else {
+    this._counter = null;
+  }
+
+  /* Navigation dots — only shown when n > 1 */
+  if (n > 1) {
+    var dotsWrap = document.createElement('div');
+    dotsWrap.className = 'iss-dots';
+    dotsWrap.setAttribute('aria-hidden', 'true');
+    this._dotEls = this.imgs.map(function(_, i) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'iss-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', t('Image', 'صورة') + ' ' + (i + 1));
+      dot.addEventListener('click', function(e) {
+        e.stopPropagation();
+        self.rotateTo(i);
+      });
+      dotsWrap.appendChild(dot);
+      return dot;
+    });
+    this.container.appendChild(dotsWrap);
+  } else {
+    this._dotEls = [];
+  }
+
+  this._applyZ();
+  this._bind();
+};
+
+/* Sync z-index, counter, and dots to current frontIdx */
+ProductImageStack.prototype._applyZ = function() {
+  var self = this;
+  var n = this.imgs.length;
+  this._cards.forEach(function(card, i) {
+    card.style.zIndex = self._posOf(i) === 'front' ? '3' : '2';
+    card.setAttribute('tabindex', self._posOf(i) === 'front' ? '0' : '-1');
+  });
+  if (this._counter) {
+    this._counter.textContent = (this.frontIdx + 1) + '/' + n;
+  }
+  if (this._dotEls && this._dotEls.length) {
+    this._dotEls.forEach(function(dot, i) {
+      dot.classList.toggle('active', i === self.frontIdx);
+    });
+  }
+};
+
+/* Smoothly rotate so newFront becomes the front image */
+ProductImageStack.prototype.rotateTo = function(newFront) {
+  if (newFront === this.frontIdx || this.locked) return;
+  this.locked = true;
+  var self    = this;
+  var n       = this.imgs.length;
+
+  /* Elevate the incoming card above the current front before the CSS transition fires */
+  this._cards[newFront].style.zIndex = '4';
+
+  this.frontIdx = newFront;
+  this._cards.forEach(function(card, i) {
+    card.dataset.pos = self._posOf(i);
+  });
+
+  /* Update counter and dots immediately for instant feedback */
+  if (this._counter) {
+    this._counter.textContent = (this.frontIdx + 1) + '/' + n;
+  }
+  if (this._dotEls && this._dotEls.length) {
+    this._dotEls.forEach(function(dot, i) {
+      dot.classList.toggle('active', i === self.frontIdx);
+    });
+  }
+
+  /* Normalise z-indices after the CSS transition completes */
+  setTimeout(function() {
+    self.locked = false;
+    self._applyZ();
+  }, 520);
+};
+
+ProductImageStack.prototype._bind = function() {
+  var self = this;
+  var n    = this.imgs.length;
+
+  this._cards.forEach(function(card, i) {
+    /* Desktop hover → rotate side cards to front */
+    if (self._hasHover) {
+      card.addEventListener('mouseenter', function() {
+        if (self._posOf(i) !== 'front') self.rotateTo(i);
+      });
+    }
+
+    /* Click / tap */
+    card.addEventListener('click', function(e) {
+      e.stopPropagation(); /* prevent card-body click opening prodModal */
+      var isFront = self._posOf(i) === 'front';
+      if (!self._hasHover && !isFront) {
+        /* Touch device: tap a side card → bring it to front */
+        self.rotateTo(i);
+      } else {
+        /* Desktop: any click → open gallery at this image's index.
+           Touch: tap on front → open gallery.                      */
+        imgGallery.open(self.productId, i);
+      }
+    });
+
+    /* Keyboard: ArrowLeft brings visual-left card to front; ArrowRight brings visual-right.
+       Visual-left is at diff=1 = (frontIdx+1)%n; visual-right is at diff=2 = (frontIdx-1+n)%n */
+    card.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        self.rotateTo((self.frontIdx + 1) % n);
+        self._cards[self.frontIdx].focus();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        self.rotateTo((self.frontIdx - 1 + n) % n);
+        self._cards[self.frontIdx].focus();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        imgGallery.open(self.productId, self.frontIdx);
+      }
+    });
+  });
+
+  /* Touch swipe: swipe-left brings the visual-right card forward (natural gallery feel);
+     swipe-right brings visual-left card forward */
+  this._wrap.addEventListener('touchstart', function(e) {
+    self._touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  this._wrap.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - self._touchStartX;
+    if (Math.abs(dx) > 35) {
+      var newFront = dx < 0
+        ? (self.frontIdx - 1 + n) % n   /* swipe left  → visual-right comes forward */
+        : (self.frontIdx + 1) % n;      /* swipe right → visual-left comes forward  */
+      self.rotateTo(newFront);
+    }
+  }, { passive: true });
+};
+
+/* ════════════════════════════════════════════
+   CARD BUILDER
+   ════════════════════════════════════════════ */
 function buildCard(p) {
+  var name        = IS_AR ? p.nameAr : p.name;
+  var desc        = IS_AR ? p.descAr : p.desc;
+  var warrantyLbl = IS_AR ? p.warrantyLabelAr : p.warrantyLabel;
+  var detailsLbl  = t('View Details','عرض التفاصيل');
+  var orderLbl    = t('Order Now','اطلب الآن');
+  var hasImgs     = p.imgs && p.imgs.length > 0;
+  var catLbl      = t('DOORS','الأبواب');
+
+  /* Image area */
+  var imgArea = document.createElement('div');
+  imgArea.className = 'prod-card-img';
+
+  /* Category badge — overlaid on image */
+  var badge = document.createElement('div');
+  badge.className = 'prod-cat-badge';
+  badge.textContent = catLbl;
+  imgArea.appendChild(badge);
+
+  if (hasImgs) {
+    new ProductImageStack(imgArea, p.imgs, name, p.id);
+  } else {
+    var noImg = document.createElement('div');
+    noImg.className = 'prod-card-no-img';
+    noImg.innerHTML =
+      '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' +
+      '<span>' + t('Image Coming Soon','الصورة قريباً') + '</span>';
+    imgArea.appendChild(noImg);
+  }
+
+  /* Card wrapper */
   var div = document.createElement('div');
-  div.className = 'prod-card';
+  div.className   = 'prod-card';
   div.dataset.id  = p.id;
   div.dataset.cat = p.cat;
+  div.appendChild(imgArea);
 
-  var name  = IS_AR ? p.nameAr  : p.name;
-  var desc  = IS_AR ? p.descAr  : p.desc;
-  var badge = catLabel(p.cat);
-  var addLbl   = t('Add to Cart','أضف إلى السلة');
-  var orderLbl = t('Order Now','اطلب الآن');
-  var availLbl = t('Available','متاح');
-
-  div.innerHTML = [
-    '<div class="prod-card-img">',
-      '<img src="' + p.img + '" alt="' + name + '" loading="lazy">',
-      '<span class="prod-badge ' + p.cat + '">' + badge + '</span>',
-      '<div class="prod-img-hover"><span class="prod-view-lbl">' + t('View Details','عرض التفاصيل') + '</span></div>',
+  /* Card body */
+  var body = document.createElement('div');
+  body.className = 'prod-card-body';
+  body.innerHTML = [
+    '<div class="prod-name">' + name + '</div>',
+    '<p class="prod-desc">' + desc + '</p>',
+    '<div class="prod-price-row">',
+      '<div class="prod-price">' + fmt(p.price) + '</div>',
+      warrantyLbl
+        ? '<span class="prod-warranty-badge">' +
+            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+            warrantyLbl +
+          '</span>'
+        : '',
     '</div>',
-    '<div class="prod-card-body">',
-      '<span class="prod-cat-tag">' + badge + '</span>',
-      '<div class="prod-name">' + name + '</div>',
-      '<p class="prod-desc">' + desc + '</p>',
-      '<div class="prod-price-row">',
-        '<div class="prod-price">' + fmt(p.price) + '</div>',
-        '<span class="prod-avail">' + availLbl + '</span>',
-      '</div>',
-      '<div class="prod-actions">',
-        '<button class="btn-add-cart" data-id="' + p.id + '">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>' +
-          addLbl +
-        '</button>',
-        '<button class="btn-order-now" data-id="' + p.id + '">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
-          orderLbl +
-        '</button>',
-      '</div>',
+    '<div class="prod-actions">',
+      '<button class="btn-view-details" data-id="' + p.id + '">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+        detailsLbl +
+      '</button>',
+      '<button class="btn-order-now" data-id="' + p.id + '">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
+        orderLbl +
+      '</button>',
     '</div>'
   ].join('');
+  div.appendChild(body);
 
   return div;
+}
+
+var BATCH_SIZE = 12;       // LCM(4,3,2)=12 — every initial render & Load More ends on a complete row
+var renderedCount = 0;
+
+function renderBatch() {
+  if (!grid) return;
+  var slice = PRODUCTS.slice(renderedCount, renderedCount + BATCH_SIZE);
+  var frag = document.createDocumentFragment();   // efficient single reflow
+  var newCards = [];
+  slice.forEach(function(p) {
+    var card = buildCard(p);
+    frag.appendChild(card);
+    newCards.push(card);
+  });
+  grid.appendChild(frag);
+  newCards.forEach(function(c, i) {
+    setTimeout(function() { c.classList.add('visible'); }, 30 + i * 45);
+  });
+  renderedCount += slice.length;
+  var wrap = document.getElementById('prodLoadMoreWrap');
+  if (wrap) wrap.style.display = (renderedCount < PRODUCTS.length) ? '' : 'none';
 }
 
 function renderProducts() {
   if (!grid) return;
   grid.innerHTML = '';
-  PRODUCTS.forEach(function(p) {
-    var card = buildCard(p);
-    grid.appendChild(card);
-  });
-  // Staggered entrance
-  var cards = grid.querySelectorAll('.prod-card');
-  cards.forEach(function(c, i) {
-    setTimeout(function() { c.classList.add('visible'); }, 80 + i * 80);
-  });
-  // Delegate card body click → modal
+  renderedCount = 0;
+  renderBatch();
+  // Load More button
+  var lm = document.getElementById('prodLoadMore');
+  if (lm) {
+    lm.textContent = t('Load More Products', 'عرض المزيد من المنتجات');
+    lm.addEventListener('click', renderBatch);
+  }
+  // Delegate card body click → modal (attached once)
   grid.addEventListener('click', function(e) {
-    var btn = e.target.closest('.btn-add-cart');
-    var ord = e.target.closest('.btn-order-now');
-    var card = e.target.closest('.prod-card');
-    if (btn) {
+    var detBtn = e.target.closest('.btn-view-details');
+    var ord    = e.target.closest('.btn-order-now');
+    var card   = e.target.closest('.prod-card');
+    if (detBtn) {
       e.stopPropagation();
-      var id = parseInt(btn.dataset.id, 10);
-      cart.add(id, 1);
-      btn.classList.add('added');
-      btn.textContent = t('Added!', 'تمت الإضافة!');
-      setTimeout(function() {
-        btn.classList.remove('added');
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>' + t('Add to Cart','أضف إلى السلة');
-      }, 1800);
+      prodModal.open(parseInt(detBtn.dataset.id, 10));
     } else if (ord) {
       e.stopPropagation();
-      var id = parseInt(ord.dataset.id, 10);
-      orderModal.open(id, 1);
+      orderModal.open(parseInt(ord.dataset.id, 10), 1);
     } else if (card) {
-      var id = parseInt(card.dataset.id, 10);
-      prodModal.open(id);
+      prodModal.open(parseInt(card.dataset.id, 10));
     }
   });
 }
 
-/* ════════════════════════════════════════════
-   PRODUCT FILTERS
-   ════════════════════════════════════════════ */
-function initFilters() {
-  var btns = document.querySelectorAll('.prod-filter');
-  btns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      btns.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      var cat = btn.dataset.cat;
-      filterCards(cat);
-    });
-  });
-}
-
-function filterCards(cat) {
-  var cards = grid ? grid.querySelectorAll('.prod-card') : [];
-  cards.forEach(function(c, i) {
-    var match = cat === 'all' || c.dataset.cat === cat;
-    if (match) {
-      c.classList.remove('hidden');
-      c.style.opacity = '0';
-      c.style.transform = 'translateY(20px)';
-      setTimeout(function() {
-        c.style.opacity = '';
-        c.style.transform = '';
-        c.classList.add('visible');
-      }, i * 60);
-    } else {
-      c.classList.add('hidden');
-      c.classList.remove('visible');
-    }
-  });
-}
 
 /* ════════════════════════════════════════════
    PRODUCT MODAL
@@ -327,6 +690,7 @@ function filterCards(cat) {
 var prodModal = {
   el: null,
   modalQty: 1,
+  currentImgIdx: 0,
   currentProduct: null,
 
   init: function() {
@@ -352,13 +716,74 @@ var prodModal = {
       self.close();
       orderModal.open(self.currentProduct.id, self.modalQty);
     });
+    var quoteBtn = document.getElementById('pmQuoteBtn');
+    if (quoteBtn) {
+      quoteBtn.addEventListener('click', function() {
+        if (!self.currentProduct) return;
+        self.close();
+        orderModal.open(self.currentProduct.id, self.modalQty);
+      });
+    }
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && self.el.classList.contains('open')) self.close();
+      if (!self.el || !self.el.classList.contains('open')) return;
+      if (e.key === 'Escape') { self.close(); }
+      else if (e.key === 'ArrowLeft')  { self.goImg(self.currentImgIdx - 1); }
+      else if (e.key === 'ArrowRight') { self.goImg(self.currentImgIdx + 1); }
     });
+
+    // Inject gallery prev/next nav buttons + touch swipe
+    var gallerySide = this.el.querySelector('.pm-gallery-side');
+    if (gallerySide) {
+      var prevBtn = document.createElement('button');
+      prevBtn.className = 'pm-img-prev';
+      prevBtn.setAttribute('aria-label', t('Previous image','الصورة السابقة'));
+      prevBtn.innerHTML = '&#8592;';
+      prevBtn.addEventListener('click', function(e) { e.stopPropagation(); self.goImg(self.currentImgIdx - 1); });
+
+      var nextBtn = document.createElement('button');
+      nextBtn.className = 'pm-img-next';
+      nextBtn.setAttribute('aria-label', t('Next image','الصورة التالية'));
+      nextBtn.innerHTML = '&#8594;';
+      nextBtn.addEventListener('click', function(e) { e.stopPropagation(); self.goImg(self.currentImgIdx + 1); });
+
+      gallerySide.appendChild(prevBtn);
+      gallerySide.appendChild(nextBtn);
+
+      var pmTouchX = 0;
+      var mainImgWrap = this.el.querySelector('.pm-main-img');
+      if (mainImgWrap) {
+        mainImgWrap.addEventListener('touchstart', function(e) { pmTouchX = e.touches[0].clientX; }, {passive:true});
+        mainImgWrap.addEventListener('touchend', function(e) {
+          var dx = e.changedTouches[0].clientX - pmTouchX;
+          if (Math.abs(dx) > 40) self.goImg(dx < 0 ? self.currentImgIdx + 1 : self.currentImgIdx - 1);
+        }, {passive:true});
+      }
+    }
+  },
+
+  goImg: function(idx) {
+    if (!this.currentProduct) return;
+    var p = this.currentProduct;
+    var imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
+    var len = imgs.length;
+    if (!len) return;
+    var n = ((idx % len) + len) % len;
+    this.currentImgIdx = n;
+    var mainImg = document.getElementById('pmMainImg');
+    if (mainImg) {
+      mainImg.src = imgs[n];
+      mainImg.alt = (IS_AR ? this.currentProduct.nameAr : this.currentProduct.name) + ' ' + (n + 1);
+    }
+    var thumbsEl = document.getElementById('pmThumbs');
+    if (thumbsEl) {
+      thumbsEl.querySelectorAll('.pm-thumb').forEach(function(th, i) {
+        th.classList.toggle('active', i === n);
+      });
+    }
   },
 
   open: function(id) {
-    var p = PRODUCTS.filter(function(x){return x.id===id;})[0];
+    var p = getProduct(id);
     if (!p || !this.el) return;
     this.currentProduct = p;
     this.modalQty = 1;
@@ -374,43 +799,109 @@ var prodModal = {
   },
 
   populate: function(p) {
-    var name = IS_AR ? p.nameAr : p.name;
-    var desc = IS_AR ? p.descAr : p.desc;
-    var specs = IS_AR ? p.specsAr : p.specs;
+    var name        = IS_AR ? p.nameAr : p.name;
+    var desc        = IS_AR ? p.descAr : p.desc;
+    var specs       = IS_AR ? p.specsAr : p.specs;
+    var features    = IS_AR ? (p.featuresAr || []) : (p.features || []);
+    var applications= IS_AR ? (p.applicationsAr || []) : (p.applications || []);
+    var finishes    = IS_AR ? (p.finishesAr || []) : (p.finishes || []);
+    var sizes       = p.sizes || ['2100 × 900 mm', '2100 × 1000 mm'];
+    var warrantyLbl = IS_AR ? p.warrantyLabelAr : p.warrantyLabel;
 
-    document.getElementById('pmCat').textContent = catLabel(p.cat);
-    document.getElementById('pmTitle').textContent = name;
-    document.getElementById('pmPrice').innerHTML = fmt(p.price);
-    document.getElementById('pmDesc').textContent = desc;
+    document.getElementById('pmCat').textContent   = t('DOORS','الأبواب');
+    document.getElementById('pmTitle').textContent  = name;
+    document.getElementById('pmPrice').innerHTML    = fmt(p.price);
+    document.getElementById('pmDesc').textContent   = desc;
+
+    // Warranty badge
+    var wBadge = document.getElementById('pmWarrantyBadge');
+    if (wBadge) {
+      wBadge.textContent = warrantyLbl || '';
+      wBadge.style.display = warrantyLbl ? '' : 'none';
+    }
+
+    // Features list
+    var featEl = document.getElementById('pmFeatures');
+    if (featEl) {
+      featEl.innerHTML = features.map(function(f) {
+        return '<li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' + f + '</li>';
+      }).join('');
+    }
 
     // Specs table
     var specsEl = document.getElementById('pmSpecs');
-    specsEl.innerHTML = '';
-    Object.keys(specs).forEach(function(k) {
-      var row = document.createElement('div');
-      row.className = 'pm-spec-row';
-      row.innerHTML = '<div class="pm-spec-key">' + k + '</div><div class="pm-spec-val">' + specs[k] + '</div>';
-      specsEl.appendChild(row);
-    });
+    if (specsEl) {
+      specsEl.innerHTML = '';
+      Object.keys(specs).forEach(function(k) {
+        var row = document.createElement('div');
+        row.className = 'pm-spec-row';
+        row.innerHTML = '<div class="pm-spec-key">' + k + '</div><div class="pm-spec-val">' + specs[k] + '</div>';
+        specsEl.appendChild(row);
+      });
+    }
+
+    // Applications tags
+    var appsEl = document.getElementById('pmApplications');
+    if (appsEl) {
+      appsEl.innerHTML = applications.map(function(a) {
+        return '<span class="pm-tag">' + a + '</span>';
+      }).join('');
+    }
+
+    // Finishes tags
+    var finEl = document.getElementById('pmFinishes');
+    if (finEl) {
+      finEl.innerHTML = finishes.map(function(f) {
+        return '<span class="pm-tag">' + f + '</span>';
+      }).join('');
+    }
+
+    // Sizes tags
+    var sizeEl = document.getElementById('pmSizes');
+    if (sizeEl) {
+      sizeEl.innerHTML = sizes.map(function(s) {
+        return '<span class="pm-tag pm-tag-size">' + s + '</span>';
+      }).join('');
+    }
+
+    // WhatsApp inquiry link
+    var waEl = document.getElementById('pmWhatsapp');
+    if (waEl) {
+      var waMsg = encodeURIComponent(t(
+        'Hello Al Farooque Manufacturing, I am interested in: ' + name + '. Please send me a quotation.',
+        'مرحباً شركة الفاروق للتصنيع، أنا مهتم بـ: ' + name + '. أرجو إرسال عرض سعر.'
+      ));
+      waEl.href = 'https://wa.me/' + WA_NUMBER + '?text=' + waMsg;
+    }
+
+    // Request quote link (order modal)
+    var quoteEl = document.getElementById('pmQuoteBtn');
+    if (quoteEl) {
+      quoteEl.dataset.id = p.id;
+    }
 
     // Main image
     var mainImg = document.getElementById('pmMainImg');
-    mainImg.src = p.imgs[0];
-    mainImg.alt = name;
+    var imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
+    this.currentImgIdx = 0;
+    if (imgs.length) {
+      mainImg.src = imgs[0];
+      mainImg.alt = name;
+      mainImg.style.display = '';
+    } else {
+      mainImg.src = '';
+      mainImg.style.display = 'none';
+    }
 
     // Thumbnails
     var thumbsEl = document.getElementById('pmThumbs');
     thumbsEl.innerHTML = '';
     var self = this;
-    p.imgs.forEach(function(src, i) {
+    imgs.forEach(function(src, i) {
       var div = document.createElement('div');
       div.className = 'pm-thumb' + (i === 0 ? ' active' : '');
       div.innerHTML = '<img src="' + src + '" alt="' + name + ' ' + (i+1) + '" loading="lazy">';
-      div.addEventListener('click', function() {
-        mainImg.src = src;
-        thumbsEl.querySelectorAll('.pm-thumb').forEach(function(t){ t.classList.remove('active'); });
-        div.classList.add('active');
-      });
+      div.addEventListener('click', function() { self.goImg(i); });
       thumbsEl.appendChild(div);
     });
 
@@ -422,7 +913,10 @@ var prodModal = {
     if (el) el.textContent = this.modalQty;
     var totalEl = document.getElementById('pmTotal');
     if (totalEl && this.currentProduct) {
-      totalEl.innerHTML = t('Total: ','الإجمالي: ') + '<strong>' + fmt(this.currentProduct.price * this.modalQty) + '</strong>';
+      totalEl.textContent = t('Total: ','الإجمالي: ');
+      var strong = document.createElement('strong');
+      strong.textContent = fmt(this.currentProduct.price * this.modalQty);
+      totalEl.appendChild(strong);
     }
   }
 };
@@ -457,6 +951,19 @@ var cart = {
       self.closeDrawer();
       orderModal.openCart();
     });
+
+    /* Single delegated listener on list — handles all qty/remove clicks */
+    var list = document.getElementById('cartItemsList');
+    if (list) {
+      list.addEventListener('click', function(e) {
+        var minus  = e.target.closest('.ci-minus');
+        var plus   = e.target.closest('.ci-plus');
+        var remove = e.target.closest('.cart-item-remove');
+        if (minus)  self.updateQty(parseInt(minus.dataset.id, 10), -1);
+        else if (plus)   self.updateQty(parseInt(plus.dataset.id, 10), 1);
+        else if (remove) self.remove(parseInt(remove.dataset.id, 10));
+      });
+    }
 
     this.renderDrawer();
     this.updateBadge();
@@ -500,7 +1007,7 @@ var cart = {
 
   total: function() {
     return this.items.reduce(function(sum, i) {
-      var p = PRODUCTS.filter(function(x){return x.id===i.id;})[0];
+      var p = getProduct(i.id);
       return sum + (p ? p.price * i.qty : 0);
     }, 0);
   },
@@ -528,11 +1035,12 @@ var cart = {
     badge.textContent = c;
     badge.classList.toggle('show', c > 0);
     if (bump && c > 0) {
+      /* Use rAF double-frame to restart animation without forced layout */
       badge.classList.remove('bump');
-      void badge.offsetWidth;
-      badge.classList.add('bump');
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() { badge.classList.add('bump'); });
+      });
     }
-    // Update drawer count
     var dc = document.getElementById('cartDrCount');
     if (dc) dc.textContent = t(c + ' item' + (c!==1?'s':''), c + ' منتج');
   },
@@ -540,20 +1048,22 @@ var cart = {
   renderDrawer: function() {
     var list = document.getElementById('cartItemsList');
     if (!list) return;
-    var self = this;
+    var frag = document.createDocumentFragment();
     if (!this.items.length) {
-      list.innerHTML = '<div class="cart-empty-msg"><span class="cart-empty-ico">🛒</span><div class="cart-empty-txt">' + t('Your cart is empty','سلة التسوق فارغة') + '</div></div>';
+      var empty = document.createElement('div');
+      empty.className = 'cart-empty-msg';
+      empty.innerHTML = '<span class="cart-empty-ico">🛒</span><div class="cart-empty-txt">' + t('Your cart is empty','سلة التسوق فارغة') + '</div>';
+      frag.appendChild(empty);
     } else {
-      list.innerHTML = '';
       this.items.forEach(function(ci) {
-        var p = PRODUCTS.filter(function(x){return x.id===ci.id;})[0];
+        var p = getProduct(ci.id);
         if (!p) return;
         var name = IS_AR ? p.nameAr : p.name;
         var el = document.createElement('div');
         el.className = 'cart-item';
         el.dataset.id = p.id;
         el.innerHTML = [
-          '<div class="cart-item-img"><img src="' + p.img + '" alt="' + name + '" loading="lazy"></div>',
+          '<div class="cart-item-img"><img src="' + p.img + '" alt="' + name + '" loading="lazy" decoding="async"></div>',
           '<div>',
             '<div class="cart-item-name">' + name + '</div>',
             '<div class="cart-item-unit-price">' + fmt(p.price * ci.qty) + '</div>',
@@ -565,26 +1075,18 @@ var cart = {
           '</div>',
           '<button class="cart-item-remove" data-id="' + p.id + '" aria-label="' + t('Remove','حذف') + '">×</button>'
         ].join('');
-        list.appendChild(el);
-      });
-      // Delegate events
-      list.querySelectorAll('.ci-minus').forEach(function(b){
-        b.addEventListener('click', function(){ self.updateQty(parseInt(b.dataset.id,10), -1); });
-      });
-      list.querySelectorAll('.ci-plus').forEach(function(b){
-        b.addEventListener('click', function(){ self.updateQty(parseInt(b.dataset.id,10), 1); });
-      });
-      list.querySelectorAll('.cart-item-remove').forEach(function(b){
-        b.addEventListener('click', function(){ self.remove(parseInt(b.dataset.id,10)); });
+        frag.appendChild(el);
       });
     }
-    // Update totals
+    list.textContent = ''; /* clear without innerHTML assignment */
+    list.appendChild(frag);
+
+    /* Single delegated listener — set once in init(), not recreated here */
+    var total = this.total();
     var subEl = document.getElementById('cartSubtotal');
     var totEl = document.getElementById('cartGrandTotal');
-    var total = this.total();
     if (subEl) subEl.textContent = fmt(total);
     if (totEl) totEl.textContent = fmt(total);
-    // Enable/disable proceed
     var proceedBtn = document.getElementById('cartProceed');
     if (proceedBtn) proceedBtn.disabled = !this.items.length;
     this.updateBadge(false);
@@ -624,7 +1126,7 @@ var orderModal = {
     this.productId  = id;
     this.qty        = qty || 1;
     this.isCartOrder= false;
-    var p = PRODUCTS.filter(function(x){return x.id===id;})[0];
+    var p = getProduct(id);
     if (!p) return;
     var name = IS_AR ? p.nameAr : p.name;
     document.getElementById('omProdImg').src = p.img;
@@ -671,7 +1173,7 @@ var orderModal = {
     if (this.isCartOrder) {
       val = cart.total();
     } else {
-      var p = PRODUCTS.filter(function(x){return x.id === orderModal.productId;})[0];
+      var p = getProduct(orderModal.productId);
       val = p ? p.price * this.qty : 0;
     }
     totEl.innerHTML = '<span>' + t('Total','الإجمالي') + '</span><span>' + fmt(val) + '</span>';
@@ -690,12 +1192,12 @@ var orderModal = {
       if (this.isCartOrder) {
         lines.push('📦 *المنتجات:*');
         cart.items.forEach(function(ci) {
-          var p = PRODUCTS.filter(function(x){return x.id===ci.id;})[0];
+          var p = getProduct(ci.id);
           if (p) lines.push('  • ' + p.nameAr + ' × ' + ci.qty + ' — ' + fmt(p.price * ci.qty));
         });
         lines.push('💰 *الإجمالي:* ' + fmt(cart.total()));
       } else {
-        var p = PRODUCTS.filter(function(x){return x.id===this.productId;})[0];
+        var p = getProduct(this.productId);
         if (p) {
           lines.push('📦 *المنتج:* ' + p.nameAr);
           lines.push('🔢 *الكمية:* ' + this.qty);
@@ -712,12 +1214,12 @@ var orderModal = {
       if (this.isCartOrder) {
         lines.push('📦 *Products:*');
         cart.items.forEach(function(ci) {
-          var p = PRODUCTS.filter(function(x){return x.id===ci.id;})[0];
+          var p = getProduct(ci.id);
           if (p) lines.push('  • ' + p.name + ' × ' + ci.qty + ' — ' + fmt(p.price * ci.qty));
         });
         lines.push('💰 *Total:* ' + fmt(cart.total()));
       } else {
-        var p = PRODUCTS.filter(function(x){return x.id===orderModal.productId;})[0];
+        var p = getProduct(orderModal.productId);
         if (p) {
           lines.push('📦 *Product:* ' + p.name);
           lines.push('🔢 *Quantity:* ' + this.qty);
@@ -744,12 +1246,12 @@ var orderModal = {
       if (this.isCartOrder) {
         lines.push('المنتجات:');
         cart.items.forEach(function(ci) {
-          var p = PRODUCTS.filter(function(x){return x.id===ci.id;})[0];
+          var p = getProduct(ci.id);
           if (p) lines.push('  - ' + p.nameAr + ' × ' + ci.qty + ' = ' + fmt(p.price * ci.qty));
         });
         lines.push('الإجمالي: ' + fmt(cart.total()));
       } else {
-        var p = PRODUCTS.filter(function(x){return x.id===this.productId;})[0];
+        var p = getProduct(this.productId);
         if (p) {
           lines.push('المنتج: ' + p.nameAr);
           lines.push('الكمية: ' + this.qty);
@@ -766,12 +1268,12 @@ var orderModal = {
       if (this.isCartOrder) {
         lines.push('Products:');
         cart.items.forEach(function(ci) {
-          var p = PRODUCTS.filter(function(x){return x.id===ci.id;})[0];
+          var p = getProduct(ci.id);
           if (p) lines.push('  - ' + p.name + ' x ' + ci.qty + ' = ' + fmt(p.price * ci.qty));
         });
         lines.push('Total: ' + fmt(cart.total()));
       } else {
-        var p = PRODUCTS.filter(function(x){return x.id===orderModal.productId;})[0];
+        var p = getProduct(orderModal.productId);
         if (p) {
           lines.push('Product: ' + p.name);
           lines.push('Quantity: ' + this.qty);
@@ -794,7 +1296,7 @@ var orderModal = {
   },
 
   sendEmail: function() {
-    var p = this.isCartOrder ? null : PRODUCTS.filter(function(x){return x.id===orderModal.productId;})[0];
+    var p = this.isCartOrder ? null : getProduct(orderModal.productId);
     var subject = IS_AR
       ? 'طلب جديد — ' + (p ? p.nameAr : 'طلب سلة')
       : 'New Product Order — ' + (p ? p.name : 'Cart Order');
@@ -832,15 +1334,127 @@ function patchLangSwitcher() {
 }
 
 /* ════════════════════════════════════════════
+   IMAGE GALLERY
+   ════════════════════════════════════════════ */
+var imgGallery = {
+  el: null,
+  currentIdx: 0,
+  currentImgs: [],
+
+  init: function() {
+    var self = this;
+    var modal = document.createElement('div');
+    modal.className = 'img-gallery-modal';
+    modal.id = 'imgGalleryModal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', t('Image Gallery', 'معرض الصور'));
+    modal.innerHTML = [
+      '<div class="ig-backdrop" id="igBackdrop"></div>',
+      '<div class="ig-inner">',
+        '<button class="ig-close" id="igClose" aria-label="' + t('Close','إغلاق') + '">&#215;</button>',
+        '<div class="ig-main">',
+          '<button class="ig-arrow ig-prev" id="igPrev" aria-label="' + t('Previous','السابق') + '">&#8592;</button>',
+          '<div class="ig-main-img-wrap" id="igMainImgWrap">',
+            '<img id="igMainImg" src="" alt="" loading="eager">',
+          '</div>',
+          '<button class="ig-arrow ig-next" id="igNext" aria-label="' + t('Next','التالي') + '">&#8594;</button>',
+        '</div>',
+        '<div class="ig-thumbs" id="igThumbs"></div>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(modal);
+    this.el = modal;
+
+    document.getElementById('igClose').addEventListener('click', function() { self.close(); });
+    document.getElementById('igBackdrop').addEventListener('click', function() { self.close(); });
+    document.getElementById('igPrev').addEventListener('click', function() { self.go(self.currentIdx - 1); });
+    document.getElementById('igNext').addEventListener('click', function() { self.go(self.currentIdx + 1); });
+
+    document.addEventListener('keydown', function(e) {
+      if (!self.el || !self.el.classList.contains('open')) return;
+      if (e.key === 'Escape')      { self.close(); }
+      else if (e.key === 'ArrowLeft')  { self.go(self.currentIdx - 1); }
+      else if (e.key === 'ArrowRight') { self.go(self.currentIdx + 1); }
+    });
+
+    var touchStartX = 0;
+    var wrap = document.getElementById('igMainImgWrap');
+    if (wrap) {
+      wrap.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      wrap.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) self.go(dx < 0 ? self.currentIdx + 1 : self.currentIdx - 1);
+      }, { passive: true });
+    }
+  },
+
+  open: function(id, startIdx) {
+    var p = getProduct(id);
+    if (!p || !this.el) return;
+    var name = IS_AR ? p.nameAr : p.name;
+    this.currentImgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
+    if (!this.currentImgs.length) return;
+    this.buildThumbs(name);
+    this.go(startIdx !== undefined ? startIdx : 0);
+    this.el.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  },
+
+  close: function() {
+    if (!this.el) return;
+    this.el.classList.remove('open');
+    document.body.style.overflow = '';
+  },
+
+  go: function(idx) {
+    var len = this.currentImgs.length;
+    var n = ((idx % len) + len) % len;
+    this.currentIdx = n;
+    var mainImg = document.getElementById('igMainImg');
+    if (mainImg) mainImg.src = this.currentImgs[n];
+    document.querySelectorAll('#igThumbs .ig-thumb').forEach(function(th, i) {
+      th.classList.toggle('active', i === n);
+    });
+    var prevBtn = document.getElementById('igPrev');
+    var nextBtn = document.getElementById('igNext');
+    var show = len > 1;
+    if (prevBtn) prevBtn.style.display = show ? '' : 'none';
+    if (nextBtn) nextBtn.style.display = show ? '' : 'none';
+  },
+
+  buildThumbs: function(name) {
+    var self = this;
+    var thumbsEl = document.getElementById('igThumbs');
+    if (!thumbsEl) return;
+    thumbsEl.innerHTML = '';
+    this.currentImgs.forEach(function(src, i) {
+      var btn = document.createElement('button');
+      btn.className = 'ig-thumb';
+      btn.setAttribute('aria-label', name + ' ' + (i + 1));
+      var img = document.createElement('img');
+      img.src = src;
+      img.alt = name + ' ' + (i + 1);
+      img.loading = 'lazy';
+      btn.appendChild(img);
+      btn.addEventListener('click', function() { self.go(i); });
+      thumbsEl.appendChild(btn);
+    });
+  }
+};
+
+/* ════════════════════════════════════════════
    INIT
    ════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
   slider.init();
   renderProducts();
-  initFilters();
   cart.init();
   prodModal.init();
   orderModal.init();
+  imgGallery.init();
   updateYear();
   /* Patch language switcher after it initialises */
   setTimeout(patchLangSwitcher, 50);

@@ -1,21 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>/* AL FAROOQUE: dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="description" content="AL FAROOQUE Manufacturing – Premium Wood Works, Steel Works and Aluminium Works. Jeddah, Saudi Arabia. Part of AL FAROOQUE Industries (IAAE). Est. 2000. Vision 2030 aligned.">
-<meta name="keywords" content="manufacturing Jeddah, wood works Saudi Arabia, steel works, aluminium works, IAAE, AL FAROOQUE">
+<meta name="description" content="AL FAROOQUE Manufacturing – Premium Wood Works, Steel Works and Aluminium Works. Jeddah, Saudi Arabia. Est. 2000. Vision 2030 aligned.">
+<meta name="keywords" content="manufacturing Jeddah, wood works Saudi Arabia, steel works, aluminium works, AL FAROOQUE">
 <meta property="og:title" content="AL FAROOQUE Manufacturing — Precision Engineered to Endure">
 <meta property="og:description" content="Premium Wood, Steel & Aluminium manufacturing from Jeddah, Saudi Arabia.">
-<meta property="og:image" content="assets/images/gallery/profile-01.jpg">
+<meta property="og:image" content="/assets/images/gallery/profile-01.jpg">
 <meta property="og:type" content="website">
 <title>AL FAROOQUE Manufacturing — Precision Engineered to Endure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/themes.css">
-<link rel="icon" href="assets/images/logo/IAA_LOGO.png" type="image/png">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/themes.css">
+<link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
 <body>
 
@@ -26,7 +27,7 @@
 
 <!-- ═══ PRELOADER ═══ -->
 <div id="preloader">
-  <img src="assets/images/logo/IAA_LOGO.png" alt="IAA" width="72" class="preloader-logo">
+  <img src="/assets/images/logo/IAA_LOGO.png" alt="IAA" width="72" class="preloader-logo">
   <div class="preloader-bar"><div class="preloader-fill"></div></div>
   <div class="preloader-text">AL FAROOQUE Manufacturing</div>
 </div>
@@ -46,66 +47,73 @@
 
 <!-- ═══ NAV ═══ -->
 <nav class="nav">
-  <a href="index.html" class="nav-logo">
-    <img src="assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE Industries">
+  <a href="/" class="nav-logo">
+    <img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE Industries">
     <div class="nav-brand">
       <span class="nav-brand-name">AL FAROOQUE</span>
-      <span class="nav-brand-sub">Manufacturing · IAAE</span>
+      <span class="nav-brand-sub">Manufacturing</span>
     </div>
   </a>
   <ul class="nav-links">
-    <li><a href="index.html" class="active">Home</a></li>
-    <li><a href="pages/about.html">About</a></li>
-    <li class="has-dropdown"><a href="pages/services.html">Services<span class="caret">▼</span></a>
+    <li><a href="/" class="active">Home</a></li>
+    <li><a href="/pages/about.html">About</a></li>
+    <li class="has-dropdown"><a href="/pages/services.html">Services<span class="caret">▼</span></a>
       <ul class="nav-dropdown">
-        <li><a href="pages/woodworks.html">Wood Works</a></li>
-        <li><a href="pages/steelworks.html">Steel Works</a></li>
-        <li><a href="pages/aluminium.html">Aluminium Works</a></li>
+        <li><a href="/pages/woodworks.html">Wood Works</a></li>
+        <li><a href="/pages/steelworks.html">Steel Works</a></li>
+        <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
       </ul>
     </li>
-    <li><a href="pages/gallery.html">Gallery</a></li>
-    <li><a href="products.html">Products</a></li>
-    <li><a href="pages/contact.html" class="nav-cta">Contact Us</a></li>
+    <li><a href="/pages/gallery.html">Gallery</a></li>
+    <li><a href="/products.html">Products</a></li>
+    <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
   </ul>
   <button class="nav-burger" aria-label="Toggle menu">
     <span></span><span></span><span></span>
   </button>
 </nav>
 <div class="nav-mobile">
-  <a href="index.html">Home</a>
-  <a href="pages/about.html">About</a>
-  <a href="pages/services.html">Services</a>
-  <a href="pages/woodworks.html" class="nav-mobile-sub">Wood Works</a>
-  <a href="pages/steelworks.html" class="nav-mobile-sub">Steel Works</a>
-  <a href="pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
-  <a href="pages/gallery.html">Gallery</a>
-  <a href="products.html">Products</a>
-  <a href="pages/contact.html">Contact Us</a>
+  <a href="/">Home</a>
+  <a href="/pages/about.html">About</a>
+  <a href="/pages/services.html">Services</a>
+  <a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a>
+  <a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a>
+  <a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
+  <a href="/pages/gallery.html">Gallery</a>
+  <a href="/products.html">Products</a>
+  <a href="/pages/contact.html">Contact Us</a>
 </div>
 
 <!-- ═══ HERO ═══ -->
-<section class="hero" id="home">
+<section class="hero" id="home" data-slider>
+  <div class="ph-slider-bg" aria-hidden="true">
+    <div class="ph-slide-bg active" style="background-image:url('/assets/images/gallery/profile-01.jpg')"></div>
+    <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/gallery-09.jpg')"></div>
+    <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/gallery-28.jpg')"></div>
+    <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/profile-03.jpg')"></div>
+  </div>
+  <div class="ph-overlay" aria-hidden="true"></div>
   <div class="hero-left">
-    <div class="hero-eyebrow reveal">
+    <div class="hero-eyebrow reveal ph-hero-el">
       <span class="hero-dot"></span>
       <span>Jeddah, Saudi Arabia · Est. 2000</span>
     </div>
 
-    <h1 class="hero-headline reveal d1">
+    <h1 class="hero-headline reveal d1 ph-hero-el ph-d2">
       <span class="t">Precision</span><br>
       <span class="a">Engineered</span><br>
       <span class="d">to Endure</span>
     </h1>
 
-    <p class="hero-body reveal d2">
+    <p class="hero-body reveal d2 ph-hero-el ph-d3">
       AL FAROOQUE Manufacturing delivers world-class Wood Works, Steel Works, and Aluminium Works from Jeddah — crafted to the highest Saudi and international standards, fully aligned with Vision 2030.
     </p>
 
-    <div class="hero-actions reveal d3">
-      <a href="pages/services.html" class="btn btn-primary btn-lg" data-mag>
+    <div class="hero-actions reveal d3 ph-hero-el ph-d4">
+      <a href="/pages/services.html" class="btn btn-primary btn-lg" data-mag>
         Our Services <span class="arrow">→</span>
       </a>
-      <a href="pages/gallery.html" class="btn btn-outline btn-lg">
+      <a href="/pages/gallery.html" class="btn btn-outline btn-lg">
         View Gallery <span class="arrow">↗</span>
       </a>
     </div>
@@ -139,7 +147,7 @@
       <div class="hero-card-top-glow"></div>
       <div class="hero-card-sweep"></div>
       <div class="hero-card-img">
-        <img src="assets/images/gallery/profile-01.jpg" alt="AL FAROOQUE Manufacturing Factory" loading="eager">
+        <img src="/assets/images/gallery/profile-01.jpg" alt="AL FAROOQUE Manufacturing Factory" loading="eager" fetchpriority="high">
         <div class="hero-card-img-overlay"></div>
         <div style="position:absolute;bottom:16px;left:16px;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.22);">Factory · Jeddah · KSA</div>
       </div>
@@ -188,7 +196,7 @@
     <div class="marquee-item"><span class="dot"></span>Vision 2030</div>
     <div class="marquee-item"><span class="dot"></span>Jeddah, Saudi Arabia</div>
     <div class="marquee-item"><span class="dot"></span>Est. 2000</div>
-    <div class="marquee-item"><span class="dot"></span>AL FAROOQUE Industries · IAAE</div>
+    <div class="marquee-item"><span class="dot"></span>AL FAROOQUE Industries</div>
     <div class="marquee-item"><span class="dot"></span>CNC Production</div>
     <div class="marquee-item"><span class="dot"></span>20+ Machines</div>
   </div>
@@ -204,7 +212,7 @@
     </div>
 
     <div class="svc-grid">
-      <div class="svc-card sweep reveal d1" data-tilt>
+      <a href="/pages/woodworks.html" class="svc-card sweep reveal d1" data-tilt aria-label="Wood Works — Explore Division">
         <div class="svc-glow"></div>
         <span class="svc-num">01</span>
         <div class="svc-icon">
@@ -218,10 +226,10 @@
           <span class="tag">Fit-out</span>
           <span class="tag">FD60 Doors</span>
         </div>
-        <a href="pages/woodworks.html" class="svc-link">Explore Division →</a>
-      </div>
+        <span class="svc-link" aria-hidden="true">Explore Division →</span>
+      </a>
 
-      <div class="svc-card sweep reveal d2" data-tilt>
+      <a href="/pages/steelworks.html" class="svc-card sweep reveal d2" data-tilt aria-label="Steel Works — Explore Division">
         <div class="svc-glow"></div>
         <span class="svc-num">02</span>
         <div class="svc-icon">
@@ -235,10 +243,10 @@
           <span class="tag">Metal Cladding</span>
           <span class="tag">Staircases</span>
         </div>
-        <a href="pages/steelworks.html" class="svc-link">Explore Division →</a>
-      </div>
+        <span class="svc-link" aria-hidden="true">Explore Division →</span>
+      </a>
 
-      <div class="svc-card sweep reveal d3" data-tilt>
+      <a href="/pages/aluminium.html" class="svc-card sweep reveal d3" data-tilt aria-label="Aluminium Works — Explore Division">
         <div class="svc-glow"></div>
         <span class="svc-num">03</span>
         <div class="svc-icon">
@@ -252,8 +260,8 @@
           <span class="tag">Glazing</span>
           <span class="tag">Facades</span>
         </div>
-        <a href="pages/aluminium.html" class="svc-link">Explore Division →</a>
-      </div>
+        <span class="svc-link" aria-hidden="true">Explore Division →</span>
+      </a>
     </div>
   </div>
 </section>
@@ -280,52 +288,28 @@
   </div>
 </section>
 
-<!-- ═══ MACHINERY SHOWCASE ═══ -->
-<section id="machinery" class="section-pad" style="position:relative;z-index:1;border-top:1px solid var(--border-1);">
+<!-- ═══ CLIENTS ═══ -->
+<section id="clients" class="section-pad" style="position:relative;z-index:1;border-top:1px solid var(--border-1);">
   <div class="container">
-    <div class="eyebrow reveal">Our Equipment</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:50px;">
-      <h2 class="section-title reveal d1" style="margin-bottom:0;">20<span class="accent">+</span> Precision<br>Machines</h2>
-      <p class="section-body reveal d2">Our Wood Works Factory in Jeddah is equipped with state-of-the-art European machinery — from SCM beam saws to CNC routers and edge banding systems.</p>
+    <div style="text-align:center;margin-bottom:56px;">
+      <div class="eyebrow reveal" style="justify-content:center;">Trusted Partners</div>
+      <h2 class="section-title reveal d1">Trusted by <span class="accent">Leading Companies</span></h2>
+      <p class="section-body reveal d2" style="margin:0 auto;text-align:center;max-width:660px;">We're proud to partner with businesses across construction, manufacturing, industrial, commercial, and government sectors, delivering quality products and reliable service they can trust.</p>
     </div>
-
-    <div class="machines-grid">
-      <div class="machine-card reveal d1">
-        <div class="machine-img"><img src="assets/images/machines/edgeband-machine.jpg" alt="Edge Banding Machine" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">Edge Banding Machine</div><div class="machine-desc">Automated edge banding for seamless panel finishing.</div></div>
-      </div>
-      <div class="machine-card reveal d2">
-        <div class="machine-img"><img src="assets/images/machines/scm-beam-saw.jpg" alt="SCM Gabbiani Beam Saw" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">SCM Gabbiani Beam Saw</div><div class="machine-desc">High-precision large format panel cutting system.</div></div>
-      </div>
-      <div class="machine-card reveal d3">
-        <div class="machine-img"><img src="assets/images/machines/sanding-machine.jpg" alt="Sanding Machine" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">Wide Belt Sanding Machine</div><div class="machine-desc">Precision surface sanding for premium finish quality.</div></div>
-      </div>
-      <div class="machine-card reveal d4">
-        <div class="machine-img"><img src="assets/images/machines/sliding-table-saw.jpg" alt="Sliding Table Saw" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">Sliding Table Saw</div><div class="machine-desc">Accurate cross-cuts and rip-cuts for sheet materials.</div></div>
-      </div>
-      <div class="machine-card reveal d1">
-        <div class="machine-img"><img src="assets/images/machines/boring-machine.jpg" alt="Semi Automatic Boring Machine" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">Semi-Auto Boring Machine</div><div class="machine-desc">Multi-spindle boring for cabinet and furniture production.</div></div>
-      </div>
-      <div class="machine-card reveal d2">
-        <div class="machine-img"><img src="assets/images/machines/spindle-moulder.jpg" alt="Spindle Moulder" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">Spindle Moulder</div><div class="machine-desc">Profile shaping and moulding for decorative woodwork.</div></div>
-      </div>
-      <div class="machine-card reveal d3">
-        <div class="machine-img"><img src="assets/images/machines/band-saw.jpg" alt="Band Saw" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">Band Saw</div><div class="machine-desc">Curved and straight cutting for solid timber.</div></div>
-      </div>
-      <div class="machine-card reveal d4">
-        <div class="machine-img"><img src="assets/images/machines/thickness-planer.jpg" alt="Thickness Planer" loading="lazy"></div>
-        <div class="machine-body"><div class="machine-name">Thickness Planer</div><div class="machine-desc">Precision planing to exact thickness specifications.</div></div>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin-top:48px;" class="reveal">
-      <a href="pages/gallery.html?filter=machinery" class="btn btn-outline">View All Machinery <span class="arrow">→</span></a>
+    <div class="clients-grid">
+      <div class="client-card reveal d1"><img src="/assets/images/Clients/Neom.png" alt="NEOM" loading="lazy" decoding="async"></div>
+      <div class="client-card reveal d2"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0002.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d3"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0003.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d4"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0004.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d1"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0005.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d2"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0006.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d3"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0007.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d4"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0008.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d1"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0009.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d2"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0010.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d3"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0011.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d4"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0013.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+      <div class="client-card reveal d1"><img src="/assets/images/Clients/Profile - Who We Are (Muhannad)_Page_23_Image_0014.jpg" alt="Client Partner" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
     </div>
   </div>
 </section>
@@ -336,32 +320,32 @@
     <div class="eyebrow reveal">Our Work</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;flex-wrap:wrap;gap:20px;">
       <h2 class="section-title reveal d1" style="margin-bottom:0;">Crafted with <span class="accent">Precision</span></h2>
-      <a href="pages/gallery.html" class="btn btn-ghost reveal d2">Full Gallery <span class="arrow">→</span></a>
+      <a href="/pages/gallery.html" class="btn btn-ghost reveal d2">Full Gallery <span class="arrow">→</span></a>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
       <div style="display:flex;flex-direction:column;gap:16px;">
         <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;" class="reveal d1">
-          <img src="assets/images/gallery/gallery-01.jpg" alt="Wood Works" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="/assets/images/gallery/gallery-01.jpg" alt="Wood Works" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
         <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:1/1;" class="reveal d2">
-          <img src="assets/images/gallery/gallery-05.jpg" alt="Manufacturing" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="/assets/images/gallery/gallery-05.jpg" alt="Manufacturing" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;">
         <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:3/4;" class="reveal d2">
-          <img src="assets/images/gallery/company-01.jpg" alt="Factory" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="/assets/images/gallery/company-01.jpg" alt="Factory" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
         <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;" class="reveal d3">
-          <img src="assets/images/gallery/gallery-10.jpg" alt="Products" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="/assets/images/gallery/gallery-10.jpg" alt="Products" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;">
         <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:1/1;" class="reveal d3">
-          <img src="assets/images/gallery/gallery-15.jpg" alt="Workshop" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="/assets/images/gallery/gallery-15.jpg" alt="Workshop" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
         <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;" class="reveal d4">
-          <img src="assets/images/gallery/profile-03.jpg" alt="Production" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="/assets/images/gallery/profile-03.jpg" alt="Production" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
       </div>
     </div>
@@ -464,8 +448,8 @@
       <h2 class="section-title reveal d1">Ready to Build Something <span class="accent">Extraordinary?</span></h2>
       <p class="section-body reveal d2" style="margin:0 auto 36px;text-align:center;">Tell us about your project. Our team will respond within 24 hours with a tailored proposal and quotation.</p>
       <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;" class="reveal d3">
-        <a href="pages/contact.html" class="btn btn-primary btn-lg" data-mag>Request a Quote <span class="arrow">→</span></a>
-        <a href="pages/gallery.html" class="btn btn-ghost btn-lg">View Our Work <span class="arrow">↗</span></a>
+        <a href="/pages/contact.html" class="btn btn-primary btn-lg" data-mag>Request a Quote <span class="arrow">→</span></a>
+        <a href="/pages/gallery.html" class="btn btn-ghost btn-lg">View Our Work <span class="arrow">↗</span></a>
       </div>
     </div>
   </div>
@@ -475,10 +459,10 @@
 <footer class="footer">
   <div class="footer-brand">
     <div class="footer-logo-row">
-      <img src="assets/images/logo/IAA_LOGO.png" alt="IAA Logo">
+      <img src="/assets/images/logo/IAA_LOGO.png" alt="IAA Logo">
       <span class="footer-name">AL FAROOQUE Manufacturing</span>
     </div>
-    <p class="footer-tag">Precision manufacturing across Wood Works, Steel Works, and Aluminium Works — serving Saudi Arabia and the region. Part of AL FAROOQUE Industries (IAAE).</p>
+    <p class="footer-tag">Precision manufacturing across Wood Works, Steel Works, and Aluminium Works — serving Saudi Arabia and the region. Part of AL FAROOQUE Industries.</p>
     <div class="footer-social">
       <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
       <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
@@ -490,30 +474,30 @@
   <div>
     <div class="footer-col-h">Navigation</div>
     <ul class="footer-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="pages/about.html">About Us</a></li>
-      <li><a href="pages/services.html">Services</a></li>
-      <li><a href="pages/gallery.html">Gallery</a></li>
-      <li><a href="pages/contact.html">Contact</a></li>
+      <li><a href="/">Home</a></li>
+      <li><a href="/pages/about.html">About Us</a></li>
+      <li><a href="/pages/services.html">Services</a></li>
+      <li><a href="/pages/gallery.html">Gallery</a></li>
+      <li><a href="/pages/contact.html">Contact</a></li>
     </ul>
   </div>
 
   <div>
     <div class="footer-col-h">Services</div>
     <ul class="footer-links">
-      <li><a href="pages/woodworks.html">Wood Works</a></li>
-      <li><a href="pages/steelworks.html">Steel Works</a></li>
-      <li><a href="pages/aluminium.html">Aluminium Works</a></li>
+      <li><a href="/pages/woodworks.html">Wood Works</a></li>
+      <li><a href="/pages/steelworks.html">Steel Works</a></li>
+      <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
       <li><a href="pages/about.html#certifications">Certifications</a></li>
-      <li><a href="pages/contact.html">Request a Quote</a></li>
+      <li><a href="/pages/contact.html">Request a Quote</a></li>
     </ul>
   </div>
 
   <div>
     <div class="footer-col-h">Contact</div>
     <ul class="footer-links">
-      <li><a href="pages/contact.html">Head Office – Jeddah</a></li>
-      <li><a href="pages/contact.html">Wood Works Factory</a></li>
+      <li><a href="/pages/contact.html">Head Office – Jeddah</a></li>
+      <li><a href="/pages/contact.html">Wood Works Factory</a></li>
       <li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li>
       <li><a href="tel:+966563000051">+966 56 300 0051</a></li>
       <li><a href="https://wa.me/966">WhatsApp</a></li>
@@ -521,7 +505,7 @@
   </div>
 
   <div class="footer-bottom">
-    <span class="footer-copy">© <span id="current-year"></span> AL FAROOQUE Manufacturing — AL FAROOQUE Industries (IAAE). All rights reserved. Jeddah, Saudi Arabia.</span>
+    <span class="footer-copy">© <span id="current-year"></span> AL FAROOQUE Manufacturing — AL FAROOQUE Industries. All rights reserved. Jeddah, Saudi Arabia.</span>
     <div class="footer-badges">
       <span class="footer-badge">SASO</span>
       <span class="footer-badge">FD60</span>
@@ -532,9 +516,9 @@
   </div>
 </footer>
 
-<script src="js/main.js"></script>
+<script src="/js/main.js"></script>
 
-<script src="js/language-switcher.js"></script>
-<script src="js/theme-switcher.js"></script>
+<script src="/js/language-switcher.js"></script>
+<script src="/js/theme-switcher.js"></script>
 </body>
 </html>

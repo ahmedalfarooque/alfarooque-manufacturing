@@ -1,17 +1,28 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/about",         "destination": "/pages/about" },
+    { "source": "/services",      "destination": "/pages/services" },
+    { "source": "/gallery",       "destination": "/pages/gallery" },
+    { "source": "/contact",       "destination": "/pages/contact" },
+    { "source": "/woodworks",     "destination": "/pages/woodworks" },
+    { "source": "/steelworks",    "destination": "/pages/steelworks" },
+    { "source": "/aluminium",     "destination": "/pages/aluminium" },
+    { "source": "/about-ar",      "destination": "/pages/about-ar" },
+    { "source": "/services-ar",   "destination": "/pages/services-ar" },
+    { "source": "/gallery-ar",    "destination": "/pages/gallery-ar" },
+    { "source": "/contact-ar",    "destination": "/pages/contact-ar" },
+    { "source": "/woodworks-ar",  "destination": "/pages/woodworks-ar" },
+    { "source": "/steelworks-ar", "destination": "/pages/steelworks-ar" },
+    { "source": "/aluminium-ar",  "destination": "/pages/aluminium-ar" }
+  ],
   "redirects": [
     {
       "source": "/",
       "destination": "/mohammed",
       "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "mohammed.alfarooque.com"
-        }
-      ]
+      "has": [{ "type": "host", "value": "mohammed.alfarooque.com" }]
     }
   ],
   "headers": [
