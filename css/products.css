@@ -659,7 +659,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 20px 80px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.30s ease;
@@ -689,10 +689,12 @@
 .img-gallery-modal.open .ig-inner {
   transform: scale(1);
 }
+/* Close: fixed to viewport top-right, unaffected by ig-inner transform */
 .ig-close {
   position: absolute;
-  top: -50px;
-  right: 0;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.18);
@@ -715,7 +717,7 @@
 .ig-main {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
 }
 .ig-main-img-wrap {
   flex: 1;
@@ -723,21 +725,27 @@
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 18px;
   overflow: hidden;
-  aspect-ratio: 4 / 3;
+  max-height: calc(100vh - 220px);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .ig-main-img-wrap img {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: calc(100vh - 220px);
+  width: auto;
+  height: auto;
   object-fit: contain;
   display: block;
   transition: opacity 0.25s ease;
 }
+/* Arrows: fixed to viewport center-sides, unaffected by ig-inner transform */
 .ig-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
   width: 46px; height: 46px;
-  flex-shrink: 0;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.16);
   background: rgba(255,255,255,0.08);
@@ -754,8 +762,10 @@
 .ig-arrow:hover {
   background: var(--pr, rgba(8,145,168,0.60));
   border-color: var(--pr-2, rgba(8,145,168,0.55));
-  transform: scale(1.10);
+  transform: translateY(-50%) scale(1.10);
 }
+.ig-prev { left: 20px; }
+.ig-next { right: 20px; }
 .ig-thumbs {
   display: flex;
   gap: 10px;
@@ -786,10 +796,13 @@
   border-color: rgba(8,145,168,0.42);
 }
 @media (max-width: 600px) {
+  .img-gallery-modal { padding: 16px 54px; }
   .ig-inner { gap: 12px; }
   .ig-arrow { width: 38px; height: 38px; font-size: 15px; }
   .ig-thumb { width: 56px; height: 56px; }
-  .ig-close { top: -48px; }
+  .ig-close { top: 16px; right: 16px; }
+  .ig-prev { left: 8px; }
+  .ig-next { right: 8px; }
 }
 
 /* ══════════════════════════════════════════
@@ -1434,10 +1447,12 @@
   overflow: hidden;
 }
 .cart-item-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cart-item-info { min-width: 0; }
 .cart-item-name {
   font-size: 13px; font-weight: 600;
   color: var(--tx,#fff); margin-bottom: 4px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  word-break: break-word;
+  line-height: 1.35;
 }
 .cart-item-unit-price {
   font-size: 14px; font-weight: 700;
@@ -1470,19 +1485,20 @@
 }
 .cart-item-remove {
   width: 28px; height: 28px; border-radius: 50%;
-  background: transparent;
-  border: 1px solid var(--bd, rgba(255,255,255,0.08));
-  color: var(--tx-4,#64748b); font-size: 13px; line-height: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: var(--tx-3,#94a3b8); font-size: 13px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-family: inherit;
   margin-top: 2px;
-  transition: background 0.25s ease, color 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   flex-shrink: 0;
 }
 .cart-item-remove:hover {
-  background: rgba(239,68,68,0.12);
-  border-color: rgba(239,68,68,0.35);
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.50);
   color: #ef4444;
+  box-shadow: 0 0 10px rgba(239,68,68,0.20);
 }
 
 .cart-dr-footer {

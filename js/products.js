@@ -1113,7 +1113,8 @@ var cart = {
   updateQty: function(id, delta) {
     var item = this.items.filter(function(i){return i.id===id;})[0];
     if (!item) return;
-    item.qty = Math.max(1, item.qty + delta);
+    item.qty = item.qty + delta;
+    if (item.qty <= 0) { return this.remove(id); }
     this.save();
     this.renderDrawer();
     this.updateBadge(false);
@@ -1178,7 +1179,7 @@ var cart = {
         el.dataset.id = p.id;
         el.innerHTML = [
           '<div class="cart-item-img"><img src="' + p.img + '" alt="' + name + '" loading="lazy" decoding="async"></div>',
-          '<div>',
+          '<div class="cart-item-info">',
             '<div class="cart-item-name">' + name + '</div>',
             '<div class="cart-item-unit-price">' + fmt(p.price * ci.qty) + '</div>',
             '<div class="ci-qty-ctrl">',
@@ -1465,14 +1466,14 @@ var imgGallery = {
     modal.setAttribute('aria-label', t('Image Gallery', 'معرض الصور'));
     modal.innerHTML = [
       '<div class="ig-backdrop" id="igBackdrop"></div>',
+      '<button class="ig-close" id="igClose" aria-label="' + t('Close','إغلاق') + '">&#215;</button>',
+      '<button class="ig-arrow ig-prev" id="igPrev" aria-label="' + t('Previous','السابق') + '">&#8592;</button>',
+      '<button class="ig-arrow ig-next" id="igNext" aria-label="' + t('Next','التالي') + '">&#8594;</button>',
       '<div class="ig-inner">',
-        '<button class="ig-close" id="igClose" aria-label="' + t('Close','إغلاق') + '">&#215;</button>',
         '<div class="ig-main">',
-          '<button class="ig-arrow ig-prev" id="igPrev" aria-label="' + t('Previous','السابق') + '">&#8592;</button>',
           '<div class="ig-main-img-wrap" id="igMainImgWrap">',
             '<img id="igMainImg" src="" alt="" loading="eager">',
           '</div>',
-          '<button class="ig-arrow ig-next" id="igNext" aria-label="' + t('Next','التالي') + '">&#8594;</button>',
         '</div>',
         '<div class="ig-thumbs" id="igThumbs"></div>',
       '</div>'
