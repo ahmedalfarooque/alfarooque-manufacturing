@@ -504,63 +504,104 @@ ProductImageStack.prototype.rotateTo = function(newFront) {
 ProductImageStack.prototype._bind = function() {
   var self = this;
   var n    = this.imgs.length;
+  var wrap = this._wrap;
 
-  this._cards.forEach(function(card, i) {
-    /* Desktop hover → rotate side cards to front */
-    if (self._hasHover) {
-      card.addEventListener('mouseenter', function() {
-        if (self._posOf(i) !== 'front') self.rotateTo(i);
-      });
+  /* ── Desktop hover: mouseover delegates to the wrap (mouseenter doesn't bubble) ── */
+  if (self._hasHover) {
+    wrap.addEventListener('mouseover', function(e) {
+      var card = e.target.closest('.iss-card');
+      if (!card) return;
+      var i = parseInt(card.dataset.idx, 10);
+      if (self._posOf(i) !== 'front') self.rotateTo(i);
+    });
+  }
+
+  /* ── Click / tap: single delegated listener on the wrap ── */
+  wrap.addEventListener('click', function(e) {
+    var card = e.target.closest('.iss-card');
+    if (!card) return;
+    e.stopPropagation();
+    var i = parseInt(card.dataset.idx, 10);
+    var isFront = self._posOf(i) === 'front';
+    if (!self._hasHover && !isFront) {
+      self.rotateTo(i);
+    } else {
+      imgGallery.open(self.productId, i);
     }
-
-    /* Click / tap */
-    card.addEventListener('click', function(e) {
-      e.stopPropagation(); /* prevent card-body click opening prodModal */
-      var isFront = self._posOf(i) === 'front';
-      if (!self._hasHover && !isFront) {
-        /* Touch device: tap a side card → bring it to front */
-        self.rotateTo(i);
-      } else {
-        /* Desktop: any click → open gallery at this image's index.
-           Touch: tap on front → open gallery.                      */
-        imgGallery.open(self.productId, i);
-      }
-    });
-
-    /* Keyboard: ArrowLeft brings visual-left card to front; ArrowRight brings visual-right.
-       Visual-left is at diff=1 = (frontIdx+1)%n; visual-right is at diff=2 = (frontIdx-1+n)%n */
-    card.addEventListener('keydown', function(e) {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        self.rotateTo((self.frontIdx + 1) % n);
-        self._cards[self.frontIdx].focus();
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        self.rotateTo((self.frontIdx - 1 + n) % n);
-        self._cards[self.frontIdx].focus();
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        imgGallery.open(self.productId, self.frontIdx);
-      }
-    });
   });
 
-  /* Touch swipe: swipe-left brings the visual-right card forward (natural gallery feel);
-     swipe-right brings visual-left card forward */
-  this._wrap.addEventListener('touchstart', function(e) {
+  /* ── Keyboard: single delegated listener on the wrap ── */
+  wrap.addEventListener('keydown', function(e) {
+    if (!e.target.closest('.iss-card')) return;
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      self.rotateTo((self.frontIdx + 1) % n);
+      self._cards[self.frontIdx].focus();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      self.rotateTo((self.frontIdx - 1 + n) % n);
+      self._cards[self.frontIdx].focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      imgGallery.open(self.productId, self.frontIdx);
+    }
+  });
+
+  /* ── Touch swipe ── */
+  wrap.addEventListener('touchstart', function(e) {
     self._touchStartX = e.touches[0].clientX;
   }, { passive: true });
 
-  this._wrap.addEventListener('touchend', function(e) {
+  wrap.addEventListener('touchend', function(e) {
     var dx = e.changedTouches[0].clientX - self._touchStartX;
     if (Math.abs(dx) > 35) {
       var newFront = dx < 0
-        ? (self.frontIdx - 1 + n) % n   /* swipe left  → visual-right comes forward */
-        : (self.frontIdx + 1) % n;      /* swipe right → visual-left comes forward  */
+        ? (self.frontIdx - 1 + n) % n
+        : (self.frontIdx + 1) % n;
       self.rotateTo(newFront);
     }
   }, { passive: true });
 };
+
+/* ════════════════════════════════════════════
+   CART TOAST
+   ════════════════════════════════════════════ */
+var _toastEl    = null;
+var _toastTimer = null;
+
+function showCartToast(productName) {
+  if (!_toastEl) {
+    var el = document.createElement('div');
+    el.className = 'cart-toast';
+    el.innerHTML = [
+      '<span class="cart-toast-icon">',
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+      '</span>',
+      '<div class="cart-toast-body">',
+        '<div class="cart-toast-title">' + t('Added to Cart', 'أُضيف إلى السلة') + '</div>',
+        '<div class="cart-toast-name"></div>',
+      '</div>',
+      '<button class="cart-toast-view">' + t('View Cart', 'عرض السلة') + '</button>',
+      '<button class="cart-toast-close" aria-label="' + t('Close', 'إغلاق') + '">&times;</button>'
+    ].join('');
+    document.body.appendChild(el);
+    _toastEl = el;
+    el.querySelector('.cart-toast-view').addEventListener('click', function() {
+      cart.openDrawer();
+      _hideCartToast();
+    });
+    el.querySelector('.cart-toast-close').addEventListener('click', _hideCartToast);
+  }
+  _toastEl.querySelector('.cart-toast-name').textContent = productName;
+  clearTimeout(_toastTimer);
+  _toastEl.classList.add('show');
+  _toastTimer = setTimeout(_hideCartToast, 3200);
+}
+
+function _hideCartToast() {
+  if (_toastEl) _toastEl.classList.remove('show');
+  clearTimeout(_toastTimer);
+}
 
 /* ════════════════════════════════════════════
    CARD BUILDER
@@ -571,6 +612,7 @@ function buildCard(p) {
   var warrantyLbl = IS_AR ? p.warrantyLabelAr : p.warrantyLabel;
   var detailsLbl  = t('View Details','عرض التفاصيل');
   var orderLbl    = t('Order Now','اطلب الآن');
+  var addCartLbl  = t('Add to Cart','أضف للسلة');
   var hasImgs     = p.imgs && p.imgs.length > 0;
   var catLbl      = t('DOORS','الأبواب');
 
@@ -618,11 +660,15 @@ function buildCard(p) {
         : '',
     '</div>',
     '<div class="prod-actions">',
-      '<button class="btn-view-details" data-id="' + p.id + '">' +
+      '<button class="btn-view-details" data-id="' + p.id + '" aria-label="' + detailsLbl + '">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
         detailsLbl +
       '</button>',
-      '<button class="btn-order-now" data-id="' + p.id + '">' +
+      '<button class="btn-add-cart" data-id="' + p.id + '" aria-label="' + addCartLbl + '">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/><line x1="17" y1="9" x2="17" y2="15"/><line x1="14" y1="12" x2="20" y2="12"/></svg>' +
+        addCartLbl +
+      '</button>',
+      '<button class="btn-order-now" data-id="' + p.id + '" aria-label="' + orderLbl + '">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
         orderLbl +
       '</button>',
@@ -668,15 +714,20 @@ function renderProducts() {
   }
   // Delegate card body click → modal (attached once)
   grid.addEventListener('click', function(e) {
-    var detBtn = e.target.closest('.btn-view-details');
-    var ord    = e.target.closest('.btn-order-now');
-    var card   = e.target.closest('.prod-card');
+    var detBtn  = e.target.closest('.btn-view-details');
+    var ord     = e.target.closest('.btn-order-now');
+    var addCart = e.target.closest('.btn-add-cart');
+    var card    = e.target.closest('.prod-card');
     if (detBtn) {
       e.stopPropagation();
       prodModal.open(parseInt(detBtn.dataset.id, 10));
     } else if (ord) {
       e.stopPropagation();
       orderModal.open(parseInt(ord.dataset.id, 10), 1);
+    } else if (addCart) {
+      e.stopPropagation();
+      var p = getProduct(parseInt(addCart.dataset.id, 10));
+      if (p) { cart.add(p.id, 1); showCartToast(IS_AR ? p.nameAr : p.name); }
     } else if (card) {
       prodModal.open(parseInt(card.dataset.id, 10));
     }
@@ -787,9 +838,20 @@ var prodModal = {
     if (!p || !this.el) return;
     this.currentProduct = p;
     this.modalQty = 1;
-    this.populate(p);
+
+    /* Phase 1 — paint the modal shell immediately so the frame commits fast (good INP). */
+    this.populateFast(p);
     this.el.classList.add('open');
     document.body.style.overflow = 'hidden';
+
+    /* Phase 2 — fill the heavy sections (specs table, tags, thumbnails) after the first
+       painted frame so they never block the interaction response. */
+    var self = this;
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        self.populateSlow(p);
+      });
+    });
   },
 
   close: function() {
@@ -798,14 +860,10 @@ var prodModal = {
     document.body.style.overflow = '';
   },
 
-  populate: function(p) {
+  /* Phase 1: above-the-fold content — name, price, image. Runs before first paint. */
+  populateFast: function(p) {
     var name        = IS_AR ? p.nameAr : p.name;
     var desc        = IS_AR ? p.descAr : p.desc;
-    var specs       = IS_AR ? p.specsAr : p.specs;
-    var features    = IS_AR ? (p.featuresAr || []) : (p.features || []);
-    var applications= IS_AR ? (p.applicationsAr || []) : (p.applications || []);
-    var finishes    = IS_AR ? (p.finishesAr || []) : (p.finishes || []);
-    var sizes       = p.sizes || ['2100 × 900 mm', '2100 × 1000 mm'];
     var warrantyLbl = IS_AR ? p.warrantyLabelAr : p.warrantyLabel;
 
     document.getElementById('pmCat').textContent   = t('DOORS','الأبواب');
@@ -813,74 +871,13 @@ var prodModal = {
     document.getElementById('pmPrice').innerHTML    = fmt(p.price);
     document.getElementById('pmDesc').textContent   = desc;
 
-    // Warranty badge
     var wBadge = document.getElementById('pmWarrantyBadge');
     if (wBadge) {
       wBadge.textContent = warrantyLbl || '';
       wBadge.style.display = warrantyLbl ? '' : 'none';
     }
 
-    // Features list
-    var featEl = document.getElementById('pmFeatures');
-    if (featEl) {
-      featEl.innerHTML = features.map(function(f) {
-        return '<li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' + f + '</li>';
-      }).join('');
-    }
-
-    // Specs table
-    var specsEl = document.getElementById('pmSpecs');
-    if (specsEl) {
-      specsEl.innerHTML = '';
-      Object.keys(specs).forEach(function(k) {
-        var row = document.createElement('div');
-        row.className = 'pm-spec-row';
-        row.innerHTML = '<div class="pm-spec-key">' + k + '</div><div class="pm-spec-val">' + specs[k] + '</div>';
-        specsEl.appendChild(row);
-      });
-    }
-
-    // Applications tags
-    var appsEl = document.getElementById('pmApplications');
-    if (appsEl) {
-      appsEl.innerHTML = applications.map(function(a) {
-        return '<span class="pm-tag">' + a + '</span>';
-      }).join('');
-    }
-
-    // Finishes tags
-    var finEl = document.getElementById('pmFinishes');
-    if (finEl) {
-      finEl.innerHTML = finishes.map(function(f) {
-        return '<span class="pm-tag">' + f + '</span>';
-      }).join('');
-    }
-
-    // Sizes tags
-    var sizeEl = document.getElementById('pmSizes');
-    if (sizeEl) {
-      sizeEl.innerHTML = sizes.map(function(s) {
-        return '<span class="pm-tag pm-tag-size">' + s + '</span>';
-      }).join('');
-    }
-
-    // WhatsApp inquiry link
-    var waEl = document.getElementById('pmWhatsapp');
-    if (waEl) {
-      var waMsg = encodeURIComponent(t(
-        'Hello Al Farooque Manufacturing, I am interested in: ' + name + '. Please send me a quotation.',
-        'مرحباً شركة الفاروق للتصنيع، أنا مهتم بـ: ' + name + '. أرجو إرسال عرض سعر.'
-      ));
-      waEl.href = 'https://wa.me/' + WA_NUMBER + '?text=' + waMsg;
-    }
-
-    // Request quote link (order modal)
-    var quoteEl = document.getElementById('pmQuoteBtn');
-    if (quoteEl) {
-      quoteEl.dataset.id = p.id;
-    }
-
-    // Main image
+    /* Main image — needed above the fold */
     var mainImg = document.getElementById('pmMainImg');
     var imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
     this.currentImgIdx = 0;
@@ -893,19 +890,90 @@ var prodModal = {
       mainImg.style.display = 'none';
     }
 
-    // Thumbnails
-    var thumbsEl = document.getElementById('pmThumbs');
-    thumbsEl.innerHTML = '';
-    var self = this;
-    imgs.forEach(function(src, i) {
-      var div = document.createElement('div');
-      div.className = 'pm-thumb' + (i === 0 ? ' active' : '');
-      div.innerHTML = '<img src="' + src + '" alt="' + name + ' ' + (i+1) + '" loading="lazy">';
-      div.addEventListener('click', function() { self.goImg(i); });
-      thumbsEl.appendChild(div);
-    });
-
     this.updateQty();
+  },
+
+  /* Phase 2: below-the-fold content — deferred to after the first frame. */
+  populateSlow: function(p) {
+    var name         = IS_AR ? p.nameAr : p.name;
+    var specs        = IS_AR ? p.specsAr : p.specs;
+    var features     = IS_AR ? (p.featuresAr || []) : (p.features || []);
+    var applications = IS_AR ? (p.applicationsAr || []) : (p.applications || []);
+    var finishes     = IS_AR ? (p.finishesAr || []) : (p.finishes || []);
+    var sizes        = p.sizes || ['2100 × 900 mm', '2100 × 1000 mm'];
+    var imgs         = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
+
+    /* Features list */
+    var featEl = document.getElementById('pmFeatures');
+    if (featEl) {
+      featEl.innerHTML = features.map(function(f) {
+        return '<li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' + f + '</li>';
+      }).join('');
+    }
+
+    /* Specs table — build with fragment to minimise reflow */
+    var specsEl = document.getElementById('pmSpecs');
+    if (specsEl) {
+      var frag = document.createDocumentFragment();
+      Object.keys(specs).forEach(function(k) {
+        var row = document.createElement('div');
+        row.className = 'pm-spec-row';
+        row.innerHTML = '<div class="pm-spec-key">' + k + '</div><div class="pm-spec-val">' + specs[k] + '</div>';
+        frag.appendChild(row);
+      });
+      specsEl.innerHTML = '';
+      specsEl.appendChild(frag);
+    }
+
+    /* Tag groups */
+    var appsEl = document.getElementById('pmApplications');
+    if (appsEl) appsEl.innerHTML = applications.map(function(a) { return '<span class="pm-tag">' + a + '</span>'; }).join('');
+
+    var finEl = document.getElementById('pmFinishes');
+    if (finEl) finEl.innerHTML = finishes.map(function(f) { return '<span class="pm-tag">' + f + '</span>'; }).join('');
+
+    var sizeEl = document.getElementById('pmSizes');
+    if (sizeEl) sizeEl.innerHTML = sizes.map(function(s) { return '<span class="pm-tag pm-tag-size">' + s + '</span>'; }).join('');
+
+    /* WhatsApp link */
+    var waEl = document.getElementById('pmWhatsapp');
+    if (waEl) {
+      waEl.href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(t(
+        'Hello Al Farooque Manufacturing, I am interested in: ' + name + '. Please send me a quotation.',
+        'مرحباً شركة الفاروق للتصنيع، أنا مهتم بـ: ' + name + '. أرجو إرسال عرض سعر.'
+      ));
+    }
+
+    /* Quote button */
+    var quoteEl = document.getElementById('pmQuoteBtn');
+    if (quoteEl) quoteEl.dataset.id = p.id;
+
+    /* Thumbnails — build with fragment */
+    var thumbsEl = document.getElementById('pmThumbs');
+    if (thumbsEl) {
+      var self = this;
+      var thumbFrag = document.createDocumentFragment();
+      imgs.forEach(function(src, i) {
+        var div = document.createElement('div');
+        div.className = 'pm-thumb' + (i === 0 ? ' active' : '');
+        var img = document.createElement('img');
+        img.src     = src;
+        img.alt     = name + ' ' + (i + 1);
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        div.appendChild(img);
+        div.addEventListener('click', function() { self.goImg(i); });
+        thumbFrag.appendChild(div);
+      });
+      thumbsEl.innerHTML = '';
+      thumbsEl.appendChild(thumbFrag);
+    }
+  },
+
+  /* Legacy alias — kept so any external callers still work. */
+  populate: function(p) {
+    this.populateFast(p);
+    this.populateSlow(p);
   },
 
   updateQty: function() {
