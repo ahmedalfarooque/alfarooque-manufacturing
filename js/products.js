@@ -14,6 +14,11 @@ var SLIDE_MS    = 5000;                 // Hero auto-advance interval (ms)
 var IS_AR = document.documentElement.lang === 'ar';
 var BASE_PATH = IS_AR ? '' : '';        // Both files in root; assets path same
 
+/* ════ POLYFILLS ════ */
+var _ric = typeof requestIdleCallback === 'function'
+  ? requestIdleCallback
+  : function(cb) { setTimeout(cb, 1); };
+
 /* ════════════════════════════════════════════
    PRODUCT DATA
    ════════════════════════════════════════════ */
@@ -846,18 +851,16 @@ var prodModal = {
 
     /* Preload the adjacent images so the next click is instant */
     var self = this;
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(function() {
-        [-1, 1].forEach(function(d) {
-          var adj = ((n + d + len) % len);
-          if (adj !== prev && imgs[adj]) {
-            var pre = new Image();
-            pre.src = imgs[adj];
-            pre.decode && pre.decode().catch(function(){});
-          }
-        });
-      }, { timeout: 1000 });
-    }
+    _ric(function() {
+      [-1, 1].forEach(function(d) {
+        var adj = ((n + d + len) % len);
+        if (adj !== prev && imgs[adj]) {
+          var pre = new Image();
+          pre.src = imgs[adj];
+          pre.decode && pre.decode().catch(function(){});
+        }
+      });
+    }, { timeout: 1000 });
   },
 
   open: function(id) {
@@ -1001,8 +1004,8 @@ var prodModal = {
     }
 
     /* Pre-decode all product images on idle so subsequent goImg() calls resolve instantly */
-    if (imgs.length > 1 && 'requestIdleCallback' in window) {
-      requestIdleCallback(function() {
+    if (imgs.length > 1) {
+      _ric(function() {
         imgs.forEach(function(src, i) {
           if (i === 0) return; /* first image already decoded by populateFast */
           var pre = new Image();

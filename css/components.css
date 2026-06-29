@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════
+/* ═══════════════════════════════════════
    AL FAROOQUE — COMPONENTS
    ═══════════════════════════════════════ */
 
@@ -46,7 +46,7 @@
 
 .hero-headline {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: clamp(44px, 5.8vw, 80px);
   line-height: 1.02;
   letter-spacing: -0.025em;
@@ -291,7 +291,7 @@
   top: 22px; right: 22px;
   font-family: var(--font-display);
   font-size: 52px;
-  font-weight: 800;
+  font-weight: 700;
   color: rgba(255,255,255,0.028);
   line-height: 1;
 }

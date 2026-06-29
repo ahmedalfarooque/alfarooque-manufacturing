@@ -472,12 +472,18 @@
 
     /* observe dynamically-added cards for scroll reveal (main.js can't see them) */
     if ('IntersectionObserver' in window) {
+      var revEls = grid.querySelectorAll('.reveal');
+      var revRemaining = revEls.length;
       var revIO = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
-          if (e.isIntersecting) { e.target.classList.add('in'); revIO.unobserve(e.target); }
+          if (e.isIntersecting) {
+            e.target.classList.add('in');
+            revIO.unobserve(e.target);
+            if (--revRemaining === 0) revIO.disconnect();
+          }
         });
       }, { threshold: 0.10, rootMargin: '0px 0px -40px 0px' });
-      grid.querySelectorAll('.reveal').forEach(function (el) { revIO.observe(el); });
+      revEls.forEach(function (el) { revIO.observe(el); });
     } else {
       /* fallback: make all visible immediately */
       grid.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });

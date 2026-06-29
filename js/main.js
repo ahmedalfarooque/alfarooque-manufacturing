@@ -42,7 +42,7 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
   let tx=0,ty=0,cx=0,cy=0,rafId=0,running=false;
   function step(){
     cx += (tx-cx)*0.08; cy += (ty-cy)*0.08;
-    cg.style.left = cx+'px'; cg.style.top = cy+'px';
+    cg.style.transform = 'translate('+(cx-200)+'px,'+(cy-200)+'px)';
     /* Stop RAF when converged to avoid burning 60fps at rest */
     if(Math.abs(tx-cx) > 0.5 || Math.abs(ty-cy) > 0.5){
       rafId = requestAnimationFrame(step);
@@ -261,7 +261,7 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
       btn.classList.add('active');
       const cat = btn.dataset.filter;
       items.forEach(item=>{
-        item.style.display = (cat==='all'||item.dataset.cat===cat)?'block':'none';
+        item.classList.toggle('gal-item--hidden', cat!=='all' && item.dataset.cat!==cat);
       });
     });
   });
@@ -351,12 +351,10 @@ document.addEventListener('click',e=>{
       slides[cur].classList.remove('active');
       cur = (cur+1) % slides.length;
       slides[cur].classList.add('active');
-      // Replay content animation
-      $$('.ph-hero-el',container).forEach(el=>{
-        el.classList.remove('ph-hero-el');
-        void el.offsetWidth;
-        el.classList.add('ph-hero-el');
-      });
+      // Replay content animation — rAF avoids synchronous layout flush
+      const els = $$('.ph-hero-el',container);
+      els.forEach(el=>el.classList.remove('ph-hero-el'));
+      requestAnimationFrame(()=>els.forEach(el=>el.classList.add('ph-hero-el')));
     }
 
     function start(){ timer = setInterval(advance, 5500); }

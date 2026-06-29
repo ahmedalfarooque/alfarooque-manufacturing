@@ -92,9 +92,9 @@
 .ph-slide.active .ph-eyebrow { opacity: 1; transform: translateY(0); }
 
 .ph-headline {
-  font-family: var(--font-display,'Syne',sans-serif);
+  font-family: var(--font-display,'Space Grotesk',sans-serif);
   font-size: clamp(38px, 6.5vw, 80px);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.025em;
   color: #fff;
@@ -181,7 +181,7 @@
   border: 1px solid rgba(255,255,255,0.40);
   cursor: pointer;
   padding: 0;
-  transition: all 0.35s ease;
+  transition: width 0.35s ease, background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 .ph-dot.active {
   width: 28px;
@@ -493,7 +493,7 @@
   margin-bottom: 5px;
 }
 .prod-name {
-  font-family: var(--font-display,'Syne',sans-serif);
+  font-family: var(--font-display,'Space Grotesk',sans-serif);
   font-size: 14px;
   font-weight: 700;
   color: var(--tx, #fff);
@@ -567,7 +567,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   white-space: nowrap;
 }
 .btn-add-cart {
@@ -854,7 +854,7 @@
   cursor: pointer;
   font-family: inherit;
   line-height: 1;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 .pm-close:hover {
   background: var(--bg-card-3, rgba(255,255,255,0.13));
@@ -976,7 +976,7 @@
 
 .pm-cat { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--pr-2,#0ea5c0); }
 .pm-title {
-  font-family: var(--font-display,'Syne',sans-serif);
+  font-family: var(--font-display,'Space Grotesk',sans-serif);
   font-size: 22px; font-weight: 700;
   color: var(--tx,#fff); line-height: 1.2;
 }
@@ -1125,7 +1125,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   white-space: nowrap;
   grid-column: 1 / -1;
   background: var(--bg-teal, rgba(8,145,168,0.08));
@@ -1255,7 +1255,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  transition: all 0.28s ease;
+  transition: opacity 0.28s ease, transform 0.28s ease;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1325,7 +1325,7 @@
   border: 2px solid var(--bg,#0b0f14);
   opacity: 0;
   transform: scale(0);
-  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  transition: opacity 0.35s cubic-bezier(0.34,1.56,0.64,1), transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
   pointer-events: none;
 }
 .cart-fab-badge.show {
@@ -1381,7 +1381,7 @@
   flex-shrink: 0;
 }
 .cart-dr-title {
-  font-family: var(--font-display,'Syne',sans-serif);
+  font-family: var(--font-display,'Space Grotesk',sans-serif);
   font-size: 18px; font-weight: 700;
   color: var(--tx, #fff);
 }
@@ -1393,7 +1393,7 @@
   color: var(--tx-3,#94a3b8); font-size: 16px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-family: inherit;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 .cart-dr-close:hover { background: var(--bg-card-3); color: var(--tx); transform: rotate(90deg); }
 
@@ -1476,7 +1476,7 @@
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-family: inherit;
   margin-top: 2px;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease;
   flex-shrink: 0;
 }
 .cart-item-remove:hover {
@@ -1518,7 +1518,7 @@
   letter-spacing: 0.08em; text-transform: uppercase;
   cursor: pointer;
   box-shadow: var(--sh-btn);
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 .cart-proceed-btn:hover {
   background: linear-gradient(135deg, var(--pr-2,#0ea5c0), var(--pr,#0891a8));
@@ -1579,7 +1579,7 @@
   margin-bottom: 22px;
 }
 .om-hd-text .om-title {
-  font-family: var(--font-display,'Syne',sans-serif);
+  font-family: var(--font-display,'Space Grotesk',sans-serif);
   font-size: 21px; font-weight: 700;
   color: var(--tx,#fff);
 }
@@ -1590,7 +1590,7 @@
   color: var(--tx-3); font-size: 16px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-family: inherit; flex-shrink: 0;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 .om-close:hover { background: var(--bg-card-3); color: var(--tx); transform: rotate(90deg); }
 
@@ -1699,7 +1699,7 @@
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 .om-wa-btn:hover {
   background: #1ab954;
@@ -1718,7 +1718,7 @@
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 .om-em-btn:hover {
   background: var(--bg-teal-2);
