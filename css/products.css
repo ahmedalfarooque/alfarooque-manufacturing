@@ -911,6 +911,7 @@
   overflow: hidden;
   min-height: 0;
   position: relative;
+  contain: layout paint;
 }
 .pm-main-img img {
   width: 100%; height: 100%;
@@ -920,9 +921,11 @@
   padding: 20px;
   box-sizing: border-box;
   transition: transform 0.55s ease;
+}
+.pm-main-img:hover img {
+  transform: scale(1.03);
   will-change: transform;
 }
-.pm-main-img:hover img { transform: scale(1.03); }
 
 .pm-thumbs {
   display: flex;

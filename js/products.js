@@ -814,22 +814,49 @@ var prodModal = {
 
   goImg: function(idx) {
     if (!this.currentProduct) return;
-    var p = this.currentProduct;
+    var p    = this.currentProduct;
     var imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
-    var len = imgs.length;
+    var len  = imgs.length;
     if (!len) return;
     var n = ((idx % len) + len) % len;
+
+    /* Same image — nothing to do */
+    if (n === this.currentImgIdx) return;
+
+    var prev = this.currentImgIdx;
     this.currentImgIdx = n;
-    var mainImg = document.getElementById('pmMainImg');
-    if (mainImg) {
-      mainImg.src = imgs[n];
-      mainImg.alt = (IS_AR ? this.currentProduct.nameAr : this.currentProduct.name) + ' ' + (n + 1);
+
+    /* Update active thumbnail using cached refs — no querySelectorAll per click */
+    if (this._thumbEls) {
+      if (this._thumbEls[prev]) this._thumbEls[prev].classList.remove('active');
+      if (this._thumbEls[n])    this._thumbEls[n].classList.add('active');
     }
-    var thumbsEl = document.getElementById('pmThumbs');
-    if (thumbsEl) {
-      thumbsEl.querySelectorAll('.pm-thumb').forEach(function(th, i) {
-        th.classList.toggle('active', i === n);
-      });
+
+    /* Swap main image via decode() so the browser can decode off the main thread.
+       The Promise resolves in a microtask if already decoded (cached), or async if not.
+       Either way the click handler returns immediately, keeping INP low. */
+    var mainImg = document.getElementById('pmMainImg');
+    if (!mainImg || !imgs[n]) return;
+    var src    = imgs[n];
+    var altTxt = (IS_AR ? p.nameAr : p.name) + ' ' + (n + 1);
+    var tmpImg = new Image();
+    tmpImg.src = src;
+    var doSwap = function() { mainImg.src = src; mainImg.alt = altTxt; };
+    (tmpImg.decode ? tmpImg.decode().then(doSwap).catch(doSwap) : (doSwap(), Promise.resolve()));
+
+    /* Preload the adjacent images so the next click is instant */
+    var self = this;
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(function() {
+        [-1, 1].forEach(function(d) {
+          var adj = ((n + d + len) % len);
+          if (adj !== prev && imgs[adj]) {
+            var pre = new Image();
+            pre.src = imgs[adj];
+            pre.decode && pre.decode().catch(function(){});
+          }
+        });
+      }, { timeout: 1000 });
     }
   },
 
@@ -838,6 +865,7 @@ var prodModal = {
     if (!p || !this.el) return;
     this.currentProduct = p;
     this.modalQty = 1;
+    this._thumbEls = null; /* clear stale refs from previous product */
 
     /* Phase 1 — paint the modal shell immediately so the frame commits fast (good INP). */
     this.populateFast(p);
@@ -948,25 +976,40 @@ var prodModal = {
     var quoteEl = document.getElementById('pmQuoteBtn');
     if (quoteEl) quoteEl.dataset.id = p.id;
 
-    /* Thumbnails — build with fragment */
+    /* Thumbnails — build with fragment, cache element refs for fast goImg() */
     var thumbsEl = document.getElementById('pmThumbs');
     if (thumbsEl) {
       var self = this;
       var thumbFrag = document.createDocumentFragment();
+      var thumbEls  = [];
       imgs.forEach(function(src, i) {
         var div = document.createElement('div');
         div.className = 'pm-thumb' + (i === 0 ? ' active' : '');
         var img = document.createElement('img');
-        img.src     = src;
-        img.alt     = name + ' ' + (i + 1);
-        img.loading = 'lazy';
+        img.src      = src;
+        img.alt      = name + ' ' + (i + 1);
+        img.loading  = 'lazy';
         img.decoding = 'async';
         div.appendChild(img);
         div.addEventListener('click', function() { self.goImg(i); });
         thumbFrag.appendChild(div);
+        thumbEls.push(div);
       });
       thumbsEl.innerHTML = '';
       thumbsEl.appendChild(thumbFrag);
+      this._thumbEls = thumbEls; /* store for O(1) active-state swaps in goImg() */
+    }
+
+    /* Pre-decode all product images on idle so subsequent goImg() calls resolve instantly */
+    if (imgs.length > 1 && 'requestIdleCallback' in window) {
+      requestIdleCallback(function() {
+        imgs.forEach(function(src, i) {
+          if (i === 0) return; /* first image already decoded by populateFast */
+          var pre = new Image();
+          pre.src = src;
+          pre.decode && pre.decode().catch(function(){});
+        });
+      }, { timeout: 2000 });
     }
   },
 
