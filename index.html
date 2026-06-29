@@ -365,52 +365,51 @@
     <div class="cert-grid">
       <div class="cert-card reveal d1">
         <div class="cert-live"><span class="live-dot"></span></div>
-        <div class="cert-logo-wrap"><img src="/assets/images/Certifications/CR.png" alt="Commercial Registration" width="120" height="42"></div>
+        <div class="cert-logo-wrap"><img src="/assets/images/Certifications/CR_Logo.png" alt="Commercial Registration" width="120" height="42"></div>
         <div class="cert-name">Commercial Registration</div>
         <div class="cert-auth">Ministry of Commerce · Saudi Arabia</div>
-        <a href="pages/about.html#certifications" class="cert-view">View Details →</a>
+        <a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/Commercel Registration.jpg" data-cert-alt="Commercial Registration Certificate">View Details →</a>
       </div>
       <div class="cert-card reveal d2">
         <div class="cert-live"><span class="live-dot"></span></div>
         <div class="cert-logo-wrap"><img src="/assets/images/Certifications/Zakat and VAT-Logo.jpg" alt="VAT Registration – ZATCA" width="120" height="42"></div>
         <div class="cert-name">VAT Registration</div>
         <div class="cert-auth">ZATCA · Zakat, Tax & Customs Authority</div>
-        <a href="pages/about.html#certifications" class="cert-view">View Details →</a>
+        <a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/VAT CERTIFICATE.jpg" data-cert-alt="VAT Registration Certificate">View Details →</a>
       </div>
       <div class="cert-card reveal d3">
         <div class="cert-live"><span class="live-dot"></span></div>
         <div class="cert-logo-wrap"><img src="/assets/images/Certifications/SASO-Logo.png" alt="SASO Certification" width="120" height="42"></div>
         <div class="cert-name">SASO Certification</div>
         <div class="cert-auth">Saudi Standards, Metrology & Quality Org.</div>
-        <a href="pages/about.html#certifications" class="cert-view">View Details →</a>
       </div>
       <div class="cert-card reveal d4">
         <div class="cert-live"><span class="live-dot"></span></div>
-        <div class="cert-logo-wrap"><img src="/assets/images/Certifications/Bmtrada_.png" alt="BM TRADA Fire Rated Door Certification" width="120" height="42"></div>
+        <div class="cert-logo-wrap"><img src="/assets/images/Certifications/Bmtrada_Logo.png" alt="BM TRADA Fire Rated Door Certification" width="120" height="42"></div>
         <div class="cert-name">BM TRADA Fire Rated Door Certification</div>
         <div class="cert-auth">BM TRADA Certification for Fire Rated Doors</div>
-        <a href="pages/about.html#certifications" class="cert-view">View Details →</a>
+        <a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/BMTRADA Certificate.jpg" data-cert-alt="BM TRADA Fire Rated Door Certificate">View Details →</a>
       </div>
       <div class="cert-card reveal d1">
         <div class="cert-live"><span class="live-dot"></span></div>
         <div class="cert-logo-wrap"><img src="/assets/images/Certifications/Ministry_of_Commerce_Logo.png" alt="Ministry of Commerce" width="120" height="42"></div>
         <div class="cert-name">Ministry of Commerce</div>
         <div class="cert-auth">Kingdom of Saudi Arabia</div>
-        <a href="pages/about.html#certifications" class="cert-view">View Details →</a>
+        <a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/Ministory of Commerce_Certificate.jpg" data-cert-alt="Ministry of Commerce Certificate">View Details →</a>
       </div>
       <div class="cert-card reveal d2">
         <div class="cert-live"><span class="live-dot"></span></div>
         <div class="cert-logo-wrap"><img src="/assets/images/Certifications/jeddah-chamber-logo.png" alt="Jeddah Chamber of Commerce" width="120" height="42"></div>
         <div class="cert-name">Jeddah Chamber</div>
         <div class="cert-auth">Jeddah Chamber of Commerce & Industry</div>
-        <a href="pages/about.html#certifications" class="cert-view">View Details →</a>
+        <a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/Jeddah Chamber_Certificates.jpg" data-cert-alt="Jeddah Chamber Certificate">View Details →</a>
       </div>
       <div class="cert-card reveal d4">
         <div class="cert-live"><span class="live-dot"></span></div>
-        <div class="cert-logo-wrap"><img src="/assets/images/Certifications/ISO_9001-2015.svg.png" alt="ISO 9001:2015 Quality Management" width="120" height="42"></div>
+        <div class="cert-logo-wrap"><img src="/assets/images/Certifications/ISO_9001-2015_Logo.png" alt="ISO 9001:2015 Quality Management" width="120" height="42"></div>
         <div class="cert-name">ISO Quality Management</div>
         <div class="cert-auth">International Standards Organization</div>
-        <a href="pages/about.html#certifications" class="cert-view">View Details →</a>
+        <a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/ISO - Certificate.jpg" data-cert-alt="ISO 9001:2015 Certificate">View Details →</a>
       </div>
     </div>
   </div>
@@ -517,5 +516,13 @@
 
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>
+<div id="cert-modal" role="dialog" aria-modal="true" aria-label="Certificate Viewer">
+  <div id="cert-modal-bd"></div>
+  <div id="cert-modal-box">
+    <button id="cert-modal-x" aria-label="Close certificate viewer">&#x2715;</button>
+    <img id="cert-modal-img" src="" alt="" loading="lazy">
+  </div>
+</div>
+<script src="/js/cert-modal.js"></script>
 </body>
 </html>
