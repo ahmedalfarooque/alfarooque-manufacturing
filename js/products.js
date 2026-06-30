@@ -973,7 +973,7 @@ function renderProducts() {
     lm.textContent = t('Load More Products', 'عرض المزيد من المنتجات');
     lm.addEventListener('click', renderBatch);
   }
-  // Delegate card body click → modal (attached once)
+  // Delegate card click events (attached once)
   grid.addEventListener('click', function(e) {
     var detBtn   = e.target.closest('.btn-view-details');
     var ord      = e.target.closest('.btn-order-now');
@@ -981,6 +981,7 @@ function renderProducts() {
     var wlBtn    = e.target.closest('.btn-wishlist');
     var qvBtn    = e.target.closest('.btn-quickview');
     var shareBtn = e.target.closest('.btn-share');
+    var imgArea  = e.target.closest('.prod-card-img');
     var card     = e.target.closest('.prod-card');
 
     if (wlBtn) {
@@ -1007,6 +1008,9 @@ function renderProducts() {
       e.stopPropagation();
       var p = getProduct(parseInt(addCart.dataset.id, 10));
       if (p) { cart.add(p.id, 1); showCartToast(IS_AR ? p.nameAr : p.name); }
+    } else if (imgArea) {
+      var imgCard = imgArea.closest('.prod-card');
+      if (imgCard) imgGallery.open(parseInt(imgCard.dataset.id, 10), 0);
     } else if (card) {
       prodModal.open(parseInt(card.dataset.id, 10));
     }
@@ -1749,7 +1753,8 @@ var imgGallery = {
             '<img id="igMainImg" src="" alt="" loading="eager">',
           '</div>',
         '</div>',
-        '<div class="ig-thumbs" id="igThumbs"></div>',
+        '<div class="ig-counter" id="igCounter" aria-live="polite"></div>',
+      '<div class="ig-thumbs" id="igThumbs"></div>',
       '</div>'
     ].join('');
     document.body.appendChild(modal);
@@ -1786,6 +1791,7 @@ var imgGallery = {
     var name = IS_AR ? p.nameAr : p.name;
     this.currentImgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
     if (!this.currentImgs.length) return;
+    this._savedScrollY = window.pageYOffset;
     this.buildThumbs(name);
     this.go(startIdx !== undefined ? startIdx : 0);
     this.el.classList.add('open');
@@ -1796,6 +1802,10 @@ var imgGallery = {
     if (!this.el) return;
     this.el.classList.remove('open');
     document.body.style.overflow = '';
+    if (this._savedScrollY !== undefined) {
+      window.scrollTo(0, this._savedScrollY);
+      this._savedScrollY = undefined;
+    }
   },
 
   go: function(idx) {
@@ -1807,11 +1817,13 @@ var imgGallery = {
     document.querySelectorAll('#igThumbs .ig-thumb').forEach(function(th, i) {
       th.classList.toggle('active', i === n);
     });
-    var prevBtn = document.getElementById('igPrev');
-    var nextBtn = document.getElementById('igNext');
+    var prevBtn  = document.getElementById('igPrev');
+    var nextBtn  = document.getElementById('igNext');
+    var counter  = document.getElementById('igCounter');
     var show = len > 1;
     if (prevBtn) prevBtn.style.display = show ? '' : 'none';
     if (nextBtn) nextBtn.style.display = show ? '' : 'none';
+    if (counter) counter.textContent = show ? (n + 1) + ' / ' + len : '';
   },
 
   buildThumbs: function(name) {

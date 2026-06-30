@@ -795,6 +795,14 @@
 .ig-thumb:hover:not(.active) {
   border-color: rgba(8,145,168,0.42);
 }
+.ig-counter {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.06em;
+  min-height: 1em;
+}
 @media (max-width: 600px) {
   .img-gallery-modal { padding: 16px 54px; }
   .ig-inner { gap: 12px; }
@@ -2129,6 +2137,9 @@
 }
 :is(html.light,body.light) .ig-thumb.active {
   border-color: #0891a8;
+}
+:is(html.light,body.light) .ig-counter {
+  color: rgba(15,23,42,0.50);
 }
 
 /* ══════════════════════════════════════════
