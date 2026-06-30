@@ -92,9 +92,9 @@
 
     <!-- Section header -->
     <div class="prod-section-header">
-      <div class="eyebrow reveal" style="justify-content:center;">Our Products</div>
-      <h1 class="ps-page-title reveal d1">Engineered to <span class="accent">Impress</span></h1>
-      <p class="ps-page-sub reveal d2">Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.</p>
+      <div class="eyebrow" style="justify-content:center;">Our Products</div>
+      <h1 class="ps-page-title">Engineered to <span class="accent">Impress</span></h1>
+      <p class="ps-page-sub">Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.</p>
     </div>
 
     <!-- Product Grid — populated by products.js -->
@@ -242,11 +242,11 @@
         <span id="cartSubtotal">SAR 0</span>
       </div>
       <div class="cart-total-row">
-        <span>Delivery</span>
-        <span style="color:var(--pr-2);">Upon Request</span>
+        <span>VAT (15%)</span>
+        <span id="cartVat">SAR 0</span>
       </div>
       <div class="cart-total-row grand">
-        <span>Total</span>
+        <span>Grand Total</span>
         <span id="cartGrandTotal">SAR 0</span>
       </div>
     </div>
@@ -295,7 +295,7 @@
         <input class="om-input" type="email" id="omEmail" name="email" placeholder="your@email.com" autocomplete="email">
       </div>
 
-      <!-- Quantity -->
+      <!-- Quantity & Price Breakdown -->
       <div id="omQtySection">
         <div class="om-label" style="margin-bottom:8px;">Quantity</div>
         <div class="om-qty-wrap">
@@ -304,8 +304,16 @@
             <div class="om-qty-val" id="omQtyVal">1</div>
             <button class="om-qty-btn" id="omQtyPlus" type="button">&#43;</button>
           </div>
-          <div class="om-total-line" id="omTotalLine" style="flex:1;">
-            <span>Total</span><span>SAR 0</span>
+        </div>
+        <div class="om-price-breakdown">
+          <div class="om-breakdown-row">
+            <span>Subtotal</span><span id="omSubtotalVal">SAR 0</span>
+          </div>
+          <div class="om-breakdown-row">
+            <span>VAT (15%)</span><span id="omVatVal">SAR 0</span>
+          </div>
+          <div class="om-total-line">
+            <span>Grand Total</span><span id="omGrandVal">SAR 0</span>
           </div>
         </div>
       </div>
@@ -392,5 +400,6 @@
 <script src="/js/theme-switcher.js"></script>
 <script src="/js/products.js"></script>
 <script src="/js/product-filter.js"></script>
+<script src="/js/products-hero.js"></script>
 </body>
 </html>

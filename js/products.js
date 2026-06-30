@@ -1405,6 +1405,14 @@ var cart = {
     }, 0);
   },
 
+  vat: function() {
+    return Math.round(this.total() * 0.15);
+  },
+
+  grand: function() {
+    return this.total() + this.vat();
+  },
+
   count: function() {
     return this.items.reduce(function(s,i){return s+i.qty;}, 0);
   },
@@ -1476,10 +1484,14 @@ var cart = {
 
     /* Single delegated listener — set once in init(), not recreated here */
     var total = this.total();
+    var vat   = this.vat();
+    var grand = this.grand();
     var subEl = document.getElementById('cartSubtotal');
+    var vatEl = document.getElementById('cartVat');
     var totEl = document.getElementById('cartGrandTotal');
     if (subEl) subEl.textContent = fmt(total);
-    if (totEl) totEl.textContent = fmt(total);
+    if (vatEl) vatEl.textContent = fmt(vat);
+    if (totEl) totEl.textContent = fmt(grand);
     var proceedBtn = document.getElementById('cartProceed');
     if (proceedBtn) proceedBtn.disabled = !this.items.length;
     this.updateBadge(false);
@@ -1544,8 +1556,8 @@ var orderModal = {
     document.getElementById('omProdImg').src = p.img;
     document.getElementById('omProdImg').alt = IS_AR ? p.nameAr : p.name;
     document.getElementById('omProdName').textContent = IS_AR ? p.nameAr : p.name;
-    document.getElementById('omProdPrice').textContent = fmt(cart.total());
-    document.getElementById('omProdNote').textContent = t('Cart total','إجمالي السلة');
+    document.getElementById('omProdPrice').textContent = fmt(cart.grand());
+    document.getElementById('omProdNote').textContent = t('Grand Total (incl. 15% VAT)','الإجمالي الكلي (شامل ضريبة 15%)');
     var qtySection = document.getElementById('omQtySection');
     if (qtySection) qtySection.style.display = 'none';
     this.updateTotal();
@@ -1560,16 +1572,24 @@ var orderModal = {
   },
 
   updateTotal: function() {
-    var totEl = document.getElementById('omTotalLine');
-    if (!totEl) return;
-    var val;
+    var subEl   = document.getElementById('omSubtotalVal');
+    var vatEl   = document.getElementById('omVatVal');
+    var grandEl = document.getElementById('omGrandVal');
+    if (!subEl) return;
+    var subtotal, vat, grand;
     if (this.isCartOrder) {
-      val = cart.total();
+      subtotal = cart.total();
+      vat      = cart.vat();
+      grand    = cart.grand();
     } else {
       var p = getProduct(orderModal.productId);
-      val = p ? p.price * this.qty : 0;
+      subtotal = p ? p.price * this.qty : 0;
+      vat      = Math.round(subtotal * 0.15);
+      grand    = subtotal + vat;
     }
-    totEl.innerHTML = '<span>' + t('Total','الإجمالي') + '</span><span>' + fmt(val) + '</span>';
+    subEl.textContent   = fmt(subtotal);
+    vatEl.textContent   = fmt(vat);
+    grandEl.textContent = fmt(grand);
     var qtyEl = document.getElementById('omQtyVal');
     if (qtyEl && !this.isCartOrder) qtyEl.textContent = this.qty;
   },
@@ -1588,13 +1608,20 @@ var orderModal = {
           var p = getProduct(ci.id);
           if (p) lines.push('  • ' + p.nameAr + ' × ' + ci.qty + ' — ' + fmt(p.price * ci.qty));
         });
-        lines.push('💰 *الإجمالي:* ' + fmt(cart.total()));
+        lines.push('💵 *المجموع الجزئي:* ' + fmt(cart.total()));
+        lines.push('🧾 *ضريبة القيمة المضافة (15%):* ' + fmt(cart.vat()));
+        lines.push('💰 *الإجمالي الكلي:* ' + fmt(cart.grand()));
       } else {
         var p = getProduct(this.productId);
         if (p) {
+          var sub = p.price * this.qty;
+          var vat = Math.round(sub * 0.15);
           lines.push('📦 *المنتج:* ' + p.nameAr);
+          lines.push('💵 *سعر الوحدة:* ' + fmt(p.price));
           lines.push('🔢 *الكمية:* ' + this.qty);
-          lines.push('💰 *الإجمالي:* ' + fmt(p.price * this.qty));
+          lines.push('💵 *المجموع الجزئي:* ' + fmt(sub));
+          lines.push('🧾 *ضريبة القيمة المضافة (15%):* ' + fmt(vat));
+          lines.push('💰 *الإجمالي الكلي:* ' + fmt(sub + vat));
         }
       }
       lines.push('\n👤 *الاسم:* ' + name);
@@ -1610,13 +1637,20 @@ var orderModal = {
           var p = getProduct(ci.id);
           if (p) lines.push('  • ' + p.name + ' × ' + ci.qty + ' — ' + fmt(p.price * ci.qty));
         });
-        lines.push('💰 *Total:* ' + fmt(cart.total()));
+        lines.push('💵 *Subtotal:* ' + fmt(cart.total()));
+        lines.push('🧾 *VAT (15%):* ' + fmt(cart.vat()));
+        lines.push('💰 *Grand Total:* ' + fmt(cart.grand()));
       } else {
         var p = getProduct(orderModal.productId);
         if (p) {
+          var sub = p.price * this.qty;
+          var vat = Math.round(sub * 0.15);
           lines.push('📦 *Product:* ' + p.name);
+          lines.push('💵 *Unit Price:* ' + fmt(p.price));
           lines.push('🔢 *Quantity:* ' + this.qty);
-          lines.push('💰 *Total:* ' + fmt(p.price * this.qty));
+          lines.push('💵 *Subtotal:* ' + fmt(sub));
+          lines.push('🧾 *VAT (15%):* ' + fmt(vat));
+          lines.push('💰 *Grand Total:* ' + fmt(sub + vat));
         }
       }
       lines.push('\n👤 *Name:* ' + name);
@@ -1642,13 +1676,20 @@ var orderModal = {
           var p = getProduct(ci.id);
           if (p) lines.push('  - ' + p.nameAr + ' × ' + ci.qty + ' = ' + fmt(p.price * ci.qty));
         });
-        lines.push('الإجمالي: ' + fmt(cart.total()));
+        lines.push('المجموع الجزئي: ' + fmt(cart.total()));
+        lines.push('ضريبة القيمة المضافة (15%): ' + fmt(cart.vat()));
+        lines.push('الإجمالي الكلي: ' + fmt(cart.grand()));
       } else {
         var p = getProduct(this.productId);
         if (p) {
+          var sub = p.price * this.qty;
+          var vat = Math.round(sub * 0.15);
           lines.push('المنتج: ' + p.nameAr);
+          lines.push('سعر الوحدة: ' + fmt(p.price));
           lines.push('الكمية: ' + this.qty);
-          lines.push('الإجمالي: ' + fmt(p.price * this.qty));
+          lines.push('المجموع الجزئي: ' + fmt(sub));
+          lines.push('ضريبة القيمة المضافة (15%): ' + fmt(vat));
+          lines.push('الإجمالي الكلي: ' + fmt(sub + vat));
         }
       }
       lines.push('\nالاسم: ' + name);
@@ -1664,13 +1705,20 @@ var orderModal = {
           var p = getProduct(ci.id);
           if (p) lines.push('  - ' + p.name + ' x ' + ci.qty + ' = ' + fmt(p.price * ci.qty));
         });
-        lines.push('Total: ' + fmt(cart.total()));
+        lines.push('Subtotal: ' + fmt(cart.total()));
+        lines.push('VAT (15%): ' + fmt(cart.vat()));
+        lines.push('Grand Total: ' + fmt(cart.grand()));
       } else {
         var p = getProduct(orderModal.productId);
         if (p) {
+          var sub = p.price * this.qty;
+          var vat = Math.round(sub * 0.15);
           lines.push('Product: ' + p.name);
+          lines.push('Unit Price: ' + fmt(p.price));
           lines.push('Quantity: ' + this.qty);
-          lines.push('Total: ' + fmt(p.price * this.qty));
+          lines.push('Subtotal: ' + fmt(sub));
+          lines.push('VAT (15%): ' + fmt(vat));
+          lines.push('Grand Total: ' + fmt(sub + vat));
         }
       }
       lines.push('\nName: ' + name);

@@ -93,9 +93,9 @@
 
     <!-- Section header -->
     <div class="prod-section-header">
-      <div class="eyebrow reveal" style="justify-content:center;">منتجاتنا</div>
-      <h1 class="ps-page-title reveal d1">مُصنَّع ليبهر <span class="accent">عيونكم</span></h1>
-      <p class="ps-page-sub reveal d2">اطلب منتجات خشبية وحديدية وألومنيوم مُصنَّعة بدقة عالية مباشرةً من مصنعنا في جدة. أحجام وتشطيبات ومواصفات مخصصة متاحة.</p>
+      <div class="eyebrow" style="justify-content:center;">منتجاتنا</div>
+      <h1 class="ps-page-title">مُصنَّع ليبهر <span class="accent">عيونكم</span></h1>
+      <p class="ps-page-sub">اطلب منتجات خشبية وحديدية وألومنيوم مُصنَّعة بدقة عالية مباشرةً من مصنعنا في جدة. أحجام وتشطيبات ومواصفات مخصصة متاحة.</p>
     </div>
 
     <!-- Product Grid — populated by products.js -->
@@ -240,15 +240,15 @@
     <div class="cart-total-rows">
       <div class="cart-total-row">
         <span>المجموع الجزئي</span>
-        <span id="cartSubtotal">0 ريال</span>
+        <span id="cartSubtotal">SAR 0</span>
       </div>
       <div class="cart-total-row">
-        <span>التوصيل</span>
-        <span style="color:var(--pr-2);">عند الطلب</span>
+        <span>ضريبة القيمة المضافة (15%)</span>
+        <span id="cartVat">SAR 0</span>
       </div>
       <div class="cart-total-row grand">
-        <span>الإجمالي</span>
-        <span id="cartGrandTotal">0 ريال</span>
+        <span>الإجمالي الكلي</span>
+        <span id="cartGrandTotal">SAR 0</span>
       </div>
     </div>
     <button class="cart-proceed-btn" id="cartProceed" disabled>
@@ -296,7 +296,7 @@
         <input class="om-input" type="email" id="omEmail" name="email" placeholder="your@email.com" autocomplete="email">
       </div>
 
-      <!-- Quantity -->
+      <!-- Quantity & Price Breakdown -->
       <div id="omQtySection">
         <div class="om-label" style="margin-bottom:8px;">الكمية</div>
         <div class="om-qty-wrap">
@@ -305,8 +305,16 @@
             <div class="om-qty-val" id="omQtyVal">1</div>
             <button class="om-qty-btn" id="omQtyPlus" type="button">&#43;</button>
           </div>
-          <div class="om-total-line" id="omTotalLine" style="flex:1;">
-            <span>الإجمالي</span><span>0 ريال</span>
+        </div>
+        <div class="om-price-breakdown">
+          <div class="om-breakdown-row">
+            <span>المجموع الجزئي</span><span id="omSubtotalVal">SAR 0</span>
+          </div>
+          <div class="om-breakdown-row">
+            <span>ضريبة القيمة المضافة (15%)</span><span id="omVatVal">SAR 0</span>
+          </div>
+          <div class="om-total-line">
+            <span>الإجمالي الكلي</span><span id="omGrandVal">SAR 0</span>
           </div>
         </div>
       </div>
@@ -393,5 +401,6 @@
 <script src="/js/theme-switcher.js"></script>
 <script src="/js/products.js"></script>
 <script src="/js/product-filter.js"></script>
+<script src="/js/products-hero.js"></script>
 </body>
 </html>

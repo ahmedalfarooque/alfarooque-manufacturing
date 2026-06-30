@@ -308,6 +308,8 @@ function pfBuildToolbar() {
   var icoSearch = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
   var icoReset  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>';
   var icoFilter = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+  var icoUser   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  var icoCart   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
 
   return [
     '<div class="pf-toolbar" id="pfToolbar">',
@@ -336,6 +338,13 @@ function pfBuildToolbar() {
     '    </div>',
     '    <select class="pf-select" id="pfSortSelect" aria-label="' + t('Sort By', 'الترتيب') + '">' + sortOpts + '</select>',
     '    <button class="pf-reset-btn" id="pfResetBtn" type="button">' + icoReset + ' <span>' + t('Reset', 'إعادة ضبط') + '</span></button>',
+    '    <button class="pf-login-btn" id="pfLoginBtn" type="button" aria-label="' + t('Login', 'تسجيل الدخول') + '">' +
+      icoUser + '<span class="pf-login-text">' + t('Login', 'تسجيل الدخول') + '</span>' +
+    '</button>',
+    '    <button class="pf-cart-btn" id="pfCartBtn" type="button" aria-label="' + t('Cart', 'السلة') + '">' +
+      icoCart +
+      '<span class="pf-cart-badge" id="pfCartBadge"></span>' +
+    '</button>',
     '  </div>',
 
     /* Info line — result count + active chips */
@@ -593,6 +602,28 @@ function pfWireEvents() {
   /* Desktop reset */
   var resetBtn = document.getElementById('pfResetBtn');
   if (resetBtn) resetBtn.addEventListener('click', pfReset);
+
+  /* Toolbar cart button → open cart drawer */
+  var pfCartBtn = document.getElementById('pfCartBtn');
+  if (pfCartBtn) {
+    pfCartBtn.addEventListener('click', function() {
+      if (typeof cart !== 'undefined' && cart.openDrawer) cart.openDrawer();
+    });
+  }
+
+  /* Sync floating FAB badge → toolbar cart badge via MutationObserver */
+  var fabBadge = document.getElementById('cartFabBadge');
+  var pfBadge  = document.getElementById('pfCartBadge');
+  if (fabBadge && pfBadge) {
+    var syncBadge = function() {
+      pfBadge.textContent = fabBadge.textContent;
+      pfBadge.className = 'pf-cart-badge' + (fabBadge.classList.contains('show') ? ' show' : '');
+    };
+    new MutationObserver(syncBadge).observe(fabBadge, {
+      attributes: true, childList: true, characterData: true, subtree: true
+    });
+    syncBadge();
+  }
 }
 
 /* ── Init — runs after products.js DOMContentLoaded ──────── */

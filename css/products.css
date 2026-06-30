@@ -1298,27 +1298,55 @@
   font-weight: 500;
 }
 .prod-section-header {
-  margin-top: 48px;
-  margin-bottom: 52px;
+  margin-top: clamp(12px, 1.8vw, 28px);
+  margin-bottom: clamp(22px, 2.8vw, 46px);
+  padding: clamp(16px, 2.2vw, 30px) 0 clamp(10px, 1.2vw, 16px);
 }
 .ps-page-title {
-  font-size: clamp(36px, 5.5vw, 64px);
+  font-size: clamp(2.8rem, 6.5vw, 7rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #fff;
   margin: 0 0 16px;
   line-height: 1.05;
+  text-shadow: 0 2px 24px rgba(7,9,12,0.50);
+  min-height: 1.1em; /* reserve one line during typewriter clear */
 }
 .ps-page-title .accent { color: var(--pr-1, #06b6d4); }
+
+/* ── Typewriter cursor ─────────────────────────────────────────── */
+.ps-page-title.ps-typing::after {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 0.82em;
+  background: var(--pr-1, #06b6d4);
+  margin-left: 5px;
+  vertical-align: middle;
+  border-radius: 2px;
+  animation: psCursorBlink 0.65s steps(1, end) infinite;
+}
+[dir="rtl"] .ps-page-title.ps-typing::after {
+  margin-left: 0;
+  margin-right: 5px;
+}
+@keyframes psCursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+:is(html.light, body.light) .ps-page-title.ps-typing::after {
+  background: #0891b2;
+}
 .ps-page-sub {
   font-size: 15px;
-  color: rgba(255,255,255,0.52);
+  color: rgba(255,255,255,0.72);
   margin: 0 auto;
   max-width: 560px;
   line-height: 1.6;
 }
 
 /* ── Light mode overrides ─────────────────── */
+/* OS-preference query — kept for non-heading UI elements only */
 @media (prefers-color-scheme: light) {
   .pqa-btn { background: rgba(255,255,255,0.85); color: rgba(0,0,0,0.6); }
   .pqa-btn:hover { background: var(--pr-1, #06b6d4); color: #fff; }
@@ -1328,9 +1356,19 @@
   .ps-bc-link { color: rgba(0,0,0,0.45); }
   .ps-bc-sep  { color: rgba(0,0,0,0.2); }
   .ps-bc-current { color: rgba(0,0,0,0.65); }
-  .ps-page-title { color: #0f172a; }
-  .ps-page-sub   { color: rgba(0,0,0,0.52); }
   .pf-share-toast { background: rgba(255,255,255,0.95); color: #1e293b; border-color: rgba(0,0,0,0.1); }
+}
+
+/* Heading colours are controlled by the site's JS theme class, NOT the OS
+   media query, so they are always pure white in dark mode regardless of the
+   system preference, and switch to dark only when the user explicitly enables
+   Light Mode (which adds the .light class via theme-switcher.js). */
+:is(html.light, body.light) .ps-page-title {
+  color: #0f172a;
+  text-shadow: 0 2px 20px rgba(242,244,247,0.50);
+}
+:is(html.light, body.light) .ps-page-sub {
+  color: rgba(0,0,0,0.72);
 }
 
 /* ── View Details card button ───────────── */
@@ -1764,10 +1802,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: clamp(8px, 2.5vmin, 20px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.30s ease;
+  overflow: hidden;
 }
 .order-modal.open { opacity: 1; pointer-events: auto; }
 .order-modal-bd {
@@ -1781,13 +1820,16 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 530px;
-  max-height: 92vh;
+  max-width: min(530px, 100%);
+  max-height: min(92vh, calc(100vh - 2 * clamp(8px, 2.5vmin, 20px)));
+  max-height: min(92svh, calc(100svh - 2 * clamp(8px, 2.5vmin, 20px)));
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   background: var(--bg-2,#111827);
   border: 1px solid var(--bd-2, rgba(255,255,255,0.14));
-  border-radius: 22px;
-  padding: 32px 28px;
+  border-radius: clamp(14px, 2vmin, 22px);
+  padding: clamp(16px, 3.5vh, 32px) clamp(16px, 3.5vw, 28px);
   box-shadow: var(--sh-xl);
   transform: scale(0.90) translateY(24px);
   transition: transform 0.42s cubic-bezier(0.34,1.56,0.64,1);
@@ -1802,6 +1844,10 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 22px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-2, #111827);
 }
 .om-hd-text .om-title {
   font-family: var(--font-display,'Space Grotesk',sans-serif);
@@ -1906,11 +1952,39 @@
 }
 .om-total-line span:last-child { color: var(--pr-2,#0ea5c0); }
 
+.om-price-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 12px;
+}
+.om-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 2px;
+  font-size: 13px;
+  color: var(--tx-3,#94a3b8);
+  border-bottom: 1px solid var(--bd-2);
+}
+.om-breakdown-row span:last-child {
+  font-weight: 600;
+  color: var(--tx-2,#cbd5e1);
+}
+.om-price-breakdown .om-total-line {
+  margin-top: 10px;
+}
+
 .om-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 4px;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: var(--bg-2, #111827);
+  padding-top: 10px;
 }
 .om-wa-btn {
   padding: 13px 10px;
@@ -2366,6 +2440,12 @@
     0 0 0 1px rgba(255,255,255,0.55),
     0 24px 80px rgba(15,23,42,0.15);
 }
+:is(html.light,body.light) .om-hd {
+  background: #FBFCFD;
+}
+:is(html.light,body.light) .om-actions {
+  background: #FBFCFD;
+}
 :is(html.light,body.light) .om-input,
 :is(html.light,body.light) .om-textarea {
   background: rgba(242,244,247,0.75);
@@ -2498,4 +2578,29 @@
     border-top: 1px solid var(--bd);
   }
   .pm-thumb { width: 56px; height: 56px; }
+  /* Order modal — tighter spacing on small phones */
+  .om-hd { margin-bottom: 14px; }
+  .om-product-preview { padding: 12px; margin-bottom: 14px; }
+  .om-product-preview img { width: 52px; height: 52px; }
+  .om-form { gap: 10px; }
+  .om-textarea { min-height: 64px; }
+  .om-price-breakdown { margin-top: 10px; }
+}
+/* ── Very small phones (≤360px) ── */
+@media (max-width: 360px) {
+  .om-inner { padding: 14px; }
+  .om-product-preview img { width: 44px; height: 44px; }
+  .om-hd-text .om-title { font-size: 18px; }
+}
+/* ── Landscape / short viewports (≤600px tall): order modal compact ── */
+@media (max-height: 600px) {
+  .om-hd { margin-bottom: 12px; }
+  .om-product-preview { padding: 10px; margin-bottom: 12px; }
+  .om-product-preview img { width: 48px; height: 48px; }
+  .om-form { gap: 10px; }
+  .om-textarea { min-height: 56px; }
+  .om-actions { gap: 8px; }
+  .om-price-breakdown { margin-top: 8px; }
+  .om-breakdown-row { padding: 4px 2px; font-size: 12px; }
+  .om-price-breakdown .om-total-line { margin-top: 8px; padding: 8px 12px; font-size: 14px; }
 }
