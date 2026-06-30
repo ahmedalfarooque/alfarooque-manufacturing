@@ -72,6 +72,18 @@ var _DOOR_ECO = [
 
 var _DOOR_SIZES = ['2100 × 900 mm', '2100 × 1000 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')];
 
+var _BED_IMGS = [
+  'assets/images/Products/Beds & Accessories/Bed and Mattress set 1_1.png',
+  'assets/images/Products/Beds & Accessories/Bed and Mattress set 1_2.png',
+  'assets/images/Products/Beds & Accessories/Bed and Mattress set 1_3.png'
+];
+var _SOFA_IMGS = [
+  'assets/images/Products/Sofa/Sofa 1_1.png',
+  'assets/images/Products/Sofa/Sofa 1_2.png',
+  'assets/images/Products/Sofa/Sofa 1_3.png',
+  'assets/images/Products/Sofa/Sofa 1_4.png'
+];
+
 var PRODUCTS = [
   {
     id: 1, cat: 'doors', material: 'Wood', availability: 'In Stock',
@@ -240,6 +252,132 @@ var PRODUCTS = [
     finishes: ['Paint Finish'],
     finishesAr: ['تشطيب دهان'],
     sizes: _DOOR_SIZES
+  },
+  {
+    id: 9, cat: 'beds', material: 'MDF', availability: 'In Stock',
+    rating: 4.9, reviewCount: 0,
+    tags: ['Bedroom', 'Furniture', 'Mattress'],
+    name: 'Wooden Bed with Spring Mattress',
+    nameAr: 'سرير خشبي مع مرتبة سبرينج',
+    desc: 'Premium wooden bed manufactured using high-quality MDF melamine panels with a strong internal plywood support system and solid wooden legs. Includes a comfortable 20 cm thick spring mattress. Professional manufacturing, delivery, and installation included.',
+    descAr: 'سرير خشبي فاخر مصنوع من ألواح MDF ميلامين عالية الجودة مع نظام دعم داخلي قوي من الخشب الرقائقي وأرجل خشبية صلبة. يشمل مرتبة سبرينج مريحة بسماكة 20 سم. يشمل التصنيع والتوصيل والتركيب الاحترافي.',
+    price: 1250,
+    img: _BED_IMGS[0], imgs: _BED_IMGS,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: [
+      'Premium 18 mm MDF Melamine construction',
+      'Heavy-duty 18 mm plywood internal support frame',
+      'Six solid wooden legs for maximum stability',
+      'Elegant modern finish (Colour as per customer selection)',
+      '20 cm thick premium spring mattress included',
+      'Strong, durable and long-lasting construction',
+      'Professional manufacturing, delivery & installation',
+      'Suitable for residential, apartments, hotels & staff accommodation',
+      'Easy maintenance and scratch-resistant finish',
+      '1-Year Manufacturer Warranty'
+    ],
+    featuresAr: [
+      'بناء فاخر من MDF ميلامين بسماكة 18 مم',
+      'إطار داعم داخلي من الخشب الرقائقي بسماكة 18 مم',
+      'ستة أرجل خشبية صلبة لأقصى استقرار',
+      'تشطيب أنيق وعصري (اللون حسب اختيار العميل)',
+      'مرتبة سبرينج فاخرة بسماكة 20 سم مشمولة',
+      'بناء قوي ومتين وطويل الأمد',
+      'تصنيع احترافي والتوصيل والتركيب مشمولان',
+      'مناسب للمساكن والشقق والفنادق وسكن الموظفين',
+      'تشطيب سهل الصيانة ومقاوم للخدش',
+      'ضمان المصنع لمدة سنة واحدة'
+    ],
+    specs: {
+      'Product Type':       'Wooden Bed with Mattress',
+      'Material':           '18 mm MDF Melamine',
+      'Internal Support':   '18 mm Plywood Base',
+      'Legs':               '6 Solid Wooden Legs',
+      'Mattress Type':      'Premium Spring Mattress',
+      'Mattress Thickness': '20 cm',
+      'Finish':             'Melamine Finish',
+      'Colour':             'As Per Selection',
+      'Installation':       'Included',
+      'Delivery':           'Included',
+      'Warranty':           '1 Year',
+      'Application':        'Residential & Commercial',
+      'Country':            'Saudi Arabia',
+      'Package Includes':   'Wooden Bed Frame, 20 cm Spring Mattress, Hardware & Accessories, Delivery, Installation'
+    },
+    specsAr: {
+      'نوع المنتج':      'سرير خشبي مع مرتبة',
+      'المادة':          'MDF ميلامين 18 مم',
+      'الدعم الداخلي':   'قاعدة خشب رقائقي 18 مم',
+      'الأرجل':          '6 أرجل خشبية صلبة',
+      'نوع المرتبة':     'مرتبة سبرينج فاخرة',
+      'سماكة المرتبة':   '20 سم',
+      'التشطيب':         'تشطيب ميلامين',
+      'اللون':           'حسب الاختيار',
+      'التركيب':         'مشمول',
+      'التوصيل':         'مشمول',
+      'الضمان':          'سنة واحدة',
+      'التطبيق':         'سكني وتجاري',
+      'البلد':           'المملكة العربية السعودية',
+      'محتويات الطلب':   'هيكل السرير الخشبي، مرتبة سبرينج 20 سم، كامل المعدات والإكسسوارات، التوصيل، التركيب'
+    },
+    applications: ['Villas','Apartments','Hotels & Resorts','Staff Accommodation','Guest Houses','Residential Bedrooms','Furnished Apartments','Commercial Housing'],
+    applicationsAr: ['الفلل','الشقق السكنية','الفنادق والمنتجعات','سكن الموظفين','دور الضيافة','غرف النوم السكنية','الشقق المفروشة','الإسكان التجاري'],
+    finishes: ['Walnut','Oak','Wenge','White','Grey Oak','Custom Colours Available'],
+    finishesAr: ['جوز','بلوط','وينج','أبيض','بلوط رمادي','ألوان مخصصة متاحة'],
+    sizes: ['90 × 200 cm (Single)','120 × 200 cm (Small Double)','160 × 200 cm (Queen)','180 × 200 cm (King)','Custom Sizes on Request']
+  },
+  {
+    id: 10, cat: 'sofa', material: 'Wood', availability: 'In Stock',
+    rating: 4.8, reviewCount: 0,
+    tags: ['Living Room', 'Furniture', 'Upholstery'],
+    name: 'Luxury Double Seater Sofa',
+    nameAr: 'كنبة فاخرة مزدوجة المقاعد',
+    desc: 'Premium double-seater sofa manufactured with a solid wood frame, high-density memory foam cushions, and premium fabric or leather upholstery. Designed for superior comfort and durability.',
+    descAr: 'كنبة مزدوجة فاخرة مصنوعة بإطار خشب صلب ووسائد فوم ذاكرة عالية الكثافة وتنجيد قماش أو جلد فاخر. مصممة للراحة الفائقة والمتانة.',
+    price: 2400,
+    img: _SOFA_IMGS[0], imgs: _SOFA_IMGS,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: [
+      'Solid wood frame',
+      'Premium memory foam seating',
+      'Fabric or leather upholstery',
+      'Colour & fabric grade as selected',
+      'Strong durable construction',
+      'Comfortable ergonomic seating',
+      'Elegant modern design',
+      'Manufacture & Delivery Included',
+      '1-Year Warranty'
+    ],
+    featuresAr: [
+      'إطار خشب صلب',
+      'وسائد جلوس من الفوم ذاكرة الفاخر',
+      'تنجيد قماش أو جلد',
+      'اللون ودرجة القماش حسب الاختيار',
+      'بناء قوي ومتين',
+      'جلسة مريحة وفق تصميم هندسي',
+      'تصميم أنيق وعصري',
+      'التصنيع والتوصيل مشمولان',
+      'ضمان سنة واحدة'
+    ],
+    specs: {
+      'Frame':       'Solid Wood',
+      'Cushion':     'Memory Foam',
+      'Upholstery':  'Fabric / Leather',
+      'Finish':      'Customer Selection',
+      'Warranty':    '1 Year'
+    },
+    specsAr: {
+      'الإطار':    'خشب صلب',
+      'الوسادة':   'فوم ذاكرة',
+      'التنجيد':   'قماش / جلد',
+      'التشطيب':   'اختيار العميل',
+      'الضمان':    'سنة واحدة'
+    },
+    applications: ['Offices','Reception Areas','Villas','Apartments','Hotels'],
+    applicationsAr: ['المكاتب','مناطق الاستقبال','الفلل','الشقق','الفنادق'],
+    finishes: ['Fabric Upholstery','Leather Upholstery','Custom Colours Available'],
+    finishesAr: ['تنجيد قماش','تنجيد جلد','ألوان مخصصة متاحة'],
+    sizes: ['Double Seater (2-person)','Custom Sizes on Request']
   }
 ];
 
@@ -427,10 +565,12 @@ var grid = document.getElementById('prodGrid');
 
 function catLabel(cat) {
   var map = {
-    doors: t('Doors','الأبواب'),
-    wood:  t('Wood Works','أعمال الخشب'),
-    steel: t('Steel Works','أعمال الحديد'),
-    aluminium: t('Aluminium Works','أعمال الألومنيوم')
+    doors:     t('Doors','الأبواب'),
+    wood:      t('Wood Works','أعمال الخشب'),
+    steel:     t('Steel Works','أعمال الحديد'),
+    aluminium: t('Aluminium Works','أعمال الألومنيوم'),
+    beds:      t('Beds & Accessories','الأسرة والإكسسوارات'),
+    sofa:      t('Sofa','الكنب')
   };
   return map[cat] || cat;
 }
@@ -696,7 +836,7 @@ function buildCard(p) {
   var orderLbl    = t('Order Now','اطلب الآن');
   var addCartLbl  = t('Add to Cart','أضف للسلة');
   var hasImgs     = p.imgs && p.imgs.length > 0;
-  var catLbl      = t('DOORS','الأبواب');
+  var catLbl      = catLabel(p.cat);
   var inWishlist  = wishlist.has(p.id);
 
   /* Image area */
@@ -1031,7 +1171,7 @@ var prodModal = {
     var desc        = IS_AR ? p.descAr : p.desc;
     var warrantyLbl = IS_AR ? p.warrantyLabelAr : p.warrantyLabel;
 
-    document.getElementById('pmCat').textContent   = t('DOORS','الأبواب');
+    document.getElementById('pmCat').textContent   = catLabel(p.cat);
     document.getElementById('pmTitle').textContent  = name;
     document.getElementById('pmPrice').innerHTML    = fmt(p.price);
     document.getElementById('pmDesc').textContent   = desc;
