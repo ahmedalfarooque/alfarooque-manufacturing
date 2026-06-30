@@ -9,6 +9,25 @@ const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 
+/* ── Load .env.local (zero-dependency — runs before anything else) ── */
+(function loadEnvLocal() {
+  try {
+    const lines = fs.readFileSync(path.join(__dirname, '.env.local'), 'utf8').split(/\r?\n/);
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) continue;
+      const eq = t.indexOf('=');
+      if (eq < 1) continue;
+      const key = t.slice(0, eq).trim();
+      let val   = t.slice(eq + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) ||
+          (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+      if (!(key in process.env)) process.env[key] = val;
+    }
+    console.log('  [env] Loaded .env.local');
+  } catch (_) { /* .env.local is optional */ }
+})();
+
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 
@@ -49,12 +68,50 @@ const MIME = {
   '.zip':  'application/zip',
 };
 
+/* ── API handlers ── */
+const quoteHandler = require('./api/quote');
+
 /* ── Server ── */
 const server = http.createServer((req, res) => {
   /* Strip query + hash, normalise trailing slash, decode percent-encoding */
   let urlPath = req.url.split('?')[0].split('#')[0];
   if (urlPath !== '/' && urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
   try { urlPath = decodeURIComponent(urlPath); } catch (e) { /* leave as-is on malformed encoding */ }
+
+  /* 0. API routes — must come before static-file handling */
+  if (urlPath === '/api/quote') {
+    let raw = '';
+    req.on('data', chunk => { raw += chunk; });
+    req.on('end', async () => {
+      let parsed = {};
+      try { parsed = JSON.parse(raw || '{}'); } catch (_) {}
+      req.body = parsed;
+
+      let statusCode = 200;
+      const apiRes = {
+        setHeader: (k, v) => res.setHeader(k, v),
+        status(n) { statusCode = n; return this; },
+        json(data) {
+          if (!res.headersSent) {
+            res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(data));
+          }
+        },
+        end() { if (!res.headersSent) { res.writeHead(statusCode); res.end(); } },
+      };
+
+      try {
+        await quoteHandler(req, apiRes);
+      } catch (err) {
+        console.error('[/api/quote] Unhandled error:', err);
+        if (!res.headersSent) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      }
+    });
+    return;
+  }
 
   /* 1. Try route table */
   const routed = ROUTES[urlPath];

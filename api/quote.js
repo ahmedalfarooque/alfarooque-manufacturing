@@ -12,7 +12,9 @@
 
 const RECIPIENT  = 'arshad@alfarooque.com';
 const FROM_NAME  = 'AL FAROOQUE Quotes';
-const FROM_EMAIL = 'noreply@alfarooque.com'; // domain must be verified in Resend
+// Override via RESEND_FROM env var during testing (e.g. onboarding@resend.dev).
+// In production set RESEND_FROM=noreply@alfarooque.com after verifying the domain in Resend.
+const FROM_EMAIL = process.env.RESEND_FROM || 'noreply@alfarooque.com';
 
 module.exports = async function handler(req, res) {
   console.log('[Quote] Incoming request — method:', req.method, 'path:', req.url);
