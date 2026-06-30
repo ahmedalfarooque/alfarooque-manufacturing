@@ -83,6 +83,18 @@ var _SOFA_IMGS = [
   'assets/images/Products/Sofa/Sofa 1_3.png',
   'assets/images/Products/Sofa/Sofa 1_4.png'
 ];
+var _ALU_WIN_IMGS = [
+  'assets/images/Products/Aluminium Window/Aluminium Window 01_1.png',
+  'assets/images/Products/Aluminium Window/Aluminium Window 01_2.png',
+  'assets/images/Products/Aluminium Window/Aluminium Window 01_3.png',
+  'assets/images/Products/Aluminium Window/Aluminium Window 01_4.png'
+];
+var _FIRE_DOOR_IMGS = [
+  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_1.png',
+  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_2.png',
+  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_3.png',
+  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_4.png'
+];
 
 var PRODUCTS = [
   {
@@ -378,6 +390,48 @@ var PRODUCTS = [
     finishes: ['Fabric Upholstery','Leather Upholstery','Custom Colours Available'],
     finishesAr: ['تنجيد قماش','تنجيد جلد','ألوان مخصصة متاحة'],
     sizes: ['Double Seater (2-person)','Custom Sizes on Request']
+  },
+  {
+    id: 11, cat: 'Aluminium Windows', material: 'Aluminium', availability: 'In Stock',
+    rating: 5.0, reviewCount: 18,
+    tags: ['Aluminium', 'Window', 'Casement', 'W1'],
+    name: 'Premium Aluminium Casement Window (W1)',
+    nameAr: 'نافذة ألمنيوم ضلفة فاخرة (W1)',
+    desc: 'Premium single casement aluminium window professionally manufactured using high-quality powder-coated aluminium profiles with premium glass, weather-resistant sealing and heavy-duty hardware.',
+    descAr: 'نافذة ألمنيوم ضلفة واحدة فاخرة مصنّعة باحترافية من بروفايلات ألمنيوم مطلية بالبودرة عالية الجودة مع زجاج فاخر وعزل مقاوم للعوامل الجوية وإكسسوارات متينة.',
+    price: 1053,
+    img: _ALU_WIN_IMGS[0], imgs: _ALU_WIN_IMGS,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: ['Premium Single Casement Aluminium Window (W1)','High-Quality Powder-Coated Aluminium Frame','Heavy-Duty Aluminium Casement Sash','Premium Clear / Tinted Glass','Corrosion & Rust Resistant','Weatherproof Rubber Gasket','Smooth Opening Mechanism','Heavy Duty Stainless Hinges','Premium Handle & Lock','Water & Air Tight','UV Resistant Finish','Modern Architectural Design','Professional Supply & Installation','Manufactured as per Approved Drawings','Project Specification Compliant'],
+    featuresAr: ['نافذة ألمنيوم ضلفة واحدة فاخرة (W1)','إطار ألمنيوم مطلي بالبودرة عالي الجودة','ضلفة ألمنيوم متينة','زجاج شفاف / ملوّن فاخر','مقاوم للتآكل والصدأ','حشية مطاطية مقاومة للعوامل الجوية','آلية فتح سلسة','مفصلات ستانلس ستيل متينة','مقبض وقفل فاخر','محكم ضد الماء والهواء','تشطيب مقاوم للأشعة فوق البنفسجية','تصميم معماري عصري','توريد وتركيب احترافي','مصنّع وفقاً للمخططات المعتمدة','مطابق لمواصفات المشروع'],
+    specs: {'Product Type':'Aluminium Casement Window (W1)','Window Type':'Single Casement','Window Size':'1300 × 1800 mm','Frame Material':'Powder-Coated Aluminium','Glass':'Clear / Tinted','Finish':'Powder Coated','Hardware':'Premium Stainless Steel','Locking':'Multi Point Lock','Installation':'Included','Warranty':'1 Year','Unit':'Per Piece (Nos)','Glass Options':'Clear / Tinted / Reflective / Frosted / Double Glazed','Package Includes':'Frame, Casement, Glass, Hardware, Rubber Gaskets, Silicone, Installation, Quality Inspection'},
+    specsAr: {'نوع المنتج':'نافذة ألمنيوم ضلفة (W1)','نوع النافذة':'ضلفة واحدة','مقاس النافذة':'1300 × 1800 مم','مادة الإطار':'ألمنيوم مطلي بالبودرة','الزجاج':'شفاف / ملوّن','التشطيب':'مطلي بالبودرة','الإكسسوارات':'ستانلس ستيل فاخر','القفل':'قفل متعدد النقاط','التركيب':'مشمول','الضمان':'سنة واحدة','الوحدة':'للقطعة (عدد)','خيارات الزجاج':'شفاف / ملوّن / عاكس / مزخرف / مزدوج','يشمل التغليف':'إطار، ضلفة، زجاج، إكسسوارات، حشيات مطاطية، سيليكون، تركيب، فحص الجودة'},
+    applications: ['Prayer Halls','Service Floors','Commercial Buildings','Hospitals','Hotels','Residential Buildings','Educational Buildings','Industrial Buildings'],
+    applicationsAr: ['قاعات الصلاة','أدوار الخدمات','المباني التجارية','المستشفيات','الفنادق','المباني السكنية','المباني التعليمية','المباني الصناعية'],
+    finishes: ['White','Dark Grey','Black','Bronze','Silver','Wood Finish'],
+    finishesAr: ['أبيض','رمادي داكن','أسود','برونزي','فضي','تشطيب خشبي'],
+    sizes: ['1300 × 1800 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')]
+  },
+  {
+    id: 12, cat: 'Fire Rated Doors', material: 'Wood', availability: 'In Stock',
+    rating: 5.0, reviewCount: 14,
+    tags: ['Fire Rated', 'Door', 'Wood', 'B17'],
+    name: 'Premium Fire Rated Wooden Door (B17)',
+    nameAr: 'باب خشبي مقاوم للحريق فاخر (B17)',
+    desc: 'Premium fire-rated wooden door professionally manufactured with Swedish hardwood frame, fire-resistant blockboard core, Oak/Mahogany veneer and certified fire-rated accessories.',
+    descAr: 'باب خشبي مقاوم للحريق فاخر مصنّع باحترافية بإطار خشب سويدي صلب وقلب بلوك بورد مقاوم للحريق وقشرة بلوط/ماهوجني وإكسسوارات معتمدة مقاومة للحريق.',
+    price: 5500,
+    img: _FIRE_DOOR_IMGS[0], imgs: _FIRE_DOOR_IMGS,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: ['Certified Fire Rated Door','Swedish Hardwood Frame','Fire Resistant Blockboard','Oak/Mahogany Veneer','Hardwood Lipping','Fire Rated Hardware','Scratch Resistant Finish','Moisture Resistant','Excellent Sound Insulation','Thermal Insulation','Supply & Installation Included','Shop Drawing Approved','Engineer Approved'],
+    featuresAr: ['باب مقاوم للحريق معتمد','إطار خشب سويدي صلب','بلوك بورد مقاوم للحريق','قشرة بلوط/ماهوجني','حواف خشب صلب','إكسسوارات مقاومة للحريق','تشطيب مقاوم للخدش','مقاوم للرطوبة','عزل صوتي ممتاز','عزل حراري','التوريد والتركيب مشمولان','معتمد بمخططات التنفيذ','معتمد من المهندس'],
+    specs: {'Product Type':'Fire Rated Wooden Door (B17)','Door Size':'800 × 1800 mm','Frame':'Swedish Hardwood','Core':'Fire Resistant Blockboard','Leaf':'Oak / Mahogany Veneer','Finish':'Protective Coating','Accessories':'Complete Fire Rated Hardware','Installation':'Included','Warranty':'1 Year','Unit':'Per Piece (Nos)','Package Includes':'Door Leaf, Frame, Hardware, Door Closer, Lockset, Painting, Installation, Quality Inspection'},
+    specsAr: {'نوع المنتج':'باب خشبي مقاوم للحريق (B17)','مقاس الباب':'800 × 1800 مم','الإطار':'خشب سويدي صلب','القلب':'بلوك بورد مقاوم للحريق','الضلفة':'قشرة بلوط / ماهوجني','التشطيب':'طلاء واقٍ','الإكسسوارات':'إكسسوارات كاملة مقاومة للحريق','التركيب':'مشمول','الضمان':'سنة واحدة','الوحدة':'للقطعة (عدد)','يشمل التغليف':'ضلفة الباب، إطار، إكسسوارات، غالق باب، مجموعة قفل، دهان، تركيب، فحص الجودة'},
+    applications: ['Commercial Buildings','Hospitals','Hotels','Schools','Government Buildings','Industrial Buildings','Fire Escape Routes','Emergency Exits'],
+    applicationsAr: ['المباني التجارية','المستشفيات','الفنادق','المدارس','المباني الحكومية','المباني الصناعية','مسارات الهروب من الحريق','مخارج الطوارئ'],
+    finishes: ['Oak','Mahogany','Walnut','Paint Finish'],
+    finishesAr: ['بلوط','ماهوجني','جوز','تشطيب دهان'],
+    sizes: ['800 × 1800 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')]
   }
 ];
 
@@ -570,7 +624,9 @@ function catLabel(cat) {
     steel:     t('Steel Works','أعمال الحديد'),
     aluminium: t('Aluminium Works','أعمال الألومنيوم'),
     beds:      t('Beds & Accessories','الأسرة والإكسسوارات'),
-    sofa:      t('Sofa','الكنب')
+    sofa:      t('Sofa','الكنب'),
+    'Aluminium Windows': t('Aluminium Windows','نوافذ الألمنيوم'),
+    'Fire Rated Doors':  t('Fire Rated Doors','أبواب مقاومة للحريق')
   };
   return map[cat] || cat;
 }
