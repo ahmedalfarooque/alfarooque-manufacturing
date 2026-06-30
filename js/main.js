@@ -299,6 +299,33 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 (function(){
   const form=document.getElementById('contact-form');
   if(!form) return;
+
+  const IS_AR = document.documentElement.lang === 'ar';
+  const tr = (en, ar) => IS_AR ? ar : en;
+
+  /* Status message element injected just below the form */
+  let statusEl = document.getElementById('contact-status');
+  if(!statusEl){
+    statusEl = document.createElement('div');
+    statusEl.id = 'contact-status';
+    statusEl.setAttribute('role','status');
+    statusEl.setAttribute('aria-live','polite');
+    statusEl.style.cssText='display:none;margin-top:14px;padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.55;';
+    form.appendChild(statusEl);
+  }
+  function showStatus(text, kind){
+    const palette = {
+      info:   ['rgba(6,182,212,0.10)','rgba(6,182,212,0.30)','#22c4de'],
+      success:['rgba(34,197,94,0.12)','rgba(34,197,94,0.38)','#4ade80'],
+      error:  ['rgba(239,68,68,0.12)','rgba(239,68,68,0.40)','#f87171'],
+    }[kind] || ['transparent','transparent','inherit'];
+    statusEl.textContent = text || '';
+    statusEl.style.display = text ? 'block' : 'none';
+    statusEl.style.background  = palette[0];
+    statusEl.style.border      = '1px solid ' + palette[1];
+    statusEl.style.color       = palette[2];
+  }
+
   form.addEventListener('submit',async e=>{
     e.preventDefault();
     console.log('[Quote] Submit button clicked');
@@ -307,6 +334,8 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
     if(!btn) return;
 
     const data=Object.fromEntries(new FormData(form));
+    data.type = 'contact';
+    data.language = IS_AR ? 'ar' : 'en';
     console.log('[Quote] Form data collected:',{
       name: data.first_name?`${data.first_name} ${data.last_name||''}`:data.name,
       email: data.email,
@@ -315,7 +344,8 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 
     btn.disabled=true;
     const origText=btn.textContent;
-    btn.textContent='Sending…';
+    btn.textContent=tr('Sending…','جارٍ الإرسال…');
+    showStatus(tr('Sending your request…','جارٍ إرسال طلبك…'),'info');
 
     console.log('[Quote] Calling API: POST /api/quote');
     let res,json;
@@ -325,13 +355,13 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data),
       });
-      json=await res.json();
+      json=await res.json().catch(()=>({}));
     } catch(err){
       console.error('[Quote] Network error:',err.message);
       btn.disabled=false;
-      btn.textContent='✗ Network Error — Try Again';
-      btn.style.cssText='background:rgba(239,68,68,0.14);border-color:rgba(239,68,68,0.40);color:#f87171;';
-      setTimeout(()=>{btn.textContent=origText;btn.style.cssText='';},4000);
+      btn.textContent=origText;
+      showStatus(tr('Network error — please check your connection and try again.',
+                    'خطأ في الشبكة — يرجى التحقق من الاتصال والمحاولة مرة أخرى.'),'error');
       return;
     }
 
@@ -339,18 +369,19 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 
     if(res.ok&&json.success){
       console.log('[Quote] SUCCESS — email delivered to arshad@alfarooque.com, id:',json.id);
-      btn.textContent='✓ Message Sent';
-      btn.style.cssText='background:rgba(34,197,94,0.14);border-color:rgba(34,197,94,0.40);color:#4ade80;';
+      btn.textContent=tr('✓ Sent','✓ تم الإرسال');
+      showStatus(tr('Thank you. Your request has been submitted successfully.',
+                    'شكراً لك. تم إرسال طلبك بنجاح.'),'success');
       setTimeout(()=>{
-        form.reset();btn.disabled=false;
-        btn.textContent=origText;btn.style.cssText='';
-      },3500);
+        form.reset();btn.disabled=false;btn.textContent=origText;
+        showStatus('',null);
+      },4500);
     } else {
+      const detail = (json && (json.error || json.message)) || ('HTTP ' + res.status);
       console.error('[Quote] FAILED — recipient: arshad@alfarooque.com — error:',json);
       btn.disabled=false;
-      btn.textContent='✗ Failed — Try Again';
-      btn.style.cssText='background:rgba(239,68,68,0.14);border-color:rgba(239,68,68,0.40);color:#f87171;';
-      setTimeout(()=>{btn.textContent=origText;btn.style.cssText='';},4000);
+      btn.textContent=origText;
+      showStatus(tr('Could not send your request: ','تعذّر إرسال طلبك: ') + detail,'error');
     }
   });
 })();

@@ -1520,8 +1520,10 @@ var orderModal = {
       self.qty++;
       self.updateTotal();
     });
-    document.getElementById('omWaBtn').addEventListener('click', function() { self.sendWhatsApp(); });
-    document.getElementById('omEmBtn').addEventListener('click', function() { self.sendEmail(); });
+    var submitBtn = document.getElementById('omSubmit');
+    if (submitBtn) submitBtn.addEventListener('click', function() { self.submit(); });
+    var omForm = document.getElementById('omForm');
+    if (omForm) omForm.addEventListener('submit', function(e) { e.preventDefault(); self.submit(); });
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && self.el.classList.contains('open')) self.close();
     });
@@ -1594,155 +1596,129 @@ var orderModal = {
     if (qtyEl && !this.isCartOrder) qtyEl.textContent = this.qty;
   },
 
-  buildMessage: function() {
-    var name  = document.getElementById('omName').value.trim()  || '—';
-    var phone = document.getElementById('omPhone').value.trim() || '—';
-    var email = document.getElementById('omEmail').value.trim() || '—';
-    var msg   = document.getElementById('omMsg').value.trim()   || '';
-    var lines = [];
-    if (IS_AR) {
-      lines.push('🛒 *طلب منتج جديد — الفاروقي للتصنيع*\n');
-      if (this.isCartOrder) {
-        lines.push('📦 *المنتجات:*');
-        cart.items.forEach(function(ci) {
-          var p = getProduct(ci.id);
-          if (p) lines.push('  • ' + p.nameAr + ' × ' + ci.qty + ' — ' + fmt(p.price * ci.qty));
-        });
-        lines.push('💵 *المجموع الجزئي:* ' + fmt(cart.total()));
-        lines.push('🧾 *ضريبة القيمة المضافة (15%):* ' + fmt(cart.vat()));
-        lines.push('💰 *الإجمالي الكلي:* ' + fmt(cart.grand()));
-      } else {
-        var p = getProduct(this.productId);
-        if (p) {
-          var sub = p.price * this.qty;
-          var vat = Math.round(sub * 0.15);
-          lines.push('📦 *المنتج:* ' + p.nameAr);
-          lines.push('💵 *سعر الوحدة:* ' + fmt(p.price));
-          lines.push('🔢 *الكمية:* ' + this.qty);
-          lines.push('💵 *المجموع الجزئي:* ' + fmt(sub));
-          lines.push('🧾 *ضريبة القيمة المضافة (15%):* ' + fmt(vat));
-          lines.push('💰 *الإجمالي الكلي:* ' + fmt(sub + vat));
-        }
-      }
-      lines.push('\n👤 *الاسم:* ' + name);
-      lines.push('📞 *الهاتف:* ' + phone);
-      lines.push('📧 *البريد:* ' + email);
-      if (msg) lines.push('💬 *ملاحظة:* ' + msg);
-      lines.push('\nأرغب في تأكيد الطلب. يرجى التواصل معي.');
+  /* Build the structured payload sent to the backend (/api/quote) */
+  buildPayload: function() {
+    var name  = document.getElementById('omName').value.trim();
+    var phone = document.getElementById('omPhone').value.trim();
+    var email = document.getElementById('omEmail').value.trim();
+    var msg   = document.getElementById('omMsg').value.trim();
+
+    var payload = {
+      language: IS_AR ? 'ar' : 'en',
+      name:     name,
+      phone:    phone,
+      email:    email,
+      message:  msg,
+    };
+
+    if (this.isCartOrder) {
+      payload.type  = 'cart';
+      payload.items = cart.items.map(function(ci) {
+        var p = getProduct(ci.id);
+        return {
+          name:      p ? (IS_AR ? p.nameAr : p.name) : ('#' + ci.id),
+          qty:       ci.qty,
+          price:     p ? p.price : 0,
+          lineTotal: p ? p.price * ci.qty : 0,
+        };
+      });
+      payload.subtotal   = cart.total();
+      payload.vat        = cart.vat();
+      payload.grandTotal = cart.grand();
     } else {
-      lines.push('🛒 *New Product Order — AL FAROOQUE Manufacturing*\n');
-      if (this.isCartOrder) {
-        lines.push('📦 *Products:*');
-        cart.items.forEach(function(ci) {
-          var p = getProduct(ci.id);
-          if (p) lines.push('  • ' + p.name + ' × ' + ci.qty + ' — ' + fmt(p.price * ci.qty));
-        });
-        lines.push('💵 *Subtotal:* ' + fmt(cart.total()));
-        lines.push('🧾 *VAT (15%):* ' + fmt(cart.vat()));
-        lines.push('💰 *Grand Total:* ' + fmt(cart.grand()));
-      } else {
-        var p = getProduct(orderModal.productId);
-        if (p) {
-          var sub = p.price * this.qty;
-          var vat = Math.round(sub * 0.15);
-          lines.push('📦 *Product:* ' + p.name);
-          lines.push('💵 *Unit Price:* ' + fmt(p.price));
-          lines.push('🔢 *Quantity:* ' + this.qty);
-          lines.push('💵 *Subtotal:* ' + fmt(sub));
-          lines.push('🧾 *VAT (15%):* ' + fmt(vat));
-          lines.push('💰 *Grand Total:* ' + fmt(sub + vat));
-        }
-      }
-      lines.push('\n👤 *Name:* ' + name);
-      lines.push('📞 *Phone:* ' + phone);
-      lines.push('📧 *Email:* ' + email);
-      if (msg) lines.push('💬 *Note:* ' + msg);
-      lines.push('\nI would like to place this order. Please contact me.');
+      var p = getProduct(this.productId);
+      var sub = p ? p.price * this.qty : 0;
+      var vat = Math.round(sub * 0.15);
+      payload.type       = 'order';
+      payload.product    = p ? (IS_AR ? p.nameAr : p.name) : ('#' + this.productId);
+      payload.quantity   = this.qty;
+      payload.subtotal   = sub;
+      payload.vat        = vat;
+      payload.grandTotal = sub + vat;
     }
-    return lines.join('\n');
+    return payload;
   },
 
-  buildEmailBody: function() {
-    var name  = document.getElementById('omName').value.trim()  || '—';
-    var phone = document.getElementById('omPhone').value.trim() || '—';
-    var email = document.getElementById('omEmail').value.trim() || '—';
-    var msg   = document.getElementById('omMsg').value.trim()   || '';
-    var lines = [];
-    if (IS_AR) {
-      lines.push('طلب منتج جديد — الفاروقي للتصنيع\n');
-      if (this.isCartOrder) {
-        lines.push('المنتجات:');
-        cart.items.forEach(function(ci) {
-          var p = getProduct(ci.id);
-          if (p) lines.push('  - ' + p.nameAr + ' × ' + ci.qty + ' = ' + fmt(p.price * ci.qty));
-        });
-        lines.push('المجموع الجزئي: ' + fmt(cart.total()));
-        lines.push('ضريبة القيمة المضافة (15%): ' + fmt(cart.vat()));
-        lines.push('الإجمالي الكلي: ' + fmt(cart.grand()));
-      } else {
-        var p = getProduct(this.productId);
-        if (p) {
-          var sub = p.price * this.qty;
-          var vat = Math.round(sub * 0.15);
-          lines.push('المنتج: ' + p.nameAr);
-          lines.push('سعر الوحدة: ' + fmt(p.price));
-          lines.push('الكمية: ' + this.qty);
-          lines.push('المجموع الجزئي: ' + fmt(sub));
-          lines.push('ضريبة القيمة المضافة (15%): ' + fmt(vat));
-          lines.push('الإجمالي الكلي: ' + fmt(sub + vat));
-        }
-      }
-      lines.push('\nالاسم: ' + name);
-      lines.push('الهاتف: ' + phone);
-      lines.push('البريد الإلكتروني: ' + email);
-      if (msg) lines.push('ملاحظة: ' + msg);
-      lines.push('\nأرغب في تأكيد الطلب.');
-    } else {
-      lines.push('New Product Order — AL FAROOQUE Manufacturing\n');
-      if (this.isCartOrder) {
-        lines.push('Products:');
-        cart.items.forEach(function(ci) {
-          var p = getProduct(ci.id);
-          if (p) lines.push('  - ' + p.name + ' x ' + ci.qty + ' = ' + fmt(p.price * ci.qty));
-        });
-        lines.push('Subtotal: ' + fmt(cart.total()));
-        lines.push('VAT (15%): ' + fmt(cart.vat()));
-        lines.push('Grand Total: ' + fmt(cart.grand()));
-      } else {
-        var p = getProduct(orderModal.productId);
-        if (p) {
-          var sub = p.price * this.qty;
-          var vat = Math.round(sub * 0.15);
-          lines.push('Product: ' + p.name);
-          lines.push('Unit Price: ' + fmt(p.price));
-          lines.push('Quantity: ' + this.qty);
-          lines.push('Subtotal: ' + fmt(sub));
-          lines.push('VAT (15%): ' + fmt(vat));
-          lines.push('Grand Total: ' + fmt(sub + vat));
-        }
-      }
-      lines.push('\nName: ' + name);
-      lines.push('Phone: ' + phone);
-      lines.push('Email: ' + email);
-      if (msg) lines.push('Note: ' + msg);
-      lines.push('\nI would like to place this order. Please contact me.');
+  /* Render a status message inside the modal (info | success | error) */
+  setStatus: function(text, kind) {
+    var el = document.getElementById('omStatus');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'om-status' + (kind ? ' om-status-' + kind : '');
+    el.style.display = text ? 'block' : 'none';
+  },
+
+  /* Submit the order to the backend — no WhatsApp / mailto */
+  submit: function() {
+    var self  = this;
+    var name  = document.getElementById('omName').value.trim();
+    var phone = document.getElementById('omPhone').value.trim();
+    var email = document.getElementById('omEmail').value.trim();
+    var btn   = document.getElementById('omSubmit');
+
+    /* Client-side validation */
+    if (!name || !phone) {
+      this.setStatus(t('Please enter your name and phone number.',
+                       'يرجى إدخال الاسم ورقم الهاتف.'), 'error');
+      return;
     }
-    return lines.join('\n');
-  },
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.setStatus(t('Please enter a valid email address.',
+                       'يرجى إدخال بريد إلكتروني صحيح.'), 'error');
+      return;
+    }
 
-  sendWhatsApp: function() {
-    var text = this.buildMessage();
-    var url  = 'https://wa.me/' + WA_NUMBER + '?text=' + esc(text);
-    window.open(url, '_blank', 'noopener,noreferrer');
-  },
+    var origLabel = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
+    this.setStatus(t('Sending your order…', 'جارٍ إرسال طلبك…'), 'info');
+    if (btn) btn.textContent = t('Sending…', 'جارٍ الإرسال…');
 
-  sendEmail: function() {
-    var p = this.isCartOrder ? null : getProduct(orderModal.productId);
-    var subject = IS_AR
-      ? 'طلب جديد — ' + (p ? p.nameAr : 'طلب سلة')
-      : 'New Product Order — ' + (p ? p.name : 'Cart Order');
-    var body = this.buildEmailBody();
-    window.location.href = 'mailto:' + ORDER_EMAIL + '?subject=' + esc(subject) + '&body=' + esc(body);
+    fetch('/api/quote', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(this.buildPayload()),
+    })
+    .then(function(res) {
+      return res.json().catch(function() { return {}; }).then(function(json) {
+        return { ok: res.ok, status: res.status, json: json };
+      });
+    })
+    .then(function(r) {
+      if (r.ok && r.json.success) {
+        console.log('[Order] SUCCESS — email sent to arshad@alfarooque.com, id:', r.json.id);
+        self.setStatus(t('Thank you. Your request has been submitted successfully.',
+                         'شكراً لك. تم إرسال طلبك بنجاح.'), 'success');
+        if (btn) { btn.classList.remove('is-loading'); btn.textContent = t('✓ Submitted', '✓ تم الإرسال'); }
+
+        /* Clear the cart on a successful cart order */
+        if (self.isCartOrder) {
+          cart.items = [];
+          cart.save();
+          cart.renderDrawer();
+          cart.updateBadge(false);
+        }
+        /* Reset & close after the user has read the confirmation */
+        setTimeout(function() {
+          var form = document.getElementById('omForm');
+          if (form) form.reset();
+          self.close();
+          self.setStatus('', '');
+          if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+        }, 3200);
+      } else {
+        var detail = (r.json && (r.json.error || r.json.message)) ||
+                     ('Request failed (HTTP ' + r.status + ')');
+        console.error('[Order] FAILED — HTTP', r.status, r.json);
+        self.setStatus(t('Could not send your order: ', 'تعذّر إرسال طلبك: ') + detail, 'error');
+        if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); btn.innerHTML = origLabel; }
+      }
+    })
+    .catch(function(err) {
+      console.error('[Order] Network error:', err);
+      self.setStatus(t('Network error — please check your connection and try again.',
+                       'خطأ في الشبكة — يرجى التحقق من الاتصال والمحاولة مرة أخرى.'), 'error');
+      if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); btn.innerHTML = origLabel; }
+    });
   }
 };
 
