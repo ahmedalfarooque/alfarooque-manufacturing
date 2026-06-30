@@ -5,8 +5,8 @@
 'use strict';
 
 /* ════ CONFIG — update before going live ════ */
-var WA_NUMBER   = '966563000051';       // WhatsApp number, no leading +
-var ORDER_EMAIL = 'sales@alfarooque.com';
+var WA_NUMBER   = '966545542792';       // WhatsApp number, no leading +
+var ORDER_EMAIL = 'arshad@alfarooque.com';
 var CART_KEY    = 'afq-products-cart';
 var SLIDE_MS    = 5000;                 // Hero auto-advance interval (ms)
 
