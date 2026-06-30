@@ -1,7 +1,8 @@
 /* ════════════════════════════════════════════════════════════
    AL FAROOQUE — Product Search & Filter System
-   One horizontal glass toolbar mounted inside the nav header:
-   Search | Category | Material | Price | Sort | Reset
+   Desktop: one horizontal glass toolbar mounted inside nav.
+   Mobile (≤768px): search bar + Filter button; all other
+   controls open in a glass-morphism slide-up bottom sheet.
    ════════════════════════════════════════════════════════════ */
 
 /* ── Products page: nav becomes a tall single header ──────── */
@@ -40,8 +41,6 @@ body.products-page .products-section { padding-top: 28px; }
   flex-wrap: nowrap;
   width: 100%;
   box-sizing: border-box;
-  /* Glass container — the nav behind it supplies the live blur,
-     so we avoid stacking a second backdrop-filter layer here. */
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 16px;
@@ -107,6 +106,52 @@ body.products-page .products-section { padding-top: 28px; }
   flex-shrink: 0;
 }
 .pf-search-clear:hover { color: var(--tx-1, #e2e8f0); background: rgba(255,255,255,0.07); }
+
+/* ── Mobile Filter Button (visible only on mobile via responsive) */
+.pf-mobile-filter-btn {
+  display: none; /* shown via @media (max-width: 768px) */
+  align-items: center;
+  gap: 7px;
+  background: rgba(14,165,193,0.10);
+  border: 1px solid rgba(14,165,193,0.28);
+  border-radius: 12px;
+  color: #22d3ee;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 14px;
+  height: 46px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.25s ease, border-color 0.25s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+.pf-mobile-filter-btn:hover {
+  background: rgba(14,165,193,0.20);
+  border-color: rgba(14,165,193,0.46);
+}
+
+/* Active filter count badge on the filter button */
+.pf-filter-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #0ea5c9;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 4px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.pf-filter-badge.visible { display: flex; }
+[dir="rtl"] .pf-filter-badge { right: auto; left: -7px; }
 
 /* ── Select inputs ────────────────────────────────────────── */
 .pf-select {
@@ -260,6 +305,203 @@ body.products-page .products-section { padding-top: 28px; }
 }
 
 /* ════════════════════════════════════════════════════════════
+   MOBILE BOTTOM SHEET
+   ════════════════════════════════════════════════════════════ */
+
+/* Backdrop overlay */
+.pf-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  background: rgba(0,0,0,0.52);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+  display: flex;
+  align-items: flex-end;
+}
+.pf-sheet-overlay.pf-sheet-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Sheet panel — glass morphism */
+.pf-sheet {
+  width: 100%;
+  max-height: 92dvh;
+  max-height: 92vh; /* fallback for older browsers */
+  background: rgba(11,17,32,0.94);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border-radius: 26px 26px 0 0;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-bottom: none;
+  box-shadow: 0 -16px 56px rgba(0,0,0,0.55), 0 -1px 0 rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+}
+.pf-sheet-overlay.pf-sheet-open .pf-sheet {
+  transform: translateY(0);
+}
+
+/* Drag handle pill */
+.pf-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+  margin: 14px auto 0;
+  flex-shrink: 0;
+}
+
+/* Sheet header row */
+.pf-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+.pf-sheet-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--tx-1, #e2e8f0);
+  letter-spacing: 0.01em;
+}
+.pf-sheet-close {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  color: rgba(148,163,184,0.75);
+  font-size: 20px;
+  line-height: 1;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.pf-sheet-close:hover {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.30);
+  color: #f87171;
+}
+
+/* Scrollable body */
+.pf-sheet-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Filter group (label + input) */
+.pf-sheet-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pf-sheet-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(148,163,184,0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Full-width selects inside the sheet */
+.pf-sheet-select {
+  width: 100%;
+  flex: none;
+  height: 50px;
+  font-size: 15px;
+  min-width: 0;
+}
+
+/* Price row inside the sheet */
+.pf-sheet-price-row {
+  flex: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.pf-sheet-price-row .pf-price-input {
+  height: 50px;
+  font-size: 15px;
+}
+
+/* Sheet footer */
+.pf-sheet-footer {
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Reset button inside sheet footer */
+.pf-sheet-reset {
+  flex: 0 0 auto;
+  min-width: 110px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 14px;
+  color: rgba(148,163,184,0.80);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+.pf-sheet-reset:hover {
+  background: rgba(239,68,68,0.10);
+  border-color: rgba(239,68,68,0.26);
+  color: #f87171;
+}
+
+/* Apply button inside sheet footer */
+.pf-sheet-apply {
+  flex: 1;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0ea5c9 0%, #0891b2 100%);
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.015em;
+}
+.pf-sheet-apply:hover {
+  background: linear-gradient(135deg, #22d3ee 0%, #0ea5c9 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(14,165,193,0.38);
+}
+.pf-sheet-apply:active { transform: none; }
+
+/* ════════════════════════════════════════════════════════════
    LIGHT MODE
    ════════════════════════════════════════════════════════════ */
 :is(html.light,body.light) .pf-bar {
@@ -297,11 +539,47 @@ body.products-page .products-section { padding-top: 28px; }
 :is(html.light,body.light) .pf-empty-title { color: #0f172a; }
 :is(html.light,body.light) .pf-empty-ico   { color: rgba(100,116,139,0.28); }
 
+/* Light mode — mobile filter button */
+:is(html.light,body.light) .pf-mobile-filter-btn {
+  background: rgba(8,145,168,0.08);
+  border-color: rgba(8,145,168,0.24);
+  color: #0891b2;
+}
+:is(html.light,body.light) .pf-mobile-filter-btn:hover {
+  background: rgba(8,145,168,0.14);
+  border-color: rgba(8,145,168,0.38);
+}
+:is(html.light,body.light) .pf-filter-badge { background: #0891b2; }
+
+/* Light mode — bottom sheet */
+:is(html.light,body.light) .pf-sheet-overlay { background: rgba(15,23,42,0.45); }
+:is(html.light,body.light) .pf-sheet {
+  background: rgba(248,250,252,0.96);
+  border-color: rgba(15,23,42,0.08);
+  box-shadow: 0 -16px 48px rgba(15,23,42,0.14);
+}
+:is(html.light,body.light) .pf-sheet-title { color: #0f172a; }
+:is(html.light,body.light) .pf-sheet-handle { background: rgba(15,23,42,0.14); }
+:is(html.light,body.light) .pf-sheet-header,
+:is(html.light,body.light) .pf-sheet-footer { border-color: rgba(15,23,42,0.08); }
+:is(html.light,body.light) .pf-sheet-close {
+  background: rgba(15,23,42,0.05);
+  border-color: rgba(15,23,42,0.10);
+  color: #475569;
+}
+:is(html.light,body.light) .pf-sheet-close:hover { color: #ef4444; }
+:is(html.light,body.light) .pf-sheet-reset {
+  background: rgba(255,255,255,0.70);
+  border-color: rgba(15,23,42,0.14);
+  color: #475569;
+}
+:is(html.light,body.light) .pf-sheet-label { color: rgba(71,85,105,0.75); }
+
 /* ════════════════════════════════════════════════════════════
    RESPONSIVE
    ════════════════════════════════════════════════════════════ */
 
-/* Tablet — allow wrapping into two rows; search takes its own line */
+/* Tablet (769px – 1024px): wrap into two rows; search full width */
 @media (max-width: 1024px) {
   .pf-bar { flex-wrap: wrap; }
   .pf-search-wrap { flex: 1 1 100%; }
@@ -309,19 +587,32 @@ body.products-page .products-section { padding-top: 28px; }
   .pf-price-row { flex: 1 1 200px; }
 }
 
-/* Mobile — stack every control full width */
-@media (max-width: 640px) {
-  body.products-page .nav { padding-bottom: 14px; }
+/* Mobile (≤768px): single row — search bar + filter button only.
+   All desktop filter controls are hidden; sheet handles them. */
+@media (max-width: 768px) {
+  body.products-page .nav { padding-bottom: 12px; }
+
+  /* Force single horizontal row regardless of tablet wrap */
   .pf-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
   }
-  .pf-search-wrap,
-  .pf-select,
-  .pf-price-row,
-  .pf-reset-btn { flex: 1 1 auto; width: 100%; min-width: 0; }
+
+  /* Search bar expands to fill available space */
+  .pf-bar .pf-search-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
   .pf-search-input { font-size: 14px; }
-  .pf-reset-btn { justify-content: center; }
+
+  /* Show the mobile filter button */
+  .pf-mobile-filter-btn { display: inline-flex; }
+
+  /* Hide all desktop-only controls */
+  .pf-bar .pf-select,
+  .pf-bar .pf-price-row,
+  .pf-bar .pf-reset-btn { display: none; }
 }

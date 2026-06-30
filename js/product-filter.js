@@ -1,7 +1,9 @@
 /* ════════════════════════════════════════════════════════════
    AL FAROOQUE — Product Search & Filter System
-   One horizontal glass toolbar: Search | Category | Material |
-   Price | Sort | Reset — mounted inside the navigation header.
+   Desktop: one horizontal glass toolbar (Search | Category |
+   Material | Price | Sort | Reset) mounted inside nav header.
+   Mobile (≤768px): search bar + Filter button visible only.
+   All other controls open as a glass-morphism bottom sheet.
    Depends on: products.js (PRODUCTS, buildCard, grid, t, IS_AR)
    ════════════════════════════════════════════════════════════ */
 'use strict';
@@ -16,10 +18,12 @@ var pfState = {
   sort:         'featured'
 };
 
-var PF_BATCH    = 12;
-var _pfVisible  = [];   /* filtered + sorted product list */
-var _pfRendered = 0;    /* how many from _pfVisible are in the DOM */
+var PF_BATCH       = 12;
+var _pfVisible     = [];   /* filtered + sorted product list */
+var _pfRendered    = 0;    /* how many from _pfVisible are in the DOM */
 var _pfSearchTimer = null;
+var _pfSheetBuilt  = false; /* lazy — sheet DOM created on first open */
+var _pfScrollY     = 0;     /* saved scroll position while sheet is open */
 
 /* ── Dynamic option extraction ────────────────────────────── */
 function pfExtract(field) {
@@ -121,6 +125,7 @@ function pfRenderAll() {
   }
   pfUpdateCount();
   pfUpdateChips();
+  pfUpdateFilterBadge();
 }
 
 function pfRenderEmpty() {
@@ -162,7 +167,7 @@ function pfUpdateChips() {
   if (!el) return;
   el.innerHTML = '';
   var chips = [];
-  if (pfState.query)              chips.push({ key: 'query',    label: '“' + pfState.query + '”' });
+  if (pfState.query)              chips.push({ key: 'query',    label: '"' + pfState.query + '"' });
   if (pfState.category !== 'all') chips.push({ key: 'category', label: pfCapitalize(pfState.category) });
   if (pfState.material !== 'all') chips.push({ key: 'material', label: pfState.material });
   if (pfState.priceMin > 0 || pfState.priceMax < 20000) {
@@ -174,14 +179,33 @@ function pfUpdateChips() {
     chip.setAttribute('type', 'button');
     chip.innerHTML = '<span>' + c.label + '</span><span class="pf-chip-x">&#215;</span>';
     chip.addEventListener('click', function() {
-      if (c.key === 'query')    { pfState.query = ''; pfSyncSearchInput(); }
+      if (c.key === 'query')      { pfState.query = ''; pfSyncSearchInput(); }
       else if (c.key === 'price') { pfState.priceMin = 0; pfState.priceMax = 20000; }
-      else pfState[c.key] = 'all';
+      else                          pfState[c.key] = 'all';
       pfSyncUI();
       pfRenderAll();
     });
     el.appendChild(chip);
   });
+}
+
+/* ── Filter badge — active filter count on mobile button ──── */
+function pfUpdateFilterBadge() {
+  var badge = document.getElementById('pfFilterBadge');
+  if (!badge) return;
+  var count = 0;
+  if (pfState.query)               count++;
+  if (pfState.category !== 'all')  count++;
+  if (pfState.material !== 'all')  count++;
+  if (pfState.priceMin > 0 || pfState.priceMax < 20000) count++;
+  if (pfState.sort !== 'featured') count++;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.add('visible');
+  } else {
+    badge.textContent = '';
+    badge.classList.remove('visible');
+  }
 }
 
 /* ── UI sync ──────────────────────────────────────────────── */
@@ -240,17 +264,18 @@ function pfBuildToolbar() {
     }).join('');
 
   var sortOpts = [
-    '<option value="featured">'   + t('Featured',           'مميز')                     + '</option>',
-    '<option value="newest">'     + t('Newest',             'الأحدث')          + '</option>',
-    '<option value="price-asc">'  + t('Price: Low → High',  'السعر: الأقل') + '</option>',
-    '<option value="price-desc">' + t('Price: High → Low',  'السعر: الأعلى') + '</option>',
-    '<option value="name-az">'    + t('Name: A → Z',   'الاسم: أ ← ي') + '</option>',
-    '<option value="name-za">'    + t('Name: Z → A',   'الاسم: ي ← أ') + '</option>',
-    '<option value="best-selling">'+ t('Best Selling',      'الأكثر مبيعاً') + '</option>'
+    '<option value="featured">'    + t('Featured',           'مميز')           + '</option>',
+    '<option value="newest">'      + t('Newest',             'الأحدث')         + '</option>',
+    '<option value="price-asc">'   + t('Price: Low → High',  'السعر: الأقل')   + '</option>',
+    '<option value="price-desc">'  + t('Price: High → Low',  'السعر: الأعلى')  + '</option>',
+    '<option value="name-az">'     + t('Name: A → Z',        'الاسم: أ ← ي')   + '</option>',
+    '<option value="name-za">'     + t('Name: Z → A',        'الاسم: ي ← أ')   + '</option>',
+    '<option value="best-selling">'+ t('Best Selling',       'الأكثر مبيعاً')  + '</option>'
   ].join('');
 
   var icoSearch = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
   var icoReset  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>';
+  var icoFilter = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
 
   return [
     '<div class="pf-toolbar" id="pfToolbar">',
@@ -262,6 +287,14 @@ function pfBuildToolbar() {
     '      <input type="text" id="pfSearchInput" class="pf-search-input" placeholder="' + t('Search products…', 'ابحث عن المنتجات…') + '" autocomplete="off" spellcheck="false">',
     '      <button class="pf-search-clear" id="pfSearchClear" type="button" aria-label="Clear search" style="display:none">&#215;</button>',
     '    </div>',
+
+    /* Mobile-only: Filter button (hidden on desktop via CSS) */
+    '    <button class="pf-mobile-filter-btn" id="pfFilterBtn" type="button" aria-label="' + t('Open Filters', 'فتح المرشحات') + '">',
+    '      ' + icoFilter + '<span>' + t('Filters', 'المرشحات') + '</span>',
+    '      <span class="pf-filter-badge" id="pfFilterBadge" aria-hidden="true"></span>',
+    '    </button>',
+
+    /* Desktop-only: inline filter controls (hidden on mobile via CSS) */
     '    <select class="pf-select" id="pfCatSelect" aria-label="' + t('Category', 'الفئة') + '">' + catOpts + '</select>',
     '    <select class="pf-select" id="pfMatSelect" aria-label="' + t('Material', 'المادة') + '">' + matOpts + '</select>',
     '    <div class="pf-price-row" aria-label="' + t('Price Range (SAR)', 'نطاق السعر') + '">',
@@ -281,6 +314,189 @@ function pfBuildToolbar() {
 
     '</div>'
   ].join('\n');
+}
+
+/* ── Mobile bottom sheet builder (lazy — built on first open) */
+function pfBuildSheet() {
+  var categories = pfExtract('cat');
+  var materials  = pfExtract('material');
+
+  var catOpts = '<option value="all">' + t('All Categories', 'جميع الفئات') + '</option>' +
+    categories.map(function(c) {
+      return '<option value="' + c + '">' + pfCapitalize(c) + '</option>';
+    }).join('');
+
+  var matOpts = '<option value="all">' + t('All Materials', 'جميع المواد') + '</option>' +
+    materials.map(function(m) {
+      return '<option value="' + m + '">' + m + '</option>';
+    }).join('');
+
+  var sortOpts = [
+    '<option value="featured">'    + t('Featured',           'مميز')           + '</option>',
+    '<option value="newest">'      + t('Newest',             'الأحدث')         + '</option>',
+    '<option value="price-asc">'   + t('Price: Low → High',  'السعر: الأقل')   + '</option>',
+    '<option value="price-desc">'  + t('Price: High → Low',  'السعر: الأعلى')  + '</option>',
+    '<option value="name-az">'     + t('Name: A → Z',        'الاسم: أ ← ي')   + '</option>',
+    '<option value="name-za">'     + t('Name: Z → A',        'الاسم: ي ← أ')   + '</option>',
+    '<option value="best-selling">'+ t('Best Selling',       'الأكثر مبيعاً')  + '</option>'
+  ].join('');
+
+  var icoReset = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>';
+
+  var wrapper = document.createElement('div');
+  wrapper.innerHTML =
+    '<div class="pf-sheet-overlay" id="pfSheetOverlay" aria-hidden="true">' +
+    '  <div class="pf-sheet" id="pfSheet" role="dialog" aria-modal="true" aria-label="' + t('Product Filters', 'مرشحات المنتجات') + '">' +
+    '    <div class="pf-sheet-handle"></div>' +
+    '    <div class="pf-sheet-header">' +
+    '      <span class="pf-sheet-title">' + t('Filters', 'المرشحات') + '</span>' +
+    '      <button class="pf-sheet-close" id="pfSheetClose" type="button" aria-label="' + t('Close filters', 'إغلاق المرشحات') + '">&#215;</button>' +
+    '    </div>' +
+    '    <div class="pf-sheet-body">' +
+    '      <div class="pf-sheet-group">' +
+    '        <label class="pf-sheet-label" for="pfMCatSelect">' + t('Category', 'الفئة') + '</label>' +
+    '        <select class="pf-select pf-sheet-select" id="pfMCatSelect">' + catOpts + '</select>' +
+    '      </div>' +
+    '      <div class="pf-sheet-group">' +
+    '        <label class="pf-sheet-label" for="pfMMatSelect">' + t('Material', 'المادة') + '</label>' +
+    '        <select class="pf-select pf-sheet-select" id="pfMMatSelect">' + matOpts + '</select>' +
+    '      </div>' +
+    '      <div class="pf-sheet-group">' +
+    '        <label class="pf-sheet-label">' + t('Price Range (SAR)', 'نطاق السعر (ريال)') + '</label>' +
+    '        <div class="pf-price-row pf-sheet-price-row">' +
+    '          <input type="number" class="pf-price-input" id="pfMPriceMin" value="0" min="0" max="20000" step="100" placeholder="' + t('Min', 'أدنى') + '">' +
+    '          <span class="pf-price-sep">—</span>' +
+    '          <input type="number" class="pf-price-input" id="pfMPriceMax" value="20000" min="0" max="20000" step="100" placeholder="' + t('Max', 'أقصى') + '">' +
+    '        </div>' +
+    '      </div>' +
+    '      <div class="pf-sheet-group">' +
+    '        <label class="pf-sheet-label" for="pfMSortSelect">' + t('Sort By', 'الترتيب') + '</label>' +
+    '        <select class="pf-select pf-sheet-select" id="pfMSortSelect">' + sortOpts + '</select>' +
+    '      </div>' +
+    '    </div>' +
+    '    <div class="pf-sheet-footer">' +
+    '      <button class="pf-sheet-reset" id="pfSheetResetBtn" type="button">' + icoReset + ' <span>' + t('Reset', 'إعادة ضبط') + '</span></button>' +
+    '      <button class="pf-sheet-apply" id="pfSheetApplyBtn" type="button">' + t('Apply Filters', 'تطبيق المرشحات') + '</button>' +
+    '    </div>' +
+    '  </div>' +
+    '</div>';
+
+  document.body.appendChild(wrapper.firstElementChild);
+  _pfSheetBuilt = true;
+  pfWireSheetEvents();
+}
+
+/* ── Sheet: open ──────────────────────────────────────────── */
+function pfOpenSheet() {
+  if (!_pfSheetBuilt) pfBuildSheet();
+  _pfScrollY = window.scrollY || window.pageYOffset;
+  pfSyncMobileSheet();
+  var overlay = document.getElementById('pfSheetOverlay');
+  if (!overlay) return;
+  overlay.setAttribute('aria-hidden', 'false');
+  overlay.classList.add('pf-sheet-open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.top      = '-' + _pfScrollY + 'px';
+  document.body.style.width    = '100%';
+}
+
+/* ── Sheet: close ─────────────────────────────────────────── */
+function pfCloseSheet() {
+  var overlay = document.getElementById('pfSheetOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('pf-sheet-open');
+  overlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.top      = '';
+  document.body.style.width    = '';
+  window.scrollTo(0, _pfScrollY);
+}
+
+/* ── Sync sheet inputs from current pfState ───────────────── */
+function pfSyncMobileSheet() {
+  var catSel   = document.getElementById('pfMCatSelect');
+  var matSel   = document.getElementById('pfMMatSelect');
+  var sortSel  = document.getElementById('pfMSortSelect');
+  var priceMin = document.getElementById('pfMPriceMin');
+  var priceMax = document.getElementById('pfMPriceMax');
+  if (catSel)   catSel.value   = pfState.category;
+  if (matSel)   matSel.value   = pfState.material;
+  if (sortSel)  sortSel.value  = pfState.sort;
+  if (priceMin) priceMin.value = pfState.priceMin;
+  if (priceMax) priceMax.value = pfState.priceMax;
+}
+
+/* ── Apply sheet selections → pfState, render, close ─────── */
+function pfApplyFromSheet() {
+  var catSel   = document.getElementById('pfMCatSelect');
+  var matSel   = document.getElementById('pfMMatSelect');
+  var sortSel  = document.getElementById('pfMSortSelect');
+  var priceMin = document.getElementById('pfMPriceMin');
+  var priceMax = document.getElementById('pfMPriceMax');
+
+  if (catSel)  pfState.category = catSel.value;
+  if (matSel)  pfState.material = matSel.value;
+  if (sortSel) pfState.sort     = sortSel.value;
+
+  var lo = parseInt((priceMin && priceMin.value) || '0', 10);
+  var hi = parseInt((priceMax && priceMax.value) || '20000', 10);
+  if (isNaN(lo) || lo < 0)     lo = 0;
+  if (isNaN(hi) || hi > 20000) hi = 20000;
+  if (lo > hi) { var tmp = lo; lo = hi; hi = tmp; }
+  pfState.priceMin = lo;
+  pfState.priceMax = hi;
+
+  pfSyncUI();
+  pfRenderAll();
+  pfCloseSheet();
+}
+
+/* ── Wire sheet-specific events (called after sheet is built) */
+function pfWireSheetEvents() {
+  var overlay  = document.getElementById('pfSheetOverlay');
+  var sheet    = document.getElementById('pfSheet');
+  var closeBtn = document.getElementById('pfSheetClose');
+  var applyBtn = document.getElementById('pfSheetApplyBtn');
+  var resetBtn = document.getElementById('pfSheetResetBtn');
+
+  if (closeBtn) closeBtn.addEventListener('click', pfCloseSheet);
+
+  if (applyBtn) applyBtn.addEventListener('click', pfApplyFromSheet);
+
+  if (resetBtn) resetBtn.addEventListener('click', function() {
+    pfReset();
+    pfSyncMobileSheet();
+    pfCloseSheet();
+  });
+
+  /* Tap outside (on the semi-transparent backdrop) to close */
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) pfCloseSheet();
+    });
+  }
+
+  /* ESC key closes the sheet */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var o = document.getElementById('pfSheetOverlay');
+      if (o && o.classList.contains('pf-sheet-open')) pfCloseSheet();
+    }
+  });
+
+  /* Swipe-down gesture closes the sheet */
+  if (sheet) {
+    var _touchStartY = 0;
+    sheet.addEventListener('touchstart', function(e) {
+      _touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    sheet.addEventListener('touchend', function(e) {
+      var delta = e.changedTouches[0].clientY - _touchStartY;
+      if (delta > 80) pfCloseSheet();
+    }, { passive: true });
+  }
 }
 
 /* ── Wire all events ──────────────────────────────────────── */
@@ -307,7 +523,11 @@ function pfWireEvents() {
     });
   }
 
-  /* Selects */
+  /* Mobile filter button → open bottom sheet */
+  var filterBtn = document.getElementById('pfFilterBtn');
+  if (filterBtn) filterBtn.addEventListener('click', pfOpenSheet);
+
+  /* Desktop selects */
   function wireSelect(id, key) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('change', function() {
@@ -319,7 +539,7 @@ function pfWireEvents() {
   wireSelect('pfMatSelect',  'material');
   wireSelect('pfSortSelect', 'sort');
 
-  /* Price inputs */
+  /* Desktop price inputs */
   function wirePriceInputs(minId, maxId) {
     var mn = document.getElementById(minId);
     var mx = document.getElementById(maxId);
@@ -338,7 +558,7 @@ function pfWireEvents() {
   }
   wirePriceInputs('pfPriceMin', 'pfPriceMax');
 
-  /* Reset */
+  /* Desktop reset */
   var resetBtn = document.getElementById('pfResetBtn');
   if (resetBtn) resetBtn.addEventListener('click', pfReset);
 }
