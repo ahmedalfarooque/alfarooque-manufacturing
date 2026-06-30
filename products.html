@@ -17,9 +17,10 @@
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/themes.css">
 <link rel="stylesheet" href="/css/products.css">
+<link rel="stylesheet" href="/css/product-filter.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
-<body>
+<body class="products-page">
 
 <!-- ── Scroll progress ── -->
 <div id="progress-bar"></div>
@@ -85,82 +86,15 @@
   <a href="/pages/contact.html">Contact Us</a>
 </div>
 
-<!-- ═══ HERO SLIDER ═══ -->
-<section class="ph-hero" aria-label="Products Hero">
-  <div class="ph-slider" id="phSlider">
-
-    <!-- Slide 1 — Wood Works -->
-    <div class="ph-slide active" data-index="0">
-      <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/gallery-03.jpg')"></div>
-      <div class="ph-slide-overlay"></div>
-      <div class="ph-slide-content">
-        <span class="ph-eyebrow">Wood Works &middot; Division 01</span>
-        <h1 class="ph-headline">PREMIUM<br><span class="accent">WOODWORKING</span><br>SOLUTIONS</h1>
-        <p class="ph-sub">Custom joinery, furniture, and architectural woodwork crafted to the highest Saudi and international standards.</p>
-        <div class="ph-cta">
-          <a href="#products" class="btn btn-primary">Shop Products <span class="arrow">→</span></a>
-          <a href="/pages/contact.html" class="btn btn-ghost">Get Quote <span class="arrow">→</span></a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Slide 2 — Steel Works -->
-    <div class="ph-slide" data-index="1">
-      <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/gallery-15.jpg')"></div>
-      <div class="ph-slide-overlay"></div>
-      <div class="ph-slide-content">
-        <span class="ph-eyebrow">Steel Works &middot; Division 02</span>
-        <h1 class="ph-headline">CUSTOM<br><span class="accent">STEEL</span><br>FABRICATION</h1>
-        <p class="ph-sub">Structural steel, precision railings, and bespoke metal components for commercial and industrial projects.</p>
-        <div class="ph-cta">
-          <a href="#products" class="btn btn-primary">Shop Products <span class="arrow">→</span></a>
-          <a href="/pages/contact.html" class="btn btn-ghost">Get Quote <span class="arrow">→</span></a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Slide 3 — Aluminium Works -->
-    <div class="ph-slide" data-index="2">
-      <div class="ph-slide-bg" style="background-image:url('/assets/images/gallery/company-01.jpg')"></div>
-      <div class="ph-slide-overlay"></div>
-      <div class="ph-slide-content">
-        <span class="ph-eyebrow">Aluminium Works &middot; Division 03</span>
-        <h1 class="ph-headline">MODERN<br><span class="accent">ALUMINIUM</span><br>INSTALLATIONS</h1>
-        <p class="ph-sub">SASO-certified aluminium windows, doors, curtain walls, and high-performance facade systems.</p>
-        <div class="ph-cta">
-          <a href="#products" class="btn btn-primary">Shop Products <span class="arrow">→</span></a>
-          <a href="/pages/contact.html" class="btn btn-ghost">Get Quote <span class="arrow">→</span></a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Arrows -->
-    <button class="ph-arrow ph-prev" id="phPrev" aria-label="Previous slide">&#8592;</button>
-    <button class="ph-arrow ph-next" id="phNext" aria-label="Next slide">&#8594;</button>
-
-    <!-- Dots -->
-    <div class="ph-dots" role="tablist" aria-label="Slider navigation">
-      <button class="ph-dot active" data-index="0" role="tab" aria-label="Slide 1"></button>
-      <button class="ph-dot" data-index="1" role="tab" aria-label="Slide 2"></button>
-      <button class="ph-dot" data-index="2" role="tab" aria-label="Slide 3"></button>
-    </div>
-
-    <!-- Progress -->
-    <div class="ph-progress" id="phProgress"></div>
-  </div>
-</section>
-
 <!-- ═══ PRODUCTS ═══ -->
-<section class="products-section" id="products" style="border-top:1px solid var(--bd);">
+<section class="products-section" id="products">
   <div class="container">
 
     <!-- Section header -->
-    <div class="prod-section-header reveal">
-      <div class="section-label" style="justify-content:center;">Our Products</div>
-      <h2 class="section-title" style="margin-bottom:12px;">Engineered to <span class="accent">Impress</span></h2>
-      <p class="section-body" style="max-width:560px;margin:0 auto;">
-        Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.
-      </p>
+    <div class="prod-section-header">
+      <div class="eyebrow reveal" style="justify-content:center;">Our Products</div>
+      <h1 class="ps-page-title reveal d1">Engineered to <span class="accent">Impress</span></h1>
+      <p class="ps-page-sub reveal d2">Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.</p>
     </div>
 
     <!-- Product Grid — populated by products.js -->
@@ -457,5 +391,6 @@
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>
 <script src="/js/products.js"></script>
+<script src="/js/product-filter.js"></script>
 </body>
 </html>

@@ -74,7 +74,9 @@ var _DOOR_SIZES = ['2100 × 900 mm', '2100 × 1000 mm', t('Custom sizes on reque
 
 var PRODUCTS = [
   {
-    id: 1, cat: 'doors',
+    id: 1, cat: 'doors', material: 'Wood', availability: 'In Stock',
+    rating: 4.8, reviewCount: 32, badge: 'BEST SELLER', featured: true,
+    tags: ['Exterior', 'Premium', 'Solid Wood'],
     name: 'Premium Solid Teak Exterior Door',
     nameAr: 'باب خارجي من خشب التيك الصلب الفاخر',
     desc: 'Premium exterior door crafted with a solid teak wood door jamb, cast jamb, and main frame. Finished with high-quality varnish, sealer & lacquer, or paint for maximum durability. Includes a 5-year warranty.',
@@ -93,7 +95,9 @@ var PRODUCTS = [
     sizes: _DOOR_SIZES
   },
   {
-    id: 2, cat: 'doors',
+    id: 2, cat: 'doors', material: 'Wood', availability: 'In Stock',
+    rating: 4.7, reviewCount: 27, badge: 'FEATURED', featured: true,
+    tags: ['Exterior', 'Premium', 'Solid Wood'],
     name: 'Premium Solid Hardwood Exterior Door',
     nameAr: 'باب خارجي من الخشب الصلب الفاخر',
     desc: 'Exterior door manufactured from premium solid hardwood options including Oak, Mahogany, Beech, or Walnut. Finished with varnish, sealer & lacquer, or paint. Includes a 5-year warranty.',
@@ -112,7 +116,9 @@ var PRODUCTS = [
     sizes: _DOOR_SIZES
   },
   {
-    id: 3, cat: 'doors',
+    id: 3, cat: 'doors', material: 'MDF', availability: 'In Stock',
+    rating: 4.5, reviewCount: 41,
+    tags: ['Interior', 'MDF'],
     name: 'Semi-Solid Interior Door (MDF Veneer Finish)',
     nameAr: 'باب داخلي شبه صلب (تشطيب قشرة MDF)',
     desc: 'Interior door with Swedish wood frame, full chipboard core, waterproof MDF pressing, premium wood veneer, and sealer & lacquer or painted finish. Includes a 1-year warranty.',
@@ -131,7 +137,9 @@ var PRODUCTS = [
     sizes: _DOOR_SIZES
   },
   {
-    id: 4, cat: 'doors',
+    id: 4, cat: 'doors', material: 'Wood', availability: 'In Stock',
+    rating: 4.4, reviewCount: 38,
+    tags: ['Interior'],
     name: 'Semi-Solid Interior Door (Plywood Finish)',
     nameAr: 'باب داخلي شبه صلب (تشطيب خشب رقائقي)',
     desc: 'Swedish wood frame with full chipboard core, plywood pressing, and painted or Talveen finish. Designed for residential and commercial interiors. Includes a 1-year warranty.',
@@ -150,7 +158,9 @@ var PRODUCTS = [
     sizes: _DOOR_SIZES
   },
   {
-    id: 5, cat: 'doors',
+    id: 5, cat: 'doors', material: 'MDF', availability: 'In Stock',
+    rating: 4.3, reviewCount: 29,
+    tags: ['Interior', 'MDF'],
     name: 'Hollow Core Interior Door (MDF Veneer Finish)',
     nameAr: 'باب داخلي بقلب أجوف (تشطيب قشرة MDF)',
     desc: 'Interior hollow-core door featuring a Swedish wood frame, chipboard core with 5 cm spacing, waterproof MDF pressing, wood veneer finish, and sealer & lacquer or paint. Includes a 1-year warranty.',
@@ -169,7 +179,9 @@ var PRODUCTS = [
     sizes: _DOOR_SIZES
   },
   {
-    id: 6, cat: 'doors',
+    id: 6, cat: 'doors', material: 'Wood', availability: 'In Stock',
+    rating: 4.2, reviewCount: 22,
+    tags: ['Interior'],
     name: 'Hollow Core Interior Door (Plywood Finish)',
     nameAr: 'باب داخلي بقلب أجوف (تشطيب خشب رقائقي)',
     desc: 'Hollow-core interior door with Swedish wood frame, chipboard core, plywood pressing, and painted or Talveen finish. Includes a 6-month warranty.',
@@ -188,7 +200,9 @@ var PRODUCTS = [
     sizes: _DOOR_SIZES
   },
   {
-    id: 7, cat: 'doors',
+    id: 7, cat: 'doors', material: 'Wood', availability: 'In Stock',
+    rating: 4.1, reviewCount: 18, badge: 'NEW',
+    tags: ['Interior'],
     name: 'Honeycomb Hollow Core Interior Door',
     nameAr: 'باب داخلي بقلب أجوف خلوي',
     desc: 'Lightweight interior door with Swedish wood frame, honeycomb core construction, plywood pressing, and painted or Talveen finish. Includes a 6-month warranty.',
@@ -207,7 +221,9 @@ var PRODUCTS = [
     sizes: _DOOR_SIZES
   },
   {
-    id: 8, cat: 'doors',
+    id: 8, cat: 'doors', material: 'Wood', availability: 'In Stock',
+    rating: 3.9, reviewCount: 52,
+    tags: ['Interior', 'Budget'],
     name: 'Economy Interior Door',
     nameAr: 'باب داخلي اقتصادي',
     desc: 'Budget-friendly interior door suitable for standard residential applications. Supplied without warranty.',
@@ -236,6 +252,67 @@ function getProduct(id) { return PRODUCTS_MAP[id] || null; }
 function t(en, ar) { return IS_AR ? ar : en; }
 function fmt(n) { return 'SAR ' + Number(n).toLocaleString('en-US'); }
 function esc(s) { return encodeURIComponent(s); }
+function capFirst(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+/* ════ Wishlist ════ */
+var wishlist = {
+  _key: 'afq-wishlist',
+  _set: null,
+  _load: function() {
+    if (this._set) return;
+    try { this._set = new Set(JSON.parse(localStorage.getItem(this._key) || '[]')); }
+    catch(e) { this._set = new Set(); }
+  },
+  _save: function() {
+    try { localStorage.setItem(this._key, JSON.stringify(Array.from(this._set))); } catch(e){}
+  },
+  has: function(id) { this._load(); return this._set.has(id); },
+  toggle: function(id) {
+    this._load();
+    if (this._set.has(id)) this._set.delete(id); else this._set.add(id);
+    this._save();
+    return this._set.has(id);
+  }
+};
+
+/* ════ Share ════ */
+function shareProduct(p) {
+  var name = IS_AR ? p.nameAr : p.name;
+  var url  = window.location.href.split('#')[0] + '#product-' + p.id;
+  if (navigator.share) {
+    navigator.share({ title: name, text: name + ' — AL FAROOQUE Manufacturing', url: url }).catch(function(){});
+  } else {
+    try { navigator.clipboard.writeText(url); } catch(e){}
+    var el = document.getElementById('pfShareToast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'pfShareToast';
+      el.className = 'pf-share-toast';
+      document.body.appendChild(el);
+    }
+    el.textContent = t('Link copied!', 'تم نسخ الرابط!');
+    el.classList.add('show');
+    setTimeout(function(){ el.classList.remove('show'); }, 2200);
+  }
+}
+
+/* ════ Stars renderer ════ */
+function starsHtml(rating, reviewCount) {
+  if (!rating) return '';
+  var full = Math.floor(rating);
+  var half = (rating - full) >= 0.5;
+  var html = '<div class="prod-rating">';
+  html += '<span class="prod-stars" aria-label="' + rating + ' out of 5">';
+  for (var i = 0; i < 5; i++) {
+    if (i < full)            html += '<span class="star star-full">★</span>';
+    else if (i === full && half) html += '<span class="star star-half">★</span>';
+    else                     html += '<span class="star star-empty">★</span>';
+  }
+  html += '</span>';
+  if (reviewCount) html += '<span class="prod-review-count">(' + reviewCount + ')</span>';
+  html += '</div>';
+  return html;
+}
 
 /* ════════════════════════════════════════════
    HERO SLIDER
@@ -620,16 +697,11 @@ function buildCard(p) {
   var addCartLbl  = t('Add to Cart','أضف للسلة');
   var hasImgs     = p.imgs && p.imgs.length > 0;
   var catLbl      = t('DOORS','الأبواب');
+  var inWishlist  = wishlist.has(p.id);
 
   /* Image area */
   var imgArea = document.createElement('div');
   imgArea.className = 'prod-card-img';
-
-  /* Category badge — overlaid on image */
-  var badge = document.createElement('div');
-  badge.className = 'prod-cat-badge';
-  badge.textContent = catLbl;
-  imgArea.appendChild(badge);
 
   if (hasImgs) {
     new ProductImageStack(imgArea, p.imgs, name, p.id);
@@ -642,6 +714,36 @@ function buildCard(p) {
     imgArea.appendChild(noImg);
   }
 
+  /* Category badge — after image stack so ProductImageStack._build() doesn't wipe it */
+  var catBadge = document.createElement('span');
+  catBadge.className = 'prod-cat-badge';
+  catBadge.textContent = catLbl;
+  imgArea.appendChild(catBadge);
+
+  /* Quality badge (NEW, BEST SELLER, FEATURED, SALE, etc.) */
+  if (p.badge) {
+    var qBadge = document.createElement('span');
+    qBadge.className = 'prod-q-badge prod-q-badge--' + p.badge.toLowerCase().replace(/\s+/g, '-');
+    qBadge.textContent = p.badge;
+    imgArea.appendChild(qBadge);
+  }
+
+  /* Quick actions overlay */
+  var qa = document.createElement('div');
+  qa.className = 'prod-qa';
+  qa.innerHTML = [
+    '<button class="pqa-btn btn-wishlist' + (inWishlist ? ' wishlisted' : '') + '" data-id="' + p.id + '" aria-label="' + t('Wishlist','المفضلة') + '" title="' + t('Wishlist','المفضلة') + '">',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="' + (inWishlist ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>',
+    '</button>',
+    '<button class="pqa-btn btn-quickview" data-id="' + p.id + '" aria-label="' + t('Quick View','عرض سريع') + '" title="' + t('Quick View','عرض سريع') + '">',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    '</button>',
+    '<button class="pqa-btn btn-share" data-id="' + p.id + '" aria-label="' + t('Share','مشاركة') + '" title="' + t('Share','مشاركة') + '">',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+    '</button>'
+  ].join('');
+  imgArea.appendChild(qa);
+
   /* Card wrapper */
   var div = document.createElement('div');
   div.className   = 'prod-card';
@@ -650,20 +752,34 @@ function buildCard(p) {
   div.appendChild(imgArea);
 
   /* Card body */
+  var stockHtml = '';
+  if (p.availability) {
+    var isStock = p.availability === 'In Stock';
+    stockHtml = '<span class="prod-stock ' + (isStock ? 'ps-instock' : 'ps-order') + '">' +
+      (isStock
+        ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' + t('In Stock','متوفر')
+        : t('Made to Order','حسب الطلب')
+      ) + '</span>';
+  }
+
+  var priceHtml = '<div class="prod-price-row">' +
+    '<div class="prod-price">' + fmt(p.price) + '</div>' +
+    (p.oldPrice ? '<div class="prod-old-price">' + fmt(p.oldPrice) + '</div>' : '') +
+    (warrantyLbl
+      ? '<span class="prod-warranty-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' + warrantyLbl + '</span>'
+      : '') +
+    '</div>';
+
   var body = document.createElement('div');
   body.className = 'prod-card-body';
   body.innerHTML = [
-    '<div class="prod-name">' + name + '</div>',
-    '<p class="prod-desc">' + desc + '</p>',
-    '<div class="prod-price-row">',
-      '<div class="prod-price">' + fmt(p.price) + '</div>',
-      warrantyLbl
-        ? '<span class="prod-warranty-badge">' +
-            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
-            warrantyLbl +
-          '</span>'
-        : '',
+    '<div class="prod-name-row">',
+      '<div class="prod-name">' + name + '</div>',
+      stockHtml,
     '</div>',
+    starsHtml(p.rating, p.reviewCount),
+    '<p class="prod-desc">' + desc + '</p>',
+    priceHtml,
     '<div class="prod-actions">',
       '<button class="btn-view-details" data-id="' + p.id + '" aria-label="' + detailsLbl + '">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
@@ -719,11 +835,29 @@ function renderProducts() {
   }
   // Delegate card body click → modal (attached once)
   grid.addEventListener('click', function(e) {
-    var detBtn  = e.target.closest('.btn-view-details');
-    var ord     = e.target.closest('.btn-order-now');
-    var addCart = e.target.closest('.btn-add-cart');
-    var card    = e.target.closest('.prod-card');
-    if (detBtn) {
+    var detBtn   = e.target.closest('.btn-view-details');
+    var ord      = e.target.closest('.btn-order-now');
+    var addCart  = e.target.closest('.btn-add-cart');
+    var wlBtn    = e.target.closest('.btn-wishlist');
+    var qvBtn    = e.target.closest('.btn-quickview');
+    var shareBtn = e.target.closest('.btn-share');
+    var card     = e.target.closest('.prod-card');
+
+    if (wlBtn) {
+      e.stopPropagation();
+      var id = parseInt(wlBtn.dataset.id, 10);
+      var added = wishlist.toggle(id);
+      wlBtn.classList.toggle('wishlisted', added);
+      var svg = wlBtn.querySelector('svg');
+      if (svg) svg.setAttribute('fill', added ? 'currentColor' : 'none');
+    } else if (qvBtn) {
+      e.stopPropagation();
+      prodModal.open(parseInt(qvBtn.dataset.id, 10));
+    } else if (shareBtn) {
+      e.stopPropagation();
+      var sp = getProduct(parseInt(shareBtn.dataset.id, 10));
+      if (sp) shareProduct(sp);
+    } else if (detBtn) {
       e.stopPropagation();
       prodModal.open(parseInt(detBtn.dataset.id, 10));
     } else if (ord) {

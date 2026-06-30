@@ -1,0 +1,327 @@
+/* ════════════════════════════════════════════════════════════
+   AL FAROOQUE — Product Search & Filter System
+   One horizontal glass toolbar mounted inside the nav header:
+   Search | Category | Material | Price | Sort | Reset
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Products page: nav becomes a tall single header ──────── */
+body.products-page .nav {
+  position: sticky;
+  top: 0;
+  height: auto;
+  min-height: var(--nav-h, 76px);
+  flex-wrap: wrap;
+  align-items: center;
+  padding-bottom: 16px;
+  row-gap: 2px;
+}
+/* Keep the top menu row at the normal nav height */
+body.products-page .nav-logo { min-height: var(--nav-h, 76px); }
+
+/* Header is in normal flow now — drop the fixed-nav top clearance */
+body.products-page .products-section { padding-top: 28px; }
+
+/* ── Toolbar wrapper (transparent; holds the bar + info line) ─ */
+.pf-toolbar {
+  flex: 0 0 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ── The single horizontal glass control bar ──────────────── */
+.pf-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+  /* Glass container — the nav behind it supplies the live blur,
+     so we avoid stacking a second backdrop-filter layer here. */
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+  padding: 10px 12px;
+}
+
+/* ── Shared control height ────────────────────────────────── */
+.pf-search-wrap,
+.pf-select,
+.pf-price-input,
+.pf-reset-btn { height: 46px; }
+
+/* ── Search (largest element) ─────────────────────────────── */
+.pf-search-wrap {
+  flex: 1 1 40%;
+  min-width: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  padding: 0 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.pf-search-wrap:focus-within {
+  border-color: rgba(14,165,193,0.60);
+  box-shadow: 0 0 0 3px rgba(8,145,168,0.18);
+}
+.pf-search-icon {
+  color: rgba(148,163,184,0.60);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  margin-right: 11px;
+}
+[dir="rtl"] .pf-search-icon { margin-right: 0; margin-left: 11px; }
+.pf-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--tx-1, #e2e8f0);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 0;
+  min-width: 0;
+  height: 100%;
+}
+.pf-search-input::placeholder { color: rgba(148,163,184,0.40); }
+.pf-search-clear {
+  background: none;
+  border: none;
+  color: rgba(148,163,184,0.55);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+.pf-search-clear:hover { color: var(--tx-1, #e2e8f0); background: rgba(255,255,255,0.07); }
+
+/* ── Select inputs ────────────────────────────────────────── */
+.pf-select {
+  flex: 0 1 150px;
+  min-width: 120px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  color: var(--tx-1, #e2e8f0);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 32px 0 14px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.pf-select:focus {
+  border-color: rgba(14,165,193,0.55);
+  box-shadow: 0 0 0 3px rgba(8,145,168,0.15);
+  background-color: rgba(255,255,255,0.08);
+}
+.pf-select:hover { border-color: rgba(255,255,255,0.18); background-color: rgba(255,255,255,0.07); }
+.pf-select option { background: #0d1117; color: #e2e8f0; }
+[dir="rtl"] .pf-select {
+  padding: 0 14px 0 32px;
+  background-position: left 12px center;
+}
+
+/* ── Price range (Min — Max) ──────────────────────────────── */
+.pf-price-row {
+  flex: 0 1 200px;
+  min-width: 170px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.pf-price-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  color: var(--tx-1, #e2e8f0);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  -moz-appearance: textfield;
+  min-width: 0;
+  width: 100%;
+}
+.pf-price-input::-webkit-outer-spin-button,
+.pf-price-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.pf-price-input:focus {
+  border-color: rgba(14,165,193,0.55);
+  box-shadow: 0 0 0 3px rgba(8,145,168,0.15);
+}
+.pf-price-sep { color: rgba(148,163,184,0.40); font-size: 12px; flex-shrink: 0; }
+
+/* ── Reset button ─────────────────────────────────────────── */
+.pf-reset-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  color: rgba(148,163,184,0.70);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+.pf-reset-btn:hover {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.30);
+  color: #f87171;
+  transform: translateY(-1px);
+}
+
+/* ── Info line: result count + active chips ───────────────── */
+.pf-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 18px;
+  padding: 0 4px;
+}
+.pf-count {
+  font-size: 12px;
+  color: rgba(148,163,184,0.60);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(8,145,168,0.14);
+  border: 1px solid rgba(14,165,193,0.30);
+  border-radius: 999px;
+  color: #22d3ee;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px 3px 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+}
+.pf-chip:hover {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.30);
+  color: #f87171;
+}
+.pf-chip-x { font-size: 14px; line-height: 1; opacity: 0.70; }
+
+/* ── Empty state ──────────────────────────────────────────── */
+.pf-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  gap: 14px;
+}
+.pf-empty-ico { color: rgba(148,163,184,0.25); margin-bottom: 4px; }
+.pf-empty-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--tx-1, #e2e8f0);
+}
+.pf-empty-sub {
+  font-size: 14px;
+  color: rgba(148,163,184,0.55);
+  max-width: 280px;
+  line-height: 1.55;
+}
+
+/* ════════════════════════════════════════════════════════════
+   LIGHT MODE
+   ════════════════════════════════════════════════════════════ */
+:is(html.light,body.light) .pf-bar {
+  background: rgba(15,23,42,0.04);
+  border-color: rgba(15,23,42,0.10);
+  box-shadow: 0 8px 28px rgba(15,23,42,0.08);
+}
+:is(html.light,body.light) .pf-search-wrap,
+:is(html.light,body.light) .pf-select,
+:is(html.light,body.light) .pf-price-input {
+  background: rgba(255,255,255,0.55);
+  border-color: rgba(15,23,42,0.12);
+  color: #1e293b;
+}
+:is(html.light,body.light) .pf-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:is(html.light,body.light) .pf-search-input { color: #1e293b; }
+:is(html.light,body.light) .pf-search-input::placeholder { color: rgba(100,116,139,0.50); }
+:is(html.light,body.light) .pf-search-clear,
+:is(html.light,body.light) .pf-search-icon { color: rgba(100,116,139,0.55); }
+:is(html.light,body.light) .pf-select:hover,
+:is(html.light,body.light) .pf-price-input:hover {
+  border-color: rgba(15,23,42,0.20);
+  background-color: rgba(255,255,255,0.75);
+}
+:is(html.light,body.light) .pf-select option { background: #f8fafc; color: #1e293b; }
+:is(html.light,body.light) .pf-reset-btn {
+  background: rgba(255,255,255,0.55);
+  border-color: rgba(15,23,42,0.12);
+  color: #475569;
+}
+:is(html.light,body.light) .pf-count,
+:is(html.light,body.light) .pf-price-sep { color: rgba(100,116,139,0.70); }
+:is(html.light,body.light) .pf-empty-title { color: #0f172a; }
+:is(html.light,body.light) .pf-empty-ico   { color: rgba(100,116,139,0.28); }
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════ */
+
+/* Tablet — allow wrapping into two rows; search takes its own line */
+@media (max-width: 1024px) {
+  .pf-bar { flex-wrap: wrap; }
+  .pf-search-wrap { flex: 1 1 100%; }
+  .pf-select { flex: 1 1 150px; }
+  .pf-price-row { flex: 1 1 200px; }
+}
+
+/* Mobile — stack every control full width */
+@media (max-width: 640px) {
+  body.products-page .nav { padding-bottom: 14px; }
+  .pf-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+  }
+  .pf-search-wrap,
+  .pf-select,
+  .pf-price-row,
+  .pf-reset-btn { flex: 1 1 auto; width: 100%; min-width: 0; }
+  .pf-search-input { font-size: 14px; }
+  .pf-reset-btn { justify-content: center; }
+}
