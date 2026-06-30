@@ -39,6 +39,37 @@ function pfCapitalize(s) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 }
 
+/* Default display order: interleave products by category (round-robin)
+   — one Door, one Bed, one Sofa, repeat — instead of grouping a whole
+   category together. Category sequence follows first appearance in
+   PRODUCTS (doors → beds → sofa). Used for the default 'featured' view
+   only; filters/search/other sorts are unaffected. */
+function pfRoundRobinByCat(arr) {
+  var order  = [];                 /* category order from PRODUCTS */
+  var groups = Object.create(null);
+  PRODUCTS.forEach(function(p) {
+    var c = p.cat || '';
+    if (!(c in groups)) { groups[c] = []; order.push(c); }
+  });
+  order.forEach(function(c) { groups[c] = []; });
+  arr.forEach(function(p) {
+    var c = p.cat || '';
+    if (!(c in groups)) { groups[c] = []; order.push(c); }
+    groups[c].push(p);
+  });
+  var result = [];
+  var idx = 0, added = true;
+  while (added) {
+    added = false;
+    for (var i = 0; i < order.length; i++) {
+      var g = groups[order[i]];
+      if (g.length > idx) { result.push(g[idx]); added = true; }
+    }
+    idx++;
+  }
+  return result;
+}
+
 /* ── Filter + sort ────────────────────────────────────────── */
 function pfMatch(p, q) {
   if (!q) return true;
@@ -74,7 +105,8 @@ function pfGetFiltered() {
     return (IS_AR ? b.nameAr : b.name).localeCompare(IS_AR ? a.nameAr : a.name);
   });
   else if (pfState.sort === 'newest') arr.sort(function(a,b){ return b.id - a.id; });
-  /* 'featured' and 'best-selling' keep PRODUCTS order */
+  else if (pfState.sort === 'featured') arr = pfRoundRobinByCat(arr);
+  /* 'best-selling' keeps PRODUCTS order */
 
   return arr;
 }
