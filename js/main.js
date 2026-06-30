@@ -301,17 +301,57 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
   if(!form) return;
   form.addEventListener('submit',async e=>{
     e.preventDefault();
+    console.log('[Quote] Submit button clicked');
+
     const btn=form.querySelector('[type=submit]');
     if(!btn) return;
+
+    const data=Object.fromEntries(new FormData(form));
+    console.log('[Quote] Form data collected:',{
+      name: data.first_name?`${data.first_name} ${data.last_name||''}`:data.name,
+      email: data.email,
+      service: data.service,
+    });
+
     btn.disabled=true;
+    const origText=btn.textContent;
     btn.textContent='Sending…';
-    await new Promise(r=>setTimeout(r,1400));
-    btn.textContent='✓ Message Sent';
-    btn.style.cssText='background:rgba(34,197,94,0.14);border-color:rgba(34,197,94,0.40);color:#4ade80;';
-    setTimeout(()=>{
-      form.reset();btn.disabled=false;
-      btn.textContent='Send Message';btn.style.cssText='';
-    },3500);
+
+    console.log('[Quote] Calling API: POST /api/quote');
+    let res,json;
+    try {
+      res=await fetch('/api/quote',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data),
+      });
+      json=await res.json();
+    } catch(err){
+      console.error('[Quote] Network error:',err.message);
+      btn.disabled=false;
+      btn.textContent='✗ Network Error — Try Again';
+      btn.style.cssText='background:rgba(239,68,68,0.14);border-color:rgba(239,68,68,0.40);color:#f87171;';
+      setTimeout(()=>{btn.textContent=origText;btn.style.cssText='';},4000);
+      return;
+    }
+
+    console.log('[Quote] API response:',res.status,json);
+
+    if(res.ok&&json.success){
+      console.log('[Quote] SUCCESS — email delivered to arshad@alfarooque.com, id:',json.id);
+      btn.textContent='✓ Message Sent';
+      btn.style.cssText='background:rgba(34,197,94,0.14);border-color:rgba(34,197,94,0.40);color:#4ade80;';
+      setTimeout(()=>{
+        form.reset();btn.disabled=false;
+        btn.textContent=origText;btn.style.cssText='';
+      },3500);
+    } else {
+      console.error('[Quote] FAILED — recipient: arshad@alfarooque.com — error:',json);
+      btn.disabled=false;
+      btn.textContent='✗ Failed — Try Again';
+      btn.style.cssText='background:rgba(239,68,68,0.14);border-color:rgba(239,68,68,0.40);color:#f87171;';
+      setTimeout(()=>{btn.textContent=origText;btn.style.cssText='';},4000);
+    }
   });
 })();
 
