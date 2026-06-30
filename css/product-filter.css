@@ -19,6 +19,13 @@ body.products-page .nav {
 /* Keep the top menu row at the normal nav height */
 body.products-page .nav-logo { min-height: var(--nav-h, 76px); }
 
+/* The toolbar lives inside the tall sticky .nav (z-index 500), so the
+   mobile menu (sibling of .nav, default z-index 490) would slide in
+   BEHIND the search/filter bar. Raise it above the nav + all page
+   chrome (cart-fab 500, filter sheet 9100) so it overlays everything.
+   Scoped to the products page; other pages keep their default stacking. */
+body.products-page .nav-mobile { z-index: 9600; }
+
 /* Header is in normal flow now — drop the fixed-nav top clearance */
 body.products-page .products-section { padding-top: 28px; }
 
