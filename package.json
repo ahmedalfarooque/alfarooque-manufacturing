@@ -6,5 +6,8 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "nodemailer": "^9.0.3"
+  }
 }

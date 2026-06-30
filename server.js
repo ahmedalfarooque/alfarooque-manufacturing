@@ -70,6 +70,7 @@ const MIME = {
 
 /* ── API handlers ── */
 const quoteHandler = require('./api/quote');
+const emailService = require('./api/_email');
 
 /* ── Server ── */
 const server = http.createServer((req, res) => {
@@ -159,4 +160,18 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log('  http://localhost:' + PORT + '\n');
   console.log('  Routes registered: ' + Object.keys(ROUTES).length);
   console.log('  Static assets served from: ' + ROOT + '\n');
+
+  /* ── Email service startup check ── */
+  var cfg = emailService.getStatus();
+  if (cfg.configured) {
+    console.log('  [email] ✓ Configured — provider: ' + cfg.provider +
+                ' | from: ' + cfg.from + ' | to: ' + cfg.to + '\n');
+  } else {
+    console.warn('  ┌──────────────────────────────────────────────────────────┐');
+    console.warn('  │  ⚠  EMAIL NOT CONFIGURED — forms will return HTTP 500.     │');
+    console.warn('  │  ' + cfg.reason);
+    console.warn('  │  Set RESEND_API_KEY, or SMTP_HOST/SMTP_USER/SMTP_PASS,     │');
+    console.warn('  │  in .env.local. See .env.example for details.              │');
+    console.warn('  └──────────────────────────────────────────────────────────┘\n');
+  }
 });

@@ -21,9 +21,9 @@
      • Production: Vercel Dashboard → Project → Settings → Environment Variables
    ═══════════════════════════════════════════════════════════════════ */
 
-const RECIPIENT  = 'arshad@alfarooque.com';
-const FROM_NAME  = 'AL FAROOQUE Website';
-const FROM_EMAIL = process.env.RESEND_FROM || 'onboarding@resend.dev';
+const mailer = require('./_email');
+
+const FROM_NAME = 'AL FAROOQUE Website';
 
 module.exports = async function handler(req, res) {
   console.log('[Submit] Incoming —', req.method, req.url);
@@ -39,15 +39,17 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  /* ── API key check ── */
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error('[Submit] FATAL: RESEND_API_KEY is not set. Add it to .env.local (local) or Vercel env vars (production).');
+  /* ── Email configuration check (Resend or SMTP) ── */
+  const cfg = mailer.getStatus();
+  if (!cfg.configured) {
+    console.error('[Submit] Email service NOT configured —', cfg.reason);
     return res.status(500).json({
-      error: 'Email service is not configured. Set RESEND_API_KEY in the environment.',
-      code:  'NO_API_KEY',
+      error:   'Email service is not configured on the server.',
+      code:    'NO_CONFIG',
+      missing: cfg.missing,
     });
   }
+  const RECIPIENT = cfg.to;
 
   /* ── Parse body (Vercel auto-parses JSON; guard for raw stream too) ── */
   let body = req.body;
@@ -129,43 +131,28 @@ module.exports = async function handler(req, res) {
     userAgent, ip,
   });
 
-  console.log('[Submit] →', RECIPIENT, '| type:', type, '| subject:', subject, '| ip:', ip);
+  console.log('[Submit] →', RECIPIENT, '| via:', cfg.provider, '| type:', type, '| subject:', subject, '| ip:', ip);
 
-  /* ── Send via Resend ── */
-  let apiResponse, apiData;
+  /* ── Send via the configured provider (Resend or SMTP) ── */
   try {
-    apiResponse = await fetch('https://api.resend.com/emails', {
-      method:  'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type':  'application/json',
-      },
-      body: JSON.stringify({
-        from:     `${FROM_NAME} <${FROM_EMAIL}>`,
-        to:       [RECIPIENT],
-        reply_to: email || undefined,
-        subject,
-        html:     htmlBody,
-      }),
+    const result = await mailer.sendEmail({
+      from:    cfg.from ? `${FROM_NAME} <${cfg.from}>` : undefined,
+      to:      RECIPIENT,
+      replyTo: email || undefined,
+      subject,
+      html:    htmlBody,
     });
-    apiData = await apiResponse.json().catch(() => ({}));
+    console.log('[Submit] SUCCESS — id:', result.id, '| provider:', result.provider, '→', RECIPIENT);
+    return res.status(200).json({ success: true, id: result.id, provider: result.provider });
   } catch (err) {
-    console.error('[Submit] Network error reaching Resend:', err.stack || err.message);
-    return res.status(502).json({ error: 'Could not reach the email service', detail: err.message });
-  }
-
-  console.log('[Submit] Resend HTTP', apiResponse.status, '| body:', JSON.stringify(apiData));
-
-  if (!apiResponse.ok) {
-    console.error('[Submit] Email delivery FAILED:', JSON.stringify(apiData));
-    return res.status(502).json({
-      error:  (apiData && apiData.message) || 'Email delivery failed',
-      detail: apiData,
+    console.error('[Submit] Email delivery FAILED —', err.code || 'ERROR', ':', err.message, err.detail || '');
+    const httpStatus = err.code === 'NO_CONFIG' ? 500 : 502;
+    return res.status(httpStatus).json({
+      error:  err.message || 'Email delivery failed',
+      code:   err.code || 'SEND_FAILED',
+      detail: err.detail,
     });
   }
-
-  console.log('[Submit] SUCCESS — id:', apiData.id, '→', RECIPIENT);
-  return res.status(200).json({ success: true, id: apiData.id });
 };
 
 /* ── HTML escape ── */
