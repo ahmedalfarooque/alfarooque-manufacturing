@@ -33,9 +33,11 @@ const I18N = {
   statOrders:['Orders','الطلبات'], statOrdersDesc:['Total placed','إجمالي الطلبات'],
   statWish:['Wishlist','المفضلة'], statWishDesc:['Saved products','المنتجات المحفوظة'],
   statAddr:['Addresses','العناوين'], statAddrDesc:['Saved locations','المواقع المحفوظة'],
-  statVerify:['Email status','حالة البريد'], statVerifyDesc:['Verification','التحقق'],
-  statCart:['Cart Items','عناصر السلة'], statCartDesc:['In cart','في السلة'],
+  statPending:['Pending','قيد الانتظار'], statPendingDesc:['Active orders','طلبات نشطة'],
+  statCompleted:['Completed','مكتملة'], statCompletedDesc:['Finished orders','طلبات منتهية'],
   statTotal:['Purchased','المشتريات'], statTotalDesc:['SAR lifetime','القيمة الإجمالية'],
+  activeStatus:['Active','نشط'],
+  currentPassword:['Current Password','كلمة المرور الحالية'],
   completeTitle:['Complete your profile','أكمل ملفك الشخصي'],
   completeCta:['Add your details →','أضف بياناتك →'],
   recentOrders:['Recent Orders','الطلبات الأخيرة'], viewAll:['View All →','عرض الكل →'],
@@ -212,17 +214,27 @@ async function hydrate(user) {
   $('#profAvatar').textContent = ini;
   $('#ovName').textContent = (user.user_metadata && user.user_metadata.first_name) || headName;
 
-  /* Verified badge + status */
+  /* Verified badge */
   const verified = !!user.email_confirmed_at;
   const vBadge = $('#acctVerifiedBadge');
   if (vBadge) vBadge.hidden = !verified;
-  $('#statVerify').textContent  = verified ? t('Verified','مُوثّق')   : t('Unverified','غير مُوثّق');
-  $('#statVerifyIco').textContent = verified ? '✓' : '!';
+
+  /* Hero card */
+  const heroAv = $('#heroAvatar');
+  if (heroAv) heroAv.textContent = ini;
+  const heroNm = $('#heroName');
+  if (heroNm) heroNm.textContent = headName;
+  const heroEm = $('#heroEmail');
+  if (heroEm) heroEm.textContent = user.email || '';
+  const heroVB = $('#heroVerifiedBadge');
+  if (heroVB) heroVB.hidden = !verified;
 
   /* Member since */
   const since = user.created_at ? new Date(user.created_at).toLocaleDateString(IS_AR ? 'ar-SA' : 'en-GB', {year:'numeric',month:'short'}) : '—';
   const msEl = $('#acctMemberSince');
   if (msEl) msEl.textContent = t('Member since ','عضو منذ ') + since;
+  const heroSince = $('#heroMemberSince');
+  if (heroSince) heroSince.textContent = t('Member since ','عضو منذ ') + since;
 
   /* Settings panel */
   $('#setTheme').textContent   = document.documentElement.classList.contains('light') ? t('Light','فاتح') : t('Dark','داكن');
@@ -260,6 +272,8 @@ async function hydrate(user) {
   $('#setRole').textContent = roleText;
   const roleBadge = $('#acctRoleBadge');
   if (roleBadge) roleBadge.textContent = roleText;
+  const heroRoleBadge = $('#heroRoleBadge');
+  if (heroRoleBadge) heroRoleBadge.textContent = roleText;
 
   computeCompleteness();
   loadStats();
@@ -290,14 +304,28 @@ async function loadStats() {
   const [ords, wish, addr] = await Promise.all([
     AFAuth.getOrders(), AFAuth.getWishlist(), AFAuth.getAddresses()
   ]);
-  animateCounter($('#statOrders'), (ords && ords.data ? ords.data.length : 0));
-  animateCounter($('#statWish'),   (wish && wish.data ? wish.data.length : 0));
-  animateCounter($('#statAddr'),   (addr && addr.data ? addr.data.length : 0));
-  animateCounter($('#statCart'),   getCartCount());
+  const orders = (ords && ords.data) || [];
+  const wishCt = (wish && wish.data ? wish.data.length : 0);
+  const addrCt = (addr && addr.data ? addr.data.length : 0);
+
+  animateCounter($('#statOrders'), orders.length);
+  animateCounter($('#statWish'),   wishCt);
+  animateCounter($('#statAddr'),   addrCt);
+
+  /* Pending / completed breakdown */
+  const ACTIVE_ST = ['pending','confirmed','processing'];
+  const pendingCt   = orders.filter(o => ACTIVE_ST.includes((o.status||'').toLowerCase())).length;
+  const completedCt = orders.filter(o => (o.status||'').toLowerCase() === 'completed').length;
+  animateCounter($('#statPending'),   pendingCt);
+  animateCounter($('#statCompleted'), completedCt);
+
+  /* Hero quick stats */
+  animateCounter($('#heroQOrders'), orders.length);
+  animateCounter($('#heroQWish'),   wishCt);
+  animateCounter($('#heroQAddr'),   addrCt);
 
   /* Total purchased */
-  const orders = (ords && ords.data) || [];
-  const total  = orders.reduce((s, o) => s + (Number(o.grand_total) || 0), 0);
+  const total = orders.reduce((s, o) => s + (Number(o.grand_total) || 0), 0);
   const totalEl = $('#statTotal');
   if (totalEl) totalEl.textContent = total.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
@@ -336,22 +364,35 @@ function renderOrders() {
 
   const money = n => 'SAR ' + Number(n || 0).toLocaleString('en-US');
   const stClass = s => (['pending','confirmed','processing','completed','cancelled'].includes(s) ? s : 'pending');
+  const ST_LABEL = {
+    pending: t('Pending','قيد الانتظار'), confirmed: t('Confirmed','مؤكد'),
+    processing: t('Processing','جاري المعالجة'), completed: t('Completed','مكتمل'),
+    cancelled: t('Cancelled','ملغي')
+  };
 
-  el.innerHTML = '<div style="overflow-x:auto"><table class="acct-table"><thead><tr>' +
-    [t('#','#'), t('Date','التاريخ'), t('Status','الحالة'), t('Items','العناصر'), t('Total','الإجمالي'), t('Actions','الإجراءات')]
-      .map(h => '<th>' + h + '</th>').join('') +
-    '</tr></thead><tbody>' +
+  el.innerHTML = '<div class="acct-orders-list">' +
     rows.map(o => {
       const st = (o.status || 'pending').toLowerCase();
-      return '<tr>' +
-        '<td><strong>' + esc(o.order_no || '#' + String(o.id || '').slice(0,8).toUpperCase()) + '</strong></td>' +
-        '<td>' + new Date(o.created_at).toLocaleDateString(IS_AR ? 'ar-SA' : 'en-GB') + '</td>' +
-        '<td><span class="acct-order-status acct-order-status--' + esc(stClass(st)) + '">' + esc(o.status || 'pending') + '</span></td>' +
-        '<td>' + ((o.items && o.items.length) || 0) + '</td>' +
-        '<td><strong>' + money(o.grand_total) + '</strong></td>' +
-        '<td><div class="acct-order-actions"><button class="acct-order-btn">' + t('View','عرض') + '</button></div></td>' +
-        '</tr>';
-    }).join('') + '</tbody></table></div>';
+      const num = esc(o.order_no || '#' + String(o.id || '').slice(0,8).toUpperCase());
+      const date = new Date(o.created_at).toLocaleDateString(IS_AR ? 'ar-SA' : 'en-GB', {year:'numeric',month:'short',day:'numeric'});
+      const items = (o.items && o.items.length) || 0;
+      return '<div class="acct-order-card">' +
+        '<div class="acct-order-card-head">' +
+          '<span class="acct-order-card-num">' + num + '</span>' +
+          '<span class="acct-order-status acct-order-status--' + esc(stClass(st)) + '">' + esc(ST_LABEL[st] || o.status || 'Pending') + '</span>' +
+        '</div>' +
+        '<div class="acct-order-card-body">' +
+          '<span class="acct-order-card-date">📅 ' + esc(date) + '</span>' +
+          '<span class="acct-order-card-items">📦 ' + items + ' ' + t('items','عناصر') + '</span>' +
+          '<span class="acct-order-card-total">' + money(o.grand_total) + '</span>' +
+        '</div>' +
+        '<div class="acct-order-card-actions">' +
+          '<button class="acct-order-btn">' + t('View Details','تفاصيل الطلب') + '</button>' +
+          '<button class="acct-order-btn">' + t('Invoice','الفاتورة') + '</button>' +
+          '<button class="acct-order-btn">' + t('Reorder','إعادة الطلب') + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>';
 }
 
 function loadRecentOrders() {
@@ -363,19 +404,24 @@ function loadRecentOrders() {
   }
   const money = n => 'SAR ' + Number(n || 0).toLocaleString('en-US');
   const stClass = s => (['pending','confirmed','processing','completed','cancelled'].includes(s) ? s : 'pending');
-  el.innerHTML = '<div style="overflow-x:auto"><table class="acct-table"><thead><tr>' +
-    [t('#','#'), t('Status','الحالة'), t('Total','الإجمالي'), t('Date','التاريخ')]
-      .map(h => '<th>' + h + '</th>').join('') +
-    '</tr></thead><tbody>' +
+  el.innerHTML = '<div class="acct-recent-orders-list">' +
     recent.map(o => {
       const st = (o.status || 'pending').toLowerCase();
-      return '<tr>' +
-        '<td><strong>' + esc(o.order_no || '#' + String(o.id || '').slice(0,8).toUpperCase()) + '</strong></td>' +
-        '<td><span class="acct-order-status acct-order-status--' + esc(stClass(st)) + '">' + esc(o.status || 'pending') + '</span></td>' +
-        '<td>' + money(o.grand_total) + '</td>' +
-        '<td>' + new Date(o.created_at).toLocaleDateString(IS_AR ? 'ar-SA' : 'en-GB') + '</td>' +
-        '</tr>';
-    }).join('') + '</tbody></table></div>';
+      const num = esc(o.order_no || '#' + String(o.id || '').slice(0,8).toUpperCase());
+      const date = new Date(o.created_at).toLocaleDateString(IS_AR ? 'ar-SA' : 'en-GB', {month:'short', day:'numeric'});
+      return '<div class="acct-recent-order-card">' +
+        '<div class="acct-recent-order-left">' +
+          '<div>' +
+            '<div class="acct-recent-order-num">' + num + '</div>' +
+            '<div class="acct-recent-order-date">' + esc(date) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="acct-recent-order-right">' +
+          '<span class="acct-order-status acct-order-status--' + esc(stClass(st)) + '">' + esc(o.status || 'pending') + '</span>' +
+          '<span class="acct-recent-order-total">' + money(o.grand_total) + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>';
 }
 
 /* ── Wishlist ── */
@@ -559,7 +605,10 @@ function wire() {
   /* Change password */
   $('#pwForm').addEventListener('submit', async e => {
     e.preventDefault();
+    const curPw = $('#pwCurrent') ? $('#pwCurrent').value : '';
     const pw = $('#pwNew').value, pw2 = $('#pwConf').value;
+    if (!curPw)
+      return msg($('#pwMsg'), t('Please enter your current password.','يرجى إدخال كلمة المرور الحالية.'));
     if (!pw || pw.length < 8 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw))
       return msg($('#pwMsg'), t('Password must be at least 8 characters and include a letter and a number.','يجب أن تكون كلمة المرور 8 أحرف على الأقل وتتضمن حرفاً ورقماً.'));
     if (pw !== pw2)

@@ -79,7 +79,8 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 .acct-side {
   background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg);
   overflow: hidden; position: sticky; top: 78px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
 }
 
 /* User profile card */
@@ -161,7 +162,9 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 /* ────────────────── CONTENT AREA ────────────────── */
 .acct-content {
   background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg);
+  backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
   padding: 28px 32px; min-height: 72vh;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22);
 }
 .acct-panel { animation: acctFadeUp 0.28s ease; }
 .acct-panel-head {
@@ -266,6 +269,109 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 .acct-quick-icon--orders  { background: rgba(139,92,246,0.12); color: #a78bfa; }
 .acct-quick-icon--addr    { background: rgba(74,222,128,0.12); color: #4ade80; }
 .acct-quick-icon--pw      { background: rgba(251,191,36,0.12); color: #fbbf24; }
+
+/* ────────────────── HERO WELCOME CARD ────────────────── */
+.acct-hero {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 24px 28px; border-radius: 20px; margin-bottom: 28px;
+  background: linear-gradient(135deg, rgba(8,145,168,0.14) 0%, rgba(14,165,192,0.06) 55%, rgba(99,102,241,0.07) 100%);
+  border: 1px solid rgba(8,145,168,0.28);
+  backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+  position: relative; overflow: hidden;
+}
+.acct-hero-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at top left, rgba(8,145,168,0.10) 0%, transparent 65%);
+}
+.acct-hero::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(8,145,168,0.55), rgba(99,102,241,0.30), transparent);
+}
+.acct-hero-avatar-col { position: relative; flex-shrink: 0; }
+.acct-hero-avatar-wrap { position: relative; display: inline-flex; }
+.acct-hero-avatar {
+  width: 88px !important; height: 88px !important;
+  font-size: 30px !important; border: 2.5px solid var(--bd-teal-2) !important;
+  box-shadow: 0 0 28px rgba(8,145,168,0.30), 0 0 60px rgba(8,145,168,0.12);
+}
+.acct-hero-status-dot {
+  position: absolute; bottom: 4px; inset-inline-end: 4px;
+  width: 15px; height: 15px; background: #22c55e;
+  border: 2.5px solid var(--bg); border-radius: 50%;
+  box-shadow: 0 0 10px rgba(34,197,94,0.6);
+}
+.acct-hero-info { flex: 1; min-width: 160px; position: relative; }
+.acct-hero-lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--pr-2); margin: 0 0 5px;
+}
+.acct-hero-name {
+  font-family: var(--font-display); font-size: 22px; font-weight: 700;
+  color: var(--tx); margin: 0 0 3px; line-height: 1.2;
+}
+.acct-hero-email { font-size: 13px; color: var(--tx-70); margin: 0 0 10px; }
+.acct-hero-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.acct-badge--active {
+  background: rgba(34,197,94,0.13); color: #4ade80; border: 1px solid rgba(34,197,94,0.28);
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.acct-hero-dot-live {
+  width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0;
+  box-shadow: 0 0 6px #22c55e; animation: pulse-live 2.5s ease-in-out infinite;
+}
+@keyframes pulse-live {
+  0%,100% { box-shadow: 0 0 4px #22c55e; }
+  50%     { box-shadow: 0 0 12px #22c55e, 0 0 24px rgba(34,197,94,0.30); }
+}
+.acct-hero-since { font-size: 12px; color: var(--tx-40); margin: 0; }
+.acct-hero-divider {
+  width: 1px; height: 72px; background: var(--bd-2); flex-shrink: 0; align-self: center;
+}
+.acct-hero-stats { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+.acct-hero-qstat { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; }
+.acct-hero-qnum {
+  font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--tx); line-height: 1;
+}
+.acct-hero-qlbl { font-size: 10px; color: var(--tx-40); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+[dir="rtl"] .acct-hero-status-dot { inset-inline-end: 4px; }
+
+/* ────────────────── ORDER CARDS ────────────────── */
+.acct-orders-list { display: flex; flex-direction: column; gap: 12px; }
+.acct-order-card {
+  background: var(--bg-card-2); border: 1px solid var(--bd);
+  border-radius: var(--r-md); padding: 18px 20px;
+  transition: border-color 0.2s, box-shadow 0.22s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+.acct-order-card:hover { border-color: var(--bd-teal-2); box-shadow: var(--sh-md); transform: translateY(-2px); }
+.acct-order-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.acct-order-card-num { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--tx); }
+.acct-order-card-body { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.acct-order-card-date, .acct-order-card-items { font-size: 13px; color: var(--tx-3); }
+.acct-order-card-total { font-size: 14px; font-weight: 700; color: var(--pr-2); margin-inline-start: auto; }
+.acct-order-card-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+/* Compact recent-order card */
+.acct-recent-order-card {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 16px; border-radius: var(--r-sm); flex-wrap: wrap;
+  background: var(--bg-card-2); border: 1px solid var(--bd);
+  transition: border-color 0.18s;
+}
+.acct-recent-order-card:hover { border-color: var(--bd-teal-2); }
+.acct-recent-order-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.acct-recent-order-num { font-weight: 700; color: var(--tx); font-size: 13px; white-space: nowrap; }
+.acct-recent-order-date { font-size: 12px; color: var(--tx-4); }
+.acct-recent-order-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.acct-recent-order-total { font-weight: 700; color: var(--pr-2); font-size: 13px; }
+.acct-recent-orders-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* Pending & Completed stat card colors */
+.acct-stat--pending:hover   { border-color: rgba(251,191,36,0.5); box-shadow: 0 8px 28px rgba(251,191,36,0.16); }
+.acct-stat--completed:hover { border-color: rgba(74,222,128,0.5); box-shadow: 0 8px 28px rgba(74,222,128,0.16); }
+.acct-stat-icon-wrap--pending   { background: rgba(251,191,36,0.14); color: #fbbf24; }
+.acct-stat-icon-wrap--completed { background: rgba(74,222,128,0.14); color: #4ade80; }
 
 /* ────────────────── FORMS ────────────────── */
 .acct-form { display: flex; flex-direction: column; gap: 0; }
@@ -526,6 +632,12 @@ select.af-input {
 :is(html.light, body.light) .acct-hdr-btn { color: var(--tx-3); }
 :is(html.light, body.light) .acct-logout { color: #dc2626; }
 :is(html.light, body.light) .acct-logout .acct-menu-icon { color: #dc2626; }
+:is(html.light, body.light) .acct-hero {
+  background: linear-gradient(135deg, rgba(8,145,168,0.09) 0%, rgba(14,165,192,0.04) 55%, rgba(99,102,241,0.05) 100%);
+}
+:is(html.light, body.light) .acct-hero-status-dot { border-color: var(--bg-card-3); }
+:is(html.light, body.light) .acct-order-card { background: var(--bg-card-3); }
+:is(html.light, body.light) .acct-recent-order-card { background: var(--bg-card-3); }
 
 /* ══════════════════════ RESPONSIVE ══════════════════════ */
 @media (max-width: 980px) {
@@ -543,8 +655,13 @@ select.af-input {
   .acct-welcome-title { font-size: 21px; }
   .acct-stats { grid-template-columns: repeat(2, 1fr); }
   .acct-orders-toolbar { flex-direction: column; align-items: stretch; }
-  /* Compact order table on mobile — hide last 2 cols */
-  .acct-table th:nth-child(n+4), .acct-table td:nth-child(n+4) { display: none; }
+  .acct-hero { padding: 18px 20px; gap: 16px; }
+  .acct-hero-avatar { width: 72px !important; height: 72px !important; font-size: 24px !important; }
+  .acct-hero-name { font-size: 18px; }
+  .acct-hero-divider { display: none; }
+  .acct-hero-stats { gap: 16px; }
+  .acct-hero-qnum { font-size: 22px; }
+  .acct-order-card-body { gap: 12px; }
 }
 @media (max-width: 500px) {
   .acct-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -553,6 +670,8 @@ select.af-input {
   .acct-quick { grid-template-columns: 1fr 1fr; }
   .acct-hdr-btn { width: 34px; height: 34px; }
   .acct-wish-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .acct-hero-avatar-col { display: none; }
+  .acct-hero-stats { justify-content: flex-start; }
 }
 @media (max-width: 360px) {
   .acct-stats { grid-template-columns: 1fr; }
