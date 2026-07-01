@@ -14,4 +14,10 @@
 window.__AF_SUPABASE__ = {
   url:     'https://yvzczhyluzkuhsnfckob.supabase.co',
   anonKey: 'sb_publishable_V0g4gItY8vG_wWlW2EVrKQ_2fKf_vi7',
+
+  /* Flip to true ONLY after you enable Google in Supabase
+     (Authentication → Providers → Google) with a Google Cloud OAuth
+     client. While false, the Google button shows as "coming soon" so
+     users never hit the "provider is not enabled" error. */
+  googleEnabled: false,
 };

@@ -14,6 +14,9 @@ import AFAuth from './auth.js';
 
 const IS_AR = document.documentElement.lang === 'ar';
 const t = (en, ar) => (IS_AR ? ar : en);
+/* Google is only "live" once enabled in Supabase + flagged in config.js.
+   Until then it renders as "coming soon" (no OAuth attempt → no error). */
+const GOOGLE_ENABLED = !!(window.__AF_SUPABASE__ && window.__AF_SUPABASE__.googleEnabled);
 
 /* ── SVG icons (inline, no external requests) ── */
 const ICON = {
@@ -45,7 +48,9 @@ function buildModal() {
 
   const socialRow =
     '<div class="af-social-row">' +
-      '<button type="button" class="af-social" data-af-oauth="google" aria-label="' + t('Continue with Google','المتابعة عبر Google') + '">' + ICON.google + '<span>Google</span></button>' +
+      (GOOGLE_ENABLED
+        ? '<button type="button" class="af-social" data-af-oauth="google" aria-label="' + t('Continue with Google','المتابعة عبر Google') + '">' + ICON.google + '<span>Google</span></button>'
+        : '<button type="button" class="af-social af-soon" disabled aria-label="Google (' + t('coming soon','قريباً') + ')" title="' + t('Coming soon','قريباً') + '">' + ICON.google + '<span>Google</span></button>') +
       '<button type="button" class="af-social af-soon" disabled aria-label="Microsoft (' + t('coming soon','قريباً') + ')" title="' + t('Coming soon','قريباً') + '">' + ICON.microsoft + '<span>Microsoft</span></button>' +
       '<button type="button" class="af-social af-soon" disabled aria-label="Apple (' + t('coming soon','قريباً') + ')" title="' + t('Coming soon','قريباً') + '">' + ICON.apple + '<span>Apple</span></button>' +
       '<button type="button" class="af-social af-soon" disabled aria-label="Facebook (' + t('coming soon','قريباً') + ')" title="' + t('Coming soon','قريباً') + '">' + ICON.facebook + '<span>Facebook</span></button>' +
