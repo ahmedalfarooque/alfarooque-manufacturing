@@ -18,13 +18,17 @@
 
 <!-- Top bar -->
 <header class="acct-topbar">
-  <a href="/" class="acct-brand"><img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE" width="36" height="36"><span data-i18n="brand">AL FAROOQUE</span></a>
-  <nav class="nav-links acct-nav"><li class="af-nav-acct-li" data-af-account></li></nav>
+  <a href="/products" class="acct-brand"><img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE" width="34" height="34"><span data-i18n="brand">AL FAROOQUE</span></a>
+  <div class="acct-topbar-right">
+    <a class="acct-shop-link" href="/products" data-i18n="continueShopping">Continue Shopping</a>
+    <nav class="nav-links acct-nav"><li class="af-nav-acct-li" data-af-account></li></nav>
+  </div>
 </header>
 
 <!-- Logged-out gate -->
 <section class="acct-gate" id="acctGate" hidden>
   <div class="acct-gate-card">
+    <div class="acct-gate-ico">🔒</div>
     <h1 data-i18n="gateTitle">Please log in</h1>
     <p data-i18n="gateMsg">Sign in to view your account, orders and wishlist.</p>
     <button class="af-submit" data-af-login style="max-width:220px;margin:0 auto;" data-i18n="gateBtn">Login</button>
@@ -33,12 +37,19 @@
 
 <!-- Account shell -->
 <main class="acct-shell" id="acctShell" hidden>
-  <aside class="acct-side">
+  <!-- Mobile section switcher -->
+  <button class="acct-side-toggle" id="acctSideToggle" aria-label="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <span id="acctCurrentLabel" data-i18n="mOverview">Dashboard</span>
+  </button>
+
+  <aside class="acct-side" id="acctSide">
     <div class="acct-user">
       <span class="af-avatar af-avatar--initials af-avatar--lg" id="acctAvatar">··</span>
-      <div><div class="acct-user-name" id="acctName">—</div><div class="acct-user-email" id="acctEmail">—</div></div>
+      <div class="acct-user-meta"><div class="acct-user-name" id="acctName">—</div><div class="acct-user-email" id="acctEmail">—</div></div>
     </div>
     <nav class="acct-menu" id="acctMenu">
+      <a href="#overview"      data-sec="overview"      data-i18n="mOverview">Dashboard</a>
       <a href="#profile"       data-sec="profile"       data-i18n="mProfile">My Profile</a>
       <a href="#orders"        data-sec="orders"        data-i18n="mOrders">My Orders</a>
       <a href="#wishlist"      data-sec="wishlist"      data-i18n="mWishlist">Wishlist</a>
@@ -51,75 +62,167 @@
   </aside>
 
   <section class="acct-content">
-    <!-- PROFILE -->
-    <div class="acct-panel" data-panel="profile">
-      <h2 data-i18n="pProfile">My Profile</h2>
-      <div class="acct-avatar-edit">
-        <span class="af-avatar af-avatar--initials af-avatar--xl" id="profAvatar">··</span>
-        <label class="acct-upload"><input type="file" id="profPhoto" accept="image/*" hidden><span data-i18n="changePhoto">Change Photo</span></label>
+    <!-- OVERVIEW / DASHBOARD -->
+    <div class="acct-panel" data-panel="overview">
+      <div class="acct-welcome">
+        <div>
+          <h2 class="acct-welcome-title"><span data-i18n="welcomeBack">Welcome back</span>, <span id="ovName">—</span> 👋</h2>
+          <p class="acct-welcome-sub" id="ovSub" data-i18n="welcomeSub">Here's what's happening with your account.</p>
+        </div>
+        <a class="acct-btn-primary" href="/products" data-i18n="browseProducts">Browse Products</a>
       </div>
+
+      <div class="acct-stats">
+        <button class="acct-stat" data-go="orders">
+          <span class="acct-stat-ico acct-stat-ico--orders">🧾</span>
+          <span class="acct-stat-num" id="statOrders">0</span>
+          <span class="acct-stat-lbl" data-i18n="statOrders">Orders</span>
+        </button>
+        <button class="acct-stat" data-go="wishlist">
+          <span class="acct-stat-ico acct-stat-ico--wish">♥</span>
+          <span class="acct-stat-num" id="statWish">0</span>
+          <span class="acct-stat-lbl" data-i18n="statWish">Wishlist</span>
+        </button>
+        <button class="acct-stat" data-go="addresses">
+          <span class="acct-stat-ico acct-stat-ico--addr">📍</span>
+          <span class="acct-stat-num" id="statAddr">0</span>
+          <span class="acct-stat-lbl" data-i18n="statAddr">Addresses</span>
+        </button>
+        <button class="acct-stat" data-go="profile">
+          <span class="acct-stat-ico acct-stat-ico--verify" id="statVerifyIco">✓</span>
+          <span class="acct-stat-num acct-stat-num--sm" id="statVerify">—</span>
+          <span class="acct-stat-lbl" data-i18n="statVerify">Email status</span>
+        </button>
+      </div>
+
+      <!-- Profile completeness -->
+      <div class="acct-complete" id="acctComplete" hidden>
+        <div class="acct-complete-head">
+          <span data-i18n="completeTitle">Complete your profile</span>
+          <span class="acct-complete-pct" id="completePct">0%</span>
+        </div>
+        <div class="acct-complete-bar"><span id="completeBar" style="width:0%"></span></div>
+        <button class="acct-link-btn" data-go="profile" data-i18n="completeCta">Add your details →</button>
+      </div>
+
+      <div class="acct-quick">
+        <a class="acct-quick-card" data-go="profile" href="#profile"><span>👤</span><span data-i18n="mProfile">My Profile</span></a>
+        <a class="acct-quick-card" data-go="orders" href="#orders"><span>📦</span><span data-i18n="mOrders">My Orders</span></a>
+        <a class="acct-quick-card" data-go="addresses" href="#addresses"><span>📍</span><span data-i18n="mAddresses">Saved Addresses</span></a>
+        <a class="acct-quick-card" data-go="password" href="#password"><span>🔑</span><span data-i18n="mPassword">Change Password</span></a>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="acct-panel" data-panel="profile" hidden>
+      <div class="acct-panel-head"><h2 data-i18n="pProfile">My Profile</h2></div>
       <div class="af-msg" id="profMsg" hidden></div>
+
+      <div class="acct-avatar-edit">
+        <div class="acct-avatar-wrap">
+          <img id="profAvatarImg" class="acct-avatar-photo" alt="" hidden>
+          <span class="af-avatar af-avatar--initials acct-avatar-initials" id="profAvatar">··</span>
+        </div>
+        <div class="acct-avatar-actions">
+          <label class="acct-btn-secondary acct-upload"><input type="file" id="profPhoto" accept="image/*" hidden><span data-i18n="changePhoto">Change Photo</span></label>
+          <button type="button" class="acct-btn-ghost" id="profPhotoRemove" data-i18n="removePhoto" hidden>Remove</button>
+          <div class="acct-avatar-hint" data-i18n="photoHint">JPG or PNG, up to ~2&nbsp;MB.</div>
+        </div>
+      </div>
+
       <form id="profForm" class="acct-form">
-        <div class="af-grid2">
-          <div class="af-field"><label class="af-label" data-i18n="firstName">First Name</label><input class="af-input" name="first_name"></div>
-          <div class="af-field"><label class="af-label" data-i18n="lastName">Last Name</label><input class="af-input" name="last_name"></div>
+        <div class="acct-form-grid">
+          <div class="af-field"><label class="af-label" data-i18n="firstName">First Name</label><input class="af-input" name="first_name" autocomplete="given-name"></div>
+          <div class="af-field"><label class="af-label" data-i18n="lastName">Last Name</label><input class="af-input" name="last_name" autocomplete="family-name"></div>
+          <div class="af-field"><label class="af-label" data-i18n="email">Email</label><input class="af-input" name="email" type="email" disabled></div>
+          <div class="af-field"><label class="af-label" data-i18n="mobile">Mobile</label><input class="af-input" name="mobile" type="tel" autocomplete="tel" placeholder="+966 5X XXX XXXX"></div>
+          <div class="af-field"><label class="af-label" data-i18n="gender">Gender</label>
+            <select class="af-input" name="gender">
+              <option value="" data-i18n="genderNone">Prefer not to say</option>
+              <option value="male" data-i18n="genderMale">Male</option>
+              <option value="female" data-i18n="genderFemale">Female</option>
+            </select>
+          </div>
+          <div class="af-field"><label class="af-label" data-i18n="birthdate">Date of Birth</label><input class="af-input" name="birthdate" type="date"></div>
+          <div class="af-field"><label class="af-label" data-i18n="company">Company (optional)</label><input class="af-input" name="company" autocomplete="organization"></div>
+          <div class="af-field"><label class="af-label" data-i18n="country">Country</label><input class="af-input" name="country" autocomplete="country-name"></div>
+          <div class="af-field"><label class="af-label" data-i18n="city">City</label><input class="af-input" name="city" autocomplete="address-level2"></div>
+          <div class="af-field"><label class="af-label" data-i18n="postal">Postal Code</label><input class="af-input" name="postal_code" autocomplete="postal-code"></div>
         </div>
-        <div class="af-field"><label class="af-label" data-i18n="email">Email</label><input class="af-input" name="email" type="email" disabled></div>
-        <div class="af-field"><label class="af-label" data-i18n="mobile">Mobile</label><input class="af-input" name="mobile" type="tel"></div>
-        <div class="af-grid2">
-          <div class="af-field"><label class="af-label" data-i18n="country">Country</label><input class="af-input" name="country"></div>
-          <div class="af-field"><label class="af-label" data-i18n="city">City</label><input class="af-input" name="city"></div>
+        <div class="af-field"><label class="af-label" data-i18n="address">Address</label><textarea class="af-input acct-textarea" name="address" autocomplete="street-address"></textarea></div>
+        <div class="acct-form-actions">
+          <button class="acct-btn-primary" type="submit" data-i18n="saveChanges">Save Changes</button>
         </div>
-        <div class="af-field"><label class="af-label" data-i18n="address">Address</label><input class="af-input" name="address"></div>
-        <button class="af-submit" type="submit" data-i18n="saveChanges">Save Changes</button>
       </form>
     </div>
 
     <!-- ORDERS -->
     <div class="acct-panel" data-panel="orders" hidden>
-      <h2 data-i18n="pOrders">Orders</h2>
+      <div class="acct-panel-head"><h2 data-i18n="pOrders">My Orders</h2></div>
       <div id="ordersBody"></div>
     </div>
 
-    <!-- WISHLIST / SAVED (shared) -->
+    <!-- WISHLIST -->
     <div class="acct-panel" data-panel="wishlist" hidden>
-      <h2 data-i18n="pWishlist">Wishlist</h2>
+      <div class="acct-panel-head"><h2 data-i18n="pWishlist">Wishlist</h2></div>
       <div id="wishBody" class="acct-wish-grid"></div>
-    </div>
-    <div class="acct-panel" data-panel="saved" hidden>
-      <h2 data-i18n="pSaved">Saved Products</h2>
-      <div id="savedBody" class="acct-wish-grid"></div>
     </div>
 
     <!-- ADDRESSES -->
     <div class="acct-panel" data-panel="addresses" hidden>
-      <h2 data-i18n="pAddresses">Saved Addresses</h2>
+      <div class="acct-panel-head">
+        <h2 data-i18n="pAddresses">Saved Addresses</h2>
+        <button class="acct-btn-secondary" id="addrAddBtn" data-i18n="addAddress">+ Add Address</button>
+      </div>
+      <form class="acct-addr-form" id="addrForm" hidden>
+        <div class="af-msg" id="addrMsg" hidden></div>
+        <div class="acct-form-grid">
+          <div class="af-field"><label class="af-label" data-i18n="addrLabel">Label</label><input class="af-input" name="label" placeholder="Home / Office"></div>
+          <div class="af-field"><label class="af-label" data-i18n="addrPhone">Phone</label><input class="af-input" name="phone" type="tel"></div>
+          <div class="af-field"><label class="af-label" data-i18n="city">City</label><input class="af-input" name="city"></div>
+          <div class="af-field"><label class="af-label" data-i18n="country">Country</label><input class="af-input" name="country"></div>
+        </div>
+        <div class="af-field"><label class="af-label" data-i18n="addrLine">Address</label><textarea class="af-input acct-textarea" name="line1"></textarea></div>
+        <div class="acct-form-actions">
+          <button class="acct-btn-primary" type="submit" data-i18n="saveAddress">Save Address</button>
+          <button class="acct-btn-ghost" type="button" id="addrCancel" data-i18n="cancel">Cancel</button>
+        </div>
+      </form>
       <div id="addrBody"></div>
     </div>
 
     <!-- NOTIFICATIONS -->
     <div class="acct-panel" data-panel="notifications" hidden>
-      <h2 data-i18n="pNotif">Notifications</h2>
+      <div class="acct-panel-head"><h2 data-i18n="pNotif">Notifications</h2></div>
       <div id="notifBody"></div>
     </div>
 
     <!-- SETTINGS -->
     <div class="acct-panel" data-panel="settings" hidden>
-      <h2 data-i18n="pSettings">Account Settings</h2>
-      <div class="acct-set-row"><span data-i18n="setTheme">Theme</span><span id="setTheme" class="acct-set-val">—</span></div>
-      <div class="acct-set-row"><span data-i18n="setLang">Language</span><span id="setLang" class="acct-set-val">—</span></div>
-      <div class="acct-set-row"><span data-i18n="setMember">Member since</span><span id="setSince" class="acct-set-val">—</span></div>
-      <div class="acct-set-row"><span data-i18n="setVerified">Email verified</span><span id="setVerified" class="acct-set-val">—</span></div>
+      <div class="acct-panel-head"><h2 data-i18n="pSettings">Account Settings</h2></div>
+      <div class="acct-card">
+        <div class="acct-set-row"><span data-i18n="setTheme">Theme</span><span id="setTheme" class="acct-set-val">—</span></div>
+        <div class="acct-set-row"><span data-i18n="setLang">Language</span><span id="setLang" class="acct-set-val">—</span></div>
+        <div class="acct-set-row"><span data-i18n="setMember">Member since</span><span id="setSince" class="acct-set-val">—</span></div>
+        <div class="acct-set-row"><span data-i18n="setVerified">Email verified</span><span id="setVerified" class="acct-set-val">—</span></div>
+        <div class="acct-set-row"><span data-i18n="setRole">Account type</span><span id="setRole" class="acct-set-val">—</span></div>
+      </div>
+      <div class="acct-card acct-danger">
+        <div><div class="acct-danger-title" data-i18n="signOutTitle">Sign out</div><div class="acct-danger-sub" data-i18n="signOutSub">Sign out of your account on this device.</div></div>
+        <button class="acct-btn-danger" data-af-logout data-i18n="mLogout">Logout</button>
+      </div>
     </div>
 
     <!-- CHANGE PASSWORD -->
     <div class="acct-panel" data-panel="password" hidden>
-      <h2 data-i18n="pPassword">Change Password</h2>
+      <div class="acct-panel-head"><h2 data-i18n="pPassword">Change Password</h2></div>
       <div class="af-msg" id="pwMsg" hidden></div>
-      <form id="pwForm" class="acct-form" style="max-width:420px;">
-        <div class="af-field"><label class="af-label" data-i18n="newPassword">New Password</label><input class="af-input" id="pwNew" type="password" autocomplete="new-password"></div>
-        <div class="af-field"><label class="af-label" data-i18n="confirmPassword">Confirm Password</label><input class="af-input" id="pwConf" type="password" autocomplete="new-password"></div>
-        <button class="af-submit" type="submit" data-i18n="updatePassword">Update Password</button>
+      <form id="pwForm" class="acct-form acct-form--narrow">
+        <div class="af-field"><label class="af-label" data-i18n="newPassword">New Password</label>
+          <input class="af-input" id="pwNew" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="af-field"><label class="af-label" data-i18n="confirmPassword">Confirm Password</label>
+          <input class="af-input" id="pwConf" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="acct-form-actions"><button class="acct-btn-primary" type="submit" data-i18n="updatePassword">Update Password</button></div>
       </form>
     </div>
   </section>

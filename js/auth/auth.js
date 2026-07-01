@@ -228,6 +228,30 @@ const AFAuth = {
       );
     } catch (e) { /* non-fatal */ }
   },
+
+  /* ── Orders (read-only history) ── */
+  getOrders: async function () {
+    if (!CONFIGURED || !_cachedUser) return { data: [], error: null };
+    const sb = await getClient();
+    return sb.from('orders').select('*').eq('user_id', _cachedUser.id).order('created_at', { ascending: false });
+  },
+
+  /* ── Addresses (CRUD) ── */
+  getAddresses: async function () {
+    if (!CONFIGURED || !_cachedUser) return { data: [], error: null };
+    const sb = await getClient();
+    return sb.from('addresses').select('*').eq('user_id', _cachedUser.id).order('created_at', { ascending: false });
+  },
+  addAddress: async function (a) {
+    if (!CONFIGURED || !_cachedUser) return notConfigured();
+    const sb = await getClient();
+    return sb.from('addresses').insert(Object.assign({ user_id: _cachedUser.id }, a)).select().single();
+  },
+  deleteAddress: async function (id) {
+    if (!CONFIGURED || !_cachedUser) return notConfigured();
+    const sb = await getClient();
+    return sb.from('addresses').delete().match({ id: id, user_id: _cachedUser.id });
+  },
 };
 
 window.AFAuth = AFAuth;

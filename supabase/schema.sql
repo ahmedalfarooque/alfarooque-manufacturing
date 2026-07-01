@@ -32,6 +32,12 @@ create table if not exists public.profiles (
   updated_at  timestamptz not null default now()
 );
 
+-- Extended profile fields (idempotent — adds columns if the table already exists)
+alter table public.profiles add column if not exists company     text;
+alter table public.profiles add column if not exists gender      text;
+alter table public.profiles add column if not exists birthdate   date;
+alter table public.profiles add column if not exists postal_code text;
+
 -- ── WISHLIST / SAVED PRODUCTS ────────────────────────────────────────
 create table if not exists public.wishlist (
   user_id    uuid not null references auth.users(id) on delete cascade,
