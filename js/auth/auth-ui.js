@@ -332,7 +332,7 @@ const MENU = [
   ['notifications', t('Notifications','الإشعارات')],
   ['settings',      t('Account Settings','إعدادات الحساب')],
 ];
-function acctHref(section) { return '/pages/account.html#' + section; }
+function acctHref(section) { return '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en') + '#' + section; }
 
 function initials(user) {
   const m = user && user.user_metadata ? user.user_metadata : {};

@@ -28,10 +28,13 @@ let _cachedUser = null;   // last known user (null = logged out)
 function redirect(path) {
   return window.location.origin + path;
 }
+/* Language of the page the user is acting from — carried through the
+   OAuth/verification redirect so they return to the SAME language. */
+function curLang() { return document.documentElement.lang === 'ar' ? 'ar' : 'en'; }
 const URLS = {
-  oauthCallback: () => redirect('/pages/auth/callback.html'),
-  resetPassword: () => redirect('/pages/auth/reset-password.html'),
-  verifyEmail:   () => redirect('/pages/auth/callback.html?verified=1'),
+  oauthCallback: () => redirect('/pages/auth/callback.html?lang=' + curLang()),
+  resetPassword: () => redirect('/pages/auth/reset-password.html?lang=' + curLang()),
+  verifyEmail:   () => redirect('/pages/auth/callback.html?verified=1&lang=' + curLang()),
 };
 
 /* ── Lazy client init ─────────────────────────────────────────────── */

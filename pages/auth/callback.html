@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>/* dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}var l=localStorage.getItem("language");if(l==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}})();</script>
+<script>/* dark default, flash-free + language from ?lang (falls back to stored) */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("language");if(q)localStorage.setItem("language",q);if(l==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}else{document.documentElement.lang="en";document.documentElement.dir="ltr";}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex">
@@ -42,6 +42,7 @@
   const IS_AR = document.documentElement.lang === 'ar';
   const t = (en, ar) => IS_AR ? ar : en;
   const params = new URLSearchParams(location.search);
+  const acct = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en');
   const titleEl = document.getElementById('afcTitle');
   const msgEl   = document.getElementById('afcMsg');
   const spin    = document.getElementById('afcSpin');
@@ -74,12 +75,12 @@
       if (user && !settled) {
         settled = true; off();
         AFAuth.mergeGuestCart();
-        location.replace('/pages/account.html');
+        location.replace(acct);
       }
     });
     setTimeout(function () {
       if (!settled) {
-        if (AFAuth.currentUser()) location.replace('/pages/account.html');
+        if (AFAuth.currentUser()) location.replace(acct);
         else done(t('Could not complete sign-in','تعذّر إكمال تسجيل الدخول'),
                   t('Please try logging in again.','يرجى محاولة تسجيل الدخول مرة أخرى.'),
                   '/products', t('Back to site','العودة للموقع'));
