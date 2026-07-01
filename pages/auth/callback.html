@@ -42,7 +42,7 @@
   const IS_AR = document.documentElement.lang === 'ar';
   const t = (en, ar) => IS_AR ? ar : en;
   const params = new URLSearchParams(location.search);
-  const acct = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en');
+  const acct = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en') + '#overview';
   const titleEl = document.getElementById('afcTitle');
   const msgEl   = document.getElementById('afcMsg');
   const spin    = document.getElementById('afcSpin');

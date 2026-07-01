@@ -463,7 +463,14 @@ var wishlist = {
     this._load();
     if (this._set.has(id)) this._set.delete(id); else this._set.add(id);
     this._save();
-    return this._set.has(id);
+    var added = this._set.has(id);
+    /* Sync to Supabase if the user is logged in */
+    if (window.AFAuth && typeof window.AFAuth.currentUser === 'function'
+        && window.AFAuth.currentUser()
+        && typeof window.AFAuth.toggleWishlist === 'function') {
+      window.AFAuth.toggleWishlist(id, added).catch(function(){});
+    }
+    return added;
   }
 };
 
@@ -1372,6 +1379,20 @@ var prodModal = {
 /* ════════════════════════════════════════════
    CART SYSTEM
    ════════════════════════════════════════════ */
+
+/* Debounced cart → Supabase sync (fires 1.5 s after last cart change) */
+var _cartSyncTimer = null;
+function _debouncedSyncCart() {
+  clearTimeout(_cartSyncTimer);
+  _cartSyncTimer = setTimeout(function() {
+    if (window.AFAuth && typeof window.AFAuth.currentUser === 'function'
+        && window.AFAuth.currentUser()
+        && typeof window.AFAuth.saveCartToServer === 'function') {
+      window.AFAuth.saveCartToServer(cart.items).catch(function(){});
+    }
+  }, 1500);
+}
+
 var cart = {
   items: [],
   drawerEl: null,
@@ -1423,6 +1444,31 @@ var cart = {
 
   save: function() {
     try { localStorage.setItem(CART_KEY, JSON.stringify(this.items)); } catch(e) {}
+    /* Save extended metadata (count + product details) for account dashboard */
+    try {
+      var meta = {
+        count:    this.count(),
+        subtotal: this.total(),
+        vat:      this.vat(),
+        grand:    this.grand(),
+        items: this.items.map(function(ci) {
+          var p = getProduct(ci.id);
+          return {
+            id:       ci.id,
+            nameEn:   p ? p.name   : ('Product #' + ci.id),
+            nameAr:   p ? p.nameAr : ('منتج #' + ci.id),
+            price:    p ? p.price  : 0,
+            qty:      ci.qty,
+            lineTotal: p ? p.price * ci.qty : 0,
+            img:      p ? p.img    : '',
+          };
+        }),
+        updatedAt: new Date().toISOString(),
+      };
+      localStorage.setItem('afq-cart-meta', JSON.stringify(meta));
+    } catch(e) {}
+    /* Sync to server (debounced — avoids spamming Supabase on rapid changes) */
+    _debouncedSyncCart();
   },
 
   add: function(id, qty) {
@@ -1753,6 +1799,30 @@ var orderModal = {
           cart.renderDrawer();
           cart.updateBadge(false);
         }
+        /* Persist order to Supabase if user is logged in */
+        if (window.AFAuth && typeof window.AFAuth.currentUser === 'function'
+            && window.AFAuth.currentUser()
+            && typeof window.AFAuth.createOrder === 'function') {
+          var pl = self.buildPayload();
+          var orderItems = self.isCartOrder
+            ? (pl.items || []).map(function(i) {
+                return { name: i.name, qty: i.qty, price: i.price, lineTotal: i.lineTotal };
+              })
+            : [{ name: pl.product, qty: pl.quantity,
+                 price: pl.quantity ? pl.subtotal / pl.quantity : 0, lineTotal: pl.subtotal }];
+          window.AFAuth.createOrder({
+            order_no:    r.json.id ? String(r.json.id) : ('AFQ-' + Date.now()),
+            status:      'pending',
+            items:       orderItems,
+            subtotal:    pl.subtotal   || 0,
+            vat:         pl.vat        || 0,
+            grand_total: pl.grandTotal || 0,
+          }).catch(function(e) { console.warn('[Order] Supabase save failed:', e); });
+          /* Also clear the server cart for cart orders */
+          if (self.isCartOrder && typeof window.AFAuth.saveCartToServer === 'function') {
+            window.AFAuth.saveCartToServer([]).catch(function(){});
+          }
+        }
         /* Reset & close after the user has read the confirmation */
         setTimeout(function() {
           var form = document.getElementById('omForm');
@@ -1939,4 +2009,53 @@ document.addEventListener('DOMContentLoaded', function() {
   updateYear();
   /* Patch language switcher after it initialises */
   setTimeout(patchLangSwitcher, 50);
+
+  /* ── Auth state sync ──
+     Restores the user's cart + wishlist from Supabase on login,
+     and resets both to empty on logout. */
+  if (typeof window.AFAuth !== 'undefined' && typeof window.AFAuth.onChange === 'function') {
+    var _prevAuthUser = null;
+    window.AFAuth.onChange(function(user) {
+      var wasLoggedIn = !!_prevAuthUser;
+      var isLoggedIn  = !!user;
+      _prevAuthUser   = user;
+
+      if (isLoggedIn && !wasLoggedIn) {
+        /* User just logged in — mergeGuestCart() already synced local→server→local.
+           Give it a moment then reload the cart + wishlist from localStorage. */
+        setTimeout(function() {
+          cart.load();
+          cart.renderDrawer();
+          cart.updateBadge(false);
+
+          /* Sync wishlist from Supabase to localStorage, then refresh UI buttons */
+          if (typeof window.AFAuth.syncWishlistToLocal === 'function') {
+            window.AFAuth.syncWishlistToLocal().then(function() {
+              wishlist._set = null; /* invalidate cache — next .has() re-reads localStorage */
+              document.querySelectorAll('.btn-wishlist').forEach(function(btn) {
+                var id   = parseInt(btn.dataset.id, 10);
+                var inWL = wishlist.has(id);
+                btn.classList.toggle('wishlisted', inWL);
+                var svg = btn.querySelector('svg');
+                if (svg) svg.setAttribute('fill', inWL ? 'currentColor' : 'none');
+              });
+            }).catch(function(){});
+          }
+        }, 700);
+
+      } else if (!isLoggedIn && wasLoggedIn) {
+        /* User just logged out — localStorage already cleared by signOut().
+           Reload cart (will be empty) and reset wishlist button states. */
+        cart.load();
+        cart.renderDrawer();
+        cart.updateBadge(false);
+        wishlist._set = null;
+        document.querySelectorAll('.btn-wishlist').forEach(function(btn) {
+          btn.classList.remove('wishlisted');
+          var svg = btn.querySelector('svg');
+          if (svg) svg.setAttribute('fill', 'none');
+        });
+      }
+    });
+  }
 });

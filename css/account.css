@@ -77,10 +77,10 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 
 /* ────────────────── SIDEBAR ────────────────── */
 .acct-side {
-  background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg);
+  background: rgba(11,17,27,0.96); border: 1px solid rgba(255,255,255,0.09); border-radius: var(--r-lg);
   overflow: hidden; position: sticky; top: 78px;
-  backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+  backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.40);
 }
 
 /* User profile card */
@@ -161,10 +161,10 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 
 /* ────────────────── CONTENT AREA ────────────────── */
 .acct-content {
-  background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg);
-  backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(11,17,27,0.92); border: 1px solid rgba(255,255,255,0.09); border-radius: var(--r-lg);
+  backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
   padding: 28px 32px; min-height: 72vh;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.32);
 }
 .acct-panel { animation: acctFadeUp 0.28s ease; }
 .acct-panel-head {
@@ -367,11 +367,75 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 .acct-recent-order-total { font-weight: 700; color: var(--pr-2); font-size: 13px; }
 .acct-recent-orders-list { display: flex; flex-direction: column; gap: 8px; }
 
+/* Cart summary in overview */
+.acct-cart-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bd); font-size: 13px; }
+.acct-cart-item:last-child { border-bottom: none; }
+.acct-cart-item-name  { flex: 1; color: var(--tx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acct-cart-item-qty   { color: var(--tx-3); flex-shrink: 0; }
+.acct-cart-item-price { font-weight: 700; color: var(--pr-2); flex-shrink: 0; }
+
 /* Pending & Completed stat card colors */
 .acct-stat--pending:hover   { border-color: rgba(251,191,36,0.5); box-shadow: 0 8px 28px rgba(251,191,36,0.16); }
 .acct-stat--completed:hover { border-color: rgba(74,222,128,0.5); box-shadow: 0 8px 28px rgba(74,222,128,0.16); }
 .acct-stat-icon-wrap--pending   { background: rgba(251,191,36,0.14); color: #fbbf24; }
 .acct-stat-icon-wrap--completed { background: rgba(74,222,128,0.14); color: #4ade80; }
+
+/* ────────────────── PROFILE BANNER ────────────────── */
+.acct-prof-banner {
+  position: relative; border-radius: 16px; margin-bottom: 28px;
+  overflow: hidden; border: 1px solid rgba(8,145,168,0.28);
+}
+.acct-prof-banner-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(8,145,168,0.16) 0%, rgba(99,102,241,0.07) 60%, transparent 100%);
+  pointer-events: none;
+}
+.acct-prof-banner::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(8,145,168,0.5), rgba(99,102,241,0.25), transparent);
+}
+.acct-prof-banner-body {
+  position: relative; display: flex; align-items: center;
+  gap: 24px; padding: 24px 28px; flex-wrap: wrap;
+}
+.acct-prof-banner-avatar-zone { position: relative; flex-shrink: 0; }
+.acct-prof-banner-photo {
+  width: 80px; height: 80px; border-radius: 50%;
+  object-fit: cover; border: 2.5px solid var(--bd-teal-2); display: block;
+}
+.acct-prof-banner-ini {
+  width: 80px !important; height: 80px !important; font-size: 28px !important;
+  border: 2.5px solid var(--bd-teal-2) !important;
+}
+.acct-prof-banner-photo[hidden] { display: none; }
+.acct-prof-banner-online {
+  position: absolute; bottom: 2px; inset-inline-end: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #22c55e; border: 2px solid var(--bg);
+  box-shadow: 0 0 8px rgba(34,197,94,0.6);
+}
+.acct-prof-banner-info { flex: 1; min-width: 160px; }
+.acct-prof-banner-name {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  color: var(--tx); margin: 0 0 4px; line-height: 1.2;
+}
+.acct-prof-banner-email { font-size: 13px; color: var(--tx-70); margin: 0 0 3px; }
+.acct-prof-banner-phone { font-size: 12px; color: var(--tx-4); margin: 0; }
+.acct-prof-banner-stats {
+  display: flex; gap: 24px; flex-shrink: 0; align-items: center;
+}
+.acct-prof-bstat { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 52px; }
+.acct-prof-bstat-n {
+  font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--tx); line-height: 1;
+}
+.acct-prof-bstat-l {
+  font-size: 10px; color: var(--tx-4); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+}
+@media (max-width: 600px) {
+  .acct-prof-banner-body { padding: 18px 20px; gap: 16px; }
+  .acct-prof-banner-stats { gap: 16px; }
+  .acct-prof-bstat-n { font-size: 20px; }
+}
 
 /* ────────────────── FORMS ────────────────── */
 .acct-form { display: flex; flex-direction: column; gap: 0; }
@@ -628,6 +692,8 @@ select.af-input {
 
 /* ────────────────── LIGHT THEME OVERRIDES ────────────────── */
 :is(html.light, body.light) .acct-topbar { background: rgba(255,255,255,0.96); }
+:is(html.light, body.light) .acct-side { background: rgba(255,255,255,0.96); border-color: rgba(0,0,0,0.09); }
+:is(html.light, body.light) .acct-content { background: rgba(255,255,255,0.92); border-color: rgba(0,0,0,0.09); }
 :is(html.light, body.light) .acct-user-card { background: linear-gradient(145deg, rgba(8,145,168,0.07) 0%, var(--bg-card-2) 100%); }
 :is(html.light, body.light) .acct-hdr-btn { color: var(--tx-3); }
 :is(html.light, body.light) .acct-logout { color: #dc2626; }
@@ -638,6 +704,7 @@ select.af-input {
 :is(html.light, body.light) .acct-hero-status-dot { border-color: var(--bg-card-3); }
 :is(html.light, body.light) .acct-order-card { background: var(--bg-card-3); }
 :is(html.light, body.light) .acct-recent-order-card { background: var(--bg-card-3); }
+:is(html.light, body.light) .acct-prof-banner { background: rgba(8,145,168,0.06); }
 
 /* ══════════════════════ RESPONSIVE ══════════════════════ */
 @media (max-width: 980px) {

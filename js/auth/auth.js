@@ -139,6 +139,10 @@ const AFAuth = {
   },
 
   signOut: async function () {
+    /* Clear user-specific local data before signing out */
+    try { localStorage.removeItem('afq-products-cart'); } catch(e){}
+    try { localStorage.removeItem('afq-wishlist'); } catch(e){}
+    try { localStorage.removeItem('afq-cart-meta'); } catch(e){}
     if (!CONFIGURED) { _cachedUser = null; _emit(); return {}; }
     const sb = await getClient();
     const res = await sb.auth.signOut();
@@ -213,20 +217,80 @@ const AFAuth = {
     );
   },
 
-  /* ── Merge the guest localStorage cart into the user's saved cart ──
-     Called after a successful login. Best-effort; never throws. ── */
+  /* ── Bidirectional cart sync: merge guest localStorage cart with the
+     user's saved Supabase cart, then persist both ways. Best-effort. ── */
   mergeGuestCart: async function () {
     if (!CONFIGURED || !_cachedUser) return;
     try {
-      const raw = localStorage.getItem('afq-products-cart');
-      const items = raw ? JSON.parse(raw) : [];
-      if (!items.length) return;
+      const CART_KEY = 'afq-products-cart';
+      const raw = localStorage.getItem(CART_KEY);
+      const guestItems = raw ? JSON.parse(raw) : [];
       const sb = await getClient();
+      /* Load user's existing server cart */
+      const existing = await sb.from('carts').select('items').eq('user_id', _cachedUser.id).maybeSingle();
+      const serverItems = (existing && existing.data && Array.isArray(existing.data.items))
+        ? existing.data.items : [];
+      /* Merge: server cart is the base, guest items are added/combined */
+      const merged = [...serverItems];
+      guestItems.forEach(function(gi) {
+        const found = merged.find(function(m) { return m.id === gi.id; });
+        if (found) { found.qty = (Number(found.qty) || 0) + (Number(gi.qty) || 0); }
+        else { merged.push(gi); }
+      });
+      /* Persist merged cart back to Supabase */
       await sb.from('carts').upsert(
-        { user_id: _cachedUser.id, items: items, updated_at: new Date().toISOString() },
+        { user_id: _cachedUser.id, items: merged, updated_at: new Date().toISOString() },
         { onConflict: 'user_id' }
       );
+      /* Restore merged cart to localStorage so the products page reflects it */
+      localStorage.setItem(CART_KEY, JSON.stringify(merged));
     } catch (e) { /* non-fatal */ }
+  },
+
+  /* ── Save the current items array directly to the user's Supabase cart ── */
+  saveCartToServer: async function (items) {
+    if (!CONFIGURED || !_cachedUser) return;
+    try {
+      const sb = await getClient();
+      await sb.from('carts').upsert(
+        { user_id: _cachedUser.id, items: items || [], updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      );
+    } catch(e) { /* non-fatal */ }
+  },
+
+  /* ── Load the user's Supabase wishlist into localStorage ──
+     Converts product_id to a number when possible, to match the integer
+     IDs used in wishlist.has() on the products page. ── */
+  syncWishlistToLocal: async function () {
+    if (!CONFIGURED || !_cachedUser) return;
+    try {
+      const sb = await getClient();
+      const res = await sb.from('wishlist').select('product_id').eq('user_id', _cachedUser.id);
+      const ids = (res && res.data) ? res.data.map(function(r) {
+        const n = parseInt(r.product_id, 10);
+        return isNaN(n) ? r.product_id : n;
+      }) : [];
+      localStorage.setItem('afq-wishlist', JSON.stringify(ids));
+    } catch(e) { /* non-fatal */ }
+  },
+
+  /* ── Create an order record in public.orders ── */
+  createOrder: async function (data) {
+    if (!CONFIGURED || !_cachedUser) return { data: null, error: { message: 'Not logged in' } };
+    try {
+      const sb = await getClient();
+      const payload = {
+        user_id:     _cachedUser.id,
+        order_no:    data.order_no   || null,
+        status:      data.status     || 'pending',
+        items:       data.items      || [],
+        subtotal:    Number(data.subtotal)   || 0,
+        vat:         Number(data.vat)        || 0,
+        grand_total: Number(data.grand_total) || 0,
+      };
+      return sb.from('orders').insert(payload).select().single();
+    } catch(e) { return { data: null, error: e }; }
   },
 
   /* ── Orders (read-only history) ── */

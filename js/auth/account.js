@@ -171,28 +171,64 @@ function animateCounter(el, target) {
 }
 
 function getCartCount() {
-  /* Try common localStorage key names */
-  const keys = ['af_cart','cart','afCart','cartItems'];
-  for (const k of keys) {
-    try {
-      const data = JSON.parse(localStorage.getItem(k) || 'null');
-      if (Array.isArray(data) && data.length) {
-        return data.reduce((s, i) => s + (Number(i.qty) || Number(i.quantity) || 1), 0);
-      }
-    } catch { /* ignore */ }
-  }
+  try {
+    const data = JSON.parse(localStorage.getItem('afq-products-cart') || '[]');
+    if (Array.isArray(data)) return data.reduce((s, i) => s + (Number(i.qty) || 1), 0);
+  } catch(e) {}
   return 0;
+}
+
+/* ── Cart info for dashboard overview ── */
+function loadCart() {
+  const cartEl    = $('#ovCartCount');
+  const cartValEl = $('#ovCartValue');
+  const cartListEl= $('#ovCartItems');
+  if (!cartEl && !cartValEl && !cartListEl) return;
+
+  let meta = null;
+  try { meta = JSON.parse(localStorage.getItem('afq-cart-meta') || 'null'); } catch(e){}
+
+  /* Fallback: count from raw cart array */
+  if (!meta) {
+    try {
+      const raw = JSON.parse(localStorage.getItem('afq-products-cart') || '[]');
+      meta = { count: raw.reduce((s, i) => s + (Number(i.qty)||1), 0), grand: 0, items: [] };
+    } catch(e) { meta = { count: 0, grand: 0, items: [] }; }
+  }
+
+  if (cartEl)     cartEl.textContent    = meta.count || 0;
+  if (cartValEl)  cartValEl.textContent = meta.count ? ('SAR ' + Number(meta.grand || 0).toLocaleString('en-US', {maximumFractionDigits:0})) : '—';
+  if (cartListEl) {
+    if (!meta.count) {
+      cartListEl.innerHTML = '<p style="color:var(--tx-3);font-size:13px">' + t('Your cart is empty','سلة التسوق فارغة') + '</p>';
+    } else {
+      const items = (meta.items || []).slice(0, 3);
+      cartListEl.innerHTML = items.map(function(it) {
+        const name = IS_AR ? (it.nameAr || it.nameEn) : (it.nameEn || it.nameAr);
+        return '<div class="acct-cart-item">' +
+          '<span class="acct-cart-item-name">' + esc(name) + '</span>' +
+          '<span class="acct-cart-item-qty">×' + esc(it.qty) + '</span>' +
+          '<span class="acct-cart-item-price">SAR ' + Number(it.lineTotal || 0).toLocaleString('en-US',{maximumFractionDigits:0}) + '</span>' +
+        '</div>';
+      }).join('') + (meta.items.length > 3 ? '<p style="color:var(--tx-3);font-size:12px;margin-top:6px">+' + (meta.items.length-3) + ' ' + t('more items','عناصر أخرى') + '</p>' : '');
+    }
+  }
 }
 
 /* ── Avatar display ── */
 function setAvatar(url, ini) {
   const img = $('#profAvatarImg'), sp = $('#profAvatar'), rm = $('#profPhotoRemove'), side = $('#acctAvatar');
+  const bannerImg = $('#profBannerImg'), bannerIni = $('#profBannerIni');
   if (url) {
     img.src = url; img.hidden = false; sp.hidden = true; if (rm) rm.hidden = false;
     if (side) { side.style.backgroundImage = 'url(' + url + ')'; side.style.backgroundSize = 'cover'; side.style.backgroundPosition = 'center'; side.textContent = ''; }
+    if (bannerImg) { bannerImg.src = url; bannerImg.hidden = false; }
+    if (bannerIni) bannerIni.hidden = true;
   } else {
     img.hidden = true; img.removeAttribute('src'); sp.hidden = false; sp.textContent = ini; if (rm) rm.hidden = true;
     if (side) { side.style.backgroundImage = ''; side.textContent = ini; }
+    if (bannerImg) { bannerImg.hidden = true; bannerImg.removeAttribute('src'); }
+    if (bannerIni) { bannerIni.hidden = false; bannerIni.textContent = ini; }
   }
 }
 
@@ -228,6 +264,14 @@ async function hydrate(user) {
   if (heroEm) heroEm.textContent = user.email || '';
   const heroVB = $('#heroVerifiedBadge');
   if (heroVB) heroVB.hidden = !verified;
+
+  /* Profile banner (profile panel) */
+  const profBannerIni = $('#profBannerIni');
+  if (profBannerIni) profBannerIni.textContent = ini;
+  const profBannerNm = $('#profBannerName');
+  if (profBannerNm) profBannerNm.textContent = headName;
+  const profBannerEm = $('#profBannerEmail');
+  if (profBannerEm) profBannerEm.textContent = user.email || '';
 
   /* Member since */
   const since = user.created_at ? new Date(user.created_at).toLocaleDateString(IS_AR ? 'ar-SA' : 'en-GB', {year:'numeric',month:'short'}) : '—';
@@ -265,6 +309,13 @@ async function hydrate(user) {
   if (f.company)     f.company.value     = d.company     || '';
   if (f.postal_code) f.postal_code.value = d.postal_code || '';
   setAvatar(d.avatar_url || '', ini);
+  /* Profile banner phone */
+  const profBannerPh = $('#profBannerPhone');
+  if (profBannerPh) profBannerPh.textContent = d.mobile || '';
+  /* Update profile banner name from full DB profile */
+  const fullName = [d.first_name, d.last_name].filter(Boolean).join(' ') || headName;
+  const profBannerNm2 = $('#profBannerName');
+  if (profBannerNm2) profBannerNm2.textContent = fullName;
 
   /* Role badge */
   const roleMap = { admin:t('Admin','مدير'), manager:t('Manager','مشرف') };
@@ -276,6 +327,7 @@ async function hydrate(user) {
   if (heroRoleBadge) heroRoleBadge.textContent = roleText;
 
   computeCompleteness();
+  loadCart();
   loadStats();
   loadOrders();
   loadWishlist();
@@ -323,6 +375,11 @@ async function loadStats() {
   animateCounter($('#heroQOrders'), orders.length);
   animateCounter($('#heroQWish'),   wishCt);
   animateCounter($('#heroQAddr'),   addrCt);
+
+  /* Profile banner quick stats */
+  animateCounter($('#profBannerOrders'), orders.length);
+  animateCounter($('#profBannerWish'),   wishCt);
+  animateCounter($('#profBannerAddr'),   addrCt);
 
   /* Total purchased */
   const total = orders.reduce((s, o) => s + (Number(o.grand_total) || 0), 0);

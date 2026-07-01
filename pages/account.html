@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/background.css">
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="stylesheet" href="/css/account.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
@@ -250,6 +251,19 @@
         <div id="ovRecentOrders"></div>
       </div>
 
+      <!-- Cart Summary -->
+      <div class="acct-section">
+        <div class="acct-section-head">
+          <h3 class="acct-section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-inline-end:6px;vertical-align:-2px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Your Cart
+          </h3>
+          <span style="font-size:13px;color:var(--tx-3)"><span id="ovCartCount">0</span> items &nbsp;·&nbsp; <span id="ovCartValue">—</span></span>
+        </div>
+        <div id="ovCartItems" style="min-height:32px"></div>
+        <a class="acct-link-btn" href="/products" style="margin-top:8px;display:inline-block">Browse Products →</a>
+      </div>
+
       <!-- Quick links -->
       <div class="acct-quick">
         <a class="acct-quick-card" data-go="profile" href="#profile">
@@ -275,6 +289,28 @@
     <div class="acct-panel" data-panel="profile" hidden>
       <div class="acct-panel-head"><h2 data-i18n="pProfile">My Profile</h2></div>
       <div class="af-msg" id="profMsg" hidden></div>
+
+      <!-- Profile Info Banner -->
+      <div class="acct-prof-banner">
+        <div class="acct-prof-banner-bg"></div>
+        <div class="acct-prof-banner-body">
+          <div class="acct-prof-banner-avatar-zone">
+            <img id="profBannerImg" class="acct-prof-banner-photo" alt="" hidden>
+            <span class="af-avatar af-avatar--initials acct-prof-banner-ini" id="profBannerIni">··</span>
+            <span class="acct-prof-banner-online"></span>
+          </div>
+          <div class="acct-prof-banner-info">
+            <h3 class="acct-prof-banner-name" id="profBannerName">—</h3>
+            <p class="acct-prof-banner-email" id="profBannerEmail">—</p>
+            <p class="acct-prof-banner-phone" id="profBannerPhone"></p>
+          </div>
+          <div class="acct-prof-banner-stats">
+            <div class="acct-prof-bstat"><span class="acct-prof-bstat-n" id="profBannerOrders">0</span><span class="acct-prof-bstat-l" data-i18n="statOrders">Orders</span></div>
+            <div class="acct-prof-bstat"><span class="acct-prof-bstat-n" id="profBannerWish">0</span><span class="acct-prof-bstat-l" data-i18n="statWish">Wishlist</span></div>
+            <div class="acct-prof-bstat"><span class="acct-prof-bstat-n" id="profBannerAddr">0</span><span class="acct-prof-bstat-l" data-i18n="statAddr">Addresses</span></div>
+          </div>
+        </div>
+      </div>
 
       <div class="acct-avatar-edit">
         <div class="acct-avatar-wrap">
