@@ -19,5 +19,5 @@ window.__AF_SUPABASE__ = {
      (Authentication → Providers → Google) with a Google Cloud OAuth
      client. While false, the Google button shows as "coming soon" so
      users never hit the "provider is not enabled" error. */
-  googleEnabled: false,
+  googleEnabled: true,
 };
