@@ -41,6 +41,7 @@ const I18N = {
   completeTitle:['Complete your profile','أكمل ملفك الشخصي'],
   completeCta:['Add your details →','أضف بياناتك →'],
   recentOrders:['Recent Orders','الطلبات الأخيرة'], viewAll:['View All →','عرض الكل →'],
+  cartSummary:['Your Cart','سلة التسوقك'], cartBrowse:['Browse Products →','تصفّح المنتجات →'],
   noRecentOrders:['No recent orders','لا توجد طلبات حديثة'],
   pProfile:['My Profile','ملفي الشخصي'], pOrders:['My Orders','طلباتي'],
   pWishlist:['Wishlist','المفضلة'], pAddresses:['Saved Addresses','العناوين المحفوظة'],
