@@ -595,97 +595,180 @@ body.products-page .cart-fab { display: none !important; }
 .pf-sheet-apply:active { transform: none; }
 
 /* ════════════════════════════════════════════════════════════
-   LIGHT MODE
+   LIGHT MODE — Premium glassmorphism filter controls
    ════════════════════════════════════════════════════════════ */
+
+/* Main filter bar: frosted glass panel */
 :is(html.light,body.light) .pf-bar {
-  background: rgba(15,23,42,0.04);
-  border-color: rgba(15,23,42,0.10);
-  box-shadow: 0 8px 28px rgba(15,23,42,0.08);
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-color: rgba(255,255,255,0.88);
+  box-shadow: 0 8px 32px rgba(15,23,42,0.09), inset 0 1px 0 rgba(255,255,255,0.92);
 }
-:is(html.light,body.light) .pf-search-wrap,
-:is(html.light,body.light) .pf-select,
-:is(html.light,body.light) .pf-price-input {
-  background: rgba(255,255,255,0.55);
-  border-color: rgba(15,23,42,0.12);
+
+/* Search wrapper — frosted glass */
+:is(html.light,body.light) .pf-search-wrap {
+  background-color: rgba(255,255,255,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(203,213,225,0.75);
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
   color: #1e293b;
 }
+:is(html.light,body.light) .pf-search-wrap:focus-within {
+  border-color: rgba(8,145,168,0.52);
+  box-shadow: 0 0 0 3px rgba(8,145,168,0.13), 0 1px 4px rgba(15,23,42,0.06);
+  background-color: rgba(255,255,255,0.96);
+}
+
+/* Select dropdowns — no stripes, clean glass */
 :is(html.light,body.light) .pf-select {
+  background-color: rgba(255,255,255,0.88);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(203,213,225,0.75);
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+  color: #1e293b;
 }
-:is(html.light,body.light) .pf-search-input { color: #1e293b; }
-:is(html.light,body.light) .pf-search-input::placeholder { color: rgba(100,116,139,0.50); }
-:is(html.light,body.light) .pf-search-clear,
-:is(html.light,body.light) .pf-search-icon { color: rgba(100,116,139,0.55); }
-:is(html.light,body.light) .pf-select:hover,
+:is(html.light,body.light) .pf-select:hover {
+  border-color: rgba(148,163,184,0.85);
+  background-color: rgba(255,255,255,0.96);
+}
+:is(html.light,body.light) .pf-select:focus {
+  border-color: rgba(8,145,168,0.52);
+  box-shadow: 0 0 0 3px rgba(8,145,168,0.13), 0 1px 4px rgba(15,23,42,0.06);
+  background-color: rgba(255,255,255,0.98);
+}
+:is(html.light,body.light) .pf-select option {
+  background: #ffffff;
+  color: #1e293b;
+}
+
+/* Price inputs — clean glass */
+:is(html.light,body.light) .pf-price-input {
+  background-color: rgba(255,255,255,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(203,213,225,0.75);
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+  color: #1e293b;
+}
 :is(html.light,body.light) .pf-price-input:hover {
-  border-color: rgba(15,23,42,0.20);
-  background-color: rgba(255,255,255,0.75);
+  border-color: rgba(148,163,184,0.85);
+  background-color: rgba(255,255,255,0.96);
 }
-:is(html.light,body.light) .pf-select option { background: #f8fafc; color: #1e293b; }
+:is(html.light,body.light) .pf-price-input:focus {
+  border-color: rgba(8,145,168,0.52);
+  box-shadow: 0 0 0 3px rgba(8,145,168,0.13), 0 1px 4px rgba(15,23,42,0.06);
+  background-color: rgba(255,255,255,0.98);
+}
+
+/* Search text, placeholder, and icons — better contrast */
+:is(html.light,body.light) .pf-search-input { color: #1e293b; }
+:is(html.light,body.light) .pf-search-input::placeholder { color: rgba(71,85,105,0.58); }
+:is(html.light,body.light) .pf-search-icon { color: rgba(71,85,105,0.68); }
+:is(html.light,body.light) .pf-search-clear { color: rgba(71,85,105,0.62); }
+:is(html.light,body.light) .pf-search-clear:hover {
+  color: #1e293b;
+  background: rgba(15,23,42,0.06);
+}
+
+/* Reset button */
 :is(html.light,body.light) .pf-reset-btn {
-  background: rgba(255,255,255,0.55);
-  border-color: rgba(15,23,42,0.12);
+  background-color: rgba(255,255,255,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(203,213,225,0.75);
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
   color: #475569;
 }
-:is(html.light,body.light) .pf-count,
-:is(html.light,body.light) .pf-price-sep { color: rgba(100,116,139,0.70); }
-:is(html.light,body.light) .pf-empty-title { color: #0f172a; }
-:is(html.light,body.light) .pf-empty-ico   { color: rgba(100,116,139,0.28); }
+:is(html.light,body.light) .pf-reset-btn:hover {
+  background-color: rgba(254,242,242,0.92);
+  border-color: rgba(239,68,68,0.30);
+  color: #dc2626;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.10);
+  transform: translateY(-1px);
+}
 
-/* Light mode — mobile filter button */
+/* Info row */
+:is(html.light,body.light) .pf-count,
+:is(html.light,body.light) .pf-price-sep { color: rgba(71,85,105,0.78); }
+
+/* Empty state */
+:is(html.light,body.light) .pf-empty-title { color: #0f172a; }
+:is(html.light,body.light) .pf-empty-ico   { color: rgba(71,85,105,0.28); }
+
+/* Mobile filter button */
 :is(html.light,body.light) .pf-mobile-filter-btn {
-  background: rgba(8,145,168,0.08);
-  border-color: rgba(8,145,168,0.24);
+  background-color: rgba(240,249,255,0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(8,145,168,0.30);
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
   color: #0891b2;
 }
 :is(html.light,body.light) .pf-mobile-filter-btn:hover {
-  background: rgba(8,145,168,0.14);
-  border-color: rgba(8,145,168,0.38);
+  background-color: rgba(224,242,254,0.95);
+  border-color: rgba(8,145,168,0.46);
 }
 :is(html.light,body.light) .pf-filter-badge { background: #0891b2; }
 
-/* Light mode — toolbar login + cart buttons */
+/* Toolbar login button */
 :is(html.light,body.light) .pf-login-btn {
-  background: rgba(255,255,255,0.55);
-  border-color: rgba(15,23,42,0.12);
-  color: #475569;
+  background-color: rgba(255,255,255,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(203,213,225,0.75);
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+  color: #334155;
 }
 :is(html.light,body.light) .pf-login-btn:hover {
-  background: rgba(8,145,168,0.08);
-  border-color: rgba(8,145,168,0.28);
+  background-color: rgba(240,249,255,0.94);
+  border-color: rgba(8,145,168,0.34);
   color: #0891b2;
-  box-shadow: 0 0 14px rgba(8,145,168,0.14);
-}
-:is(html.light,body.light) .pf-cart-btn {
-  box-shadow: 0 4px 16px rgba(8,145,168,0.28);
-}
-:is(html.light,body.light) .pf-cart-badge {
-  border-color: #f8fafc;
+  box-shadow: 0 2px 12px rgba(8,145,168,0.14);
 }
 
-/* Light mode — bottom sheet */
-:is(html.light,body.light) .pf-sheet-overlay { background: rgba(15,23,42,0.45); }
+/* Cart button */
+:is(html.light,body.light) .pf-cart-btn { box-shadow: 0 4px 16px rgba(8,145,168,0.28); }
+:is(html.light,body.light) .pf-cart-badge { border-color: #f8fafc; }
+
+/* Mobile bottom sheet */
+:is(html.light,body.light) .pf-sheet-overlay { background: rgba(15,23,42,0.42); }
 :is(html.light,body.light) .pf-sheet {
-  background: rgba(248,250,252,0.96);
-  border-color: rgba(15,23,42,0.08);
-  box-shadow: 0 -16px 48px rgba(15,23,42,0.14);
+  background: rgba(248,250,252,0.97);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border-color: rgba(203,213,225,0.55);
+  box-shadow: 0 -16px 48px rgba(15,23,42,0.12);
 }
 :is(html.light,body.light) .pf-sheet-title { color: #0f172a; }
 :is(html.light,body.light) .pf-sheet-handle { background: rgba(15,23,42,0.14); }
 :is(html.light,body.light) .pf-sheet-header,
-:is(html.light,body.light) .pf-sheet-footer { border-color: rgba(15,23,42,0.08); }
+:is(html.light,body.light) .pf-sheet-footer { border-color: rgba(203,213,225,0.55); }
 :is(html.light,body.light) .pf-sheet-close {
-  background: rgba(15,23,42,0.05);
-  border-color: rgba(15,23,42,0.10);
+  background-color: rgba(255,255,255,0.82);
+  border-color: rgba(203,213,225,0.65);
   color: #475569;
 }
-:is(html.light,body.light) .pf-sheet-close:hover { color: #ef4444; }
+:is(html.light,body.light) .pf-sheet-close:hover {
+  background-color: rgba(254,242,242,0.92);
+  border-color: rgba(239,68,68,0.28);
+  color: #dc2626;
+}
 :is(html.light,body.light) .pf-sheet-reset {
-  background: rgba(255,255,255,0.70);
-  border-color: rgba(15,23,42,0.14);
+  background-color: rgba(255,255,255,0.82);
+  border-color: rgba(203,213,225,0.65);
   color: #475569;
 }
-:is(html.light,body.light) .pf-sheet-label { color: rgba(71,85,105,0.75); }
+:is(html.light,body.light) .pf-sheet-reset:hover {
+  background-color: rgba(254,242,242,0.92);
+  border-color: rgba(239,68,68,0.26);
+  color: #dc2626;
+}
+:is(html.light,body.light) .pf-sheet-label { color: #64748b; }
 
 /* ════════════════════════════════════════════════════════════
    RESPONSIVE

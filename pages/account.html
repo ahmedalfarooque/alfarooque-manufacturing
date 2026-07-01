@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}var l=localStorage.getItem("language");if(l==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>My Account — AL FAROOQUE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/auth.css">
+<link rel="stylesheet" href="/css/account.css">
+<link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
+</head>
+<body>
+<div class="bg-env"><div class="bg-grad"></div><div class="bg-grid"></div></div>
+
+<!-- Top bar -->
+<header class="acct-topbar">
+  <a href="/" class="acct-brand"><img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE" width="36" height="36"><span data-i18n="brand">AL FAROOQUE</span></a>
+  <nav class="nav-links acct-nav"><li class="af-nav-acct-li" data-af-account></li></nav>
+</header>
+
+<!-- Logged-out gate -->
+<section class="acct-gate" id="acctGate" hidden>
+  <div class="acct-gate-card">
+    <h1 data-i18n="gateTitle">Please log in</h1>
+    <p data-i18n="gateMsg">Sign in to view your account, orders and wishlist.</p>
+    <button class="af-submit" data-af-login style="max-width:220px;margin:0 auto;" data-i18n="gateBtn">Login</button>
+  </div>
+</section>
+
+<!-- Account shell -->
+<main class="acct-shell" id="acctShell" hidden>
+  <aside class="acct-side">
+    <div class="acct-user">
+      <span class="af-avatar af-avatar--initials af-avatar--lg" id="acctAvatar">··</span>
+      <div><div class="acct-user-name" id="acctName">—</div><div class="acct-user-email" id="acctEmail">—</div></div>
+    </div>
+    <nav class="acct-menu" id="acctMenu">
+      <a href="#profile"       data-sec="profile"       data-i18n="mProfile">My Profile</a>
+      <a href="#orders"        data-sec="orders"        data-i18n="mOrders">My Orders</a>
+      <a href="#wishlist"      data-sec="wishlist"      data-i18n="mWishlist">Wishlist</a>
+      <a href="#addresses"     data-sec="addresses"     data-i18n="mAddresses">Saved Addresses</a>
+      <a href="#notifications" data-sec="notifications" data-i18n="mNotif">Notifications</a>
+      <a href="#settings"      data-sec="settings"      data-i18n="mSettings">Account Settings</a>
+      <a href="#password"      data-sec="password"      data-i18n="mPassword">Change Password</a>
+      <button type="button" class="acct-logout" data-af-logout data-i18n="mLogout">Logout</button>
+    </nav>
+  </aside>
+
+  <section class="acct-content">
+    <!-- PROFILE -->
+    <div class="acct-panel" data-panel="profile">
+      <h2 data-i18n="pProfile">My Profile</h2>
+      <div class="acct-avatar-edit">
+        <span class="af-avatar af-avatar--initials af-avatar--xl" id="profAvatar">··</span>
+        <label class="acct-upload"><input type="file" id="profPhoto" accept="image/*" hidden><span data-i18n="changePhoto">Change Photo</span></label>
+      </div>
+      <div class="af-msg" id="profMsg" hidden></div>
+      <form id="profForm" class="acct-form">
+        <div class="af-grid2">
+          <div class="af-field"><label class="af-label" data-i18n="firstName">First Name</label><input class="af-input" name="first_name"></div>
+          <div class="af-field"><label class="af-label" data-i18n="lastName">Last Name</label><input class="af-input" name="last_name"></div>
+        </div>
+        <div class="af-field"><label class="af-label" data-i18n="email">Email</label><input class="af-input" name="email" type="email" disabled></div>
+        <div class="af-field"><label class="af-label" data-i18n="mobile">Mobile</label><input class="af-input" name="mobile" type="tel"></div>
+        <div class="af-grid2">
+          <div class="af-field"><label class="af-label" data-i18n="country">Country</label><input class="af-input" name="country"></div>
+          <div class="af-field"><label class="af-label" data-i18n="city">City</label><input class="af-input" name="city"></div>
+        </div>
+        <div class="af-field"><label class="af-label" data-i18n="address">Address</label><input class="af-input" name="address"></div>
+        <button class="af-submit" type="submit" data-i18n="saveChanges">Save Changes</button>
+      </form>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="acct-panel" data-panel="orders" hidden>
+      <h2 data-i18n="pOrders">Orders</h2>
+      <div id="ordersBody"></div>
+    </div>
+
+    <!-- WISHLIST / SAVED (shared) -->
+    <div class="acct-panel" data-panel="wishlist" hidden>
+      <h2 data-i18n="pWishlist">Wishlist</h2>
+      <div id="wishBody" class="acct-wish-grid"></div>
+    </div>
+    <div class="acct-panel" data-panel="saved" hidden>
+      <h2 data-i18n="pSaved">Saved Products</h2>
+      <div id="savedBody" class="acct-wish-grid"></div>
+    </div>
+
+    <!-- ADDRESSES -->
+    <div class="acct-panel" data-panel="addresses" hidden>
+      <h2 data-i18n="pAddresses">Saved Addresses</h2>
+      <div id="addrBody"></div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="acct-panel" data-panel="notifications" hidden>
+      <h2 data-i18n="pNotif">Notifications</h2>
+      <div id="notifBody"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="acct-panel" data-panel="settings" hidden>
+      <h2 data-i18n="pSettings">Account Settings</h2>
+      <div class="acct-set-row"><span data-i18n="setTheme">Theme</span><span id="setTheme" class="acct-set-val">—</span></div>
+      <div class="acct-set-row"><span data-i18n="setLang">Language</span><span id="setLang" class="acct-set-val">—</span></div>
+      <div class="acct-set-row"><span data-i18n="setMember">Member since</span><span id="setSince" class="acct-set-val">—</span></div>
+      <div class="acct-set-row"><span data-i18n="setVerified">Email verified</span><span id="setVerified" class="acct-set-val">—</span></div>
+    </div>
+
+    <!-- CHANGE PASSWORD -->
+    <div class="acct-panel" data-panel="password" hidden>
+      <h2 data-i18n="pPassword">Change Password</h2>
+      <div class="af-msg" id="pwMsg" hidden></div>
+      <form id="pwForm" class="acct-form" style="max-width:420px;">
+        <div class="af-field"><label class="af-label" data-i18n="newPassword">New Password</label><input class="af-input" id="pwNew" type="password" autocomplete="new-password"></div>
+        <div class="af-field"><label class="af-label" data-i18n="confirmPassword">Confirm Password</label><input class="af-input" id="pwConf" type="password" autocomplete="new-password"></div>
+        <button class="af-submit" type="submit" data-i18n="updatePassword">Update Password</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<script src="/js/auth/config.js"></script>
+<script type="module" src="/js/auth/auth-ui.js"></script>
+<script type="module" src="/js/auth/account.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+/* ═══════════════════════════════════════════════════════════════════
+   AL FAROOQUE — Account dashboard layout (theme-aware, RTL, responsive)
+   ═══════════════════════════════════════════════════════════════════ */
+body { background: var(--bg); color: var(--tx); font-family: var(--font-body); min-height: 100vh; }
+
+/* Top bar */
+.acct-topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px;
+  background: var(--nav-bg-s, rgba(11,15,20,0.92));
+  border-bottom: 1px solid var(--nav-bd, rgba(255,255,255,0.07));
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+}
+.acct-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--tx); font-family: var(--font-display); font-weight: 700; }
+.acct-brand img { display: block; }
+.acct-nav { list-style: none; margin: 0; padding: 0; display: flex; }
+
+/* Gate */
+.acct-gate { min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.acct-gate-card { text-align: center; max-width: 380px; padding: 40px 30px; background: var(--bg-card-3); border: 1px solid var(--bd-2); border-radius: var(--r-lg); box-shadow: var(--sh-lg); }
+.acct-gate-card h1 { font-family: var(--font-display); font-size: 24px; margin: 0 0 8px; color: var(--tx); }
+.acct-gate-card p { color: var(--tx-3); font-size: 14px; margin: 0 0 22px; line-height: 1.6; }
+
+/* Shell */
+.acct-shell { max-width: 1100px; margin: 28px auto; padding: 0 22px; display: grid; grid-template-columns: 264px 1fr; gap: 22px; align-items: start; }
+
+/* Sidebar */
+.acct-side { background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg); padding: 18px; position: sticky; top: 84px; }
+.acct-user { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--bd); }
+.acct-user-name { font-weight: 700; color: var(--tx); font-size: 15px; }
+.acct-user-email { font-size: 12px; color: var(--tx-3); overflow: hidden; text-overflow: ellipsis; max-width: 170px; white-space: nowrap; }
+.af-avatar--xl { width: 84px; height: 84px; font-size: 30px; }
+.acct-menu { display: flex; flex-direction: column; gap: 2px; }
+.acct-menu a, .acct-logout {
+  display: block; text-align: start; padding: 11px 14px; border-radius: var(--r-sm);
+  color: var(--tx-70); text-decoration: none; font-size: 14px; font-weight: 500;
+  background: none; border: none; cursor: pointer; font-family: var(--font-body);
+  transition: background 0.16s, color 0.16s;
+}
+.acct-menu a:hover, .acct-logout:hover { background: var(--bg-card-2); color: var(--tx); }
+.acct-menu a.is-active { background: var(--bg-teal-2); color: var(--tx); box-shadow: inset 2px 0 0 var(--pr-2); }
+[dir="rtl"] .acct-menu a.is-active { box-shadow: inset -2px 0 0 var(--pr-2); }
+.acct-logout { color: #f87171; margin-top: 6px; border-top: 1px solid var(--bd); border-radius: 0; padding-top: 14px; }
+:is(html.light, body.light) .acct-logout { color: #dc2626; }
+
+/* Content */
+.acct-content { background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg); padding: 28px; min-height: 60vh; }
+.acct-panel h2 { font-family: var(--font-display); font-size: 22px; margin: 0 0 20px; color: var(--tx); }
+.acct-form { display: flex; flex-direction: column; gap: 16px; max-width: 560px; }
+.acct-avatar-edit { display: flex; align-items: center; gap: 18px; margin-bottom: 22px; }
+.acct-upload { cursor: pointer; padding: 9px 16px; border-radius: var(--r-full); background: var(--bg-card-2); border: 1px solid var(--bd-2); font-size: 13px; font-weight: 600; color: var(--tx); }
+.acct-upload:hover { border-color: var(--bd-teal-2); }
+
+.acct-empty { padding: 28px; text-align: center; color: var(--tx-3); font-size: 14px; background: var(--bg-card); border: 1px dashed var(--bd-2); border-radius: var(--r-md); }
+.acct-empty a { color: var(--pr-2); text-decoration: none; font-weight: 600; }
+
+.acct-orders-head { display: grid; grid-template-columns: 1fr 1fr 0.7fr 1fr 1fr 0.8fr; gap: 10px; padding: 10px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tx-4); border-bottom: 1px solid var(--bd); margin-bottom: 14px; }
+
+.acct-wish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.acct-wish-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px; background: var(--bg-card-2); border: 1px solid var(--bd); border-radius: var(--r-md); font-size: 14px; color: var(--tx); }
+.acct-wish-rm { background: none; border: 1px solid var(--bd-2); color: #f87171; border-radius: var(--r-full); padding: 5px 12px; font-size: 12px; cursor: pointer; }
+.acct-wish-rm:hover { border-color: #f87171; }
+
+.acct-set-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--bd); font-size: 14px; color: var(--tx-70); }
+.acct-set-val { font-weight: 600; color: var(--tx); }
+
+/* Responsive */
+@media (max-width: 820px) {
+  .acct-shell { grid-template-columns: 1fr; }
+  .acct-side { position: static; }
+  .acct-menu { flex-direction: row; flex-wrap: wrap; }
+  .acct-menu a { flex: 0 0 auto; }
+  .acct-logout { width: 100%; border-top: 1px solid var(--bd); }
+}
+@media (max-width: 480px) {
+  .acct-content { padding: 20px 16px; }
+  .acct-orders-head { display: none; }
+  .acct-topbar { padding: 12px 16px; }
+}

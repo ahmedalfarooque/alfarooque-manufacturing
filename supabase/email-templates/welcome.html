@@ -1,0 +1,22 @@
+<!-- AL FAROOQUE — Welcome email (optional)
+     Not a built-in Supabase auth email. Send it after first verified login
+     via a Database Webhook / Edge Function, or reuse the "Confirm signup"
+     template. {{ .Email }} / {{ .FullName }} are placeholders you control. -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;font-family:Arial,Helvetica,sans-serif;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e6e6e6;">
+      <tr><td style="background:linear-gradient(135deg,#0b1f3a,#0891a8);padding:30px 34px;color:#fff;">
+        <div style="font-size:20px;font-weight:700;">Welcome to AL FAROOQUE</div>
+        <div style="font-size:13px;opacity:.8;">Your account is ready</div>
+      </td></tr>
+      <tr><td style="padding:32px 34px;color:#1a1a1a;">
+        <p style="font-size:15px;line-height:1.6;margin:0 0 14px;">Hi {{ .FullName }},</p>
+        <p style="font-size:15px;line-height:1.6;margin:0 0 18px;">Thanks for joining AL FAROOQUE Manufacturing. You can now save products to your wishlist, track orders, and check out faster.</p>
+        <p style="text-align:center;margin:26px 0;">
+          <a href="https://alfarooque.com/products" style="display:inline-block;background:#0891a8;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 34px;border-radius:10px;">Browse Products</a>
+        </p>
+      </td></tr>
+      <tr><td style="background:#f9f9f9;padding:16px 34px;font-size:11px;color:#999;text-align:center;border-top:1px solid #eee;">© AL FAROOQUE Industries — Jeddah, Saudi Arabia</td></tr>
+    </table>
+  </td></tr>
+</table>

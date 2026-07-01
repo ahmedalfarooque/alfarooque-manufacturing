@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* dark default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="dark";localStorage.setItem("theme","dark");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}var l=localStorage.getItem("language");if(l==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Signing in… — AL FAROOQUE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/auth.css">
+<link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
+<style>
+  .afc-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .afc-card{max-width:420px;width:100%;text-align:center;padding:40px 32px;background:var(--bg-card-3);border:1px solid var(--bd-2);border-radius:var(--r-lg);box-shadow:var(--sh-lg);}
+  .afc-logo{width:64px;height:64px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-full);background:var(--bg-teal);border:1px solid var(--bd-teal);}
+  .afc-logo img{width:40px;height:40px;}
+  .afc-title{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--tx);margin:0 0 8px;}
+  .afc-msg{font-size:14px;color:var(--tx-3);line-height:1.6;margin:0 0 20px;}
+  .afc-spinner{width:38px;height:38px;margin:0 auto 18px;border:3px solid var(--bd-2);border-top-color:var(--pr-2);border-radius:50%;animation:afcSpin .8s linear infinite;}
+  @keyframes afcSpin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion:reduce){.afc-spinner{animation:none;}}
+  .afc-btn{display:inline-block;padding:12px 24px;border-radius:var(--r-md);background:linear-gradient(100deg,var(--pr),var(--pr-2));color:#fff;font-weight:700;font-size:14px;text-decoration:none;box-shadow:var(--sh-btn);}
+</style>
+</head>
+<body>
+<div class="bg-env"><div class="bg-grad"></div><div class="bg-grid"></div></div>
+<div class="afc-wrap">
+  <div class="afc-card">
+    <div class="afc-logo"><img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE" width="40" height="40"></div>
+    <div class="afc-spinner" id="afcSpin"></div>
+    <h1 class="afc-title" id="afcTitle">Signing you in…</h1>
+    <p class="afc-msg" id="afcMsg">Please wait while we complete your sign-in.</p>
+    <a class="afc-btn" id="afcBtn" href="/products" hidden>Continue</a>
+  </div>
+</div>
+
+<script src="/js/auth/config.js"></script>
+<script type="module">
+  import AFAuth from '/js/auth/auth.js';
+  const IS_AR = document.documentElement.lang === 'ar';
+  const t = (en, ar) => IS_AR ? ar : en;
+  const params = new URLSearchParams(location.search);
+  const titleEl = document.getElementById('afcTitle');
+  const msgEl   = document.getElementById('afcMsg');
+  const spin    = document.getElementById('afcSpin');
+  const btn     = document.getElementById('afcBtn');
+
+  function done(title, msg, href, label) {
+    spin.hidden = true;
+    titleEl.textContent = title;
+    msgEl.textContent = msg;
+    btn.href = href; btn.textContent = label; btn.hidden = false;
+  }
+
+  // Email verification landing (no session needed)
+  if (params.get('verified')) {
+    done(t('Email verified ✓','تم تأكيد البريد ✓'),
+         t('Your email is confirmed. You can now log in to your account.','تم تأكيد بريدك الإلكتروني. يمكنك الآن تسجيل الدخول.'),
+         '/products', t('Continue','متابعة'));
+  } else if (params.get('error') || params.get('error_description')) {
+    done(t('Sign-in failed','فشل تسجيل الدخول'),
+         params.get('error_description') || t('The link is invalid or has expired.','الرابط غير صالح أو منتهي الصلاحية.'),
+         '/products', t('Back to site','العودة للموقع'));
+  } else if (!AFAuth.isConfigured()) {
+    done(t('Auth not configured','المصادقة غير مُهيأة'),
+         t('Add your Supabase keys in js/auth/config.js (see AUTH_SETUP.md).','أضف مفاتيح Supabase في js/auth/config.js.'),
+         '/products', t('Back to site','العودة للموقع'));
+  } else {
+    // OAuth/code exchange is handled by the client (detectSessionInUrl).
+    let settled = false;
+    const off = AFAuth.onChange(function (user) {
+      if (user && !settled) {
+        settled = true; off();
+        AFAuth.mergeGuestCart();
+        location.replace('/pages/account.html');
+      }
+    });
+    setTimeout(function () {
+      if (!settled) {
+        if (AFAuth.currentUser()) location.replace('/pages/account.html');
+        else done(t('Could not complete sign-in','تعذّر إكمال تسجيل الدخول'),
+                  t('Please try logging in again.','يرجى محاولة تسجيل الدخول مرة أخرى.'),
+                  '/products', t('Back to site','العودة للموقع'));
+      }
+    }, 6000);
+  }
+</script>
+</body>
+</html>
