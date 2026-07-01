@@ -237,6 +237,7 @@ function setAvatar(url, ini) {
 let CURRENT = { user: null, profile: null };
 let ALL_ORDERS = [];
 let currentFilter = 'all';
+let _editingAddrId = null;
 
 /* ── Hydrate ── */
 async function hydrate(user) {
@@ -494,20 +495,38 @@ async function loadWishlist() {
       '/products', t('Browse Products →','تصفّح المنتجات →'));
     return;
   }
-  el.innerHTML = ids.map(id =>
-    '<div class="acct-wish-card">' +
+  /* Load product metadata saved by the products page */
+  let wishMeta = {};
+  try { wishMeta = JSON.parse(localStorage.getItem('afq-wishlist-meta') || '{}'); } catch(e) {}
+
+  el.innerHTML = '<div class="acct-wish-grid">' + ids.map(id => {
+    const m = wishMeta[String(id)] || {};
+    const name = IS_AR ? (m.nameAr || m.nameEn || t('Product','منتج') + ' #' + id)
+                       : (m.nameEn || m.nameAr || t('Product','منتج') + ' #' + id);
+    const price = m.price ? ('SAR ' + Number(m.price).toLocaleString('en-US', {maximumFractionDigits:0})) : '';
+    const cat   = m.cat   ? (m.cat.charAt(0).toUpperCase() + m.cat.slice(1)) : t('Saved item','منتج محفوظ');
+    return '<div class="acct-wish-card">' +
       '<div class="acct-wish-img">📦</div>' +
       '<div class="acct-wish-body">' +
-        '<div class="acct-wish-name">' + t('Product','منتج') + ' #' + esc(id) + '</div>' +
-        '<div class="acct-wish-cat">' + t('Saved item','منتج محفوظ') + '</div>' +
+        '<div class="acct-wish-name">' + esc(name) + '</div>' +
+        '<div class="acct-wish-cat">' + esc(cat) + '</div>' +
+        (price ? '<div class="acct-wish-price">' + esc(price) + '</div>' : '') +
         '<div class="acct-wish-actions">' +
+          '<a class="acct-wish-shop" href="/products">' + t('View in Shop →','عرض في المتجر →') + '</a>' +
           '<button class="acct-wish-rm" data-rm="' + esc(id) + '">' + t('Remove','حذف') + '</button>' +
         '</div>' +
       '</div>' +
-    '</div>'
-  ).join('');
+    '</div>';
+  }).join('') + '</div>';
+
   $$('[data-rm]', el).forEach(b => b.addEventListener('click', async () => {
     await AFAuth.toggleWishlist(b.getAttribute('data-rm'), false);
+    /* Also remove from local metadata */
+    try {
+      const wm = JSON.parse(localStorage.getItem('afq-wishlist-meta') || '{}');
+      delete wm[String(b.getAttribute('data-rm'))];
+      localStorage.setItem('afq-wishlist-meta', JSON.stringify(wm));
+    } catch(e) {}
     loadWishlist(); loadStats();
   }));
 }
@@ -533,13 +552,33 @@ async function loadAddresses() {
         '<div class="acct-addr-text">' + [a.line1, a.city, a.country].filter(Boolean).map(esc).join(', ') + '</div>' +
         (a.phone ? '<div class="acct-addr-phone">' + esc(a.phone) + '</div>' : '') +
         '<div class="acct-addr-actions">' +
-          '<button class="acct-addr-del" data-del="' + a.id + '">' + t('Delete','حذف') + '</button>' +
+          '<button class="acct-addr-edit" data-edit-id="' + esc(a.id) + '" data-edit-label="' + esc(a.label||'') + '" data-edit-phone="' + esc(a.phone||'') + '" data-edit-city="' + esc(a.city||'') + '" data-edit-country="' + esc(a.country||'') + '" data-edit-line1="' + esc(a.line1||'') + '">' + t('Edit','تعديل') + '</button>' +
+          '<button class="acct-addr-del" data-del="' + esc(a.id) + '">' + t('Delete','حذف') + '</button>' +
         '</div>' +
       '</div>'
     ).join('') + '</div>';
   $$('[data-del]', el).forEach(b => b.addEventListener('click', async () => {
+    if (_editingAddrId === b.getAttribute('data-del')) {
+      _editingAddrId = null; $('#addrForm').reset(); $('#addrForm').hidden = true;
+    }
     await AFAuth.deleteAddress(b.getAttribute('data-del'));
     loadAddresses(); loadStats();
+  }));
+  /* Edit: pre-fill the add/edit form with existing address data */
+  $$('[data-edit-id]', el).forEach(b => b.addEventListener('click', () => {
+    _editingAddrId = b.getAttribute('data-edit-id');
+    const f = $('#addrForm'); if (!f) return;
+    const lbl = f.elements['label'], ph = f.elements['phone'],
+          ci  = f.elements['city'],  co = f.elements['country'], li = f.elements['line1'];
+    if (lbl) lbl.value = b.getAttribute('data-edit-label') || '';
+    if (ph)  ph.value  = b.getAttribute('data-edit-phone') || '';
+    if (ci)  ci.value  = b.getAttribute('data-edit-city') || '';
+    if (co)  co.value  = b.getAttribute('data-edit-country') || '';
+    if (li)  li.value  = b.getAttribute('data-edit-line1') || '';
+    f.hidden = false;
+    const submitBtn = f.querySelector('button[type=submit]');
+    if (submitBtn) submitBtn.textContent = t('Update Address','تحديث العنوان');
+    f.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }));
 }
 
@@ -604,7 +643,9 @@ function checkStrength(pw) {
 /* ── Wire all event handlers ── */
 function wire() {
   /* Save profile */
-  $('#profForm').addEventListener('submit', async e => {
+  const profFormEl = $('#profForm');
+  if (!profFormEl) return; // gate — elements may not be in DOM (shouldn't happen on account.html)
+  profFormEl.addEventListener('submit', async e => {
     e.preventDefault();
     const f = e.currentTarget;
     const base = {
@@ -634,7 +675,8 @@ function wire() {
   });
 
   /* Avatar upload */
-  $('#profPhoto').addEventListener('change', async function () {
+  const profPhotoEl = $('#profPhoto');
+  if (profPhotoEl) profPhotoEl.addEventListener('change', async function () {
     const file = this.files && this.files[0]; if (!file) return;
     if (file.size > 3 * 1024 * 1024) return msg($('#profMsg'), t('Image is too large (max ~3 MB).','الصورة كبيرة جداً (بحد أقصى ~3 ميغابايت).'), 'error');
     msg($('#profMsg'), t('Uploading photo…','جارٍ رفع الصورة…'), 'success');
@@ -653,7 +695,8 @@ function wire() {
   });
 
   /* Remove photo */
-  $('#profPhotoRemove').addEventListener('click', async () => {
+  const profPhotoRemoveEl = $('#profPhotoRemove');
+  if (profPhotoRemoveEl) profPhotoRemoveEl.addEventListener('click', async () => {
     await AFAuth.updateProfile({ avatar_url: null });
     CURRENT.profile = Object.assign(CURRENT.profile || {}, { avatar_url: null });
     setAvatar('', initials(CURRENT.user));
@@ -661,7 +704,8 @@ function wire() {
   });
 
   /* Change password */
-  $('#pwForm').addEventListener('submit', async e => {
+  const pwFormEl = $('#pwForm');
+  if (pwFormEl) pwFormEl.addEventListener('submit', async e => {
     e.preventDefault();
     const curPw = $('#pwCurrent') ? $('#pwCurrent').value : '';
     const pw = $('#pwNew').value, pw2 = $('#pwConf').value;
@@ -695,17 +739,40 @@ function wire() {
   if (pwNew) pwNew.addEventListener('input', function () { checkStrength(this.value); });
 
   /* Address form show/hide + submit */
-  $('#addrAddBtn').addEventListener('click', () => { $('#addrForm').hidden = !$('#addrForm').hidden; });
-  $('#addrCancel').addEventListener('click', () => { $('#addrForm').hidden = true; });
-  $('#addrForm').addEventListener('submit', async e => {
+  const addrAddBtn = $('#addrAddBtn');
+  if (addrAddBtn) addrAddBtn.addEventListener('click', () => {
+    _editingAddrId = null;
+    const f = $('#addrForm'); if (!f) return;
+    f.reset(); f.hidden = !f.hidden;
+    const submitBtn = f.querySelector('button[type=submit]');
+    if (submitBtn) submitBtn.textContent = t('Save Address','حفظ العنوان');
+  });
+  const addrCancel = $('#addrCancel');
+  if (addrCancel) addrCancel.addEventListener('click', () => {
+    _editingAddrId = null;
+    const f = $('#addrForm'); if (f) { f.reset(); f.hidden = true; }
+    const submitBtn = f && f.querySelector('button[type=submit]');
+    if (submitBtn) submitBtn.textContent = t('Save Address','حفظ العنوان');
+  });
+  const addrForm = $('#addrForm');
+  if (addrForm) addrForm.addEventListener('submit', async e => {
     e.preventDefault();
     const f = e.currentTarget;
     const a = { label: f.label.value.trim(), phone: f.phone.value.trim(), city: f.city.value.trim(), country: f.country.value.trim(), line1: f.line1.value.trim() };
     if (!a.line1) return msg($('#addrMsg'), t('Please enter the address.','يرجى إدخال العنوان.'));
     const btn = f.querySelector('button[type=submit]'); btn.disabled = true;
-    const res = await AFAuth.addAddress(a); btn.disabled = false;
+    let res;
+    if (_editingAddrId) {
+      res = await AFAuth.updateAddress(_editingAddrId, a);
+    } else {
+      res = await AFAuth.addAddress(a);
+    }
+    btn.disabled = false;
     if (res && res.error) return msg($('#addrMsg'), res.error.message, 'error');
-    f.reset(); $('#addrMsg').hidden = true; $('#addrForm').hidden = true;
+    _editingAddrId = null;
+    f.reset(); btn.textContent = t('Save Address','حفظ العنوان');
+    const addrMsg = $('#addrMsg'); if (addrMsg) addrMsg.hidden = true;
+    f.hidden = true;
     loadAddresses(); loadStats();
   });
 

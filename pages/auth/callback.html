@@ -42,7 +42,7 @@
   const IS_AR = document.documentElement.lang === 'ar';
   const t = (en, ar) => IS_AR ? ar : en;
   const params = new URLSearchParams(location.search);
-  const acct = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en') + '#overview';
+  const acct = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en') + '#profile';
   const titleEl = document.getElementById('afcTitle');
   const msgEl   = document.getElementById('afcMsg');
   const spin    = document.getElementById('afcSpin');
@@ -75,7 +75,15 @@
       if (user && !settled) {
         settled = true; off();
         AFAuth.mergeGuestCart();
-        location.replace(acct);
+        /* If user was mid-checkout, send them back to products to resume it.
+           Otherwise land on the Profile section (not overview, not homepage). */
+        let dest = acct;
+        try {
+          if (sessionStorage.getItem('af-pending-checkout') === '1') {
+            dest = '/products';  // pending-checkout flag is kept for products.js to consume
+          }
+        } catch (_) {}
+        location.replace(dest);
       }
     });
     setTimeout(function () {

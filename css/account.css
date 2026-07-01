@@ -545,7 +545,15 @@ select.af-input {
 .acct-wish-body { padding: 14px; }
 .acct-wish-name { font-weight: 700; color: var(--tx); font-size: 14px; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .acct-wish-cat  { font-size: 11px; color: var(--tx-4); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
-.acct-wish-actions { display: flex; gap: 6px; }
+.acct-wish-price { font-size: 13px; font-weight: 700; color: var(--pr-2); margin-bottom: 10px; }
+.acct-wish-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.acct-wish-shop {
+  background: none; border: 1px solid var(--bd-teal-2); color: var(--pr-2);
+  border-radius: var(--r-sm); padding: 5px 10px; font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body); text-decoration: none;
+  display: inline-flex; align-items: center; transition: background 0.18s;
+}
+.acct-wish-shop:hover { background: var(--bg-teal); }
 .acct-wish-rm {
   background: none; border: 1px solid rgba(248,113,113,0.3); color: #f87171;
   border-radius: var(--r-sm); padding: 5px 10px; font-size: 11px; font-weight: 700;
@@ -574,6 +582,12 @@ select.af-input {
 .acct-addr-text { font-size: 13px; color: var(--tx-3); line-height: 1.65; }
 .acct-addr-phone { font-size: 12px; color: var(--tx-4); margin-top: 6px; }
 .acct-addr-actions { display: flex; gap: 6px; margin-top: 14px; }
+.acct-addr-edit {
+  background: none; border: 1px solid var(--bd-teal-2); color: var(--pr-2);
+  border-radius: var(--r-sm); padding: 5px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body); transition: background 0.18s;
+}
+.acct-addr-edit:hover { background: var(--bg-teal); }
 .acct-addr-del {
   background: none; border: 1px solid rgba(248,113,113,0.3); color: #f87171;
   border-radius: var(--r-sm); padding: 5px 12px; font-size: 12px; font-weight: 700;

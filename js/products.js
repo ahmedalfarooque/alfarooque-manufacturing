@@ -470,6 +470,25 @@ var wishlist = {
         && typeof window.AFAuth.toggleWishlist === 'function') {
       window.AFAuth.toggleWishlist(id, added).catch(function(){});
     }
+    /* Store product metadata in localStorage so dashboard can show names/prices */
+    try {
+      var WM_KEY = 'afq-wishlist-meta';
+      var wm = {};
+      try { wm = JSON.parse(localStorage.getItem(WM_KEY) || '{}'); } catch(e) {}
+      if (added) {
+        var prod = null;
+        for (var _pi = 0; _pi < PRODUCTS.length; _pi++) {
+          if (PRODUCTS[_pi].id === id) { prod = PRODUCTS[_pi]; break; }
+        }
+        if (prod) {
+          wm[String(id)] = { nameEn: prod.name || '', nameAr: prod.nameAr || prod.name || '',
+            price: prod.price || 0, img: prod.img || '', cat: prod.cat || '' };
+        }
+      } else {
+        delete wm[String(id)];
+      }
+      localStorage.setItem(WM_KEY, JSON.stringify(wm));
+    } catch(_e) {}
     return added;
   }
 };
@@ -2058,4 +2077,30 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  /* ── Pending checkout resume (after Google OAuth) ──
+     If the user was mid-checkout when they were asked to log in via Google,
+     callback.html kept the flag and redirected here. Now that auth is
+     settled, open the cart drawer and auto-click Checkout. */
+  try {
+    if (sessionStorage.getItem('af-pending-checkout') === '1') {
+      sessionStorage.removeItem('af-pending-checkout');
+      if (typeof window.AFAuth !== 'undefined' && typeof window.AFAuth.onChange === 'function') {
+        var _pendingCheckoutOff = window.AFAuth.onChange(function(pendingUser) {
+          if (pendingUser) {
+            setTimeout(function() {
+              if (typeof _pendingCheckoutOff === 'function') { _pendingCheckoutOff(); _pendingCheckoutOff = null; }
+              if (cart.items && cart.items.length) {
+                cart.openDrawer();
+                setTimeout(function() {
+                  var cartProceedBtn = document.getElementById('cartProceed');
+                  if (cartProceedBtn) cartProceedBtn.click();
+                }, 600);
+              }
+            }, 1200);
+          }
+        });
+      }
+    }
+  } catch(_pce) {}
 });

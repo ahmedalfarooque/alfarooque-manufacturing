@@ -316,6 +316,11 @@ const AFAuth = {
     const sb = await getClient();
     return sb.from('addresses').delete().match({ id: id, user_id: _cachedUser.id });
   },
+  updateAddress: async function (id, a) {
+    if (!CONFIGURED || !_cachedUser) return notConfigured();
+    const sb = await getClient();
+    return sb.from('addresses').update(a).match({ id: id, user_id: _cachedUser.id });
+  },
 };
 
 window.AFAuth = AFAuth;

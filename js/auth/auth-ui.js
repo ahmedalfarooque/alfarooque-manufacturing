@@ -266,7 +266,19 @@ async function handleLogin(e) {
   }
   await AFAuth.mergeGuestCart();
   showMsg('login', t('Welcome back! Signing you in…','مرحباً بعودتك! جارٍ تسجيل الدخول…'), 'success');
-  setTimeout(closeModal, 900);
+  setTimeout(function () {
+    closeModal();
+    /* If user was interrupted mid-checkout, re-trigger it after cart merge settles */
+    try {
+      if (sessionStorage.getItem('af-pending-checkout') === '1') {
+        sessionStorage.removeItem('af-pending-checkout');
+        setTimeout(function () {
+          var btn = document.getElementById('cartProceed');
+          if (btn) btn.click();
+        }, 1400);
+      }
+    } catch (_) {}
+  }, 900);
 }
 
 async function handleSignup(e) {
@@ -465,13 +477,18 @@ function closeDropdown() {
    propagation here cleanly cancels the action and opens the login modal.
    Guests keep full browse/search/filter/details access — only these
    mutating/protected actions require an account. ── */
-const PROTECTED_ACTIONS = '.btn-add-cart, .btn-order-now, .btn-wishlist, #cartProceed, #pmAddCart, #pmOrderNow, #pmQuoteBtn';
+/* Only wishlist and checkout require login; guests may browse, add to cart, and use order forms. */
+const PROTECTED_ACTIONS = '.btn-wishlist, #cartProceed';
 document.addEventListener('click', function (e) {
   const hit = e.target.closest(PROTECTED_ACTIONS);
   if (!hit) return;
   if (AFAuth.currentUser()) return;        // logged in → let the app handle it
   e.preventDefault();
   e.stopImmediatePropagation();            // block products.js handlers
+  /* Remember pending checkout so we can auto-resume after login */
+  if (hit.id === 'cartProceed') {
+    try { sessionStorage.setItem('af-pending-checkout', '1'); } catch (_) {}
+  }
   openModal('login');
 }, true);
 
