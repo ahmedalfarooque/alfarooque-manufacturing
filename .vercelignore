@@ -1,0 +1,11 @@
+# Stray scaffolds created by local CLI tooling — NOT part of the site
+my-vue-app/
+alfarooque_manufacturing/
+.agents/
+skills-lock.json
+.mcp.json
+
+# Local-only / heavy
+node_modules/
+Machine Images/
+*.zip
