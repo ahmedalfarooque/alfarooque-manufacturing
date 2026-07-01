@@ -12,7 +12,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 'use strict';
 
-const SUPABASE_ESM = 'https://esm.sh/@supabase/supabase-js@2.45.4';
+const SUPABASE_ESM = 'https://esm.sh/@supabase/supabase-js@2';
 
 const cfg = (window.__AF_SUPABASE__ || {});
 const CONFIGURED =
