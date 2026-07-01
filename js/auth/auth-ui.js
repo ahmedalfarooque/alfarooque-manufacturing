@@ -304,7 +304,15 @@ async function handleGoogle(e) {
   const tabPanel = e.currentTarget.closest('.af-panel');
   const tab = tabPanel ? tabPanel.getAttribute('data-af-panel') : 'login';
   const res = await AFAuth.signInWithGoogle();
-  if (res && res.error) showMsg(tab, res.error.message);
+  if (res && res.error) {
+    var m = res.error.message || '';
+    /* Provider not turned on in Supabase yet → friendly guidance */
+    if (/provider is not enabled|unsupported provider/i.test(m)) {
+      m = t('Google sign-in is not available yet — please sign in with your email and password.',
+            'تسجيل الدخول عبر Google غير متاح حالياً — يرجى استخدام البريد الإلكتروني وكلمة المرور.');
+    }
+    showMsg(tab, m);
+  }
   /* On success Supabase redirects the browser to Google. */
 }
 
