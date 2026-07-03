@@ -1820,6 +1820,19 @@ var orderModal = {
                          'شكراً لك. تم إرسال طلبك بنجاح.'), 'success');
         if (btn) { btn.classList.remove('is-loading'); btn.textContent = t('✓ Submitted', '✓ تم الإرسال'); }
 
+        /* Build the order payload (reads cart.items) BEFORE the cart gets
+           cleared below — building it after would always see an already-
+           empty cart, saving 0 items / SAR 0 for every cart checkout while
+           leaving direct (single-product) orders unaffected, since those
+           don't depend on cart.items at all. This was the actual bug. */
+        var pl = self.buildPayload();
+        var orderItems = self.isCartOrder
+          ? (pl.items || []).map(function(i) {
+              return { name: i.name, qty: i.qty, price: i.price, lineTotal: i.lineTotal };
+            })
+          : [{ name: pl.product, qty: pl.quantity,
+               price: pl.quantity ? pl.subtotal / pl.quantity : 0, lineTotal: pl.subtotal }];
+
         /* Clear the cart on a successful cart order */
         if (self.isCartOrder) {
           cart.items = [];
@@ -1831,21 +1844,21 @@ var orderModal = {
         if (window.AFAuth && typeof window.AFAuth.currentUser === 'function'
             && window.AFAuth.currentUser()
             && typeof window.AFAuth.createOrder === 'function') {
-          var pl = self.buildPayload();
-          var orderItems = self.isCartOrder
-            ? (pl.items || []).map(function(i) {
-                return { name: i.name, qty: i.qty, price: i.price, lineTotal: i.lineTotal };
-              })
-            : [{ name: pl.product, qty: pl.quantity,
-                 price: pl.quantity ? pl.subtotal / pl.quantity : 0, lineTotal: pl.subtotal }];
-          window.AFAuth.createOrder({
-            order_no:    r.json.id ? String(r.json.id) : ('AFQ-' + Date.now()),
-            status:      'pending',
-            items:       orderItems,
-            subtotal:    pl.subtotal   || 0,
-            vat:         pl.vat        || 0,
-            grand_total: pl.grandTotal || 0,
-          }).catch(function(e) { console.warn('[Order] Supabase save failed:', e); });
+          /* Never persist an order with no line items (e.g. cart was
+             already empty for some other reason) — an order record with
+             0 items and SAR 0 is worse than no record at all. */
+          if (!orderItems.length) {
+            console.error('[Order] Skipped Supabase save — order has 0 items.', pl);
+          } else {
+            window.AFAuth.createOrder({
+              order_no:    r.json.id ? String(r.json.id) : ('AFQ-' + Date.now()),
+              status:      'pending',
+              items:       orderItems,
+              subtotal:    pl.subtotal   || 0,
+              vat:         pl.vat        || 0,
+              grand_total: pl.grandTotal || 0,
+            }).catch(function(e) { console.warn('[Order] Supabase save failed:', e); });
+          }
           /* Also clear the server cart for cart orders */
           if (self.isCartOrder && typeof window.AFAuth.saveCartToServer === 'function') {
             window.AFAuth.saveCartToServer([]).catch(function(){});
