@@ -7,6 +7,13 @@
 const $ = (s,c=document) => c.querySelector(s);
 const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 
+/* ═══ PAUSE BACKGROUND ANIMATIONS WHILE TAB IS HIDDEN ═══ */
+(function(){
+  const sync = () => document.body.classList.toggle('bg-tab-hidden', document.hidden);
+  document.addEventListener('visibilitychange', sync);
+  sync();
+})();
+
 /* ═══ PRELOADER ═══ */
 (function(){
   const pl = document.getElementById('preloader');

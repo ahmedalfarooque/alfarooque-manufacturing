@@ -201,7 +201,11 @@ async function boot() {
   wireTopbar();
   startClock();
   pollNotifBadge();
-  setInterval(pollNotifBadge, 30000);
+  /* Skip the network round-trip while the tab is in the background —
+     nobody is looking at the badge — and catch up immediately the
+     moment it's visible again instead of waiting up to 30s. */
+  setInterval(() => { if (!document.hidden) pollNotifBadge(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pollNotifBadge(); });
 
   /* Initial route: the URL hash is the source of truth (works with
      Back/Forward and survives a refresh) — ?page=<x> is accepted as an
@@ -301,7 +305,9 @@ function wireTopbar() {
 function startClock() {
   const el = $('#adClock');
   const tick = () => { el.textContent = new Date().toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }); };
-  tick(); setInterval(tick, 1000);
+  tick();
+  /* No point re-rendering a clock nobody can see. */
+  setInterval(() => { if (!document.hidden) tick(); }, 1000);
 }
 async function pollNotifBadge() {
   try {
@@ -360,7 +366,7 @@ async function renderHome() {
   await loadHomeStats();
   /* Keep the widgets current without a manual browser refresh — cleared
      in goTo() the moment the admin navigates away from Home. */
-  homeRefreshTimer = setInterval(() => { if (currentPage === 'home') loadHomeStats(true); }, HOME_REFRESH_MS);
+  homeRefreshTimer = setInterval(() => { if (currentPage === 'home' && !document.hidden) loadHomeStats(true); }, HOME_REFRESH_MS);
 }
 
 async function loadHomeStats(isBackgroundRefresh) {

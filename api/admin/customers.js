@@ -112,7 +112,12 @@ async function getList(sb, query, res) {
   const pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize, 10) || 20));
   const from = (page - 1) * pageSize, to = from + pageSize - 1;
 
-  let q = sb.from('profiles').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+  /* Only the columns the list view (and its search filter) actually use —
+     the single-customer GET below still uses select('*') for the full
+     View/Edit forms. */
+  let q = sb.from('profiles')
+    .select('id, first_name, last_name, full_name, mobile, company, address, city, country, status, created_at', { count: 'exact' })
+    .order('created_at', { ascending: false });
   if (query.search) {
     const s = query.search.trim();
     q = q.or('first_name.ilike.%' + s + '%,last_name.ilike.%' + s + '%,full_name.ilike.%' + s + '%,company.ilike.%' + s + '%');

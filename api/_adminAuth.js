@@ -91,8 +91,12 @@ async function requireAdminSession(req, res) {
 
   const sb = getAdminClient();
   const tokenHash = sha256Hex(token);
+  /* Embedded join (via the admin_sessions.admin_id FK) fetches the
+     session AND its admin_users row in a single round-trip instead of
+     two sequential ones — every protected admin request was paying for
+     this twice before. */
   const { data: session } = await sb.from('admin_sessions')
-    .select('id, admin_id, expires_at, revoked_at')
+    .select('id, expires_at, revoked_at, admin:admin_users(id, email, full_name, role, is_active, must_change_password)')
     .eq('token_hash', tokenHash)
     .maybeSingle();
 
@@ -101,11 +105,7 @@ async function requireAdminSession(req, res) {
     return null;
   }
 
-  const { data: admin } = await sb.from('admin_users')
-    .select('id, email, full_name, role, is_active, must_change_password')
-    .eq('id', session.admin_id)
-    .maybeSingle();
-
+  const admin = session.admin;
   if (!admin || !admin.is_active) {
     res.status(401).json({ error: 'Account disabled.' });
     return null;

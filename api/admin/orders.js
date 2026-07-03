@@ -69,7 +69,12 @@ module.exports = async function handler(req, res) {
     const pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize, 10) || 20));
     const from = (page - 1) * pageSize, to = from + pageSize - 1;
 
-    let q = sb.from('orders').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+    /* List view only ever renders these columns (see loadOrdersTable in
+       js/admin/dashboard.js) — the single-order GET above still uses
+       select('*') since the View/Edit modals need every field. */
+    let q = sb.from('orders')
+      .select('id, order_no, status, payment_status, grand_total, created_at, guest_name, guest_email, user_id, items', { count: 'exact' })
+      .order('created_at', { ascending: false });
     if (query.status && query.status !== 'all') q = q.eq('status', query.status);
     if (query.today === '1') {
       const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);

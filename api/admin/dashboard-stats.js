@@ -13,18 +13,20 @@ module.exports = async function handler(req, res) {
   const sb = getAdminClient();
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
 
-  const [ordersRes, quotesRes, productsRes, lowStockRes] = await Promise.all([
+  const [ordersRes, quotesRes, productsRes, lowStockRes, customerCountRes, recentProfilesRes] = await Promise.all([
     sb.from('orders').select('id, order_no, status, grand_total, created_at, guest_name, user_id').order('created_at', { ascending: false }).limit(500),
     sb.from('quotes').select('id, status, created_at').order('created_at', { ascending: false }).limit(500),
     sb.from('products').select('id', { count: 'exact', head: true }),
     sb.from('products').select('id, name, stock, low_stock_threshold').order('stock', { ascending: true }).limit(200),
+    sb.from('profiles').select('id', { count: 'exact', head: true }),
+    sb.from('profiles').select('id, first_name, last_name, full_name, created_at').order('created_at', { ascending: false }).limit(5),
   ]);
 
   const orders = ordersRes.data || [];
   const quotes = quotesRes.data || [];
   const lowStockAll = (lowStockRes.data || []).filter(p => p.stock <= (p.low_stock_threshold || 5));
-
-  const { count: customerCount } = await sb.from('profiles').select('id', { count: 'exact', head: true });
+  const customerCount = customerCountRes.count;
+  const recentProfiles = recentProfilesRes.data;
 
   const todayOrders = orders.filter(o => new Date(o.created_at) >= todayStart);
   const byStatus = st => orders.filter(o => (o.status || '').toLowerCase() === st).length;
@@ -32,18 +34,16 @@ module.exports = async function handler(req, res) {
     .reduce((s, o) => s + (Number(o.grand_total) || 0), 0);
   const todayRevenue = todayOrders.reduce((s, o) => s + (Number(o.grand_total) || 0), 0);
 
-  /* Recent customers: latest profiles, merged with auth email via admin API */
-  const { data: recentProfiles } = await sb.from('profiles')
-    .select('id, first_name, last_name, full_name, created_at').order('created_at', { ascending: false }).limit(5);
-  const recentCustomers = [];
-  for (const p of (recentProfiles || [])) {
-    let email = '';
-    try {
-      const { data: u } = await sb.auth.admin.getUserById(p.id);
-      email = (u && u.user && u.user.email) || '';
-    } catch (_) {}
-    recentCustomers.push({ id: p.id, name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || email, email, created_at: p.created_at });
-  }
+  /* Recent customers: latest profiles, merged with auth email — one batched
+     listUsers() call instead of a getUserById() round-trip per customer
+     (was 5 sequential requests for the 5 most recent customers). */
+  const { data: recentUsersPage } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const emailById = {};
+  (recentUsersPage && recentUsersPage.users || []).forEach(u => { emailById[u.id] = u.email || ''; });
+  const recentCustomers = (recentProfiles || []).map(p => {
+    const email = emailById[p.id] || '';
+    return { id: p.id, name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || email, email, created_at: p.created_at };
+  });
 
   /* Resolve real names for the recent orders placed by signed-in customers */
   const recentOrdersRaw = orders.slice(0, 8);

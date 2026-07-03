@@ -576,6 +576,11 @@ var slider = {
 
     this.show(0);
     this.startAuto();
+    // Don't burn a timer + CSS transition advancing slides nobody is
+    // watching while the tab is in the background.
+    document.addEventListener('visibilitychange', function() {
+      document.hidden ? self.stopAuto() : self.startAuto();
+    });
 
     // Parallax on scroll — cache references once
     var phHero = document.querySelector('.ph-hero');
@@ -616,6 +621,10 @@ var slider = {
   startAuto: function() {
     var self = this;
     this.timer = setInterval(function() { self.go(self.cur + 1); }, SLIDE_MS);
+  },
+
+  stopAuto: function() {
+    clearInterval(this.timer);
   },
 
   resetAuto: function() {
