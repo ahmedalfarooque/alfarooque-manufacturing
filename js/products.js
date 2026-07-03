@@ -1628,6 +1628,17 @@ var cart = {
   }
 };
 
+/* One id per checkout attempt, sent to /api/quote as an idempotency key
+   so a retried/duplicated request (double click, refresh mid-request)
+   upserts the same order row instead of inserting a second one. */
+function genOrderId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 /* ════════════════════════════════════════════
    ORDER MODAL
    ════════════════════════════════════════════ */
@@ -1636,6 +1647,8 @@ var orderModal = {
   productId: null,
   qty: 1,
   isCartOrder: false,
+  submitting: false,       // re-entry guard — blocks a second submit() while one is in flight
+  orderIdempotencyKey: null, // one stable id per checkout attempt (see open()/openCart())
 
   init: function() {
     this.el = document.getElementById('orderModal');
@@ -1663,6 +1676,7 @@ var orderModal = {
     this.productId  = id;
     this.qty        = qty || 1;
     this.isCartOrder= false;
+    this.orderIdempotencyKey = genOrderId();
     var p = getProduct(id);
     if (!p) return;
     var name = IS_AR ? p.nameAr : p.name;
@@ -1682,6 +1696,7 @@ var orderModal = {
 
   openCart: function() {
     this.isCartOrder = true;
+    this.orderIdempotencyKey = genOrderId();
     this.qty = cart.count();
     // Show cart summary
     var p = {img: 'assets/images/logo/IAA_LOGO.png', nameAr: 'سلة التسوق', name: 'Cart Order (' + this.qty + ' items)'};
@@ -1734,11 +1749,12 @@ var orderModal = {
     var msg   = document.getElementById('omMsg').value.trim();
 
     var payload = {
-      language: IS_AR ? 'ar' : 'en',
-      name:     name,
-      phone:    phone,
-      email:    email,
-      message:  msg,
+      language:      IS_AR ? 'ar' : 'en',
+      name:          name,
+      phone:         phone,
+      email:         email,
+      message:       msg,
+      clientOrderId: this.orderIdempotencyKey || genOrderId(),
     };
 
     if (this.isCartOrder) {
@@ -1778,9 +1794,21 @@ var orderModal = {
     el.style.display = text ? 'block' : 'none';
   },
 
-  /* Submit the order to the backend — no WhatsApp / mailto */
+  /* Submit the order to the backend — no WhatsApp / mailto.
+
+     Order persistence now happens ENTIRELY server-side, in a single
+     upsert (api/quote.js → persistSubmission), for both Direct Order and
+     Cart Checkout, guest and signed-in alike. There used to also be a
+     separate client-side Supabase insert here for signed-in users — that
+     created a second row per checkout (and, for cart orders, one built
+     from an already-cleared cart, saving 0 items / SAR 0). Removed
+     entirely; the access token below just lets the server attribute the
+     one order it creates to the real account instead of treating it as
+     a guest order. */
   submit: function() {
-    var self  = this;
+    var self = this;
+    if (this.submitting) return; // re-entry guard — blocks a second concurrent submit
+
     var name  = document.getElementById('omName').value.trim();
     var phone = document.getElementById('omPhone').value.trim();
     var email = document.getElementById('omEmail').value.trim();
@@ -1798,15 +1826,30 @@ var orderModal = {
       return;
     }
 
+    this.submitting = true;
     var origLabel = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
     this.setStatus(t('Sending your order…', 'جارٍ إرسال طلبك…'), 'info');
     if (btn) btn.textContent = t('Sending…', 'جارٍ الإرسال…');
 
-    fetch('/api/quote', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(this.buildPayload()),
+    /* Read the cart/product data into a fixed payload up front, once —
+       nothing after this point re-reads cart.items, so clearing the cart
+       on success can never race with what gets sent to the server. */
+    var payload = this.buildPayload();
+
+    var tokenPromise = (window.AFAuth && typeof window.AFAuth.getAccessToken === 'function')
+      ? window.AFAuth.getAccessToken().catch(function() { return null; })
+      : Promise.resolve(null);
+
+    function endSubmitting() {
+      self.submitting = false;
+      if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); btn.innerHTML = origLabel; }
+    }
+
+    tokenPromise.then(function(token) {
+      var headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      return fetch('/api/quote', { method: 'POST', headers: headers, body: JSON.stringify(payload) });
     })
     .then(function(res) {
       return res.json().catch(function() { return {}; }).then(function(json) {
@@ -1820,47 +1863,13 @@ var orderModal = {
                          'شكراً لك. تم إرسال طلبك بنجاح.'), 'success');
         if (btn) { btn.classList.remove('is-loading'); btn.textContent = t('✓ Submitted', '✓ تم الإرسال'); }
 
-        /* Build the order payload (reads cart.items) BEFORE the cart gets
-           cleared below — building it after would always see an already-
-           empty cart, saving 0 items / SAR 0 for every cart checkout while
-           leaving direct (single-product) orders unaffected, since those
-           don't depend on cart.items at all. This was the actual bug. */
-        var pl = self.buildPayload();
-        var orderItems = self.isCartOrder
-          ? (pl.items || []).map(function(i) {
-              return { name: i.name, qty: i.qty, price: i.price, lineTotal: i.lineTotal };
-            })
-          : [{ name: pl.product, qty: pl.quantity,
-               price: pl.quantity ? pl.subtotal / pl.quantity : 0, lineTotal: pl.subtotal }];
-
-        /* Clear the cart on a successful cart order */
+        /* Clear the cart (local + server-persisted) on a successful cart order */
         if (self.isCartOrder) {
           cart.items = [];
           cart.save();
           cart.renderDrawer();
           cart.updateBadge(false);
-        }
-        /* Persist order to Supabase if user is logged in */
-        if (window.AFAuth && typeof window.AFAuth.currentUser === 'function'
-            && window.AFAuth.currentUser()
-            && typeof window.AFAuth.createOrder === 'function') {
-          /* Never persist an order with no line items (e.g. cart was
-             already empty for some other reason) — an order record with
-             0 items and SAR 0 is worse than no record at all. */
-          if (!orderItems.length) {
-            console.error('[Order] Skipped Supabase save — order has 0 items.', pl);
-          } else {
-            window.AFAuth.createOrder({
-              order_no:    r.json.id ? String(r.json.id) : ('AFQ-' + Date.now()),
-              status:      'pending',
-              items:       orderItems,
-              subtotal:    pl.subtotal   || 0,
-              vat:         pl.vat        || 0,
-              grand_total: pl.grandTotal || 0,
-            }).catch(function(e) { console.warn('[Order] Supabase save failed:', e); });
-          }
-          /* Also clear the server cart for cart orders */
-          if (self.isCartOrder && typeof window.AFAuth.saveCartToServer === 'function') {
+          if (window.AFAuth && typeof window.AFAuth.saveCartToServer === 'function') {
             window.AFAuth.saveCartToServer([]).catch(function(){});
           }
         }
@@ -1870,21 +1879,21 @@ var orderModal = {
           if (form) form.reset();
           self.close();
           self.setStatus('', '');
-          if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+          endSubmitting();
         }, 3200);
       } else {
         var detail = (r.json && (r.json.error || r.json.message)) ||
                      ('Request failed (HTTP ' + r.status + ')');
         console.error('[Order] FAILED — HTTP', r.status, r.json);
         self.setStatus(t('Could not send your order: ', 'تعذّر إرسال طلبك: ') + detail, 'error');
-        if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); btn.innerHTML = origLabel; }
+        endSubmitting();
       }
     })
     .catch(function(err) {
       console.error('[Order] Network error:', err);
       self.setStatus(t('Network error — please check your connection and try again.',
                        'خطأ في الشبكة — يرجى التحقق من الاتصال والمحاولة مرة أخرى.'), 'error');
-      if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); btn.innerHTML = origLabel; }
+      endSubmitting();
     });
   }
 };

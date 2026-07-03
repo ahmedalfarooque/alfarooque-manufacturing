@@ -36,32 +36,68 @@ const FROM_NAME = 'AL FAROOQUE Website';
    same id can be embedded in the email's "View Order" button — the row
    is inserted with that exact id (overriding the column's random default)
    so the link and the database record always agree. */
-async function persistSubmission(type, d, recordId) {
+/* Resolve the real signed-in customer server-side from their Supabase
+   access token (Authorization: Bearer <jwt>) — never trust a client-
+   supplied user id. Returns null for guests or an invalid/expired token
+   (the order is then saved as a guest order, same as before). */
+async function resolveUserId(req, sb) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : null;
+  if (!token) return null;
+  try {
+    const { data, error } = await sb.auth.getUser(token);
+    if (error || !data || !data.user) return null;
+    return data.user.id;
+  } catch (_) { return null; }
+}
+
+/* This is the ONLY place an order (or quote) row is ever inserted — both
+   the Direct Order and Cart Checkout flows funnel through this exact
+   function with exactly one call each, for both guest and signed-in
+   customers. There is no separate client-side insert anymore, which is
+   what previously caused a second (and, for cart orders, incomplete)
+   order row per checkout.
+
+   `recordId` doubles as an idempotency key: it's the client's stable
+   per-checkout-attempt id (see buildPayload()'s clientOrderId), so a
+   retried/duplicated request (double click, page refresh mid-request,
+   network retry) upserts the SAME row instead of inserting a second one
+   — `ignoreDuplicates` makes this an atomic, single-statement no-op on
+   a repeat, never a partial or duplicate write. */
+async function persistSubmission(type, d, recordId, userId) {
   let getAdminClient;
   try { ({ getAdminClient } = require('./_supabaseAdmin')); } catch (_) { return; }
   let sb;
   try { sb = getAdminClient(); } catch (_) { return; } // not configured — skip quietly
 
   if (type === 'contact') {
-    await sb.from('quotes').insert({
+    await sb.from('quotes').upsert({
       id: recordId,
       name: d.fullName || null, email: d.email || null, phone: d.phone || null,
       message: d.message || null, product: d.service || null, status: 'new',
-    });
+    }, { onConflict: 'id', ignoreDuplicates: true });
     return;
   }
 
-  /* order / cart → guest order (user_id null; visible only to admin via service role) */
+  /* order / cart → same schema/table either way; guest when not signed in
+     (user_id null, visible only to admin via service role), linked to the
+     real account when signed in. Never insert with zero items — an
+     order record with nothing purchased is worse than no record. */
   const items = d.items && d.items.length
     ? d.items.map(it => ({ name: it.name, qty: it.qty, price: it.price != null ? it.price : (it.lineTotal && it.qty ? it.lineTotal / it.qty : 0) }))
     : (d.product ? [{ name: d.product, qty: d.quantity || 1, price: d.quantity ? (Number(d.subtotal) || 0) / d.quantity : (Number(d.subtotal) || 0) }] : []);
 
-  await sb.from('orders').insert({
+  if (!items.length) {
+    console.error('[Submit] Refusing to persist an order with 0 items.', { type, fullName: d.fullName, email: d.email });
+    return;
+  }
+
+  const { error } = await sb.from('orders').upsert({
     id: recordId,
-    user_id: null,
+    user_id: userId || null,
     order_no: 'ORD-' + Date.now().toString(36).toUpperCase(),
     status: 'pending',
-    source: 'guest',
+    source: userId ? 'account' : 'guest',
     guest_name: d.fullName || null,
     guest_email: d.email || null,
     guest_phone: d.phone || null,
@@ -69,7 +105,8 @@ async function persistSubmission(type, d, recordId) {
     subtotal: Number(d.subtotal) || 0,
     vat: Number(d.vat) || 0,
     grand_total: Number(d.grandTotal) || 0,
-  });
+  }, { onConflict: 'id', ignoreDuplicates: true });
+  if (error) console.error('[Submit] Order persist failed:', error.message, '| type:', type, '| items:', items.length);
 }
 
 /* ── Absolute site origin, for the "View Order" email button ── */
@@ -85,7 +122,7 @@ module.exports = async function handler(req, res) {
   /* ── CORS ── */
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method !== 'POST') {
@@ -173,9 +210,16 @@ module.exports = async function handler(req, res) {
     : (body.product || (Array.isArray(body.items) ? `${body.items.length} item(s)` : 'Order'));
   const subject = `${label} — ${subjBit} — ${fullName || email || phone}`;
 
-  /* Generated up front so the same id is both embedded in the email's
-     "View Order" button and used as the DB row's primary key. */
-  const recordId = crypto.randomUUID();
+  /* Idempotency: the client generates ONE id per checkout attempt (see
+     buildPayload()'s clientOrderId) and resends the SAME one on any retry
+     of that same attempt (double click, page refresh mid-request, network
+     retry) — persistSubmission's upsert(on conflict id, ignoreDuplicates)
+     then guarantees exactly one row no matter how many times this handler
+     runs for that attempt. Falls back to a fresh id for older clients or
+     non-order submission types, which don't carry a clientOrderId. This id
+     is also embedded in the email's "View Order" button either way. */
+  const isValidUuid = typeof body.clientOrderId === 'string' && /^[0-9a-f-]{16,36}$/i.test(body.clientOrderId);
+  const recordId = isValidUuid ? body.clientOrderId : crypto.randomUUID();
   const viewParam = type === 'contact' ? 'openQuote' : 'openOrder';
   const viewUrl = siteOrigin(req) + '/admin?' + viewParam + '=' + recordId;
 
@@ -204,12 +248,17 @@ module.exports = async function handler(req, res) {
     });
     console.log('[Submit] SUCCESS — id:', result.id, '| provider:', result.provider, '→', RECIPIENT);
     try {
+      let userId = null;
+      try {
+        const { getAdminClient } = require('./_supabaseAdmin');
+        userId = await resolveUserId(req, getAdminClient());
+      } catch (_) { /* auth not configured — treat as guest */ }
       await persistSubmission(type, {
         fullName, email, phone, company, message, service: body.service,
         items: Array.isArray(body.items) ? body.items : null,
         product: body.product, quantity: body.quantity,
         subtotal: body.subtotal, vat: body.vat, grandTotal: body.grandTotal,
-      }, recordId);
+      }, recordId, userId);
     } catch (dbErr) {
       console.error('[Submit] DB persist failed (non-fatal, email already sent):', dbErr.message);
     }

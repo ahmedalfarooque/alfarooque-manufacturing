@@ -82,6 +82,18 @@ const AFAuth = {
   /* Current user (sync cache) + a promise variant that hydrates session */
   currentUser: function () { return _cachedUser; },
 
+  /* Current session's JWT — sent to server endpoints (e.g. /api/quote) so
+     they can securely resolve the real signed-in user server-side instead
+     of trusting a client-supplied id. Returns null when logged out. */
+  getAccessToken: async function () {
+    if (!CONFIGURED) return null;
+    try {
+      const sb = await getClient();
+      const res = await sb.auth.getSession();
+      return res.data.session ? res.data.session.access_token : null;
+    } catch (e) { return null; }
+  },
+
   init: async function () {
     if (!CONFIGURED) { _emit(); return null; }
     const sb = await getClient();
