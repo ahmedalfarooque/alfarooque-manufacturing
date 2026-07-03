@@ -11,6 +11,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 'use strict';
 import AFAuth from './auth.js';
+import { isAdminAccountEmail } from './admin-emails.js';
 
 const IS_AR = document.documentElement.lang === 'ar';
 const t = (en, ar) => (IS_AR ? ar : en);
@@ -248,19 +249,19 @@ function strongPassword(pw) {
 }
 
 /* ── Admin-account detection ────────────────────────────────────────
-   The one administrator account must never sign in as a customer. This
-   only ever activates for this exact email — every other address takes
-   the normal customer path below with zero added latency or behavior
-   change. The password itself is verified server-side (bcrypt, via the
-   real admin login endpoint) — nothing here is a hardcoded credential,
-   and nothing about admin status is revealed unless the password is
-   ALSO correct, matching the same "no login" wording the admin endpoint
-   already returns for anyone else. On success the admin endpoint has
-   already sent the OTP email, so we hand off straight into that flow
-   on the admin login page instead of asking for the password again. */
-const ADMIN_ACCOUNT_EMAIL = 'arshad@alfarooque.com';
+   Administrator accounts (see js/auth/admin-emails.js) must never sign
+   in as a customer. This only ever activates for those exact emails —
+   every other address takes the normal customer path below with zero
+   added latency or behavior change. The password itself is verified
+   server-side (bcrypt, via the real admin login endpoint) — nothing here
+   is a hardcoded credential, and nothing about admin status is revealed
+   unless the password is ALSO correct, matching the same "no login"
+   wording the admin endpoint already returns for anyone else. On success
+   the admin endpoint has already sent the OTP email, so we hand off
+   straight into that flow on the admin login page instead of asking for
+   the password again. */
 async function tryAdminHandoff(email, password) {
-  if (email.toLowerCase() !== ADMIN_ACCOUNT_EMAIL) return false;
+  if (!isAdminAccountEmail(email)) return false;
   try {
     const res = await fetch('/api/admin/auth', {
       method: 'POST',
@@ -485,6 +486,7 @@ function openDropdown(trigger, user) {
   dropdownEl.querySelector('[data-af-logout]').addEventListener('click', async function () {
     closeDropdown();
     await AFAuth.signOut();
+    location.href = '/products';
   });
   /* Position under trigger (RTL-aware) */
   const r = trigger.getBoundingClientRect();

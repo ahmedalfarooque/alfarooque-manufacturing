@@ -39,6 +39,7 @@
 <script src="/js/auth/config.js"></script>
 <script type="module">
   import AFAuth from '/js/auth/auth.js';
+  import { isAdminAccountEmail } from '/js/auth/admin-emails.js';
   const IS_AR = document.documentElement.lang === 'ar';
   const t = (en, ar) => IS_AR ? ar : en;
   const params = new URLSearchParams(location.search);
@@ -70,20 +71,19 @@
          '/products', t('Back to site','العودة للموقع'));
   } else {
     // OAuth/code exchange is handled by the client (detectSessionInUrl).
-    const ADMIN_ACCOUNT_EMAIL = 'arshad@alfarooque.com';
     let settled = false;
     const off = AFAuth.onChange(function (user) {
       if (user && !settled) {
         settled = true; off();
 
-        /* The one administrator account must never end up on the customer
+        /* Administrator accounts must never end up on the customer
            dashboard, regardless of which sign-in method reached it. Google
            doesn't hand us a password to verify (unlike the email+password
            path), so we can't skip straight to OTP here — but an exact
            email match after Google has already confirmed identity is a
            strong enough signal to route to the real admin login instead of
            silently leaving an admin logged in as a "customer". */
-        if ((user.email || '').toLowerCase() === ADMIN_ACCOUNT_EMAIL) {
+        if (isAdminAccountEmail(user.email)) {
           AFAuth.signOut().finally(function () {
             location.replace('/admin?email=' + encodeURIComponent(user.email));
           });
@@ -105,7 +105,7 @@
     setTimeout(function () {
       if (!settled) {
         const already = AFAuth.currentUser();
-        if (already && (already.email || '').toLowerCase() === ADMIN_ACCOUNT_EMAIL) {
+        if (already && isAdminAccountEmail(already.email)) {
           settled = true; off();
           AFAuth.signOut().finally(function () {
             location.replace('/admin?email=' + encodeURIComponent(already.email));
