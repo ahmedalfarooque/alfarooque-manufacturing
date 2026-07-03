@@ -37,8 +37,20 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body.admin-body {
-  background: radial-gradient(ellipse at top left, rgba(8,145,168,0.08), transparent 55%), var(--ad-bg);
+html body.admin-body {
+  /* Explicit longhands (not the `background: <image>, var(...)` shorthand)
+     — with the public nav's stylesheets now also loaded on this page for
+     the navbar, a shorthand background-color buried in a var() inside a
+     multi-layer background list doesn't reliably win the cascade against
+     the site's own `background-color` rules (e.g. the light-theme
+     override) even when this rule loads later with equal specificity.
+     Longhands make color/image independent and unambiguous.
+     The redundant `html` in the selector matches the specificity of
+     themes.css's `:is(html.light, body.light) body` rule (0,1,2) — without
+     it, that rule (equal-or-higher specificity, admin-agnostic, applies
+     site-wide) would win and turn this page's background light. */
+  background-color: var(--ad-bg);
+  background-image: radial-gradient(ellipse at top left, rgba(8,145,168,0.08), transparent 55%);
   color: var(--ad-text);
   font-family: var(--ad-font-body);
   min-height: 100vh;
@@ -49,7 +61,11 @@ a { color: inherit; }
 button, input, select, textarea { font-family: inherit; }
 
 /* ────────────────── LOGIN PAGE ────────────────── */
-.ad-login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+/* margin-top reserves exactly the space the fixed public navbar occupies
+   (--nav-h, defined in css/main.css, now loaded on this page) so the card
+   sits centered in the room actually left below it, never underneath it —
+   the card itself is otherwise untouched. */
+.ad-login-wrap { min-height: calc(100vh - var(--nav-h, 76px)); margin-top: var(--nav-h, 76px); display: flex; align-items: center; justify-content: center; padding: 24px; }
 .ad-login-card {
   width: 100%; max-width: 400px; padding: 40px 34px;
   background: var(--ad-card-3); border: 1px solid var(--ad-border-2); border-radius: var(--ad-r-lg);

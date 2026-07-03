@@ -7,10 +7,56 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Admin Login — AL FAROOQUE</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<!-- Public-site nav (Home/About/Services/Gallery/Products/Contact, language
+     switcher, theme toggle) — loaded ONLY so the navbar can render/function;
+     the admin login card below still gets the last word on shared selectors
+     since css/admin/admin.css loads after these. -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/auth.css">
 <link rel="stylesheet" href="/css/admin/admin.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
 <body class="admin-body">
+
+<!-- ═══ NAV (identical to the public site) ═══ -->
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE Industries" width="42" height="42">
+    <div class="nav-brand">
+      <span class="nav-brand-name">AL FAROOQUE</span>
+      <span class="nav-brand-sub">Manufacturing</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/pages/about.html">About</a></li>
+    <li class="has-dropdown"><a href="/pages/services.html">Services<span class="caret">▼</span></a>
+      <ul class="nav-dropdown">
+        <li><a href="/pages/woodworks.html">Wood Works</a></li>
+        <li><a href="/pages/steelworks.html">Steel Works</a></li>
+        <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
+      </ul>
+    </li>
+    <li><a href="/pages/gallery.html">Gallery</a></li>
+    <li><a href="/products.html">Products</a></li>
+    <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
+  </ul>
+  <button class="nav-burger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-mobile">
+  <a href="/">Home</a>
+  <a href="/pages/about.html">About</a>
+  <a href="/pages/services.html">Services</a>
+  <a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a>
+  <a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a>
+  <a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
+  <a href="/pages/gallery.html">Gallery</a>
+  <a href="/products.html">Products</a>
+  <a href="/pages/contact.html">Contact Us</a>
+</div>
 
 <div class="ad-login-wrap">
   <div class="ad-login-card">
@@ -48,6 +94,14 @@
   </div>
 </div>
 
+<!-- Public-site nav behavior (burger menu, scroll state, dropdown, language
+     switcher, theme toggle, account control) — same scripts every public
+     page loads, in the same order. -->
+<script src="/js/main.js"></script>
+<script src="/js/language-switcher.js"></script>
+<script src="/js/theme-switcher.js"></script>
+<script src="/js/auth/config.js"></script>
+<script type="module" src="/js/auth/auth-ui.js"></script>
 <script src="/js/admin/login.js"></script>
 </body>
 </html>

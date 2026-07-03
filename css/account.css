@@ -10,6 +10,13 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 .acct-btn-primary[hidden], .acct-btn-secondary[hidden],
 .acct-btn-ghost[hidden], .acct-btn-danger[hidden] { display: none !important; }
 
+/* The public navbar added inside the logged-out gate (see #acctGate)
+   would otherwise sit directly on top of this page's own slim topbar.
+   Hide the old topbar ONLY while the gate is showing (logged out) —
+   purely presentational, driven by the same [hidden] toggle account.js
+   already sets; the logged-in dashboard's topbar is untouched. */
+body:has(#acctGate:not([hidden])) .acct-topbar { display: none; }
+
 /* ────────────────── TOP BAR ────────────────── */
 .acct-topbar {
   position: sticky; top: 0; z-index: 50;
@@ -44,7 +51,11 @@ body { background: var(--bg); color: var(--tx); font-family: var(--font-body); m
 .acct-hdr-btn:hover { color: var(--pr-2); border-color: var(--bd-teal-2); background: var(--bg-teal-2); transform: translateY(-1px); }
 
 /* ────────────────── GATE ────────────────── */
-.acct-gate { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+/* margin-top reserves exactly the space the fixed public navbar (added
+   only inside this logged-out gate) occupies, so the gate card sits
+   centered below it rather than underneath it — the card itself, the
+   shared .acct-topbar, and the logged-in dashboard shell are untouched. */
+.acct-gate { min-height: calc(80vh - var(--nav-h, 76px)); margin-top: var(--nav-h, 76px); display: flex; align-items: center; justify-content: center; padding: 24px; }
 .acct-gate-card {
   text-align: center; max-width: 400px; padding: 52px 36px;
   background: var(--bg-card-3); border: 1px solid var(--bd-2); border-radius: var(--r-lg);
