@@ -247,6 +247,33 @@ function strongPassword(pw) {
   return pw && pw.length >= 8 && /[A-Za-z]/.test(pw) && /\d/.test(pw);
 }
 
+/* ── Admin-account detection ────────────────────────────────────────
+   The one administrator account must never sign in as a customer. This
+   only ever activates for this exact email — every other address takes
+   the normal customer path below with zero added latency or behavior
+   change. The password itself is verified server-side (bcrypt, via the
+   real admin login endpoint) — nothing here is a hardcoded credential,
+   and nothing about admin status is revealed unless the password is
+   ALSO correct, matching the same "no login" wording the admin endpoint
+   already returns for anyone else. On success the admin endpoint has
+   already sent the OTP email, so we hand off straight into that flow
+   on the admin login page instead of asking for the password again. */
+const ADMIN_ACCOUNT_EMAIL = 'arshad@alfarooque.com';
+async function tryAdminHandoff(email, password) {
+  if (email.toLowerCase() !== ADMIN_ACCOUNT_EMAIL) return false;
+  try {
+    const res = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Request': '1' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ action: 'login', email, password }),
+    });
+    return res.ok;
+  } catch (_) {
+    return false; // network hiccup — fall back to normal customer login
+  }
+}
+
 /* ── Handlers ── */
 async function handleLogin(e) {
   e.preventDefault();
@@ -255,6 +282,15 @@ async function handleLogin(e) {
   const pw = form.password.value;
   if (!EMAIL_RE.test(email)) return showMsg('login', t('Please enter a valid email address.','يرجى إدخال بريد إلكتروني صحيح.'));
   if (!pw) return showMsg('login', t('Please enter your password.','يرجى إدخال كلمة المرور.'));
+
+  setLoading(form, true);
+  if (await tryAdminHandoff(email, pw)) {
+    showMsg('login', t('Verified — continuing to admin sign-in…','تم التحقق — جارٍ المتابعة إلى دخول المشرف…'), 'success');
+    setTimeout(function () { location.href = '/admin?otp=1&email=' + encodeURIComponent(email); }, 500);
+    return;
+  }
+  setLoading(form, false);
+
   setLoading(form, true);
   const res = await AFAuth.signIn(email, pw);
   setLoading(form, false);
@@ -267,17 +303,23 @@ async function handleLogin(e) {
   await AFAuth.mergeGuestCart();
   showMsg('login', t('Welcome back! Signing you in…','مرحباً بعودتك! جارٍ تسجيل الدخول…'), 'success');
   setTimeout(function () {
-    closeModal();
-    /* If user was interrupted mid-checkout, re-trigger it after cart merge settles */
+    /* Mid-checkout interruption takes priority — resume it, stay put (checkout no longer even requires login, but keep this path intact for safety). */
     try {
       if (sessionStorage.getItem('af-pending-checkout') === '1') {
         sessionStorage.removeItem('af-pending-checkout');
+        closeModal();
         setTimeout(function () {
           var btn = document.getElementById('cartProceed');
           if (btn) btn.click();
         }, 1400);
+        return;
       }
     } catch (_) {}
+    /* Otherwise: land on the Dashboard after login, never leave the user on Products. */
+    closeModal();
+    if (!/\/pages\/account\.html$/.test(location.pathname)) {
+      location.href = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en') + '#overview';
+    }
   }, 900);
 }
 
@@ -337,7 +379,7 @@ async function handleGoogle(e) {
    ACCOUNT CONTROL (nav) + DROPDOWN
    ════════════════════════════════════════════════════════════════ */
 const MENU = [
-  ['profile',       t('My Profile','ملفي الشخصي')],
+  ['overview',      t('My Profile','ملفي الشخصي')],
   ['orders',        t('My Orders','طلباتي')],
   ['wishlist',      t('Wishlist','المفضلة')],
   ['addresses',     t('Saved Addresses','العناوين المحفوظة')],
@@ -475,20 +517,16 @@ function closeDropdown() {
 /* ── Route protection: gate commerce actions behind login ──────────────
    Capture phase runs before products.js's bubble handlers, so stopping
    propagation here cleanly cancels the action and opens the login modal.
-   Guests keep full browse/search/filter/details access — only these
-   mutating/protected actions require an account. ── */
-/* Only wishlist and checkout require login; guests may browse, add to cart, and use order forms. */
-const PROTECTED_ACTIONS = '.btn-wishlist, #cartProceed';
+   Guests keep full browse/search/filter/details/checkout access — only
+   wishlist requires an account. Cart checkout (#cartProceed) must behave
+   exactly like single-product ordering: no login required. ── */
+const PROTECTED_ACTIONS = '.btn-wishlist';
 document.addEventListener('click', function (e) {
   const hit = e.target.closest(PROTECTED_ACTIONS);
   if (!hit) return;
   if (AFAuth.currentUser()) return;        // logged in → let the app handle it
   e.preventDefault();
   e.stopImmediatePropagation();            // block products.js handlers
-  /* Remember pending checkout so we can auto-resume after login */
-  if (hit.id === 'cartProceed') {
-    try { sessionStorage.setItem('af-pending-checkout', '1'); } catch (_) {}
-  }
   openModal('login');
 }, true);
 

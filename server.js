@@ -40,6 +40,7 @@ const ROUTES = {
   '/contact':       'pages/contact.html',
   '/products':      'products.html',
   '/mohammed':      'mohammed.html',
+  '/admin':         'pages/admin/login.html',
   '/woodworks':     'pages/woodworks.html',
   '/steelworks':    'pages/steelworks.html',
   '/aluminium':     'pages/aluminium.html',
@@ -69,8 +70,55 @@ const MIME = {
 };
 
 /* ── API handlers ── */
-const quoteHandler = require('./api/quote');
 const emailService = require('./api/_email');
+
+/* Generic Vercel-style API dispatcher for local dev: any request to
+   /api/<path> loads ./api/<path>.js and invokes its default export as
+   (req, res), mirroring how Vercel routes serverless functions in
+   production. Files whose basename starts with "_" are helpers, never
+   routed (matches the convention documented in api/_email.js). */
+function loadApiHandler(urlPath) {
+  const rel = urlPath.replace(/^\/api\//, '');
+  if (!rel || rel.split('/').some(seg => seg.startsWith('_') || seg === '..')) return null;
+  const filePath = path.join(ROOT, 'api', rel + '.js');
+  if (!filePath.startsWith(path.join(ROOT, 'api') + path.sep)) return null; // traversal guard
+  if (!fs.existsSync(filePath)) return null;
+  try { return require(filePath); } catch (e) { console.error('[api] Failed to load', filePath, e); return null; }
+}
+
+function dispatchApi(handler, req, res, urlPath) {
+  let raw = '';
+  req.on('data', chunk => { raw += chunk; });
+  req.on('end', async () => {
+    let parsed = {};
+    try { parsed = raw ? JSON.parse(raw) : {}; } catch (_) {}
+    req.body = parsed;
+    req.query = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams);
+
+    let statusCode = 200;
+    const apiRes = {
+      setHeader: (k, v) => res.setHeader(k, v),
+      status(n) { statusCode = n; return this; },
+      json(data) {
+        if (!res.headersSent) {
+          res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(data));
+        }
+      },
+      end() { if (!res.headersSent) { res.writeHead(statusCode); res.end(); } },
+    };
+
+    try {
+      await handler(req, apiRes);
+    } catch (err) {
+      console.error('[' + urlPath + '] Unhandled error:', err);
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    }
+  });
+}
 
 /* ── Server ── */
 const server = http.createServer((req, res) => {
@@ -80,38 +128,11 @@ const server = http.createServer((req, res) => {
   try { urlPath = decodeURIComponent(urlPath); } catch (e) { /* leave as-is on malformed encoding */ }
 
   /* 0. API routes — must come before static-file handling */
-  if (urlPath === '/api/quote') {
-    let raw = '';
-    req.on('data', chunk => { raw += chunk; });
-    req.on('end', async () => {
-      let parsed = {};
-      try { parsed = JSON.parse(raw || '{}'); } catch (_) {}
-      req.body = parsed;
-
-      let statusCode = 200;
-      const apiRes = {
-        setHeader: (k, v) => res.setHeader(k, v),
-        status(n) { statusCode = n; return this; },
-        json(data) {
-          if (!res.headersSent) {
-            res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(data));
-          }
-        },
-        end() { if (!res.headersSent) { res.writeHead(statusCode); res.end(); } },
-      };
-
-      try {
-        await quoteHandler(req, apiRes);
-      } catch (err) {
-        console.error('[/api/quote] Unhandled error:', err);
-        if (!res.headersSent) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: err.message }));
-        }
-      }
-    });
-    return;
+  if (urlPath.startsWith('/api/')) {
+    const handler = loadApiHandler(urlPath);
+    if (handler) return dispatchApi(handler, req, res, urlPath);
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: 'Not found' }));
   }
 
   /* 1. Try route table */

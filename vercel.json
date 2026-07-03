@@ -1,4 +1,5 @@
 {
+  "framework": null,
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
@@ -15,7 +16,8 @@
     { "source": "/contact-ar",    "destination": "/pages/contact-ar" },
     { "source": "/woodworks-ar",  "destination": "/pages/woodworks-ar" },
     { "source": "/steelworks-ar", "destination": "/pages/steelworks-ar" },
-    { "source": "/aluminium-ar",  "destination": "/pages/aluminium-ar" }
+    { "source": "/aluminium-ar",  "destination": "/pages/aluminium-ar" },
+    { "source": "/admin",         "destination": "/pages/admin/login" }
   ],
   "redirects": [
     {

@@ -42,7 +42,7 @@
   const IS_AR = document.documentElement.lang === 'ar';
   const t = (en, ar) => IS_AR ? ar : en;
   const params = new URLSearchParams(location.search);
-  const acct = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en') + '#profile';
+  const acct = '/pages/account.html?lang=' + (IS_AR ? 'ar' : 'en') + '#overview';
   const titleEl = document.getElementById('afcTitle');
   const msgEl   = document.getElementById('afcMsg');
   const spin    = document.getElementById('afcSpin');
@@ -70,10 +70,26 @@
          '/products', t('Back to site','العودة للموقع'));
   } else {
     // OAuth/code exchange is handled by the client (detectSessionInUrl).
+    const ADMIN_ACCOUNT_EMAIL = 'arshad@alfarooque.com';
     let settled = false;
     const off = AFAuth.onChange(function (user) {
       if (user && !settled) {
         settled = true; off();
+
+        /* The one administrator account must never end up on the customer
+           dashboard, regardless of which sign-in method reached it. Google
+           doesn't hand us a password to verify (unlike the email+password
+           path), so we can't skip straight to OTP here — but an exact
+           email match after Google has already confirmed identity is a
+           strong enough signal to route to the real admin login instead of
+           silently leaving an admin logged in as a "customer". */
+        if ((user.email || '').toLowerCase() === ADMIN_ACCOUNT_EMAIL) {
+          AFAuth.signOut().finally(function () {
+            location.replace('/admin?email=' + encodeURIComponent(user.email));
+          });
+          return;
+        }
+
         AFAuth.mergeGuestCart();
         /* If user was mid-checkout, send them back to products to resume it.
            Otherwise land on the Profile section (not overview, not homepage). */
@@ -88,7 +104,14 @@
     });
     setTimeout(function () {
       if (!settled) {
-        if (AFAuth.currentUser()) location.replace(acct);
+        const already = AFAuth.currentUser();
+        if (already && (already.email || '').toLowerCase() === ADMIN_ACCOUNT_EMAIL) {
+          settled = true; off();
+          AFAuth.signOut().finally(function () {
+            location.replace('/admin?email=' + encodeURIComponent(already.email));
+          });
+        }
+        else if (already) location.replace(acct);
         else done(t('Could not complete sign-in','تعذّر إكمال تسجيل الدخول'),
                   t('Please try logging in again.','يرجى محاولة تسجيل الدخول مرة أخرى.'),
                   '/products', t('Back to site','العودة للموقع'));

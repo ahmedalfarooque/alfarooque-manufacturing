@@ -3,9 +3,15 @@
   "configurations": [
     {
       "name": "alfarooque-static",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "3500", "."],
-      "port": 3500
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "port": 3000
+    },
+    {
+      "name": "alfarooque-test",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "port": 3011
     }
   ]
 }

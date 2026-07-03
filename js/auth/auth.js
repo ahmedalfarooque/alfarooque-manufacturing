@@ -300,6 +300,22 @@ const AFAuth = {
     return sb.from('orders').select('*').eq('user_id', _cachedUser.id).order('created_at', { ascending: false });
   },
 
+  /* ── Live order sync — admin status/tracking updates land in this same
+     table, so subscribing here makes them appear in the dashboard the
+     instant they're saved, with no page reload needed. Returns an
+     unsubscribe function; safe no-op if Realtime is unavailable. ── */
+  subscribeOrders: function (onChange) {
+    if (!CONFIGURED || !_cachedUser) return function () {};
+    let channel = null;
+    getClient().then(function (sb) {
+      if (!sb) return;
+      channel = sb.channel('orders-' + _cachedUser.id)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: 'user_id=eq.' + _cachedUser.id }, onChange)
+        .subscribe();
+    }).catch(function () {});
+    return function () { if (channel) channel.unsubscribe(); };
+  },
+
   /* ── Addresses (CRUD) ── */
   getAddresses: async function () {
     if (!CONFIGURED || !_cachedUser) return { data: [], error: null };

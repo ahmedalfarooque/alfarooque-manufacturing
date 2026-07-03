@@ -333,28 +333,70 @@
   </div>
 </section>
 
-<!-- ═══ GALLERY PREVIEW ═══ -->
-<section class="section-pad" style="position:relative;z-index:1;background:rgba(255,255,255,0.015);border-top:1px solid var(--border-1);">
+<!-- ═══ GALLERY PREVIEW — معرض 3D دوراني ═══ -->
+<section id="gallery-preview" class="section-pad" style="position:relative;z-index:1;background:rgba(255,255,255,0.015);border-top:1px solid var(--border-1);">
   <div class="container">
     <div class="eyebrow reveal">أعمالنا</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;flex-wrap:wrap;gap:20px;">
       <h2 class="section-title reveal d1" style="margin-bottom:0;">مُصنَّع بـ<span class="accent">دقة</span></h2>
       <a href="/pages/gallery-ar.html" class="btn btn-ghost reveal d2">المعرض الكامل <span class="arrow">←</span></a>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;" class="reveal d1"><img src="/assets/images/Home/Home_01.jpg" alt="أعمال خشبية" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:1/1;" class="reveal d2"><img src="/assets/images/Home/Home_02.jpg" alt="تصنيع" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:3/4;" class="reveal d2"><img src="/assets/images/Gallery/gallery works/company-01.jpg" alt="المصنع" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;" class="reveal d3"><img src="/assets/images/Gallery/gallery works/gallery-10.jpg" alt="المنتجات" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:1/1;" class="reveal d3"><img src="/assets/images/Gallery/gallery works/gallery-15.jpg" alt="ورشة العمل" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div style="border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;" class="reveal d4"><img src="/assets/images/About/About_02.jpg" alt="الإنتاج" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+  </div>
+
+  <div id="gallery3d-wrap" class="gallery3d-wrap" aria-label="معرض صور دوراني ثلاثي الأبعاد" role="region">
+    <div class="gallery3d-stage">
+      <div class="gallery3d-ring">
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="أعمال خشبية">
+          <img src="/assets/images/Home/Home_01.jpg" alt="أعمال خشبية" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">أعمال خشبية</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="تصنيع">
+          <img src="/assets/images/Home/Home_02.jpg" alt="تصنيع" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">تصنيع</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="نجارة مخصصة">
+          <img src="/assets/images/Gallery/gallery works/gallery-03.jpg" alt="نجارة مخصصة" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">نجارة مخصصة</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="منظر المصنع">
+          <img src="/assets/images/Gallery/gallery works/company-01.jpg" alt="منظر المصنع" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">منظر المصنع</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="درابزين حديدي">
+          <img src="/assets/images/Gallery/gallery works/gallery-10.jpg" alt="درابزين حديدي" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">درابزين حديدي</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="ورشة العمل">
+          <img src="/assets/images/Gallery/gallery works/gallery-15.jpg" alt="ورشة العمل" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">ورشة العمل</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="كاونتر الاستقبال">
+          <img src="/assets/images/Gallery/gallery works/gallery-12.jpg" alt="كاونتر الاستقبال" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">كاونتر الاستقبال</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="بوابة حديدية">
+          <img src="/assets/images/Gallery/gallery works/gallery-16.jpg" alt="بوابة حديدية" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">بوابة حديدية</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="ستائر زجاجية">
+          <img src="/assets/images/Gallery/gallery works/company-04.jpg" alt="نظام ستائر زجاجية" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">ستائر زجاجية</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="الإنتاج">
+          <img src="/assets/images/About/About_02.jpg" alt="الإنتاج" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">الإنتاج</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="برجولة خشبية">
+          <img src="/assets/images/Gallery/gallery works/gallery-14.jpg" alt="برجولة خشبية" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">برجولة خشبية</span></div>
+        </div>
+        <div class="gallery3d-card" tabindex="0" role="button" aria-label="منصة صناعية">
+          <img src="/assets/images/Gallery/gallery works/gallery-20.jpg" alt="منصة صناعية" loading="lazy" decoding="async">
+          <div class="gallery3d-card-overlay"><span class="gallery3d-card-cap">منصة صناعية</span></div>
+        </div>
       </div>
     </div>
+    <p class="gallery3d-hint" aria-hidden="true">مرر للتصفح &nbsp;·&nbsp; انقر للعرض</p>
   </div>
 </section>
 
@@ -513,6 +555,7 @@
 </footer>
 
 <script src="/js/main.js"></script>
+<script src="/js/gallery3d.js"></script>
 
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>

@@ -60,9 +60,16 @@ const I18N = {
   country:['Country','الدولة'], city:['City','المدينة'],
   postal:['Postal Code','الرمز البريدي'], address:['Address','العنوان'],
   saveChanges:['Save Changes','حفظ التغييرات'],
-  addAddress:['Add Address','إضافة عنوان'],
-  addrLabel:['Label','التسمية'], addrPhone:['Phone','الهاتف'], addrLine:['Address','العنوان'],
+  addAddress:['Add Address','إضافة عنوان'], editAddress:['Edit Address','تعديل العنوان'],
+  addrLabel:['Label','التسمية'], addrPhone:['Phone','الهاتف'], addrLine:['Full Address','العنوان الكامل'],
   saveAddress:['Save Address','حفظ العنوان'], cancel:['Cancel','إلغاء'],
+  state:['State / Region','المنطقة'], searchLocation:['Search for a location…','ابحث عن موقع…'],
+  useCurrentLocation:['Use Current Location','استخدام الموقع الحالي'], locating:['Locating…','جارٍ تحديد الموقع…'],
+  locationNotFound:['Location not found. Try a different search.','لم يتم العثور على الموقع. جرّب بحثاً مختلفاً.'],
+  geoNotSupported:['Location services are not available on this device.','خدمات الموقع غير متاحة على هذا الجهاز.'],
+  setDefaultAddr:['Set as default address','تعيين كعنوان افتراضي'],
+  dragMarkerHint:['Drag the pin, search, or use your current location to set the address.','اسحب العلامة أو ابحث أو استخدم موقعك الحالي لتحديد العنوان.'],
+  mapLoadError:['Could not load the map. Please check your connection.','تعذّر تحميل الخريطة. يرجى التحقق من الاتصال.'],
   filterAll:['All','الكل'], filterPending:['Pending','قيد الانتظار'],
   filterConfirmed:['Confirmed','مؤكد'], filterProcessing:['Processing','جاري المعالجة'],
   filterCompleted:['Completed','مكتمل'], filterCancelled:['Cancelled','ملغي'],
@@ -102,7 +109,16 @@ const I18N = {
   noAddresses:['No saved addresses','لا توجد عناوين محفوظة'],
   noAddressesSub:['Add a shipping address to speed up checkout.','أضف عنوان شحن لتسريع إتمام الطلب.'],
   allCaughtUp:["You're all caught up",'أنت على اطلاع بكل شيء'],
-  noNotifSub:['No notifications yet. We'll notify you about orders and updates.','لا توجد إشعارات حتى الآن. سنُعلمك بالطلبات والتحديثات.'],
+  noNotifSub:['No notifications yet. We will notify you about orders and updates.','لا توجد إشعارات حتى الآن. سنُعلمك بالطلبات والتحديثات.'],
+  orderDetails:['Order Details','تفاصيل الطلب'], close:['Close','إغلاق'],
+  orderPlaced:['Order Placed','تم الطلب'], orderConfirmed:['Confirmed','تم التأكيد'],
+  orderProcessing:['Processing','قيد المعالجة'], orderReady:['Ready','جاهز'],
+  orderDelivered:['Delivered','تم التسليم'], orderCancelledTl:['Cancelled','ملغي'],
+  reorderAdded:['Items added to your cart ✓','تمت إضافة المنتجات إلى السلة ✓'],
+  invoiceSoon:['Invoice download coming soon.','تحميل الفاتورة قريباً.'],
+  prevPage:['Previous','السابق'], nextPage:['Next','التالي'],
+  pageOf:['Page {n} of {t}','صفحة {n} من {t}'],
+  buyNow:['Buy Now','اشترِ الآن'],
 };
 
 function applyI18n() {
@@ -237,7 +253,9 @@ function setAvatar(url, ini) {
 let CURRENT = { user: null, profile: null };
 let ALL_ORDERS = [];
 let currentFilter = 'all';
-let _editingAddrId = null;
+let ordersPage = 1;
+const ORDERS_PER_PAGE = 5;
+let _unsubscribeOrders = null;
 
 /* ── Hydrate ── */
 async function hydrate(user) {
@@ -335,6 +353,33 @@ async function hydrate(user) {
   loadWishlist();
   loadAddresses();
   loadNotifications();
+
+  /* Live sync: re-pull orders + stats the instant admin updates a status
+     or tracking field, with no reload needed. */
+  if (typeof _unsubscribeOrders === 'function') _unsubscribeOrders();
+  _unsubscribeOrders = AFAuth.subscribeOrders(function () {
+    loadOrders();
+    loadStats();
+  });
+  loadNotifPrefs();
+}
+
+/* ── Notification preference toggles (persisted locally) ── */
+function loadNotifPrefs() {
+  let prefs = { email: true, whatsapp: false, marketing: false };
+  try { prefs = Object.assign(prefs, JSON.parse(localStorage.getItem('afq-notif-prefs') || '{}')); } catch(e) {}
+  const em = $('#prefEmailNotif'), wa = $('#prefWhatsapp'), mk = $('#prefMarketing');
+  if (em) em.checked = !!prefs.email;
+  if (wa) wa.checked = !!prefs.whatsapp;
+  if (mk) mk.checked = !!prefs.marketing;
+}
+function saveNotifPrefs() {
+  const prefs = {
+    email: $('#prefEmailNotif') ? $('#prefEmailNotif').checked : true,
+    whatsapp: $('#prefWhatsapp') ? $('#prefWhatsapp').checked : false,
+    marketing: $('#prefMarketing') ? $('#prefMarketing').checked : false,
+  };
+  localStorage.setItem('afq-notif-prefs', JSON.stringify(prefs));
 }
 
 /* ── Profile completeness ── */
@@ -397,11 +442,23 @@ async function loadOrders() {
   loadRecentOrders();
 }
 
+const ORDER_STATUS_LIST = ['pending','confirmed','processing','completed','cancelled'];
+function stClass(s) { return ORDER_STATUS_LIST.includes(s) ? s : 'pending'; }
+function orderStatusLabel(st) {
+  const ST_LABEL = {
+    pending: t('Pending','قيد الانتظار'), confirmed: t('Confirmed','مؤكد'),
+    processing: t('Processing','جاري المعالجة'), completed: t('Completed','مكتمل'),
+    cancelled: t('Cancelled','ملغي')
+  };
+  return ST_LABEL[st] || st;
+}
+function findOrder(id) { return ALL_ORDERS.find(o => String(o.id) === String(id)); }
+
 function renderOrders() {
   const el = $('#ordersBody'); if (!el) return;
   const search = ($('#orderSearch') ? $('#orderSearch').value : '').toLowerCase().trim();
 
-  const rows = ALL_ORDERS.filter(o => {
+  const filtered = ALL_ORDERS.filter(o => {
     const st = (o.status || '').toLowerCase();
     const okFilter = currentFilter === 'all' || st === currentFilter;
     const term = (o.order_no || o.id || '') + ' ' + (o.status || '');
@@ -415,19 +472,18 @@ function renderOrders() {
       '/products', t('Start Shopping →','ابدأ التسوق →'));
     return;
   }
-  if (!rows.length) {
+  if (!filtered.length) {
     el.innerHTML = emptyState('🔍', t('No results found','لا توجد نتائج'),
       t('Try a different filter or search term.','جرّب فلتراً أو كلمة بحث مختلفة.'));
     return;
   }
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ORDERS_PER_PAGE));
+  if (ordersPage > totalPages) ordersPage = totalPages;
+  const start = (ordersPage - 1) * ORDERS_PER_PAGE;
+  const rows = filtered.slice(start, start + ORDERS_PER_PAGE);
+
   const money = n => 'SAR ' + Number(n || 0).toLocaleString('en-US');
-  const stClass = s => (['pending','confirmed','processing','completed','cancelled'].includes(s) ? s : 'pending');
-  const ST_LABEL = {
-    pending: t('Pending','قيد الانتظار'), confirmed: t('Confirmed','مؤكد'),
-    processing: t('Processing','جاري المعالجة'), completed: t('Completed','مكتمل'),
-    cancelled: t('Cancelled','ملغي')
-  };
 
   el.innerHTML = '<div class="acct-orders-list">' +
     rows.map(o => {
@@ -438,7 +494,7 @@ function renderOrders() {
       return '<div class="acct-order-card">' +
         '<div class="acct-order-card-head">' +
           '<span class="acct-order-card-num">' + num + '</span>' +
-          '<span class="acct-order-status acct-order-status--' + esc(stClass(st)) + '">' + esc(ST_LABEL[st] || o.status || 'Pending') + '</span>' +
+          '<span class="acct-order-status acct-order-status--' + esc(stClass(st)) + '">' + esc(orderStatusLabel(st) || o.status || 'Pending') + '</span>' +
         '</div>' +
         '<div class="acct-order-card-body">' +
           '<span class="acct-order-card-date">📅 ' + esc(date) + '</span>' +
@@ -446,12 +502,147 @@ function renderOrders() {
           '<span class="acct-order-card-total">' + money(o.grand_total) + '</span>' +
         '</div>' +
         '<div class="acct-order-card-actions">' +
-          '<button class="acct-order-btn">' + t('View Details','تفاصيل الطلب') + '</button>' +
-          '<button class="acct-order-btn">' + t('Invoice','الفاتورة') + '</button>' +
-          '<button class="acct-order-btn">' + t('Reorder','إعادة الطلب') + '</button>' +
+          '<button class="acct-order-btn" data-view="' + esc(o.id) + '">' + t('View Details','تفاصيل الطلب') + '</button>' +
+          '<button class="acct-order-btn" data-invoice="' + esc(o.id) + '">' + t('Invoice','الفاتورة') + '</button>' +
+          '<button class="acct-order-btn" data-reorder="' + esc(o.id) + '">' + t('Reorder','إعادة الطلب') + '</button>' +
         '</div>' +
       '</div>';
-    }).join('') + '</div>';
+    }).join('') + '</div>' +
+    (totalPages > 1 ?
+      '<div class="acct-pagination">' +
+        '<button class="acct-btn-ghost acct-page-btn" id="ordersPrev"' + (ordersPage <= 1 ? ' disabled' : '') + '>' + t('Previous','السابق') + '</button>' +
+        '<span class="acct-page-info">' + t('Page ','صفحة ') + ordersPage + t(' of ',' من ') + totalPages + '</span>' +
+        '<button class="acct-btn-ghost acct-page-btn" id="ordersNext"' + (ordersPage >= totalPages ? ' disabled' : '') + '>' + t('Next','التالي') + '</button>' +
+      '</div>' : '');
+
+  const prevBtn = $('#ordersPrev'), nextBtn = $('#ordersNext');
+  if (prevBtn) prevBtn.addEventListener('click', () => { ordersPage--; renderOrders(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { ordersPage++; renderOrders(); });
+
+  $$('[data-view]', el).forEach(b => b.addEventListener('click', () => openOrderModal(b.getAttribute('data-view'))));
+  $$('[data-invoice]', el).forEach(b => b.addEventListener('click', () => {
+    msg($('#profMsg') && !$('#profMsg').hidden ? $('#profMsg') : ensureToast(), t('Invoice download coming soon.','تحميل الفاتورة قريباً.'), 'success');
+  }));
+  $$('[data-reorder]', el).forEach(b => b.addEventListener('click', () => reorderOrder(b.getAttribute('data-reorder'))));
+}
+
+/* ── Toast (lightweight, reused for action feedback outside forms) ── */
+function ensureToast() {
+  let toast = $('#acctToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'acctToast';
+    toast.className = 'acct-toast';
+    document.body.appendChild(toast);
+  }
+  return toast;
+}
+function showToast(text) {
+  const toast = ensureToast();
+  toast.textContent = text;
+  toast.classList.add('is-visible');
+  clearTimeout(showToast._tid);
+  showToast._tid = setTimeout(() => toast.classList.remove('is-visible'), 2600);
+}
+
+/* ── Reorder: push order items back into the local cart ── */
+function reorderOrder(id) {
+  const o = findOrder(id); if (!o) return;
+  try {
+    const cart = JSON.parse(localStorage.getItem('afq-products-cart') || '[]');
+    (o.items || []).forEach(it => {
+      const existing = cart.find(c => c.id === it.id || c.product_id === it.id);
+      if (existing) existing.qty = (Number(existing.qty) || 1) + (Number(it.qty) || 1);
+      else cart.push({ id: it.id || it.product_id, nameEn: it.nameEn || it.name, nameAr: it.nameAr || it.name, price: it.price, qty: it.qty || 1 });
+    });
+    localStorage.setItem('afq-products-cart', JSON.stringify(cart));
+  } catch (e) {}
+  showToast(t('Items added to your cart ✓','تمت إضافة المنتجات إلى السلة ✓'));
+  loadCart();
+}
+
+/* ── Order details modal with visual timeline ── */
+const ORDER_TIMELINE_STEPS = [
+  { key:'placed',     icon:'📝' },
+  { key:'confirmed',  icon:'✅' },
+  { key:'processing', icon:'⚙️' },
+  { key:'ready',      icon:'📦' },
+  { key:'delivered',  icon:'🚚' },
+];
+function timelineStepIndex(status) {
+  const st = (status || 'pending').toLowerCase();
+  if (st === 'cancelled') return -1;
+  if (st === 'pending') return 0;
+  if (st === 'confirmed') return 1;
+  if (st === 'processing') return 2;
+  if (st === 'completed') return 4;
+  return 0;
+}
+function renderOrderTimeline(o) {
+  const st = (o.status || 'pending').toLowerCase();
+  if (st === 'cancelled') {
+    return '<div class="acct-timeline acct-timeline--cancelled">' +
+      '<span class="acct-timeline-cancel-ico">✗</span>' +
+      '<span>' + t('This order was cancelled.','تم إلغاء هذا الطلب.') + '</span>' +
+    '</div>';
+  }
+  const activeIdx = timelineStepIndex(st);
+  const LABELS = [
+    t('Order Placed','تم الطلب'), t('Confirmed','تم التأكيد'),
+    t('Processing','قيد المعالجة'), t('Ready','جاهز'), t('Delivered','تم التسليم')
+  ];
+  return '<div class="acct-timeline">' +
+    ORDER_TIMELINE_STEPS.map((step, i) => {
+      const state = i < activeIdx ? 'done' : (i === activeIdx ? 'active' : '');
+      return '<div class="acct-timeline-step is-' + (state || 'pending') + '">' +
+        '<span class="acct-timeline-dot">' + (i < activeIdx ? '✓' : step.icon) + '</span>' +
+        '<span class="acct-timeline-label">' + esc(LABELS[i]) + '</span>' +
+        (i < ORDER_TIMELINE_STEPS.length - 1 ? '<span class="acct-timeline-line ' + (i < activeIdx ? 'is-done' : '') + '"></span>' : '') +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+function openOrderModal(id) {
+  const o = findOrder(id); if (!o) return;
+  let modal = $('#acctOrderModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'acctOrderModal';
+    modal.className = 'acct-modal-overlay';
+    modal.innerHTML = '<div class="acct-modal"><button class="acct-modal-close" id="acctModalClose" aria-label="Close">&times;</button><div id="acctModalBody"></div></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeOrderModal(); });
+    $('#acctModalClose', modal).addEventListener('click', closeOrderModal);
+  }
+  const num = esc(o.order_no || '#' + String(o.id || '').slice(0,8).toUpperCase());
+  const date = new Date(o.created_at).toLocaleDateString(IS_AR ? 'ar-SA' : 'en-GB', {year:'numeric',month:'short',day:'numeric'});
+  const st = (o.status || 'pending').toLowerCase();
+  const money = n => 'SAR ' + Number(n || 0).toLocaleString('en-US');
+  const items = o.items || [];
+  $('#acctModalBody', modal).innerHTML =
+    '<h3 class="acct-modal-title">' + t('Order Details','تفاصيل الطلب') + ' — ' + num + '</h3>' +
+    '<div class="acct-modal-meta">' +
+      '<span class="acct-order-status acct-order-status--' + esc(stClass(st)) + '">' + esc(orderStatusLabel(st)) + '</span>' +
+      '<span>📅 ' + esc(date) + '</span>' +
+    '</div>' +
+    renderOrderTimeline(o) +
+    '<div class="acct-modal-items">' +
+      (items.length ? items.map(it => (
+        '<div class="acct-modal-item">' +
+          '<span>' + esc(IS_AR ? (it.nameAr || it.nameEn || it.name) : (it.nameEn || it.nameAr || it.name)) + '</span>' +
+          '<span>×' + esc(it.qty || 1) + '</span>' +
+          '<span>' + money(it.price ? it.price * (it.qty||1) : it.lineTotal) + '</span>' +
+        '</div>'
+      )).join('') : '<p style="color:var(--tx-3);font-size:13px">' + t('No item details available.','لا توجد تفاصيل منتجات متاحة.') + '</p>') +
+    '</div>' +
+    '<div class="acct-modal-total">' + t('Total','الإجمالي') + ': <strong>' + money(o.grand_total) + '</strong></div>';
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOrderModal() {
+  const modal = $('#acctOrderModal');
+  if (modal) modal.classList.remove('is-open');
+  document.body.style.overflow = '';
 }
 
 function loadRecentOrders() {
@@ -512,6 +703,7 @@ async function loadWishlist() {
         '<div class="acct-wish-cat">' + esc(cat) + '</div>' +
         (price ? '<div class="acct-wish-price">' + esc(price) + '</div>' : '') +
         '<div class="acct-wish-actions">' +
+          '<button class="acct-wish-buy" data-buy="' + esc(id) + '">' + t('Buy Now','اشترِ الآن') + '</button>' +
           '<a class="acct-wish-shop" href="/products">' + t('View in Shop →','عرض في المتجر →') + '</a>' +
           '<button class="acct-wish-rm" data-rm="' + esc(id) + '">' + t('Remove','حذف') + '</button>' +
         '</div>' +
@@ -529,81 +721,478 @@ async function loadWishlist() {
     } catch(e) {}
     loadWishlist(); loadStats();
   }));
+
+  $$('[data-buy]', el).forEach(b => b.addEventListener('click', () => {
+    const id = b.getAttribute('data-buy');
+    const m = wishMeta[String(id)] || {};
+    try {
+      const cart = JSON.parse(localStorage.getItem('afq-products-cart') || '[]');
+      const existing = cart.find(c => String(c.id) === String(id));
+      if (existing) existing.qty = (Number(existing.qty) || 1) + 1;
+      else cart.push({ id, nameEn: m.nameEn, nameAr: m.nameAr, price: m.price, qty: 1 });
+      localStorage.setItem('afq-products-cart', JSON.stringify(cart));
+    } catch (e) {}
+    location.href = '/products';
+  }));
 }
 
 /* ── Addresses ── */
+let ALL_ADDRESSES = [];
+
 async function loadAddresses() {
   const el = $('#addrBody'); if (!el) return;
   const res = await AFAuth.getAddresses();
   const rows = (res && res.data) || [];
+  ALL_ADDRESSES = rows;
   if (!rows.length) {
     el.innerHTML = emptyState('📍',
       t('No saved addresses','لا توجد عناوين محفوظة'),
       t('Add a shipping address to speed up checkout.','أضف عنوان شحن لتسريع إتمام الطلب.'));
     return;
   }
+  /* Backward-compat: if no row has is_default set, treat the first as default */
+  const hasDefault = rows.some(a => a.is_default);
   el.innerHTML = '<div class="acct-addr-grid">' +
-    rows.map((a, i) =>
-      '<div class="acct-addr-card">' +
+    rows.map((a, i) => {
+      const isDefault = hasDefault ? !!a.is_default : i === 0;
+      const line2 = [a.city, a.state, a.postal_code].filter(Boolean).join(', ');
+      return '<div class="acct-addr-card">' +
         '<div class="acct-addr-top">' +
           '<span class="acct-addr-label">' + esc(a.label || t('Address','عنوان')) + '</span>' +
-          (i === 0 ? '<span class="acct-addr-default">' + t('Default','افتراضي') + '</span>' : '') +
+          (isDefault ? '<span class="acct-addr-default">' + t('Default','افتراضي') + '</span>' : '') +
         '</div>' +
-        '<div class="acct-addr-text">' + [a.line1, a.city, a.country].filter(Boolean).map(esc).join(', ') + '</div>' +
+        '<div class="acct-addr-text">' + esc(a.line1 || '') + '</div>' +
+        (line2 ? '<div class="acct-addr-text acct-addr-text--sub">' + esc(line2) + (a.country ? ', ' + esc(a.country) : '') + '</div>' : (a.country ? '<div class="acct-addr-text acct-addr-text--sub">' + esc(a.country) + '</div>' : '')) +
         (a.phone ? '<div class="acct-addr-phone">' + esc(a.phone) + '</div>' : '') +
         '<div class="acct-addr-actions">' +
-          '<button class="acct-addr-edit" data-edit-id="' + esc(a.id) + '" data-edit-label="' + esc(a.label||'') + '" data-edit-phone="' + esc(a.phone||'') + '" data-edit-city="' + esc(a.city||'') + '" data-edit-country="' + esc(a.country||'') + '" data-edit-line1="' + esc(a.line1||'') + '">' + t('Edit','تعديل') + '</button>' +
+          (isDefault ? '' : '<button class="acct-addr-default-btn" data-set-default="' + esc(a.id) + '">' + t('Set as Default','تعيين كافتراضي') + '</button>') +
+          '<button class="acct-addr-edit" data-edit-id="' + esc(a.id) + '">' + t('Edit','تعديل') + '</button>' +
           '<button class="acct-addr-del" data-del="' + esc(a.id) + '">' + t('Delete','حذف') + '</button>' +
         '</div>' +
-      '</div>'
-    ).join('') + '</div>';
+      '</div>';
+    }).join('') + '</div>';
+
   $$('[data-del]', el).forEach(b => b.addEventListener('click', async () => {
-    if (_editingAddrId === b.getAttribute('data-del')) {
-      _editingAddrId = null; $('#addrForm').reset(); $('#addrForm').hidden = true;
-    }
     await AFAuth.deleteAddress(b.getAttribute('data-del'));
     loadAddresses(); loadStats();
   }));
-  /* Edit: pre-fill the add/edit form with existing address data */
   $$('[data-edit-id]', el).forEach(b => b.addEventListener('click', () => {
-    _editingAddrId = b.getAttribute('data-edit-id');
-    const f = $('#addrForm'); if (!f) return;
-    const lbl = f.elements['label'], ph = f.elements['phone'],
-          ci  = f.elements['city'],  co = f.elements['country'], li = f.elements['line1'];
-    if (lbl) lbl.value = b.getAttribute('data-edit-label') || '';
-    if (ph)  ph.value  = b.getAttribute('data-edit-phone') || '';
-    if (ci)  ci.value  = b.getAttribute('data-edit-city') || '';
-    if (co)  co.value  = b.getAttribute('data-edit-country') || '';
-    if (li)  li.value  = b.getAttribute('data-edit-line1') || '';
-    f.hidden = false;
-    const submitBtn = f.querySelector('button[type=submit]');
-    if (submitBtn) submitBtn.textContent = t('Update Address','تحديث العنوان');
-    f.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const addr = ALL_ADDRESSES.find(a => String(a.id) === b.getAttribute('data-edit-id'));
+    if (addr) addrModal.open(addr);
+  }));
+  $$('[data-set-default]', el).forEach(b => b.addEventListener('click', async () => {
+    const id = b.getAttribute('data-set-default');
+    await setDefaultAddress(id);
   }));
 }
 
+/* ── Set one address as default, unsetting all others ── */
+async function setDefaultAddress(id) {
+  await Promise.all(ALL_ADDRESSES.map(a =>
+    AFAuth.updateAddress(a.id, { is_default: String(a.id) === String(id) })
+  ));
+  loadAddresses();
+}
+
+/* ── Live map address picker ──────────────────────────────────────────
+   Leaflet (map/marker) + OpenStreetMap tiles + Nominatim (search &
+   reverse geocoding) — no API key / billing account required. ── */
+const NOMINATIM = 'https://nominatim.openstreetmap.org';
+const DEFAULT_CENTER = [21.4858, 39.1925]; // Jeddah, Saudi Arabia
+let _leafletLoading = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (_leafletLoading) return _leafletLoading;
+  _leafletLoading = new Promise((resolve, reject) => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('leaflet-load-failed'));
+    document.body.appendChild(script);
+  });
+  return _leafletLoading;
+}
+
+function reverseGeocodeFields(addr) {
+  const a = addr || {};
+  return {
+    line1: addr.display_name || '',
+    city: a.city || a.town || a.village || a.municipality || a.county || '',
+    state: a.state || a.region || '',
+    country: a.country || '',
+    postal_code: a.postcode || '',
+  };
+}
+
+const addrModal = {
+  el: null, map: null, marker: null, editingId: null, _searchTimer: null,
+
+  ensureDom: function () {
+    if (this.el) return this.el;
+    const el = document.createElement('div');
+    el.className = 'acct-modal-overlay';
+    el.id = 'acctAddrModal';
+    el.innerHTML =
+      '<div class="acct-modal acct-modal--wide">' +
+        '<button class="acct-modal-close" id="acctAddrModalClose" aria-label="Close">&times;</button>' +
+        '<h3 class="acct-modal-title" id="acctAddrModalTitle">' + t('Add Address','إضافة عنوان') + '</h3>' +
+        '<div class="af-msg" id="acctAddrMsg" hidden></div>' +
+        '<div class="acct-map-search-row">' +
+          '<div class="acct-map-search-wrap">' +
+            '<input class="af-input" id="acctMapSearch" type="text" placeholder="' + t('Search for a location…','ابحث عن موقع…') + '" autocomplete="off">' +
+            '<div class="acct-map-suggestions" id="acctMapSuggestions" hidden></div>' +
+          '</div>' +
+          '<button type="button" class="acct-btn-secondary acct-map-locate" id="acctMapLocate">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' +
+            '<span>' + t('Use Current Location','استخدام الموقع الحالي') + '</span>' +
+          '</button>' +
+        '</div>' +
+        '<div class="acct-map-container" id="acctMapContainer"></div>' +
+        '<p class="acct-map-hint">' + t('Drag the pin, search, or use your current location to set the address.','اسحب العلامة أو ابحث أو استخدم موقعك الحالي لتحديد العنوان.') + '</p>' +
+        '<form id="acctAddrForm" class="acct-form">' +
+          '<div class="acct-form-grid">' +
+            '<div class="af-field"><label class="af-label">' + t('Label','التسمية') + '</label><input class="af-input" name="label" placeholder="Home / Office"></div>' +
+            '<div class="af-field"><label class="af-label">' + t('Phone','الهاتف') + '</label><input class="af-input" name="phone" type="tel"></div>' +
+          '</div>' +
+          '<div class="af-field"><label class="af-label">' + t('Full Address','العنوان الكامل') + '</label><textarea class="af-input acct-textarea" name="line1" required></textarea></div>' +
+          '<div class="acct-form-grid acct-form-grid--3">' +
+            '<div class="af-field"><label class="af-label">' + t('City','المدينة') + '</label><input class="af-input" name="city"></div>' +
+            '<div class="af-field"><label class="af-label">' + t('State / Region','المنطقة') + '</label><input class="af-input" name="state"></div>' +
+            '<div class="af-field"><label class="af-label">' + t('Postal Code','الرمز البريدي') + '</label><input class="af-input" name="postal_code"></div>' +
+          '</div>' +
+          '<div class="af-field"><label class="af-label">' + t('Country','الدولة') + '</label><input class="af-input" name="country"></div>' +
+          '<label class="af-check acct-map-default-check"><input type="checkbox" name="is_default"><span>' + t('Set as default address','تعيين كعنوان افتراضي') + '</span></label>' +
+          '<div class="acct-form-actions">' +
+            '<button class="acct-btn-primary" type="submit">' + t('Save Address','حفظ العنوان') + '</button>' +
+            '<button class="acct-btn-ghost" type="button" id="acctAddrCancel">' + t('Cancel','إلغاء') + '</button>' +
+          '</div>' +
+        '</form>' +
+      '</div>';
+    document.body.appendChild(el);
+    this.el = el;
+    el.addEventListener('click', e => { if (e.target === el) this.close(); });
+    $('#acctAddrModalClose', el).addEventListener('click', () => this.close());
+    $('#acctAddrCancel', el).addEventListener('click', () => this.close());
+    $('#acctMapLocate', el).addEventListener('click', () => this.useCurrentLocation());
+    $('#acctMapSearch', el).addEventListener('input', e => this.onSearchInput(e.target.value));
+    $('#acctAddrForm', el).addEventListener('submit', e => this.save(e));
+    return el;
+  },
+
+  fillFields: function (fields) {
+    const f = $('#acctAddrForm');
+    if (!f) return;
+    if (fields.line1 != null) f.line1.value = fields.line1;
+    if (fields.city != null) f.city.value = fields.city;
+    if (fields.state != null) f.state.value = fields.state;
+    if (fields.country != null) f.country.value = fields.country;
+    if (fields.postal_code != null) f.postal_code.value = fields.postal_code;
+  },
+
+  placeMarker: function (lat, lng) {
+    if (!this.map) return;
+    if (this.marker) { this.marker.setLatLng([lat, lng]); }
+    else {
+      this.marker = window.L.marker([lat, lng], { draggable: true }).addTo(this.map);
+      this.marker.on('dragend', () => {
+        const p = this.marker.getLatLng();
+        this.reverseGeocode(p.lat, p.lng);
+      });
+    }
+    this.lat = lat; this.lng = lng;
+  },
+
+  reverseGeocode: async function (lat, lng) {
+    this.placeMarker(lat, lng);
+    try {
+      const res = await fetch(NOMINATIM + '/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng + '&addressdetails=1');
+      const data = await res.json();
+      this.fillFields(reverseGeocodeFields(Object.assign({ display_name: data.display_name }, data.address)));
+    } catch (e) { /* keep the coordinates even if reverse geocoding fails */ }
+  },
+
+  onSearchInput: function (q) {
+    clearTimeout(this._searchTimer);
+    const box = $('#acctMapSuggestions');
+    if (!q || q.trim().length < 3) { if (box) { box.hidden = true; box.innerHTML = ''; } return; }
+    this._searchTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(NOMINATIM + '/search?format=jsonv2&addressdetails=1&limit=5&q=' + encodeURIComponent(q));
+        const results = await res.json();
+        if (!box) return;
+        if (!results.length) {
+          box.innerHTML = '<div class="acct-map-suggestion acct-map-suggestion--empty">' + t('Location not found. Try a different search.','لم يتم العثور على الموقع. جرّب بحثاً مختلفاً.') + '</div>';
+          box.hidden = false;
+          return;
+        }
+        box.innerHTML = results.map((r, i) => '<button type="button" class="acct-map-suggestion" data-idx="' + i + '">' + esc(r.display_name) + '</button>').join('');
+        box.hidden = false;
+        $$('.acct-map-suggestion[data-idx]', box).forEach(btn => btn.addEventListener('click', () => {
+          const r = results[Number(btn.getAttribute('data-idx'))];
+          const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+          this.map.setView([lat, lng], 16);
+          this.placeMarker(lat, lng);
+          this.fillFields(reverseGeocodeFields(Object.assign({ display_name: r.display_name }, r.address)));
+          box.hidden = true;
+          $('#acctMapSearch').value = r.display_name;
+        }));
+      } catch (e) { /* non-fatal — user can still drag the pin */ }
+    }, 400);
+  },
+
+  useCurrentLocation: function () {
+    if (!navigator.geolocation) return msg($('#acctAddrMsg'), t('Location services are not available on this device.','خدمات الموقع غير متاحة على هذا الجهاز.'), 'error');
+    const btn = $('#acctMapLocate');
+    if (btn) btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(pos => {
+      if (btn) btn.disabled = false;
+      const { latitude, longitude } = pos.coords;
+      this.map.setView([latitude, longitude], 16);
+      this.reverseGeocode(latitude, longitude);
+    }, () => {
+      if (btn) btn.disabled = false;
+      msg($('#acctAddrMsg'), t('Location services are not available on this device.','خدمات الموقع غير متاحة على هذا الجهاز.'), 'error');
+    }, { enableHighAccuracy: true, timeout: 8000 });
+  },
+
+  open: async function (existing) {
+    this.ensureDom();
+    this.editingId = existing ? existing.id : null;
+    $('#acctAddrModalTitle').textContent = existing ? t('Edit Address','تعديل العنوان') : t('Add Address','إضافة عنوان');
+    const f = $('#acctAddrForm');
+    f.reset();
+    $('#acctMapSearch').value = '';
+    const suggestions = $('#acctMapSuggestions'); if (suggestions) { suggestions.hidden = true; suggestions.innerHTML = ''; }
+    const addrMsgEl = $('#acctAddrMsg'); if (addrMsgEl) addrMsgEl.hidden = true;
+    if (existing) {
+      f.label.value = existing.label || '';
+      f.phone.value = existing.phone || '';
+      f.line1.value = existing.line1 || '';
+      f.city.value = existing.city || '';
+      f.state.value = existing.state || '';
+      f.country.value = existing.country || '';
+      f.postal_code.value = existing.postal_code || '';
+      f.is_default.checked = !!existing.is_default;
+    }
+    this.el.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+
+    try {
+      await loadLeaflet();
+    } catch (e) {
+      msg($('#acctAddrMsg'), t('Could not load the map. Please check your connection.','تعذّر تحميل الخريطة. يرجى التحقق من الاتصال.'), 'error');
+      return;
+    }
+    const center = (existing && existing.lat && existing.lng) ? [existing.lat, existing.lng] : DEFAULT_CENTER;
+    if (!this.map) {
+      this.map = window.L.map('acctMapContainer').setView(center, existing && existing.lat ? 16 : 12);
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
+      }).addTo(this.map);
+      this.map.on('click', e => this.reverseGeocode(e.latlng.lat, e.latlng.lng));
+    } else {
+      this.map.setView(center, existing && existing.lat ? 16 : 12);
+      setTimeout(() => this.map.invalidateSize(), 50);
+    }
+    if (existing && existing.lat && existing.lng) this.placeMarker(existing.lat, existing.lng);
+    else if (this.marker) { this.map.removeLayer(this.marker); this.marker = null; this.lat = this.lng = null; }
+    setTimeout(() => this.map.invalidateSize(), 80);
+  },
+
+  close: function () {
+    if (this.el) this.el.classList.remove('is-open');
+    document.body.style.overflow = '';
+  },
+
+  save: async function (e) {
+    e.preventDefault();
+    const f = e.currentTarget;
+    const base = {
+      label: f.label.value.trim(), phone: f.phone.value.trim(),
+      line1: f.line1.value.trim(), city: f.city.value.trim(), country: f.country.value.trim(),
+      is_default: !!f.is_default.checked,
+    };
+    if (!base.line1) return msg($('#acctAddrMsg'), t('Please enter the address.','يرجى إدخال العنوان.'), 'error');
+    const extra = {
+      state: f.state.value.trim() || null,
+      postal_code: f.postal_code.value.trim() || null,
+      lat: this.lat != null ? this.lat : null,
+      lng: this.lng != null ? this.lng : null,
+    };
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true;
+    const full = Object.assign({}, base, extra);
+    let res = this.editingId ? await AFAuth.updateAddress(this.editingId, full) : await AFAuth.addAddress(full);
+    if (res && res.error) {
+      /* Extended columns (state/postal_code/lat/lng) may not exist yet — retry with the base fields only */
+      res = this.editingId ? await AFAuth.updateAddress(this.editingId, base) : await AFAuth.addAddress(base);
+    }
+    btn.disabled = false;
+    if (res && res.error) return msg($('#acctAddrMsg'), res.error.message, 'error');
+    if (base.is_default) {
+      /* Unset default on every other address */
+      const savedId = this.editingId || (res && res.data && res.data.id);
+      await Promise.all(ALL_ADDRESSES.filter(a => String(a.id) !== String(savedId))
+        .map(a => AFAuth.updateAddress(a.id, { is_default: false })));
+    }
+    this.close();
+    loadAddresses(); loadStats();
+  },
+};
+
 /* ── Notifications ── */
+function baseNotifications() {
+  const list = [
+    { id:'welcome', ico:'👋', title:t('Welcome to AL FAROOQUE','مرحباً في الفاروقي'),
+      sub:t('Your account is set up and ready to use.','حسابك جاهز للاستخدام.'),
+      desc:t('Your AL FAROOQUE account has been created and is ready to use. Explore your dashboard to track orders, manage your wishlist, and update your profile.','تم إنشاء حسابك في الفاروقي وهو جاهز للاستخدام. تصفّح لوحة التحكم لتتبع طلباتك وإدارة قائمة رغباتك وتحديث ملفك الشخصي.'),
+      ts: 0, time:t('Just now','الآن') },
+    { id:'notif-on', ico:'🔔', title:t('Notifications enabled','الإشعارات مفعّلة'),
+      sub:t('We will notify you about order updates, quotes, and more.','سنُعلمك بتحديثات الطلبات والعروض والمزيد.'),
+      desc:t('You will receive notifications here whenever your order status changes, a quote is answered, or your account is updated.','ستصلك إشعارات هنا عند تغيّر حالة طلبك أو الرد على عرض سعر أو تحديث حسابك.'),
+      ts: 0, time:t('Today','اليوم') },
+  ];
+  ALL_ORDERS.slice(0, 5).forEach(o => {
+    const num = o.order_no || '#' + String(o.id || '').slice(0,8).toUpperCase();
+    const st = (o.status || 'pending').toLowerCase();
+    const ts = o.created_at ? new Date(o.created_at).getTime() : 0;
+    list.push({
+      id: 'order-' + o.id, ico:'📦',
+      title: t('Order ' + num, 'الطلب ' + num),
+      sub: t('Status: ' + orderStatusLabel(st), 'الحالة: ' + orderStatusLabel(st)),
+      desc: t('Your order ' + num + ' is currently ' + orderStatusLabel(st) + '. Total: SAR ' + Number(o.grand_total || 0).toLocaleString('en-US') + '.',
+              'طلبك ' + num + ' حالياً ' + orderStatusLabel(st) + '. الإجمالي: ' + Number(o.grand_total || 0).toLocaleString('en-US') + ' ريال.'),
+      ts: ts,
+      time: o.created_at ? new Date(o.created_at).toLocaleString(IS_AR ? 'ar-SA' : 'en-GB', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
+      orderId: o.id,
+      action: t('View Order','عرض الطلب'),
+    });
+  });
+  return list.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+}
+function getReadNotifIds() {
+  try { return JSON.parse(localStorage.getItem('afq-notif-read') || '[]'); } catch(e) { return []; }
+}
+function setReadNotifIds(ids) { localStorage.setItem('afq-notif-read', JSON.stringify(ids)); }
+function getDeletedNotifIds() {
+  try { return JSON.parse(localStorage.getItem('afq-notif-deleted') || '[]'); } catch(e) { return []; }
+}
+function setDeletedNotifIds(ids) { localStorage.setItem('afq-notif-deleted', JSON.stringify(ids)); }
+function markNotifRead(id) {
+  const read = getReadNotifIds();
+  if (read.indexOf(id) === -1) { read.push(id); setReadNotifIds(read); }
+  updateNotifBadge();
+}
+function visibleNotifications() {
+  const deleted = getDeletedNotifIds();
+  return baseNotifications().filter(n => deleted.indexOf(n.id) === -1);
+}
+
+function updateNotifBadge() {
+  const items = visibleNotifications();
+  const read = getReadNotifIds();
+  const unread = items.filter(n => read.indexOf(n.id) === -1).length;
+  const hdr = $('#notifBadgeHdr'), menu = $('#notifBadgeMenu');
+  [hdr, menu].forEach(b => { if (b) { b.hidden = unread === 0; b.textContent = unread > 9 ? '9+' : String(unread); } });
+  const markAllBtn = $('#markAllReadBtn');
+  if (markAllBtn) markAllBtn.hidden = unread === 0;
+}
+
 function loadNotifications() {
   const el = $('#notifBody'); if (!el) return;
-  /* Show professional empty state — no live notifications table in schema */
-  el.innerHTML = '<div class="acct-notif is-read">' +
-    '<div class="acct-notif-dot-col"><span class="acct-notif-dot"></span></div>' +
-    '<div class="acct-notif-ico">👋</div>' +
-    '<div class="acct-notif-body">' +
-      '<div class="acct-notif-title">' + t('Welcome to AL FAROOQUE','مرحباً في الفاروقي') + '</div>' +
-      '<div class="acct-notif-sub">' + t('Your account is set up and ready to use.','حسابك جاهز للاستخدام.') + '</div>' +
-      '<div class="acct-notif-time">' + t('Just now','الآن') + '</div>' +
-    '</div>' +
-  '</div>' +
-  '<div class="acct-notif is-read">' +
-    '<div class="acct-notif-dot-col"><span class="acct-notif-dot"></span></div>' +
-    '<div class="acct-notif-ico">🔔</div>' +
-    '<div class="acct-notif-body">' +
-      '<div class="acct-notif-title">' + t('Notifications enabled','الإشعارات مفعّلة') + '</div>' +
-      '<div class="acct-notif-sub">' + t("We'll notify you about order updates, quotes, and more.","سنُعلمك بتحديثات الطلبات والعروض والمزيد.") + '</div>' +
-      '<div class="acct-notif-time">' + t('Today','اليوم') + '</div>' +
-    '</div>' +
-  '</div>';
+  const items = visibleNotifications();
+  const read = getReadNotifIds();
+  const unreadCount = items.filter(n => read.indexOf(n.id) === -1).length;
+
+  if (!items.length) {
+    el.innerHTML = emptyState('🔔', t('No notifications','لا توجد إشعارات'),
+      t('You have no notifications right now.','لا توجد إشعارات لديك حالياً.'));
+    updateNotifBadge();
+    return;
+  }
+
+  const caughtUpBanner = unreadCount === 0
+    ? '<div class="acct-notif-caughtup"><span class="acct-caughtup-ico">✓</span><span>' + t("You're all caught up",'أنت على اطلاع بكل شيء') + '</span></div>'
+    : '';
+
+  el.innerHTML = caughtUpBanner + items.map(n => {
+    const isRead = read.indexOf(n.id) !== -1;
+    return '<div class="acct-notif' + (isRead ? ' is-read' : ' is-unread') + '" data-notif="' + esc(n.id) + '" tabindex="0" role="button">' +
+      '<div class="acct-notif-dot-col">' + (isRead ? '' : '<span class="acct-notif-dot"></span>') + '</div>' +
+      '<div class="acct-notif-ico">' + n.ico + '</div>' +
+      '<div class="acct-notif-body">' +
+        '<div class="acct-notif-title">' + esc(n.title) + '</div>' +
+        '<div class="acct-notif-sub">' + esc(n.sub) + '</div>' +
+        '<div class="acct-notif-time">' + esc(n.time) + '</div>' +
+      '</div>' +
+      '<button class="acct-notif-del" data-notif-del="' + esc(n.id) + '" aria-label="' + t('Delete','حذف') + '">&times;</button>' +
+    '</div>';
+  }).join('');
+  updateNotifBadge();
+
+  $$('.acct-notif[data-notif]', el).forEach(card => {
+    const open = () => openNotifModal(card.getAttribute('data-notif'));
+    card.addEventListener('click', e => { if (!e.target.closest('[data-notif-del]')) open(); });
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+  $$('[data-notif-del]', el).forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = b.getAttribute('data-notif-del');
+    const deleted = getDeletedNotifIds();
+    if (deleted.indexOf(id) === -1) { deleted.push(id); setDeletedNotifIds(deleted); }
+    loadNotifications();
+  }));
+}
+
+/* ── Notification detail modal (reuses the generic .acct-modal styles) ── */
+function openNotifModal(id) {
+  const n = visibleNotifications().find(x => x.id === id); if (!n) return;
+  markNotifRead(id);
+  $$('.acct-notif[data-notif="' + id + '"]').forEach(card => {
+    card.classList.remove('is-unread'); card.classList.add('is-read');
+    const dot = $('.acct-notif-dot-col', card); if (dot) dot.innerHTML = '';
+  });
+  const banner = $('#notifBody .acct-notif-caughtup');
+  const stillUnread = visibleNotifications().some(x => getReadNotifIds().indexOf(x.id) === -1);
+  if (!stillUnread && !banner) loadNotifications(); // re-render to show "all caught up" + hide mark-all-read
+
+  let modal = $('#acctNotifModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'acctNotifModal';
+    modal.className = 'acct-modal-overlay';
+    modal.innerHTML = '<div class="acct-modal"><button class="acct-modal-close" id="acctNotifModalClose" aria-label="Close">&times;</button><div id="acctNotifModalBody"></div></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeNotifModal(); });
+    $('#acctNotifModalClose', modal).addEventListener('click', closeNotifModal);
+  }
+  $('#acctNotifModalBody', modal).innerHTML =
+    '<div class="acct-notif-modal-ico">' + n.ico + '</div>' +
+    '<h3 class="acct-modal-title">' + esc(n.title) + '</h3>' +
+    '<p class="acct-notif-modal-time">' + esc(n.time) + '</p>' +
+    '<p class="acct-notif-modal-desc">' + esc(n.desc || n.sub) + '</p>' +
+    '<div class="acct-modal-actions">' +
+      (n.orderId ? '<button class="acct-btn-primary" id="acctNotifAction">' + esc(n.action || t('View','عرض')) + '</button>' : '') +
+      '<button class="acct-btn-ghost" id="acctNotifDelete">' + t('Delete Notification','حذف الإشعار') + '</button>' +
+    '</div>';
+  const actionBtn = $('#acctNotifAction', modal);
+  if (actionBtn) actionBtn.addEventListener('click', () => { closeNotifModal(); goTo('orders'); });
+  $('#acctNotifDelete', modal).addEventListener('click', () => {
+    const deleted = getDeletedNotifIds();
+    if (deleted.indexOf(id) === -1) { deleted.push(id); setDeletedNotifIds(deleted); }
+    closeNotifModal();
+    loadNotifications();
+  });
+  modal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+function closeNotifModal() {
+  const modal = $('#acctNotifModal');
+  if (modal) modal.classList.remove('is-open');
+  document.body.style.overflow = '';
 }
 
 /* ── Password strength ── */
@@ -674,6 +1263,13 @@ function wire() {
     computeCompleteness();
   });
 
+  /* Cancel profile edits */
+  const profCancel = $('#profCancel');
+  if (profCancel) profCancel.addEventListener('click', () => { if (CURRENT.user) hydrate(CURRENT.user); });
+
+  /* Notification preference toggles */
+  $$('#prefEmailNotif, #prefWhatsapp, #prefMarketing').forEach(inp => inp && inp.addEventListener('change', saveNotifPrefs));
+
   /* Avatar upload */
   const profPhotoEl = $('#profPhoto');
   if (profPhotoEl) profPhotoEl.addEventListener('change', async function () {
@@ -738,47 +1334,13 @@ function wire() {
   const pwNew = $('#pwNew');
   if (pwNew) pwNew.addEventListener('input', function () { checkStrength(this.value); });
 
-  /* Address form show/hide + submit */
+  /* Add Address → opens the live map picker modal */
   const addrAddBtn = $('#addrAddBtn');
-  if (addrAddBtn) addrAddBtn.addEventListener('click', () => {
-    _editingAddrId = null;
-    const f = $('#addrForm'); if (!f) return;
-    f.reset(); f.hidden = !f.hidden;
-    const submitBtn = f.querySelector('button[type=submit]');
-    if (submitBtn) submitBtn.textContent = t('Save Address','حفظ العنوان');
-  });
-  const addrCancel = $('#addrCancel');
-  if (addrCancel) addrCancel.addEventListener('click', () => {
-    _editingAddrId = null;
-    const f = $('#addrForm'); if (f) { f.reset(); f.hidden = true; }
-    const submitBtn = f && f.querySelector('button[type=submit]');
-    if (submitBtn) submitBtn.textContent = t('Save Address','حفظ العنوان');
-  });
-  const addrForm = $('#addrForm');
-  if (addrForm) addrForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const f = e.currentTarget;
-    const a = { label: f.label.value.trim(), phone: f.phone.value.trim(), city: f.city.value.trim(), country: f.country.value.trim(), line1: f.line1.value.trim() };
-    if (!a.line1) return msg($('#addrMsg'), t('Please enter the address.','يرجى إدخال العنوان.'));
-    const btn = f.querySelector('button[type=submit]'); btn.disabled = true;
-    let res;
-    if (_editingAddrId) {
-      res = await AFAuth.updateAddress(_editingAddrId, a);
-    } else {
-      res = await AFAuth.addAddress(a);
-    }
-    btn.disabled = false;
-    if (res && res.error) return msg($('#addrMsg'), res.error.message, 'error');
-    _editingAddrId = null;
-    f.reset(); btn.textContent = t('Save Address','حفظ العنوان');
-    const addrMsg = $('#addrMsg'); if (addrMsg) addrMsg.hidden = true;
-    f.hidden = true;
-    loadAddresses(); loadStats();
-  });
+  if (addrAddBtn) addrAddBtn.addEventListener('click', () => addrModal.open(null));
 
   /* Orders search */
   const orderSearch = $('#orderSearch');
-  if (orderSearch) orderSearch.addEventListener('input', renderOrders);
+  if (orderSearch) orderSearch.addEventListener('input', () => { ordersPage = 1; renderOrders(); });
 
   /* Orders filter chips */
   $$('.acct-chip', $('#orderFilterChips')).forEach(chip => {
@@ -786,6 +1348,7 @@ function wire() {
       $$('.acct-chip', $('#orderFilterChips')).forEach(c => c.classList.remove('is-active'));
       this.classList.add('is-active');
       currentFilter = this.getAttribute('data-filter') || 'all';
+      ordersPage = 1;
       renderOrders();
     });
   });
@@ -793,8 +1356,8 @@ function wire() {
   /* Mark all notifications read */
   const markAllBtn = $('#markAllReadBtn');
   if (markAllBtn) markAllBtn.addEventListener('click', () => {
-    $$('.acct-notif').forEach(n => n.classList.add('is-read'));
-    $$('.acct-notif-dot').forEach(d => { d.style.background = 'var(--bd-2)'; });
+    setReadNotifIds(visibleNotifications().map(n => n.id));
+    loadNotifications();
   });
 
   /* Theme toggle in settings */
@@ -835,11 +1398,25 @@ function wire() {
   }));
 }
 
-/* ── Boot ── */
+/* ── Boot ──
+   The Dashboard (overview) must always be the landing tab the first time
+   the dashboard is opened in a browser session — regardless of what hash
+   the user arrived with (a stale bookmark, an old link, etc.). After that
+   first landing, normal hash-based navigation/deep-linking takes over. */
 applyI18n();
 wire();
 window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '')));
 AFAuth.onChange(user => {
   showGate(!!user);
-  if (user) { hydrate(user); showSection(location.hash.replace('#', '') || 'overview'); }
+  if (user) {
+    hydrate(user);
+    let sec = location.hash.replace('#', '') || 'overview';
+    try {
+      if (!sessionStorage.getItem('af-dashboard-opened')) {
+        sessionStorage.setItem('af-dashboard-opened', '1');
+        sec = 'overview';
+      }
+    } catch (_) {}
+    showSection(sec);
+  }
 });
