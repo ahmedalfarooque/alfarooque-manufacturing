@@ -1089,6 +1089,9 @@ input,textarea,select{font-family:inherit;}
   transition:box-shadow 0.35s ease;
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
+  /* Permanent soft shadow beneath/behind every card so the whole ring
+     reads as floating panels in 3D space, not flat cut-outs. */
+  box-shadow:0 22px 46px -14px rgba(0,0,0,0.55),0 8px 18px rgba(0,0,0,0.35);
 }
 .gallery3d-card:focus-visible{
   outline:2px solid var(--teal-200,#a5eef8);outline-offset:4px;
@@ -1105,17 +1108,6 @@ input,textarea,select{font-family:inherit;}
 }
 .gallery3d-card:hover{
   box-shadow:0 24px 60px rgba(34,196,222,0.28),0 8px 24px rgba(0,0,0,0.6);
-}
-.gallery3d-card-overlay{
-  position:absolute;bottom:0;left:0;right:0;
-  padding:22px 14px 13px;
-  background:linear-gradient(to top,rgba(9,12,18,0.9),transparent);
-  opacity:0;transition:opacity 0.3s ease;
-}
-.gallery3d-card:hover .gallery3d-card-overlay{opacity:1;}
-.gallery3d-card-cap{
-  font-size:12px;font-weight:500;
-  color:rgba(255,255,255,0.95);letter-spacing:0.03em;
 }
 .gallery3d-hint{
   font-size:10px;color:var(--grey-600,#4b5563);

@@ -180,7 +180,10 @@
         if (card === hovered) return;
         var facing = ((angle + (360 / N) * i) % 360 + 360) % 360;
         var c = Math.cos(facing * Math.PI / 180);
-        card.style.opacity = (0.35 + (c + 1) / 2 * 0.65).toFixed(3);
+        /* Front-facing card = fully opaque; the card directly behind the
+           ring's center fades to ~20% so the full circular arrangement
+           stays visible through it instead of disappearing. */
+        card.style.opacity = (0.2 + (c + 1) / 2 * 0.8).toFixed(3);
       });
 
       rafId = requestAnimationFrame(tick);
