@@ -193,6 +193,11 @@ button, input, select, textarea { font-family: inherit; }
 .ad-table td { padding: 12px 14px; border-bottom: 1px solid var(--ad-border); color: var(--ad-text-70); vertical-align: middle; }
 .ad-table tr:last-child td { border-bottom: none; }
 .ad-table tr:hover td { background: rgba(255,255,255,0.02); }
+/* Whole-row click target (Customers table) — buttons inside still work
+   independently, handled in JS by checking the click target first. */
+.ad-table tr[data-customer-row] { cursor: pointer; }
+.ad-table tr[data-customer-row]:hover td { background: var(--ad-card-2); }
+.ad-table tr[data-customer-row]:focus-visible { outline: 2px solid var(--ad-teal-2); outline-offset: -2px; }
 .ad-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; white-space: nowrap; }
 .ad-badge--pending, .ad-badge--new { background: rgba(251,191,36,0.14); color: var(--ad-amber); }
 .ad-badge--confirmed, .ad-badge--contacted { background: rgba(96,165,250,0.14); color: var(--ad-blue); }
@@ -208,7 +213,11 @@ button, input, select, textarea { font-family: inherit; }
 .ad-btn-sm--primary { background: linear-gradient(100deg, var(--ad-teal), var(--ad-teal-2)); color: #06181c; border-color: transparent; }
 .ad-btn-sm--danger { border-color: rgba(248,113,113,0.3); color: var(--ad-red); }
 .ad-btn-sm--danger:hover { background: rgba(248,113,113,0.1); }
-.ad-actions-row { display: flex; gap: 6px; flex-wrap: wrap; }
+/* View/Edit always share one line with equal spacing — table cells wrap
+   with `overflow-x: auto` on .ad-table-wrap for narrow screens instead of
+   stacking the buttons. */
+.ad-actions-row { display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; white-space: nowrap; }
+.ad-actions-row .ad-btn-sm { flex: 0 0 auto; }
 
 /* Toolbar */
 .ad-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -271,6 +280,69 @@ button, input, select, textarea { font-family: inherit; }
 /* Mobile sidebar toggle */
 .ad-mobile-toggle { display: none; }
 
+/* ────────────────── READ-ONLY VIEW MODALS ────────────────── */
+.ad-view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; margin-bottom: 6px; }
+.ad-view-row { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-bottom: 1px solid var(--ad-border); min-width: 0; }
+.ad-view-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ad-text-35); }
+.ad-view-val { font-size: 13.5px; color: var(--ad-text); overflow-wrap: anywhere; }
+
+/* Order item product card */
+.ad-oi-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px; margin-bottom: 10px;
+  background: var(--ad-card); border: 1px solid var(--ad-border); border-radius: var(--ad-r-md);
+  transition: border-color 0.2s; animation: adFadeUp 0.22s ease;
+}
+.ad-oi-card:hover { border-color: var(--ad-border-2); }
+.ad-oi-media { flex-shrink: 0; }
+.ad-oi-thumb {
+  width: 84px; height: 84px; object-fit: cover; display: block;
+  border-radius: var(--ad-r-sm); border: 1px solid var(--ad-border-2);
+  background: var(--ad-card-2); cursor: zoom-in; transition: transform 0.18s;
+}
+.ad-oi-thumb:hover { transform: scale(1.04); }
+.ad-oi-thumb--empty { display: flex; align-items: center; justify-content: center; color: var(--ad-text-35); cursor: default; }
+.ad-oi-thumb--empty:hover { transform: none; }
+.ad-oi-thumb--empty svg { width: 26px; height: 26px; }
+.ad-oi-gallery { display: flex; gap: 5px; margin-top: 6px; max-width: 84px; flex-wrap: wrap; }
+.ad-oi-gallery img { width: 24px; height: 24px; object-fit: cover; border-radius: 4px; border: 1px solid var(--ad-border-2); cursor: zoom-in; }
+.ad-oi-body { flex: 1; min-width: 0; }
+.ad-oi-name { font-weight: 700; font-size: 14px; }
+.ad-oi-desc { font-size: 12px; color: var(--ad-text-50); line-height: 1.55; margin: 4px 0 10px; }
+.ad-oi-specs { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.ad-oi-spec { font-size: 12.5px; color: var(--ad-text-70); min-width: 0; }
+.ad-oi-spec span { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ad-text-35); margin-bottom: 1px; }
+.ad-oi-total { font-weight: 700; font-size: 14px; white-space: nowrap; align-self: center; color: var(--ad-teal-2); }
+
+/* Order block inside the customer read-only view */
+.ad-ov-order { padding: 14px; margin-bottom: 12px; background: var(--ad-card); border: 1px solid var(--ad-border); border-radius: var(--ad-r-md); }
+.ad-ov-order-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; margin-bottom: 12px; }
+.ad-ov-order .ad-oi-card { background: var(--ad-card-2); }
+
+/* ────────────────── IMAGE LIGHTBOX ────────────────── */
+.ad-lightbox {
+  position: fixed; inset: 0; z-index: 700; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.88); backdrop-filter: blur(5px);
+}
+.ad-lightbox.is-open { display: flex; }
+.ad-lb-img {
+  max-width: 86vw; max-height: 84vh; border-radius: var(--ad-r-md);
+  cursor: zoom-in; transition: transform 0.25s ease; box-shadow: var(--ad-sh-lg);
+}
+.ad-lb-img.is-zoomed { transform: scale(1.7); cursor: zoom-out; }
+.ad-lb-btn {
+  position: absolute; width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--ad-border-2); color: var(--ad-text);
+  font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s; z-index: 1;
+}
+.ad-lb-btn:hover { background: rgba(255,255,255,0.16); }
+.ad-lb-close { top: 18px; right: 18px; }
+.ad-lb-prev { left: 18px; top: 50%; transform: translateY(-50%); }
+.ad-lb-next { right: 18px; top: 50%; transform: translateY(-50%); }
+.ad-lb-count { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--ad-text-70); font-variant-numeric: tabular-nums; }
+
 /* ────────────────── RESPONSIVE ────────────────── */
 @media (max-width: 980px) {
   .ad-shell { grid-template-columns: 1fr; }
@@ -284,4 +356,12 @@ button, input, select, textarea { font-family: inherit; }
   .ad-form-grid, .ad-form-grid--3 { grid-template-columns: 1fr; }
   .ad-clock { display: none; }
   .ad-topbar { padding: 10px 14px; }
+  .ad-view-grid { grid-template-columns: 1fr; }
+  .ad-oi-card { flex-wrap: wrap; }
+  .ad-oi-thumb { width: 68px; height: 68px; }
+  .ad-oi-total { width: 100%; text-align: end; }
+  .ad-lb-img { max-width: 94vw; }
+  .ad-lb-prev { left: 8px; }
+  .ad-lb-next { right: 8px; }
+  .ad-lb-btn { width: 36px; height: 36px; }
 }

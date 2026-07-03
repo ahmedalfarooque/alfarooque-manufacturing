@@ -70,6 +70,113 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+/* ── Image lightbox (product previews) ─────────────────────────────
+   One overlay reused for every gallery. Opened via delegated clicks on
+   any element carrying data-lb (URI-encoded JSON array of image URLs) +
+   data-lb-idx, so it works inside dynamically rendered modals with
+   nothing to rebind. Click the image to zoom, arrows/keys to navigate,
+   Esc / backdrop / × to close. */
+let LB = null, LB_IMGS = [], LB_IDX = 0;
+function ensureLightbox() {
+  if (LB) return LB;
+  LB = document.createElement('div');
+  LB.id = 'adLightbox';
+  LB.className = 'ad-lightbox';
+  LB.innerHTML =
+    '<button class="ad-lb-btn ad-lb-close" aria-label="Close">&times;</button>' +
+    '<button class="ad-lb-btn ad-lb-prev" aria-label="Previous">&#10094;</button>' +
+    '<img class="ad-lb-img" alt="">' +
+    '<button class="ad-lb-btn ad-lb-next" aria-label="Next">&#10095;</button>' +
+    '<div class="ad-lb-count"></div>';
+  document.body.appendChild(LB);
+  LB.addEventListener('click', e => { if (e.target === LB) closeLightbox(); });
+  LB.querySelector('.ad-lb-close').addEventListener('click', closeLightbox);
+  LB.querySelector('.ad-lb-prev').addEventListener('click', () => lbNav(-1));
+  LB.querySelector('.ad-lb-next').addEventListener('click', () => lbNav(1));
+  LB.querySelector('.ad-lb-img').addEventListener('click', function () { this.classList.toggle('is-zoomed'); });
+  document.addEventListener('keydown', e => {
+    if (!LB.classList.contains('is-open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowLeft') lbNav(-1);
+    else if (e.key === 'ArrowRight') lbNav(1);
+  });
+  return LB;
+}
+function lbShow() {
+  const img = LB.querySelector('.ad-lb-img');
+  img.classList.remove('is-zoomed');
+  img.src = LB_IMGS[LB_IDX];
+  const multi = LB_IMGS.length > 1;
+  LB.querySelector('.ad-lb-prev').style.visibility = multi ? 'visible' : 'hidden';
+  LB.querySelector('.ad-lb-next').style.visibility = multi ? 'visible' : 'hidden';
+  LB.querySelector('.ad-lb-count').textContent = multi ? (LB_IDX + 1) + ' / ' + LB_IMGS.length : '';
+}
+function lbNav(d) { if (!LB_IMGS.length) return; LB_IDX = (LB_IDX + d + LB_IMGS.length) % LB_IMGS.length; lbShow(); }
+function openLightbox(images, idx) {
+  if (!images || !images.length) return;
+  ensureLightbox();
+  LB_IMGS = images; LB_IDX = Math.min(Math.max(0, idx || 0), images.length - 1);
+  lbShow();
+  LB.classList.add('is-open');
+}
+function closeLightbox() { if (LB) LB.classList.remove('is-open'); }
+
+/* ── Read-only view helpers ────────────────────────────────────────── */
+/* Product images were migrated with repo-relative paths ("assets/…");
+   admin pages live under /pages/admin/, so root-anchor them. */
+function imgUrl(src) {
+  if (!src) return '';
+  if (/^(https?:)?\/\//.test(src) || src.charAt(0) === '/') return src;
+  return '/' + src;
+}
+function lbAttrs(imgs, idx) {
+  return ' data-lb="' + encodeURIComponent(JSON.stringify(imgs)) + '" data-lb-idx="' + idx + '"';
+}
+/* Label/value rows; values are pre-escaped by the caller (some contain
+   badge HTML). Empty values render as "—". */
+function infoGrid(pairs) {
+  return '<div class="ad-view-grid">' + pairs.map(p =>
+    '<div class="ad-view-row"><span class="ad-view-lbl">' + esc(p[0]) + '</span><span class="ad-view-val">' + (p[1] == null || p[1] === '' ? '—' : p[1]) + '</span></div>'
+  ).join('') + '</div>';
+}
+/* One order line as a product card: thumbnail + gallery (lightbox-able),
+   name, description and specs — all from the enriched product record the
+   API joined in; items whose product was deleted/renamed fall back to
+   the snapshot fields stored on the order itself. */
+function orderItemCard(it) {
+  const p = it.product || null;
+  const imgs = (p && p.images.length ? p.images : []).map(imgUrl);
+  const thumb = imgs.length
+    ? '<img class="ad-oi-thumb" src="' + esc(imgs[0]) + '" alt="" loading="lazy"' + lbAttrs(imgs, 0) + '>'
+    : '<div class="ad-oi-thumb ad-oi-thumb--empty"><i data-lucide="package"></i></div>';
+  const gallery = imgs.length > 1
+    ? '<div class="ad-oi-gallery">' + imgs.map((src, i) =>
+        '<img src="' + esc(src) + '" alt="" loading="lazy"' + lbAttrs(imgs, i) + '>').join('') + '</div>'
+    : '';
+  const qty = Number(it.qty) || 1;
+  const unit = it.price != null ? Number(it.price) : (it.lineTotal ? Number(it.lineTotal) / qty : 0);
+  const total = it.lineTotal != null ? Number(it.lineTotal) : unit * qty;
+  const spec = (lbl, val) => val ? '<div class="ad-oi-spec"><span>' + esc(lbl) + '</span>' + esc(val) + '</div>' : '';
+  return '<div class="ad-oi-card">' +
+    '<div class="ad-oi-media">' + thumb + gallery + '</div>' +
+    '<div class="ad-oi-body">' +
+      '<div class="ad-oi-name">' + esc(it.name || (p && p.name) || 'Item') + '</div>' +
+      (p && p.description ? '<div class="ad-oi-desc">' + esc(p.description) + '</div>' : '') +
+      '<div class="ad-oi-specs">' +
+        spec('Category', p && p.category) +
+        spec('SKU', p && p.sku) +
+        spec('Material', it.material || (p && p.material)) +
+        spec('Size', it.size || (p && p.sizes.length ? p.sizes.join(' / ') : null)) +
+        spec('Color', it.color) +
+        spec('Finish', it.finish || (p && p.finishes.length ? p.finishes.join(' / ') : null)) +
+        spec('Quantity', '× ' + qty) +
+        spec('Unit Price', money(unit)) +
+      '</div>' +
+    '</div>' +
+    '<div class="ad-oi-total">' + money(total) + '</div>' +
+  '</div>';
+}
+
 /* ── State ── */
 let CURRENT_ADMIN = null;
 let currentPage = 'home';
@@ -136,18 +243,28 @@ async function boot() {
 function wireNav() {
   document.addEventListener('click', e => {
     if (!e.target || typeof e.target.closest !== 'function') return;
+    /* Product image → lightbox (works inside any modal, nothing to rebind) */
+    const lbEl = e.target.closest('[data-lb]');
+    if (lbEl) {
+      try { openLightbox(JSON.parse(decodeURIComponent(lbEl.getAttribute('data-lb'))), Number(lbEl.getAttribute('data-lb-idx')) || 0); } catch (_) {}
+      return;
+    }
     const pageBtn = e.target.closest('[data-page]');
     if (pageBtn) { location.hash = '#' + pageBtn.getAttribute('data-page'); return; }
     const soonBtn = e.target.closest('[data-soon]');
     if (soonBtn) { renderComingSoon(soonBtn.getAttribute('data-soon')); return; }
-    /* Dashboard Home: Recent Orders / Recent Customers rows open the
-       exact same detail modal as their "View" button — same delegated
-       listener, so this keeps working no matter how many times Home
-       re-renders (auto-refresh included). */
+    /* Any other button (View / Edit / View Orders / Delete / …) has its
+       own dedicated listener bound where it's rendered — never let that
+       click also fall through to a containing clickable row below. */
+    if (e.target.closest('button')) return;
+    /* Dashboard Home rows + the Customers table row open the read-only
+       preview (same as each table's View button) — same delegated
+       listener, so this keeps working no matter how many times the
+       page re-renders (auto-refresh included). */
     const orderRow = e.target.closest('[data-order-row]');
-    if (orderRow) { openOrderDetail(orderRow.getAttribute('data-order-row')); return; }
+    if (orderRow) { openOrderView(orderRow.getAttribute('data-order-row')); return; }
     const custRow = e.target.closest('[data-customer-row]');
-    if (custRow) { openCustomerDetail(custRow.getAttribute('data-customer-row')); }
+    if (custRow) { openCustomerView(custRow.getAttribute('data-customer-row')); }
   });
   /* Generic keyboard activation for every non-native clickable element
      (stat cards, table rows) marked up as role="button" — native
@@ -165,7 +282,7 @@ function wireNav() {
   });
   $('#logoutBtn').addEventListener('click', async () => {
     try { await api('/api/admin/auth', { method: 'POST', body: { action: 'logout' } }); } catch (e) {}
-    location.href = '/pages/admin/login.html';
+    location.href = '/products';
   });
   $('#sideToggle').addEventListener('click', () => $('#adSide').classList.toggle('is-open'));
 }
@@ -365,10 +482,14 @@ async function loadOrdersTable() {
       '<td><span class="ad-badge ad-badge--' + esc(o.status) + '">' + label(o.status) + '</span></td>' +
       '<td><span class="ad-badge ad-badge--' + esc(o.payment_status || 'pending') + '">' + label(o.payment_status || 'pending') + '</span></td>' +
       '<td>' + new Date(o.created_at).toLocaleDateString() + '</td>' +
-      '<td><button class="ad-btn-sm ad-btn-sm--primary" data-view="' + o.id + '">View</button></td></tr>';
+      '<td class="ad-actions-row">' +
+        '<button class="ad-btn-sm ad-btn-sm--primary" data-view="' + o.id + '">View</button>' +
+        '<button class="ad-btn-sm" data-edit-order="' + o.id + '">Edit</button>' +
+      '</td></tr>';
     }).join('') + '</tbody></table></div>' +
     pagination(ordersPage, data.total, 15, p => { ordersPage = p; loadOrdersTable(); });
-  $$('[data-view]', wrap).forEach(b => b.addEventListener('click', () => openOrderDetail(b.getAttribute('data-view'))));
+  $$('[data-view]', wrap).forEach(b => b.addEventListener('click', () => openOrderView(b.getAttribute('data-view'))));
+  $$('[data-edit-order]', wrap).forEach(b => b.addEventListener('click', () => openOrderDetail(b.getAttribute('data-edit-order'))));
 }
 
 function pagination(page, total, pageSize, onChange) {
@@ -387,11 +508,73 @@ function pagination(page, total, pageSize, onChange) {
   '</div>';
 }
 
+/* Read-only order preview — everything below comes from the order row
+   plus the product records the API joined onto each item. No inputs,
+   no save; editing lives in openOrderDetail (the Edit button). */
+async function openOrderView(id) {
+  const data = await api('/api/admin/orders?id=' + id);
+  const o = data.order;
+  const custName = o.guest_name || o.customer_name || (o.user_id ? 'Registered customer' : 'Guest');
+  const items = o.items || [];
+  const statusIdx = ORDER_STATUSES.indexOf(o.status);
+  const cancelled = ['cancelled', 'returned', 'rejected'].includes(o.status);
+  const timeline = '<div class="ad-timeline">' + ORDER_STATUSES.slice(0, 11).map(s => {
+    const done = ORDER_STATUSES.indexOf(s) <= statusIdx && statusIdx !== -1 && !cancelled;
+    return '<div class="ad-timeline-step' + (done ? ' is-done' : '') + '"><div class="ad-timeline-dot">' + (done ? '✓' : '') + '</div><div class="ad-timeline-label">' + label(s) + '</div></div>';
+  }).join('') + '</div>';
+
+  openModal(
+    '<h3 class="ad-modal-title">Order ' + esc(o.order_no || o.id.slice(0, 8)) + ' &nbsp;' +
+      '<span class="ad-badge ad-badge--' + esc(o.status) + '">' + label(o.status) + '</span> ' +
+      '<span class="ad-badge ad-badge--' + esc(o.payment_status || 'pending') + '">' + label(o.payment_status || 'pending') + '</span></h3>' +
+
+    '<div class="ad-card-title">Products (' + items.length + ')</div>' +
+    (items.length ? items.map(orderItemCard).join('') : '<p class="ad-empty">No item details stored on this order.</p>') +
+
+    '<div class="ad-card-title" style="margin-top:16px">Customer</div>' +
+    infoGrid([
+      ['Name', esc(custName)],
+      ['Email', esc(o.guest_email || o.customer_email || '')],
+      ['Phone', esc(o.guest_phone || '')],
+      ['Company', esc(o.guest_company || '')],
+      ['Delivery Address', esc(o.delivery_address || '')],
+    ]) +
+
+    '<div class="ad-card-title" style="margin-top:16px">Order Information</div>' +
+    infoGrid([
+      ['Order ID', esc(o.order_no || o.id)],
+      ['Date', esc(new Date(o.created_at).toLocaleString())],
+      ['Order Status', '<span class="ad-badge ad-badge--' + esc(o.status) + '">' + label(o.status) + '</span>'],
+      ['Payment Status', '<span class="ad-badge ad-badge--' + esc(o.payment_status || 'pending') + '">' + label(o.payment_status || 'pending') + '</span>'],
+      ['Current Stage', esc(o.current_stage || '')],
+      ['Tracking', (o.tracking_pct || 0) + '%'],
+      ['Est. Completion', esc(o.estimated_completion || '')],
+      ['Est. Delivery', esc(o.estimated_delivery || '')],
+      ['Tracking Number', esc(o.tracking_number || '')],
+      ['Courier', esc(o.courier || '')],
+      ['Notes', esc(o.admin_notes || '')],
+    ]) +
+    timeline +
+
+    '<div class="ad-card-title" style="margin-top:16px">Totals</div>' +
+    infoGrid([
+      ['Subtotal', money(o.subtotal)],
+      ['VAT (15%)', money(o.vat)],
+      ['Shipping', o.shipping_cost != null ? money(o.shipping_cost) : ''],
+      ['Discount', o.discount != null ? money(o.discount) : ''],
+      ['Grand Total', '<strong style="color:var(--ad-teal-2)">' + money(o.grand_total) + '</strong>'],
+    ]),
+    true
+  );
+  icons();
+}
+
 async function openOrderDetail(id) {
   const data = await api('/api/admin/orders?id=' + id);
   const o = data.order;
+  const items = o.items || [];
   openModal(
-    '<h3 class="ad-modal-title">Order ' + esc(o.order_no || o.id.slice(0, 8)) + '</h3>' +
+    '<h3 class="ad-modal-title">Edit Order ' + esc(o.order_no || o.id.slice(0, 8)) + '</h3>' +
     '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--ad-text-70)">' +
       '<div><strong>Customer:</strong> ' + esc(o.guest_name || o.customer_name || (o.user_id ? 'Registered customer' : 'Guest')) + '</div>' +
       '<div><strong>Email:</strong> ' + esc(o.guest_email || o.customer_email || '—') + '</div>' +
@@ -403,34 +586,56 @@ async function openOrderDetail(id) {
       return '<div class="ad-timeline-step' + (done ? ' is-done' : '') + '"><div class="ad-timeline-dot">' + (done ? '✓' : '') + '</div><div class="ad-timeline-label">' + label(s) + '</div></div>';
     }).join('') + '</div>' +
     '<div class="ad-form-grid">' +
-      '<div class="ad-field"><label class="ad-label">Status</label><select class="ad-input ad-select" id="ordStatus">' +
+      '<div class="ad-field"><label class="ad-label">Order Status</label><select class="ad-input ad-select" id="ordStatus">' +
         ORDER_STATUSES.map(s => '<option value="' + s + '"' + (s === o.status ? ' selected' : '') + '>' + label(s) + '</option>').join('') + '</select></div>' +
       '<div class="ad-field"><label class="ad-label">Payment Status</label><select class="ad-input ad-select" id="ordPayment">' +
         ['pending','paid','failed','refunded'].map(s => '<option value="' + s + '"' + (s === (o.payment_status || 'pending') ? ' selected' : '') + '>' + label(s) + '</option>').join('') + '</select></div>' +
       '<div class="ad-field"><label class="ad-label">Tracking %</label><input class="ad-input" id="ordPct" type="number" min="0" max="100" value="' + (o.tracking_pct || 0) + '"></div>' +
       '<div class="ad-field"><label class="ad-label">Current Stage</label><input class="ad-input" id="ordStage" value="' + esc(o.current_stage || '') + '"></div>' +
       '<div class="ad-field"><label class="ad-label">Est. Completion</label><input class="ad-input" id="ordEstComplete" type="date" value="' + (o.estimated_completion || '') + '"></div>' +
-      '<div class="ad-field"><label class="ad-label">Est. Delivery</label><input class="ad-input" id="ordEstDeliver" type="date" value="' + (o.estimated_delivery || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Delivery Date</label><input class="ad-input" id="ordEstDeliver" type="date" value="' + (o.estimated_delivery || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Tracking Number</label><input class="ad-input" id="ordTracking" value="' + esc(o.tracking_number || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Courier</label><input class="ad-input" id="ordCourier" value="' + esc(o.courier || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Discount</label><input class="ad-input" id="ordDiscount" type="number" min="0" step="0.01" value="' + (o.discount || 0) + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Shipping Cost</label><input class="ad-input" id="ordShipping" type="number" min="0" step="0.01" value="' + (o.shipping_cost || 0) + '"></div>' +
     '</div>' +
+    '<div class="ad-field"><label class="ad-label">Customer / Delivery Address</label><textarea class="ad-input ad-textarea" id="ordAddress">' + esc(o.delivery_address || '') + '</textarea></div>' +
     '<div class="ad-field"><label class="ad-label">Admin Notes</label><textarea class="ad-input ad-textarea" id="ordNotes">' + esc(o.admin_notes || '') + '</textarea></div>' +
     '<div class="ad-card-title" style="margin-top:14px">Items</div>' +
-    (o.items && o.items.length ? o.items.map(it => rowLine(it.name, '×' + it.qty, money(it.price * it.qty))).join('') : '<p class="ad-empty">No item details.</p>') +
-    '<div style="text-align:end;font-size:15px;margin-top:10px">Total: <strong>' + money(o.grand_total) + '</strong></div>' +
+    (items.length ? '<div class="ad-form-grid" id="ordItemsGrid">' + items.map((it, i) => (
+      '<div class="ad-field" style="grid-column:1/-1;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;border-bottom:1px solid var(--ad-border);padding-bottom:10px">' +
+        '<div style="flex:1 1 200px"><label class="ad-label">' + esc(it.name) + '</label></div>' +
+        '<div style="width:100px"><label class="ad-label">Qty</label><input class="ad-input ad-item-qty" type="number" min="1" value="' + (Number(it.qty) || 1) + '" data-idx="' + i + '"></div>' +
+        '<div style="width:140px"><label class="ad-label">Unit Price</label><input class="ad-input ad-item-price" type="number" min="0" step="0.01" value="' + (Number(it.price) || 0) + '" data-idx="' + i + '"></div>' +
+      '</div>'
+    )).join('') + '</div>' : '<p class="ad-empty">No item details.</p>') +
+    '<div style="text-align:end;font-size:15px;margin-top:10px">Current Total: <strong>' + money(o.grand_total) + '</strong></div>' +
     '<div class="ad-form-actions"><button class="ad-btn-sm ad-btn-sm--primary" id="ordSaveBtn">Save Changes</button></div>',
     true
   );
   $('#ordSaveBtn').addEventListener('click', async () => {
     const btn = $('#ordSaveBtn'); btn.disabled = true;
     try {
+      const newItems = items.map((it, i) => {
+        const qtyEl = $('.ad-item-qty[data-idx="' + i + '"]');
+        const priceEl = $('.ad-item-price[data-idx="' + i + '"]');
+        return { name: it.name, qty: qtyEl ? Number(qtyEl.value) || 1 : it.qty, price: priceEl ? Number(priceEl.value) || 0 : it.price };
+      });
       await api('/api/admin/orders?id=' + o.id, { method: 'PATCH', body: {
         status: $('#ordStatus').value, payment_status: $('#ordPayment').value,
         tracking_pct: Number($('#ordPct').value) || 0, current_stage: $('#ordStage').value,
         estimated_completion: $('#ordEstComplete').value || null, estimated_delivery: $('#ordEstDeliver').value || null,
-        admin_notes: $('#ordNotes').value,
+        tracking_number: $('#ordTracking').value, courier: $('#ordCourier').value,
+        discount: Number($('#ordDiscount').value) || 0, shipping_cost: Number($('#ordShipping').value) || 0,
+        delivery_address: $('#ordAddress').value, admin_notes: $('#ordNotes').value,
+        items: items.length ? newItems : undefined,
       }});
       toast('Order updated — synced to the customer dashboard.');
       closeModal();
-      loadOrdersTable();
+      /* This modal can be opened from the Orders page OR from a customer's
+         order history — only refresh whichever table is actually on screen. */
+      if ($('#ordersTableWrap')) loadOrdersTable();
+      else if ($('#custTableWrap')) loadCustomersTable();
     } catch (err) { toast(err.message); } finally { btn.disabled = false; }
   });
 }
@@ -454,52 +659,147 @@ async function loadCustomersTable() {
   const data = await api('/api/admin/customers?' + q.toString());
   if (!data.customers.length) { wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">👤</div>No customers found.</div>'; return; }
   wrap.innerHTML =
-    '<div class="ad-table-wrap"><table class="ad-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>' +
+    '<div class="ad-table-wrap"><table class="ad-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Status</th><th>Joined</th><th>Order Details</th><th>Actions</th></tr></thead><tbody>' +
     data.customers.map(c => (
-      '<tr><td>' + esc(c.name) + (c.company ? '<br><span style="color:var(--ad-text-35);font-size:11px">' + esc(c.company) + '</span>' : '') + '</td>' +
-      '<td>' + esc(c.email) + '</td><td>' + esc(c.phone || '—') + '</td><td>' + c.orders_count + '</td>' +
+      '<tr data-customer-row="' + c.id + '" role="button" tabindex="0">' +
+      '<td>' + esc(c.name) + (c.company ? '<br><span style="color:var(--ad-text-35);font-size:11px">' + esc(c.company) + '</span>' : '') + '</td>' +
+      '<td>' + esc(c.email) + '</td><td>' + esc(c.phone || '—') + '</td>' +
+      '<td>' + c.orders_count + ' Order' + (c.orders_count === 1 ? '' : 's') + '</td>' +
       '<td><span class="ad-badge ad-badge--' + (c.is_banned ? 'suspended' : 'active') + '">' + (c.is_banned ? 'Disabled' : 'Active') + '</span></td>' +
       '<td>' + new Date(c.created_at).toLocaleDateString() + '</td>' +
-      '<td class="ad-actions-row"><button class="ad-btn-sm ad-btn-sm--primary" data-view="' + c.id + '">View</button></td></tr>'
+      '<td class="ad-actions-row"><button class="ad-btn-sm ad-btn-sm--primary" data-view-orders="' + c.id + '">View Orders</button></td>' +
+      '<td class="ad-actions-row"><button class="ad-btn-sm" data-edit-cust="' + c.id + '">Edit</button></td>' +
+      '</tr>'
     )).join('') + '</tbody></table></div>' +
     pagination(customersPage, data.total, 15, p => { customersPage = p; loadCustomersTable(); });
-  $$('[data-view]', wrap).forEach(b => b.addEventListener('click', () => openCustomerDetail(b.getAttribute('data-view'))));
+  $$('[data-view-orders]', wrap).forEach(b => b.addEventListener('click', () => openCustomerOrders(b.getAttribute('data-view-orders'))));
+  $$('[data-edit-cust]', wrap).forEach(b => b.addEventListener('click', () => openCustomerDetail(b.getAttribute('data-edit-cust'))));
 }
+/* One order as a card: head (order#, date, status/payment badges, total)
+   + its items as product cards + a View/Edit button pair. Shared by the
+   read-only Customer Details view and the "View Orders" page so the
+   markup and wiring never drift apart. */
+function orderHistoryBlock(o) {
+  return '<div class="ad-ov-order">' +
+    '<div class="ad-ov-order-head">' +
+      '<strong>' + esc(o.order_no || o.id.slice(0, 8)) + '</strong>' +
+      '<span style="color:var(--ad-text-50)">' + new Date(o.created_at).toLocaleDateString() + '</span>' +
+      '<span class="ad-badge ad-badge--' + esc(o.status) + '">' + label(o.status) + '</span>' +
+      '<span class="ad-badge ad-badge--' + esc(o.payment_status || 'pending') + '">' + label(o.payment_status || 'pending') + '</span>' +
+      '<span style="margin-inline-start:auto;font-weight:700">' + money(o.grand_total) + '</span>' +
+    '</div>' +
+    ((o.items || []).length ? o.items.map(orderItemCard).join('') : '<p class="ad-empty" style="padding:14px">No item details stored.</p>') +
+    '<div class="ad-actions-row" style="padding:10px 0 0">' +
+      '<button class="ad-btn-sm ad-btn-sm--primary" data-view="' + o.id + '">View</button>' +
+      '<button class="ad-btn-sm" data-edit-order="' + o.id + '">Edit</button>' +
+    '</div>' +
+  '</div>';
+}
+function wireOrderHistoryButtons(scope) {
+  $$('[data-view]', scope).forEach(b => b.addEventListener('click', () => openOrderView(b.getAttribute('data-view'))));
+  $$('[data-edit-order]', scope).forEach(b => b.addEventListener('click', () => openOrderDetail(b.getAttribute('data-edit-order'))));
+}
+
+/* Read-only customer profile with full order history — each order shows
+   its items as product cards (image/description/specs from the joined
+   product records) plus View/Edit buttons. Editing customer info itself
+   happens in openCustomerDetail (the Edit button). */
+async function openCustomerView(id) {
+  const data = await api('/api/admin/customers?id=' + id);
+  const c = data.customer;
+  openModal(
+    '<h3 class="ad-modal-title">' + esc(c.full_name || c.email) + ' &nbsp;' +
+      '<span class="ad-badge ad-badge--' + (c.is_banned ? 'suspended' : 'active') + '">' + (c.is_banned ? 'Disabled' : 'Active') + '</span></h3>' +
+
+    '<div class="ad-card-title">Customer Information</div>' +
+    infoGrid([
+      ['Full Name', esc(c.full_name || [c.first_name, c.last_name].filter(Boolean).join(' '))],
+      ['Email', esc(c.email) + (c.email_verified ? ' <span class="ad-badge ad-badge--active">Verified</span>' : ' <span class="ad-badge ad-badge--pending">Unverified</span>')],
+      ['Phone', esc(c.mobile || '')],
+      ['Company', esc(c.company || '')],
+      ['Country', esc(c.country || '')],
+      ['Address', esc([c.address, c.city, c.postal_code].filter(Boolean).join(', '))],
+      ['Registered', esc(new Date(c.created_at).toLocaleDateString())],
+      ['Last Login', c.last_login ? esc(new Date(c.last_login).toLocaleString()) : ''],
+      ['Status', '<span class="ad-badge ad-badge--' + (c.is_banned ? 'suspended' : 'active') + '">' + (c.is_banned ? 'Disabled' : 'Active') + '</span>'],
+    ]) +
+
+    '<div class="ad-card-title" style="margin-top:16px">Order History (' + data.orders.length + ')</div>' +
+    (data.orders.length ? data.orders.map(orderHistoryBlock).join('') : '<p class="ad-empty">No orders yet.</p>'),
+    true
+  );
+  icons();
+  wireOrderHistoryButtons($('#adModalBody'));
+}
+
+/* "View Orders" page — lighter header (name/email/phone only) + the
+   customer's full order history, each card with View/Edit buttons.
+   Reached from the Customers table's "Order Details" column. */
+async function openCustomerOrders(id) {
+  const data = await api('/api/admin/customers?id=' + id);
+  const c = data.customer;
+  openModal(
+    '<h3 class="ad-modal-title">Orders — ' + esc(c.full_name || c.email) + '</h3>' +
+    infoGrid([
+      ['Name', esc(c.full_name || [c.first_name, c.last_name].filter(Boolean).join(' '))],
+      ['Email', esc(c.email)],
+      ['Phone', esc(c.mobile || '')],
+    ]) +
+    '<div class="ad-card-title" style="margin-top:16px">Orders (' + data.orders.length + ')</div>' +
+    (data.orders.length ? data.orders.map(orderHistoryBlock).join('') : '<p class="ad-empty">No orders yet.</p>'),
+    true
+  );
+  icons();
+  wireOrderHistoryButtons($('#adModalBody'));
+}
+
+/* Edit ONLY the customer's own information — no orders/addresses shown
+   here (those live in openCustomerOrders / the "View Orders" button). */
 async function openCustomerDetail(id) {
   const data = await api('/api/admin/customers?id=' + id);
   const c = data.customer;
   openModal(
-    '<h3 class="ad-modal-title">' + esc(c.full_name || c.email) + '</h3>' +
-    '<div class="ad-form-grid" style="font-size:13px;margin-bottom:16px">' +
-      '<div><strong>Email:</strong> ' + esc(c.email) + (c.email_verified ? ' ✓' : ' (unverified)') + '</div>' +
-      '<div><strong>Phone:</strong> ' + esc(c.mobile || '—') + '</div>' +
-      '<div><strong>Company:</strong> ' + esc(c.company || '—') + '</div>' +
-      '<div><strong>Country:</strong> ' + esc(c.country || '—') + '</div>' +
-      '<div><strong>Joined:</strong> ' + new Date(c.created_at).toLocaleDateString() + '</div>' +
-      '<div><strong>Last login:</strong> ' + (c.last_login ? new Date(c.last_login).toLocaleString() : '—') + '</div>' +
+    '<h3 class="ad-modal-title">Edit Customer — ' + esc(c.full_name || c.email) + '</h3>' +
+    '<div class="ad-form-grid">' +
+      '<div class="ad-field"><label class="ad-label">First Name</label><input class="ad-input" id="custFirstName" value="' + esc(c.first_name || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Last Name</label><input class="ad-input" id="custLastName" value="' + esc(c.last_name || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Email</label><input class="ad-input" id="custEmailInput" type="email" value="' + esc(c.email || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Phone</label><input class="ad-input" id="custPhone" value="' + esc(c.mobile || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Company</label><input class="ad-input" id="custCompany" value="' + esc(c.company || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Country</label><input class="ad-input" id="custCountry" value="' + esc(c.country || '') + '"></div>' +
+      '<div class="ad-field"><label class="ad-label">Status</label><select class="ad-input ad-select" id="custStatus">' +
+        '<option value="active"' + (!c.is_banned ? ' selected' : '') + '>Active</option>' +
+        '<option value="suspended"' + (c.is_banned ? ' selected' : '') + '>Disabled</option>' +
+      '</select></div>' +
     '</div>' +
-    '<div class="ad-card-title">Orders (' + data.orders.length + ')</div>' +
-    (data.orders.length ? data.orders.slice(0, 5).map(o => (
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--ad-border);font-size:13px">' +
-        '<div><div style="font-weight:600">' + esc(o.order_no || o.id.slice(0, 8)) + '</div><div style="color:var(--ad-text-50);font-size:12px">' + new Date(o.created_at).toLocaleDateString() + '</div></div>' +
-        '<div style="display:flex;align-items:center;gap:10px">' +
-          '<span class="ad-badge ad-badge--' + esc(o.status) + '">' + label(o.status) + '</span>' +
-          '<span>' + money(o.grand_total) + '</span>' +
-          '<button class="ad-btn-sm ad-btn-sm--primary" data-view-order="' + o.id + '">View Order</button>' +
-        '</div>' +
-      '</div>'
-    )).join('') : '<p class="ad-empty">No orders.</p>') +
-    '<div class="ad-card-title" style="margin-top:12px">Addresses (' + data.addresses.length + ')</div>' +
-    (data.addresses.length ? data.addresses.map(a => rowLine(a.label || 'Address', [a.line1, a.city, a.country].filter(Boolean).join(', '), '')).join('') : '<p class="ad-empty">No saved addresses.</p>') +
+    '<div class="ad-field"><label class="ad-label">Address</label><textarea class="ad-input ad-textarea" id="custAddress">' + esc(c.address || '') + '</textarea></div>' +
+    '<div class="ad-field"><label class="ad-label">Notes</label><textarea class="ad-input ad-textarea" id="custNotes">' + esc(c.notes || '') + '</textarea></div>' +
     '<div class="ad-form-actions" style="margin-top:16px;flex-wrap:wrap">' +
+      '<button class="ad-btn-sm ad-btn-sm--primary" id="custSaveBtn">Save Changes</button>' +
       '<button class="ad-btn-sm" id="custResetPw">Reset Password</button>' +
       '<button class="ad-btn-sm" id="custEmail">Email Customer</button>' +
-      '<button class="ad-btn-sm' + (c.is_banned ? ' ad-btn-sm--primary' : ' ad-btn-sm--danger') + '" id="custToggle">' + (c.is_banned ? 'Enable Account' : 'Disable Account') + '</button>' +
       '<button class="ad-btn-sm ad-btn-sm--danger" id="custDelete">Delete Account</button>' +
     '</div>',
     true
   );
-  $$('[data-view-order]').forEach(b => b.addEventListener('click', () => openOrderDetail(b.getAttribute('data-view-order'))));
+  $('#custSaveBtn').addEventListener('click', async () => {
+    const btn = $('#custSaveBtn'); btn.disabled = true;
+    try {
+      const wasBanned = c.is_banned;
+      const nowBanned = $('#custStatus').value === 'suspended';
+      const body = {
+        first_name: $('#custFirstName').value, last_name: $('#custLastName').value,
+        company: $('#custCompany').value, mobile: $('#custPhone').value,
+        country: $('#custCountry').value, address: $('#custAddress').value,
+        email: $('#custEmailInput').value, notes: $('#custNotes').value,
+      };
+      if (nowBanned !== wasBanned) body.disabled = nowBanned;
+      await api('/api/admin/customers?id=' + c.id, { method: 'PATCH', body });
+      toast('Customer updated.');
+      closeModal();
+      loadCustomersTable();
+    } catch (err) { toast(err.message); } finally { btn.disabled = false; }
+  });
   $('#custResetPw').addEventListener('click', async () => {
     try { await api('/api/admin/customers', { method: 'POST', body: { action: 'reset-password', id: c.id } }); toast('Password reset email sent.'); }
     catch (err) { toast(err.message); }
@@ -517,10 +817,6 @@ async function openCustomerDetail(id) {
         toast('Email sent.'); closeModal();
       } catch (err) { toast(err.message); }
     });
-  });
-  $('#custToggle').addEventListener('click', async () => {
-    try { await api('/api/admin/customers?id=' + c.id, { method: 'PATCH', body: { disabled: !c.is_banned } }); toast('Updated.'); closeModal(); loadCustomersTable(); }
-    catch (err) { toast(err.message); }
   });
   $('#custDelete').addEventListener('click', async () => {
     if (!confirm('Permanently delete this customer account? This cannot be undone.')) return;

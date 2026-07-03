@@ -1,9 +1,18 @@
 'use strict';
 
 /* /api/admin/customers
-   GET    ?id=<uuid>                         → single customer (profile + auth + orders/addresses)
+   GET    ?id=<uuid>                         → single customer (profile + auth + orders/addresses + admin notes)
    GET    ?page=&pageSize=&search=           → paginated list
-   PATCH  ?id=<uuid>  { disabled: true|false } → enable/disable sign-in
+   PATCH  ?id=<uuid>  { disabled?: true|false,
+                         first_name?, last_name?, company?, mobile?,
+                         country?, city?, address?, postal_code?,
+                         email?, notes? }
+          → enable/disable sign-in AND/OR edit customer profile fields.
+          `email` updates the real auth.users login email (service role,
+          immediate — no confirmation round-trip). `notes` is admin-only
+          and stored in public.admin_customer_notes, never on the profile
+          row itself, so it can never be returned by the customer's own
+          RLS-permitted `select('*')` on their profile.
    DELETE ?id=<uuid>                          → permanently delete the account
    POST   { action:'reset-password', id }     → email a password-reset link
    POST   { action:'email-customer', id, subject, message } → send a custom email */
@@ -11,6 +20,7 @@
 const mailer = require('../_email');
 const { getAdminClient } = require('../_supabaseAdmin');
 const { requireAdminSession, readJsonBody, logAudit } = require('../_adminAuth');
+const { enrichOrderItems } = require('../_orderEnrich');
 
 module.exports = async function handler(req, res) {
   const admin = await requireAdminSession(req, res);
@@ -27,11 +37,54 @@ module.exports = async function handler(req, res) {
     const id = query.id;
     if (!id) return res.status(400).json({ error: 'Missing customer id.' });
     const body = await readJsonBody(req);
-    const disable = !!body.disabled;
-    const { error } = await sb.auth.admin.updateUserById(id, { ban_duration: disable ? '87600h' : 'none' });
-    if (error) return res.status(500).json({ error: error.message });
-    await sb.from('profiles').update({ status: disable ? 'suspended' : 'active' }).eq('id', id);
-    await logAudit(sb, { adminId: admin.id, adminEmail: admin.email, action: disable ? 'customer.disable' : 'customer.enable', entityType: 'customer', entityId: id, req });
+
+    /* Enable/disable sign-in — unchanged from before. */
+    if (body.disabled !== undefined) {
+      const disable = !!body.disabled;
+      const { error } = await sb.auth.admin.updateUserById(id, { ban_duration: disable ? '87600h' : 'none' });
+      if (error) return res.status(500).json({ error: error.message });
+      await sb.from('profiles').update({ status: disable ? 'suspended' : 'active' }).eq('id', id);
+      await logAudit(sb, { adminId: admin.id, adminEmail: admin.email, action: disable ? 'customer.disable' : 'customer.enable', entityType: 'customer', entityId: id, req });
+    }
+
+    /* Editable profile fields (Customer Edit form). */
+    const profilePatch = {};
+    ['first_name', 'last_name', 'company', 'mobile', 'country', 'city', 'address', 'postal_code'].forEach(f => {
+      if (body[f] !== undefined) profilePatch[f] = body[f] || null;
+    });
+    if (profilePatch.first_name !== undefined || profilePatch.last_name !== undefined) {
+      const { data: current } = await sb.from('profiles').select('first_name, last_name').eq('id', id).maybeSingle();
+      const fn = profilePatch.first_name !== undefined ? profilePatch.first_name : (current && current.first_name);
+      const ln = profilePatch.last_name !== undefined ? profilePatch.last_name : (current && current.last_name);
+      profilePatch.full_name = [fn, ln].filter(Boolean).join(' ') || null;
+    }
+    if (Object.keys(profilePatch).length) {
+      const { error } = await sb.from('profiles').update(profilePatch).eq('id', id);
+      if (error) return res.status(500).json({ error: error.message });
+    }
+
+    /* Login email — a real, immediate change via the service role. */
+    if (body.email !== undefined && String(body.email).trim()) {
+      const { error } = await sb.auth.admin.updateUserById(id, { email: String(body.email).trim(), email_confirm: true });
+      if (error) return res.status(500).json({ error: error.message });
+    }
+
+    /* Admin-only notes — separate table, never exposed to the customer. */
+    if (body.notes !== undefined) {
+      const { error } = await sb.from('admin_customer_notes')
+        .upsert({ user_id: id, notes: body.notes || null, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      if (error) return res.status(500).json({ error: error.message });
+    }
+
+    if (Object.keys(profilePatch).length || body.email !== undefined || body.notes !== undefined) {
+      await logAudit(sb, {
+        adminId: admin.id, adminEmail: admin.email, action: 'customer.update',
+        entityType: 'customer', entityId: id,
+        details: Object.assign({}, profilePatch, body.email !== undefined ? { email: body.email } : {}, body.notes !== undefined ? { notesUpdated: true } : {}),
+        req,
+      });
+    }
+
     return res.status(200).json({ ok: true });
   }
 
@@ -118,10 +171,12 @@ async function getOne(sb, id, res) {
   if (!profile) return res.status(404).json({ error: 'Customer not found.' });
   const { data: userRes } = await sb.auth.admin.getUserById(id);
   const u = (userRes && userRes.user) || {};
-  const [ordersRes, addrRes] = await Promise.all([
+  const [ordersRes, addrRes, notesRes] = await Promise.all([
     sb.from('orders').select('*').eq('user_id', id).order('created_at', { ascending: false }),
     sb.from('addresses').select('*').eq('user_id', id),
+    sb.from('admin_customer_notes').select('notes').eq('user_id', id).maybeSingle(),
   ]);
+  const enrichedOrders = await enrichOrderItems(sb, ordersRes.data || []);
   return res.status(200).json({
     customer: {
       ...profile,
@@ -129,8 +184,9 @@ async function getOne(sb, id, res) {
       last_login: u.last_sign_in_at || null,
       email_verified: !!u.email_confirmed_at,
       is_banned: !!(u.banned_until && new Date(u.banned_until) > new Date()),
+      notes: (notesRes.data && notesRes.data.notes) || '',
     },
-    orders: ordersRes.data || [],
+    orders: enrichedOrders,
     addresses: addrRes.data || [],
   });
 }

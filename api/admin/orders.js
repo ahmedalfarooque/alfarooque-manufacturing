@@ -5,13 +5,18 @@
    GET   ?page=&pageSize=&status=&search=  → paginated list
    PATCH ?id=<uuid>  { status?, payment_status?, current_stage?,
                         estimated_completion?, estimated_delivery?,
-                        tracking_pct?, admin_notes? }
+                        tracking_pct?, admin_notes?, items?, discount?,
+                        shipping_cost?, tracking_number?, courier?,
+                        delivery_address? }
    Every write lands directly in public.orders — the same table the
    customer dashboard reads live, so status/tracking changes are visible
-   to the customer the next time their dashboard loads or re-syncs. */
+   to the customer the next time their dashboard loads or re-syncs.
+   Editing items/discount/shipping_cost recomputes subtotal/vat/grand_total
+   server-side so the stored totals always match what was actually saved. */
 
 const { getAdminClient } = require('../_supabaseAdmin');
 const { requireAdminSession, readJsonBody, logAudit } = require('../_adminAuth');
+const { enrichOrderItems } = require('../_orderEnrich');
 
 const ALLOWED_STATUSES = [
   'pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed',
@@ -56,7 +61,8 @@ module.exports = async function handler(req, res) {
       if (error) return res.status(500).json({ error: error.message });
       if (!data) return res.status(404).json({ error: 'Order not found.' });
       const [withInfo] = await attachCustomerInfo(sb, [data]);
-      return res.status(200).json({ order: withInfo });
+      const [enriched] = await enrichOrderItems(sb, [withInfo]);
+      return res.status(200).json({ order: enriched });
     }
 
     const page = Math.max(1, parseInt(query.page, 10) || 1);
@@ -101,6 +107,32 @@ module.exports = async function handler(req, res) {
     if (body.estimated_delivery !== undefined) patch.estimated_delivery = body.estimated_delivery || null;
     if (body.tracking_pct !== undefined) patch.tracking_pct = Math.max(0, Math.min(100, Number(body.tracking_pct) || 0));
     if (body.admin_notes !== undefined) patch.admin_notes = String(body.admin_notes || '').slice(0, 2000);
+    if (body.tracking_number !== undefined) patch.tracking_number = String(body.tracking_number || '').slice(0, 200) || null;
+    if (body.courier !== undefined) patch.courier = String(body.courier || '').slice(0, 200) || null;
+    if (body.delivery_address !== undefined) patch.delivery_address = String(body.delivery_address || '').slice(0, 2000) || null;
+    if (body.discount !== undefined) patch.discount = Math.max(0, Number(body.discount) || 0);
+    if (body.shipping_cost !== undefined) patch.shipping_cost = Math.max(0, Number(body.shipping_cost) || 0);
+    if (Array.isArray(body.items)) {
+      patch.items = body.items.map(it => ({
+        name: String((it && it.name) || '').slice(0, 300),
+        qty: Math.max(1, Number(it && it.qty) || 1),
+        price: Math.max(0, Number(it && it.price) || 0),
+      }));
+    }
+
+    /* Editing line items, discount, or shipping changes the money — keep
+       the stored totals authoritative rather than trusting a stale client
+       value for anything money-related. */
+    if (patch.items || patch.discount !== undefined || patch.shipping_cost !== undefined) {
+      const items = patch.items || existing.items || [];
+      const subtotal = items.reduce((s, it) => s + (Number(it.price) || 0) * (Number(it.qty) || 1), 0);
+      const vat = Math.round(subtotal * 0.15 * 100) / 100;
+      const shipping = patch.shipping_cost !== undefined ? patch.shipping_cost : (Number(existing.shipping_cost) || 0);
+      const discount = patch.discount !== undefined ? patch.discount : (Number(existing.discount) || 0);
+      patch.subtotal = Math.round(subtotal * 100) / 100;
+      patch.vat = vat;
+      patch.grand_total = Math.max(0, Math.round((subtotal + vat + shipping - discount) * 100) / 100);
+    }
 
     if (patch.status && patch.status !== existing.status) {
       const timeline = Array.isArray(existing.timeline) ? existing.timeline.slice() : [];

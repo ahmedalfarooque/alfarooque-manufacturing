@@ -364,8 +364,11 @@ drop policy if exists "public read products"   on public.products;
 create policy "public read categories" on public.categories for select using (is_active = true);
 create policy "public read products"   on public.products   for select using (is_active = true);
 
--- ── Seed the initial admin account (change the password after first login —
---    must_change_password is already set to true). Safe to re-run. ──
+-- ── Seed admin accounts (change the password after first login —
+--    must_change_password is already set to true). Safe to re-run.
+--    Every row here gets 100% identical permissions — there is no
+--    per-admin role/permission gating anywhere in the admin API, so
+--    adding an administrator is exactly "add a row to admin_users". ──
 insert into public.admin_users (email, password_hash, full_name, role, must_change_password)
 values (
   'arshad@alfarooque.com',
@@ -375,4 +378,37 @@ values (
   true
 )
 on conflict (email) do nothing;
+
+insert into public.admin_users (email, password_hash, full_name, role, must_change_password)
+values (
+  'ahmed@alfarooque.com',
+  crypt('123Abc@@45', gen_salt('bf', 12)),
+  'Ahmed',
+  'admin',
+  true
+)
+on conflict (email) do nothing;
+-- ═══════════════════════════════════════════════════════════════════
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- ADMIN ORDER/CUSTOMER MANAGEMENT — extra editable order fields, and a
+-- service-role-only notes table for customers (kept OUT of public.profiles
+-- so admin-only notes can never be returned by the customer's own
+-- `select('*')` on their profile — profiles RLS lets a user read every
+-- column of their own row, so anything admin-internal must live elsewhere).
+-- ═══════════════════════════════════════════════════════════════════
+alter table public.orders add column if not exists discount         numeric(12,2) default 0;
+alter table public.orders add column if not exists shipping_cost    numeric(12,2) default 0;
+alter table public.orders add column if not exists tracking_number  text;
+alter table public.orders add column if not exists courier          text;
+alter table public.orders add column if not exists delivery_address text;
+
+create table if not exists public.admin_customer_notes (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  notes      text,
+  updated_at timestamptz not null default now()
+);
+alter table public.admin_customer_notes enable row level security;
+-- No policies — only the service role (admin API) can read/write this table.
 -- ═══════════════════════════════════════════════════════════════════
