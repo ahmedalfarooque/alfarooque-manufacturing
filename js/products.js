@@ -22,510 +22,48 @@ var _ric = typeof requestIdleCallback === 'function'
 /* ════════════════════════════════════════════
    PRODUCT DATA
    ════════════════════════════════════════════ */
-/* Image naming convention in assets/images/Products/:
-   "[Product Name] 1.png"  "[Product Name] 2.png"  "[Product Name] 3.png"
-   Add matching images to the folder to replace placeholder fallbacks.       */
-var _DOOR_TEAK = [
-  'assets/images/Products/Premium Solid Teak Exterior Door 1.png',
-  'assets/images/Products/Premium Solid Teak Exterior Door 2.png',
-  'assets/images/Products/Premium Solid Teak Exterior Door 3.png'
-];
-var _DOOR_HARD = [
-  'assets/images/Products/Premium Solid Hardwood Exterior Door 1.png',
-  'assets/images/Products/Premium Solid Hardwood Exterior Door 2.png',
-  'assets/images/Products/Premium Solid Hardwood Exterior Door 3.png'
-];
-var _DOOR_MDF = [
-  'assets/images/Products/Semi-Solid Interior Door (MDF Veneer Finish) 1.png',
-  'assets/images/Products/Semi-Solid Interior Door (MDF Veneer Finish) 2.png',
-  'assets/images/Products/Semi-Solid Interior Door (MDF Veneer Finish) 3.png'
-];
-var _DOOR_PLY = [
-  'assets/images/Products/Semi-Solid Interior Door (Plywood Finish) 1.png',
-  'assets/images/Products/Semi-Solid Interior Door (Plywood Finish) 2.png',
-  'assets/images/Products/Semi-Solid Interior Door (Plywood Finish) 3.png'
-];
-var _DOOR_HC_MDF = [
-  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 1.png',
-  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 2.png',
-  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 3.png',
-  'assets/images/Products/Hollow Core Interior Door (MDF Veneer Finish) 4.png'
-];
-var _DOOR_HC_PLY = [
-  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 1.png',
-  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 2.png',
-  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 3.png',
-  'assets/images/Products/Hollow Core Interior Door (Plywood Finish) 4.png'
-];
-var _DOOR_HONEY = [
-  'assets/images/Products/Honeycomb Hollow Core Interior Door 1.png',
-  'assets/images/Products/Honeycomb Hollow Core Interior Door 2.png',
-  'assets/images/Products/Honeycomb Hollow Core Interior Door 3.png',
-  'assets/images/Products/Honeycomb Hollow Core Interior Door 4.png'
-];
-var _DOOR_ECO = [
-  'assets/images/Products/Economy Interior Door 1.png',
-  'assets/images/Products/Economy Interior Door 2.png',
-  'assets/images/Products/Economy Interior Door 3.png',
-  'assets/images/Products/Economy Interior Door 4.png'
-];
+/* Products page reads product data exclusively from /api/products, which
+   is the SAME public.products table the Admin Dashboard edits (see
+   api/admin/products.js) — this is the single source of truth. There is
+   no static/seed/mock product list anywhere in this file: an admin price
+   or content edit is live on this page on next load, with nothing else
+   to keep in sync.
 
-var _DOOR_SIZES = ['2100 × 900 mm', '2100 × 1000 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')];
-
-var _BED_IMGS = [
-  'assets/images/Products/Beds & Accessories/Bed and Mattress set 1_1.png',
-  'assets/images/Products/Beds & Accessories/Bed and Mattress set 1_2.png',
-  'assets/images/Products/Beds & Accessories/Bed and Mattress set 1_3.png'
-];
-var _SOFA_IMGS = [
-  'assets/images/Products/Sofa/Sofa 1_1.png',
-  'assets/images/Products/Sofa/Sofa 1_2.png',
-  'assets/images/Products/Sofa/Sofa 1_3.png',
-  'assets/images/Products/Sofa/Sofa 1_4.png'
-];
-var _ALU_WIN_IMGS = [
-  'assets/images/Products/Aluminium Window/Aluminium Window 01_1.png',
-  'assets/images/Products/Aluminium Window/Aluminium Window 01_2.png',
-  'assets/images/Products/Aluminium Window/Aluminium Window 01_3.png',
-  'assets/images/Products/Aluminium Window/Aluminium Window 01_4.png'
-];
-var _FIRE_DOOR_IMGS = [
-  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_1.png',
-  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_2.png',
-  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_3.png',
-  'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_4.png'
-];
-var _NIGHTSTAND_IMGS = [
-  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_1.png',
-  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_2.png',
-  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_3.png',
-  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_4.png'
-];
-
-var PRODUCTS = [
-  {
-    id: 1, cat: 'doors', material: 'Wood', availability: 'In Stock',
-    rating: 4.8, reviewCount: 32, badge: 'BEST SELLER', featured: true,
-    tags: ['Exterior', 'Premium', 'Solid Wood'],
-    name: 'Premium Solid Teak Exterior Door',
-    nameAr: 'باب خارجي من خشب التيك الصلب الفاخر',
-    desc: 'Premium exterior door crafted with a solid teak wood door jamb, cast jamb, and main frame. Finished with high-quality varnish, sealer & lacquer, or paint for maximum durability. Includes a 5-year warranty.',
-    descAr: 'باب خارجي فاخر مصنوع من خشب التيك الصلب مع إطار وأطراف وهيكل رئيسي متكامل. تشطيب بورنيش عالي الجودة أو سيلر ولاكيه أو دهان لمتانة قصوى. يشمل ضمان 5 سنوات.',
-    price: 9500,
-    img: _DOOR_TEAK[0], imgs: _DOOR_TEAK,
-    warrantyLabel: '5-Year Warranty', warrantyLabelAr: 'ضمان 5 سنوات',
-    features: ['Premium solid teak construction','Solid teak door jamb and main frame','Cast iron jamb for enhanced durability','Superior moisture and weather resistance','Anti-termite and corrosion treatment','Varnish, sealer & lacquer, or paint finish','Elegant natural teak grain appearance','5-year manufacturer warranty'],
-    featuresAr: ['بناء متين من خشب التيك الصلب الفاخر','إطار باب ورئيسي من خشب التيك الصلب','إطار مصبوب لمتانة فائقة','مقاومة فائقة للرطوبة والعوامل الجوية','معالجة مضادة للحشرات والتآكل','تشطيب ورنيش أو سيلر ولاكيه أو دهان','مظهر أنيق بحبوب التيك الطبيعية','ضمان المصنع لمدة 5 سنوات'],
-    specs: {'Product Type':'Door','Door Type':'Exterior – Solid Core','Frame Material':'Solid Teak Wood','Core Material':'Solid Teak Wood','Surface Finish':'Varnish / Sealer & Lacquer / Paint','Wood Species':'Teak','Warranty':'5 Years','Application':'Residential & Commercial','Installation':'Exterior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'خارجي – قلب صلب','مادة الإطار':'خشب التيك الصلب','مادة القلب':'خشب التيك الصلب','التشطيب السطحي':'ورنيش / سيلر ولاكيه / دهان','نوع الخشب':'تيك','الضمان':'5 سنوات','التطبيق':'سكني وتجاري','التركيب':'خارجي','البلد':'المملكة العربية السعودية'},
-    applications: ['Villas','Luxury Residences','Commercial Buildings','Hotels & Resorts','Government Projects','High-End Offices'],
-    applicationsAr: ['الفلل','المساكن الفاخرة','المباني التجارية','الفنادق والمنتجعات','المشاريع الحكومية','المكاتب الراقية'],
-    finishes: ['Natural Teak Varnish','Sealer & Lacquer','Paint Finish','Custom Colors'],
-    finishesAr: ['ورنيش التيك الطبيعي','سيلر ولاكيه','تشطيب دهان','ألوان مخصصة'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 2, cat: 'doors', material: 'Wood', availability: 'In Stock',
-    rating: 4.7, reviewCount: 27, badge: 'FEATURED', featured: true,
-    tags: ['Exterior', 'Premium', 'Solid Wood'],
-    name: 'Premium Solid Hardwood Exterior Door',
-    nameAr: 'باب خارجي من الخشب الصلب الفاخر',
-    desc: 'Exterior door manufactured from premium solid hardwood options including Oak, Mahogany, Beech, or Walnut. Finished with varnish, sealer & lacquer, or paint. Includes a 5-year warranty.',
-    descAr: 'باب خارجي مصنوع من أخشاب صلبة فاخرة تشمل البلوط والماهوجني والزان أو الجوز. تشطيب بورنيش أو سيلر ولاكيه أو دهان. يشمل ضمان 5 سنوات.',
-    price: 6500,
-    img: _DOOR_HARD[0], imgs: _DOOR_HARD,
-    warrantyLabel: '5-Year Warranty', warrantyLabelAr: 'ضمان 5 سنوات',
-    features: ['Premium hardwood species selection','Outstanding weather resistance','Solid core construction throughout','Multiple premium finish options','Heavy-duty jamb and main frame','Classic elegant natural design','Long service life and durability','5-year manufacturer warranty'],
-    featuresAr: ['اختيار أجود أنواع الأخشاب الصلبة','مقاومة ممتازة لعوامل الطقس','بناء ذو قلب صلب بالكامل','خيارات تشطيب فاخرة متعددة','إطار وهيكل رئيسي متين','تصميم كلاسيكي راقٍ وأنيق','عمر خدمة طويل ومتانة فائقة','ضمان المصنع لمدة 5 سنوات'],
-    specs: {'Product Type':'Door','Door Type':'Exterior – Solid Core','Frame Material':'Solid Hardwood','Core Material':'Solid Hardwood','Surface Finish':'Varnish / Sealer & Lacquer / Paint','Wood Species':'Oak / Mahogany / Beech / Walnut','Warranty':'5 Years','Application':'Residential & Commercial','Installation':'Exterior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'خارجي – قلب صلب','مادة الإطار':'خشب صلب فاخر','مادة القلب':'خشب صلب فاخر','التشطيب السطحي':'ورنيش / سيلر ولاكيه / دهان','نوع الخشب':'بلوط / ماهوجني / زان / جوز','الضمان':'5 سنوات','التطبيق':'سكني وتجاري','التركيب':'خارجي','البلد':'المملكة العربية السعودية'},
-    applications: ['Villas','Residential Buildings','Commercial Offices','Hotels','Government Projects','Schools & Hospitals'],
-    applicationsAr: ['الفلل','المباني السكنية','المكاتب التجارية','الفنادق','المشاريع الحكومية','المدارس والمستشفيات'],
-    finishes: ['Natural Wood Varnish','Sealer & Lacquer','Paint Finish','PU Finish','Custom Colors'],
-    finishesAr: ['ورنيش الخشب الطبيعي','سيلر ولاكيه','تشطيب دهان','تشطيب PU','ألوان مخصصة'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 3, cat: 'doors', material: 'MDF', availability: 'In Stock',
-    rating: 4.5, reviewCount: 41,
-    tags: ['Interior', 'MDF'],
-    name: 'Semi-Solid Interior Door (MDF Veneer Finish)',
-    nameAr: 'باب داخلي شبه صلب (تشطيب قشرة MDF)',
-    desc: 'Interior door with Swedish wood frame, full chipboard core, waterproof MDF pressing, premium wood veneer, and sealer & lacquer or painted finish. Includes a 1-year warranty.',
-    descAr: 'باب داخلي بإطار خشب سويدي وقلب رقاقة خشبية كامل وضغط MDF مقاوم للماء وقشرة خشب فاخرة وتشطيب سيلر ولاكيه أو دهان. يشمل ضمان سنة واحدة.',
-    price: 1050,
-    img: _DOOR_MDF[0], imgs: _DOOR_MDF,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: ['Swedish wood frame for structural stability','Full chipboard core for rigidity','Waterproof MDF pressing layer','Premium natural wood veneer surface','Sealer & lacquer or paint finish','Smooth and precise surface quality','Suitable for residential & commercial','1-year manufacturer warranty'],
-    featuresAr: ['إطار خشب سويدي لثبات هيكلي ممتاز','قلب رقاقة خشبية كاملة للصلابة','طبقة ضغط MDF مقاومة للماء','سطح قشرة خشب طبيعية فاخرة','تشطيب سيلر ولاكيه أو دهان','جودة سطح ناعمة ودقيقة','مناسب للاستخدام السكني والتجاري','ضمان المصنع لمدة سنة واحدة'],
-    specs: {'Product Type':'Door','Door Type':'Interior – Semi-Solid Core','Frame Material':'Swedish Wood','Core Material':'Full Chipboard','Surface Finish':'Wood Veneer + Sealer & Lacquer / Paint','Wood Species':'Swedish Wood + MDF Veneer','Warranty':'1 Year','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب شبه صلب','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة خشبية كاملة','التشطيب السطحي':'قشرة خشب + سيلر ولاكيه / دهان','نوع الخشب':'خشب سويدي + قشرة MDF','الضمان':'سنة واحدة','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
-    applications: ['Residences & Villas','Apartments','Hotels & Resorts','Commercial Offices','Healthcare Facilities','Educational Buildings'],
-    applicationsAr: ['المنازل والفلل','الشقق السكنية','الفنادق والمنتجعات','المكاتب التجارية','المرافق الصحية','المباني التعليمية'],
-    finishes: ['Natural Wood Veneer','Sealer & Lacquer','Paint Finish','Custom Colors'],
-    finishesAr: ['قشرة خشب طبيعية','سيلر ولاكيه','تشطيب دهان','ألوان مخصصة'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 4, cat: 'doors', material: 'Wood', availability: 'In Stock',
-    rating: 4.4, reviewCount: 38,
-    tags: ['Interior'],
-    name: 'Semi-Solid Interior Door (Plywood Finish)',
-    nameAr: 'باب داخلي شبه صلب (تشطيب خشب رقائقي)',
-    desc: 'Swedish wood frame with full chipboard core, plywood pressing, and painted or Talveen finish. Designed for residential and commercial interiors. Includes a 1-year warranty.',
-    descAr: 'إطار خشب سويدي مع قلب رقاقة خشبية كامل وضغط خشب رقائقي وتشطيب دهان أو تالفين. مصمم للديكورات الداخلية السكنية والتجارية. يشمل ضمان سنة واحدة.',
-    price: 950,
-    img: _DOOR_PLY[0], imgs: _DOOR_PLY,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: ['Swedish wood structural frame','Full chipboard solid core','Plywood pressing for durability','Paint or Talveen surface finish','Durable and cost-effective','Precision engineered construction','Suitable for residential & commercial','1-year manufacturer warranty'],
-    featuresAr: ['إطار هيكلي من الخشب السويدي','قلب رقاقة خشبية صلبة كاملة','ضغط خشب رقائقي للمتانة','تشطيب دهان أو تالفين','متين وفعّال من حيث التكلفة','بناء مهندس بدقة','مناسب للاستخدام السكني والتجاري','ضمان المصنع لمدة سنة واحدة'],
-    specs: {'Product Type':'Door','Door Type':'Interior – Semi-Solid Core','Frame Material':'Swedish Wood','Core Material':'Full Chipboard','Surface Finish':'Plywood + Paint / Talveen','Wood Species':'Swedish Wood','Warranty':'1 Year','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب شبه صلب','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة خشبية كاملة','التشطيب السطحي':'خشب رقائقي + دهان / تالفين','نوع الخشب':'خشب سويدي','الضمان':'سنة واحدة','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
-    applications: ['Residential Buildings','Apartments','Schools','Hospitals','Commercial Buildings','Government Facilities'],
-    applicationsAr: ['المباني السكنية','الشقق','المدارس','المستشفيات','المباني التجارية','المرافق الحكومية'],
-    finishes: ['Paint Finish','Talveen Finish','Custom Colors'],
-    finishesAr: ['تشطيب دهان','تشطيب تالفين','ألوان مخصصة'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 5, cat: 'doors', material: 'MDF', availability: 'In Stock',
-    rating: 4.3, reviewCount: 29,
-    tags: ['Interior', 'MDF'],
-    name: 'Hollow Core Interior Door (MDF Veneer Finish)',
-    nameAr: 'باب داخلي بقلب أجوف (تشطيب قشرة MDF)',
-    desc: 'Interior hollow-core door featuring a Swedish wood frame, chipboard core with 5 cm spacing, waterproof MDF pressing, wood veneer finish, and sealer & lacquer or paint. Includes a 1-year warranty.',
-    descAr: 'باب داخلي بقلب أجوف بإطار خشب سويدي وقلب رقاقة خشبية بفراغات 5 سم وضغط MDF مقاوم للماء وقشرة خشب وتشطيب سيلر ولاكيه أو دهان. يشمل ضمان سنة واحدة.',
-    price: 1000,
-    img: _DOOR_HC_MDF[0], imgs: _DOOR_HC_MDF,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: ['Swedish wood perimeter frame','Hollow chipboard core (5 cm spacing)','Waterproof MDF pressing layer','Premium natural wood veneer surface','Lightweight yet structurally sound','Good sound insulation properties','Elegant and smooth finish','1-year manufacturer warranty'],
-    featuresAr: ['إطار محيطي من الخشب السويدي','قلب رقاقة أجوف (فراغات 5 سم)','طبقة ضغط MDF مقاومة للماء','سطح قشرة خشب طبيعية فاخرة','خفيف الوزن ومتين هيكلياً','خصائص جيدة لعزل الصوت','تشطيب أنيق وناعم','ضمان المصنع لمدة سنة واحدة'],
-    specs: {'Product Type':'Door','Door Type':'Interior – Hollow Core','Frame Material':'Swedish Wood','Core Material':'Hollow Chipboard (5 cm spacing)','Surface Finish':'Wood Veneer + Sealer & Lacquer / Paint','Wood Species':'Swedish Wood + MDF Veneer','Warranty':'1 Year','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب أجوف','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة أجوف (فراغات 5 سم)','التشطيب السطحي':'قشرة خشب + سيلر ولاكيه / دهان','نوع الخشب':'خشب سويدي + قشرة MDF','الضمان':'سنة واحدة','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
-    applications: ['Bedrooms & Living Rooms','Apartments','Hotels','Commercial Offices','Healthcare Facilities','Educational Buildings'],
-    applicationsAr: ['غرف النوم والمعيشة','الشقق السكنية','الفنادق','المكاتب التجارية','المرافق الصحية','المباني التعليمية'],
-    finishes: ['Natural Wood Veneer','Sealer & Lacquer','Paint Finish','Custom Colors'],
-    finishesAr: ['قشرة خشب طبيعية','سيلر ولاكيه','تشطيب دهان','ألوان مخصصة'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 6, cat: 'doors', material: 'Wood', availability: 'In Stock',
-    rating: 4.2, reviewCount: 22,
-    tags: ['Interior'],
-    name: 'Hollow Core Interior Door (Plywood Finish)',
-    nameAr: 'باب داخلي بقلب أجوف (تشطيب خشب رقائقي)',
-    desc: 'Hollow-core interior door with Swedish wood frame, chipboard core, plywood pressing, and painted or Talveen finish. Includes a 6-month warranty.',
-    descAr: 'باب داخلي بقلب أجوف بإطار خشب سويدي وقلب رقاقة خشبية وضغط خشب رقائقي وتشطيب دهان أو تالفين. يشمل ضمان 6 أشهر.',
-    price: 850,
-    img: _DOOR_HC_PLY[0], imgs: _DOOR_HC_PLY,
-    warrantyLabel: '6-Month Warranty', warrantyLabelAr: 'ضمان 6 أشهر',
-    features: ['Swedish wood frame construction','Hollow chipboard core','Plywood pressing layer','Paint or Talveen surface finish','Lightweight design for easy handling','Cost-effective door solution','Easy and fast installation','6-month manufacturer warranty'],
-    featuresAr: ['بناء إطار من الخشب السويدي','قلب رقاقة خشبية أجوف','طبقة ضغط خشب رقائقي','تشطيب دهان أو تالفين','تصميم خفيف الوزن لسهولة التعامل','حل اقتصادي للأبواب','تركيب سهل وسريع','ضمان المصنع لمدة 6 أشهر'],
-    specs: {'Product Type':'Door','Door Type':'Interior – Hollow Core','Frame Material':'Swedish Wood','Core Material':'Hollow Chipboard','Surface Finish':'Plywood + Paint / Talveen','Wood Species':'Swedish Wood','Warranty':'6 Months','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب أجوف','مادة الإطار':'خشب سويدي','مادة القلب':'رقاقة خشبية أجوف','التشطيب السطحي':'خشب رقائقي + دهان / تالفين','نوع الخشب':'خشب سويدي','الضمان':'6 أشهر','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
-    applications: ['Residential Buildings','Apartments','Budget Hotels','Schools','Warehouses','Utility Rooms'],
-    applicationsAr: ['المباني السكنية','الشقق','الفنادق الاقتصادية','المدارس','المستودعات','الغرف الخدمية'],
-    finishes: ['Paint Finish','Talveen Finish','Custom Colors'],
-    finishesAr: ['تشطيب دهان','تشطيب تالفين','ألوان مخصصة'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 7, cat: 'doors', material: 'Wood', availability: 'In Stock',
-    rating: 4.1, reviewCount: 18, badge: 'NEW',
-    tags: ['Interior'],
-    name: 'Honeycomb Hollow Core Interior Door',
-    nameAr: 'باب داخلي بقلب أجوف خلوي',
-    desc: 'Lightweight interior door with Swedish wood frame, honeycomb core construction, plywood pressing, and painted or Talveen finish. Includes a 6-month warranty.',
-    descAr: 'باب داخلي خفيف الوزن بإطار خشب سويدي وبنية قلب خلوي وضغط خشب رقائقي وتشطيب دهان أو تالفين. يشمل ضمان 6 أشهر.',
-    price: 700,
-    img: _DOOR_HONEY[0], imgs: _DOOR_HONEY,
-    warrantyLabel: '6-Month Warranty', warrantyLabelAr: 'ضمان 6 أشهر',
-    features: ['Swedish wood perimeter frame','Ultra-lightweight honeycomb core','Plywood pressing for surface rigidity','Paint or Talveen surface finish','Eco-friendly lightweight construction','Ideal for partition applications','Quick and easy installation','6-month manufacturer warranty'],
-    featuresAr: ['إطار محيطي من الخشب السويدي','قلب خلوي خفيف الوزن للغاية','ضغط خشب رقائقي لصلابة السطح','تشطيب دهان أو تالفين','بناء بيئي خفيف الوزن','مثالي لتطبيقات الفواصل','تركيب سريع وسهل','ضمان المصنع لمدة 6 أشهر'],
-    specs: {'Product Type':'Door','Door Type':'Interior – Honeycomb Core','Frame Material':'Swedish Wood','Core Material':'Honeycomb','Surface Finish':'Plywood + Paint / Talveen','Wood Species':'Swedish Wood','Warranty':'6 Months','Application':'Residential & Commercial','Installation':'Interior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قلب خلوي','مادة الإطار':'خشب سويدي','مادة القلب':'خلوي','التشطيب السطحي':'خشب رقائقي + دهان / تالفين','نوع الخشب':'خشب سويدي','الضمان':'6 أشهر','التطبيق':'سكني وتجاري','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
-    applications: ['Residential Buildings','Apartments','Lightweight Partitions','Offices','Schools','Utility Areas'],
-    applicationsAr: ['المباني السكنية','الشقق','الفواصل الخفيفة','المكاتب','المدارس','المناطق الخدمية'],
-    finishes: ['Paint Finish','Talveen Finish','Custom Colors'],
-    finishesAr: ['تشطيب دهان','تشطيب تالفين','ألوان مخصصة'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 8, cat: 'doors', material: 'Wood', availability: 'In Stock',
-    rating: 3.9, reviewCount: 52,
-    tags: ['Interior', 'Budget'],
-    name: 'Economy Interior Door',
-    nameAr: 'باب داخلي اقتصادي',
-    desc: 'Budget-friendly interior door suitable for standard residential applications. Supplied without warranty.',
-    descAr: 'باب داخلي اقتصادي مناسب للتطبيقات السكنية القياسية. يُورَّد بدون ضمان.',
-    price: 550,
-    img: _DOOR_ECO[0], imgs: _DOOR_ECO,
-    warrantyLabel: 'No Warranty', warrantyLabelAr: 'بدون ضمان',
-    features: ['Budget-friendly construction','Standard residential grade quality','Paint surface finish','Lightweight design','Easy installation','Suitable for standard applications','Cost-effective solution','Functional and practical'],
-    featuresAr: ['بناء اقتصادي ميسور التكلفة','جودة سكنية قياسية','تشطيب دهان سطحي','تصميم خفيف الوزن','تركيب سهل','مناسب للتطبيقات القياسية','حل فعّال من حيث التكلفة','عملي ونافع'],
-    specs: {'Product Type':'Door','Door Type':'Interior – Standard','Frame Material':'Standard Wood','Core Material':'Standard Core','Surface Finish':'Paint','Wood Species':'Standard Wood','Warranty':'No Warranty','Application':'Residential','Installation':'Interior','Country':'Saudi Arabia'},
-    specsAr: {'نوع المنتج':'باب','نوع الباب':'داخلي – قياسي','مادة الإطار':'خشب قياسي','مادة القلب':'قلب قياسي','التشطيب السطحي':'دهان','نوع الخشب':'خشب قياسي','الضمان':'بدون ضمان','التطبيق':'سكني','التركيب':'داخلي','البلد':'المملكة العربية السعودية'},
-    applications: ['Standard Residential Buildings','Apartments','Budget Housing Projects','Utility Rooms','Storage Areas'],
-    applicationsAr: ['المباني السكنية القياسية','الشقق','مشاريع الإسكان الميسور','الغرف الخدمية','مناطق التخزين'],
-    finishes: ['Paint Finish'],
-    finishesAr: ['تشطيب دهان'],
-    sizes: _DOOR_SIZES
-  },
-  {
-    id: 9, cat: 'beds', material: 'MDF', availability: 'In Stock',
-    rating: 4.9, reviewCount: 0,
-    tags: ['Bedroom', 'Furniture', 'Mattress'],
-    name: 'Wooden Bed with Spring Mattress',
-    nameAr: 'سرير خشبي مع مرتبة سبرينج',
-    desc: 'Premium wooden bed manufactured using high-quality MDF melamine panels with a strong internal plywood support system and solid wooden legs. Includes a comfortable 20 cm thick spring mattress. Professional manufacturing, delivery, and installation included.',
-    descAr: 'سرير خشبي فاخر مصنوع من ألواح MDF ميلامين عالية الجودة مع نظام دعم داخلي قوي من الخشب الرقائقي وأرجل خشبية صلبة. يشمل مرتبة سبرينج مريحة بسماكة 20 سم. يشمل التصنيع والتوصيل والتركيب الاحترافي.',
-    price: 1250,
-    img: _BED_IMGS[0], imgs: _BED_IMGS,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: [
-      'Premium 18 mm MDF Melamine construction',
-      'Heavy-duty 18 mm plywood internal support frame',
-      'Six solid wooden legs for maximum stability',
-      'Elegant modern finish (Colour as per customer selection)',
-      '20 cm thick premium spring mattress included',
-      'Strong, durable and long-lasting construction',
-      'Professional manufacturing, delivery & installation',
-      'Suitable for residential, apartments, hotels & staff accommodation',
-      'Easy maintenance and scratch-resistant finish',
-      '1-Year Manufacturer Warranty'
-    ],
-    featuresAr: [
-      'بناء فاخر من MDF ميلامين بسماكة 18 مم',
-      'إطار داعم داخلي من الخشب الرقائقي بسماكة 18 مم',
-      'ستة أرجل خشبية صلبة لأقصى استقرار',
-      'تشطيب أنيق وعصري (اللون حسب اختيار العميل)',
-      'مرتبة سبرينج فاخرة بسماكة 20 سم مشمولة',
-      'بناء قوي ومتين وطويل الأمد',
-      'تصنيع احترافي والتوصيل والتركيب مشمولان',
-      'مناسب للمساكن والشقق والفنادق وسكن الموظفين',
-      'تشطيب سهل الصيانة ومقاوم للخدش',
-      'ضمان المصنع لمدة سنة واحدة'
-    ],
-    specs: {
-      'Product Type':       'Wooden Bed with Mattress',
-      'Material':           '18 mm MDF Melamine',
-      'Internal Support':   '18 mm Plywood Base',
-      'Legs':               '6 Solid Wooden Legs',
-      'Mattress Type':      'Premium Spring Mattress',
-      'Mattress Thickness': '20 cm',
-      'Finish':             'Melamine Finish',
-      'Colour':             'As Per Selection',
-      'Installation':       'Included',
-      'Delivery':           'Included',
-      'Warranty':           '1 Year',
-      'Application':        'Residential & Commercial',
-      'Country':            'Saudi Arabia',
-      'Package Includes':   'Wooden Bed Frame, 20 cm Spring Mattress, Hardware & Accessories, Delivery, Installation'
-    },
-    specsAr: {
-      'نوع المنتج':      'سرير خشبي مع مرتبة',
-      'المادة':          'MDF ميلامين 18 مم',
-      'الدعم الداخلي':   'قاعدة خشب رقائقي 18 مم',
-      'الأرجل':          '6 أرجل خشبية صلبة',
-      'نوع المرتبة':     'مرتبة سبرينج فاخرة',
-      'سماكة المرتبة':   '20 سم',
-      'التشطيب':         'تشطيب ميلامين',
-      'اللون':           'حسب الاختيار',
-      'التركيب':         'مشمول',
-      'التوصيل':         'مشمول',
-      'الضمان':          'سنة واحدة',
-      'التطبيق':         'سكني وتجاري',
-      'البلد':           'المملكة العربية السعودية',
-      'محتويات الطلب':   'هيكل السرير الخشبي، مرتبة سبرينج 20 سم، كامل المعدات والإكسسوارات، التوصيل، التركيب'
-    },
-    applications: ['Villas','Apartments','Hotels & Resorts','Staff Accommodation','Guest Houses','Residential Bedrooms','Furnished Apartments','Commercial Housing'],
-    applicationsAr: ['الفلل','الشقق السكنية','الفنادق والمنتجعات','سكن الموظفين','دور الضيافة','غرف النوم السكنية','الشقق المفروشة','الإسكان التجاري'],
-    finishes: ['Walnut','Oak','Wenge','White','Grey Oak','Custom Colours Available'],
-    finishesAr: ['جوز','بلوط','وينج','أبيض','بلوط رمادي','ألوان مخصصة متاحة'],
-    sizes: ['90 × 200 cm (Single)','120 × 200 cm (Small Double)','160 × 200 cm (Queen)','180 × 200 cm (King)','Custom Sizes on Request']
-  },
-  {
-    id: 10, cat: 'sofa', material: 'Wood', availability: 'In Stock',
-    rating: 4.8, reviewCount: 0,
-    tags: ['Living Room', 'Furniture', 'Upholstery'],
-    name: 'Luxury Double Seater Sofa',
-    nameAr: 'كنبة فاخرة مزدوجة المقاعد',
-    desc: 'Premium double-seater sofa manufactured with a solid wood frame, high-density memory foam cushions, and premium fabric or leather upholstery. Designed for superior comfort and durability.',
-    descAr: 'كنبة مزدوجة فاخرة مصنوعة بإطار خشب صلب ووسائد فوم ذاكرة عالية الكثافة وتنجيد قماش أو جلد فاخر. مصممة للراحة الفائقة والمتانة.',
-    price: 2400,
-    img: _SOFA_IMGS[0], imgs: _SOFA_IMGS,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: [
-      'Solid wood frame',
-      'Premium memory foam seating',
-      'Fabric or leather upholstery',
-      'Colour & fabric grade as selected',
-      'Strong durable construction',
-      'Comfortable ergonomic seating',
-      'Elegant modern design',
-      'Manufacture & Delivery Included',
-      '1-Year Warranty'
-    ],
-    featuresAr: [
-      'إطار خشب صلب',
-      'وسائد جلوس من الفوم ذاكرة الفاخر',
-      'تنجيد قماش أو جلد',
-      'اللون ودرجة القماش حسب الاختيار',
-      'بناء قوي ومتين',
-      'جلسة مريحة وفق تصميم هندسي',
-      'تصميم أنيق وعصري',
-      'التصنيع والتوصيل مشمولان',
-      'ضمان سنة واحدة'
-    ],
-    specs: {
-      'Frame':       'Solid Wood',
-      'Cushion':     'Memory Foam',
-      'Upholstery':  'Fabric / Leather',
-      'Finish':      'Customer Selection',
-      'Warranty':    '1 Year'
-    },
-    specsAr: {
-      'الإطار':    'خشب صلب',
-      'الوسادة':   'فوم ذاكرة',
-      'التنجيد':   'قماش / جلد',
-      'التشطيب':   'اختيار العميل',
-      'الضمان':    'سنة واحدة'
-    },
-    applications: ['Offices','Reception Areas','Villas','Apartments','Hotels'],
-    applicationsAr: ['المكاتب','مناطق الاستقبال','الفلل','الشقق','الفنادق'],
-    finishes: ['Fabric Upholstery','Leather Upholstery','Custom Colours Available'],
-    finishesAr: ['تنجيد قماش','تنجيد جلد','ألوان مخصصة متاحة'],
-    sizes: ['Double Seater (2-person)','Custom Sizes on Request']
-  },
-  {
-    id: 11, cat: 'Aluminium Windows', material: 'Aluminium', availability: 'In Stock',
-    rating: 5.0, reviewCount: 18,
-    tags: ['Aluminium', 'Window', 'Casement', 'W1'],
-    name: 'Premium Aluminium Casement Window (W1)',
-    nameAr: 'نافذة ألمنيوم ضلفة فاخرة (W1)',
-    desc: 'Premium single casement aluminium window professionally manufactured using high-quality powder-coated aluminium profiles with premium glass, weather-resistant sealing and heavy-duty hardware.',
-    descAr: 'نافذة ألمنيوم ضلفة واحدة فاخرة مصنّعة باحترافية من بروفايلات ألمنيوم مطلية بالبودرة عالية الجودة مع زجاج فاخر وعزل مقاوم للعوامل الجوية وإكسسوارات متينة.',
-    price: 1053,
-    img: _ALU_WIN_IMGS[0], imgs: _ALU_WIN_IMGS,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: ['Premium Single Casement Aluminium Window (W1)','High-Quality Powder-Coated Aluminium Frame','Heavy-Duty Aluminium Casement Sash','Premium Clear / Tinted Glass','Corrosion & Rust Resistant','Weatherproof Rubber Gasket','Smooth Opening Mechanism','Heavy Duty Stainless Hinges','Premium Handle & Lock','Water & Air Tight','UV Resistant Finish','Modern Architectural Design','Professional Supply & Installation','Manufactured as per Approved Drawings','Project Specification Compliant'],
-    featuresAr: ['نافذة ألمنيوم ضلفة واحدة فاخرة (W1)','إطار ألمنيوم مطلي بالبودرة عالي الجودة','ضلفة ألمنيوم متينة','زجاج شفاف / ملوّن فاخر','مقاوم للتآكل والصدأ','حشية مطاطية مقاومة للعوامل الجوية','آلية فتح سلسة','مفصلات ستانلس ستيل متينة','مقبض وقفل فاخر','محكم ضد الماء والهواء','تشطيب مقاوم للأشعة فوق البنفسجية','تصميم معماري عصري','توريد وتركيب احترافي','مصنّع وفقاً للمخططات المعتمدة','مطابق لمواصفات المشروع'],
-    specs: {'Product Type':'Aluminium Casement Window (W1)','Window Type':'Single Casement','Window Size':'1300 × 1800 mm','Frame Material':'Powder-Coated Aluminium','Glass':'Clear / Tinted','Finish':'Powder Coated','Hardware':'Premium Stainless Steel','Locking':'Multi Point Lock','Installation':'Included','Warranty':'1 Year','Unit':'Per Piece (Nos)','Glass Options':'Clear / Tinted / Reflective / Frosted / Double Glazed','Package Includes':'Frame, Casement, Glass, Hardware, Rubber Gaskets, Silicone, Installation, Quality Inspection'},
-    specsAr: {'نوع المنتج':'نافذة ألمنيوم ضلفة (W1)','نوع النافذة':'ضلفة واحدة','مقاس النافذة':'1300 × 1800 مم','مادة الإطار':'ألمنيوم مطلي بالبودرة','الزجاج':'شفاف / ملوّن','التشطيب':'مطلي بالبودرة','الإكسسوارات':'ستانلس ستيل فاخر','القفل':'قفل متعدد النقاط','التركيب':'مشمول','الضمان':'سنة واحدة','الوحدة':'للقطعة (عدد)','خيارات الزجاج':'شفاف / ملوّن / عاكس / مزخرف / مزدوج','يشمل التغليف':'إطار، ضلفة، زجاج، إكسسوارات، حشيات مطاطية، سيليكون، تركيب، فحص الجودة'},
-    applications: ['Prayer Halls','Service Floors','Commercial Buildings','Hospitals','Hotels','Residential Buildings','Educational Buildings','Industrial Buildings'],
-    applicationsAr: ['قاعات الصلاة','أدوار الخدمات','المباني التجارية','المستشفيات','الفنادق','المباني السكنية','المباني التعليمية','المباني الصناعية'],
-    finishes: ['White','Dark Grey','Black','Bronze','Silver','Wood Finish'],
-    finishesAr: ['أبيض','رمادي داكن','أسود','برونزي','فضي','تشطيب خشبي'],
-    sizes: ['1300 × 1800 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')]
-  },
-  {
-    id: 12, cat: 'Fire Rated Doors', material: 'Wood', availability: 'In Stock',
-    rating: 5.0, reviewCount: 14,
-    tags: ['Fire Rated', 'Door', 'Wood', 'B17'],
-    name: 'Premium Fire Rated Wooden Door (B17)',
-    nameAr: 'باب خشبي مقاوم للحريق فاخر (B17)',
-    desc: 'Premium fire-rated wooden door professionally manufactured with Swedish hardwood frame, fire-resistant blockboard core, Oak/Mahogany veneer and certified fire-rated accessories.',
-    descAr: 'باب خشبي مقاوم للحريق فاخر مصنّع باحترافية بإطار خشب سويدي صلب وقلب بلوك بورد مقاوم للحريق وقشرة بلوط/ماهوجني وإكسسوارات معتمدة مقاومة للحريق.',
-    price: 5500,
-    img: _FIRE_DOOR_IMGS[0], imgs: _FIRE_DOOR_IMGS,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: ['Certified Fire Rated Door','Swedish Hardwood Frame','Fire Resistant Blockboard','Oak/Mahogany Veneer','Hardwood Lipping','Fire Rated Hardware','Scratch Resistant Finish','Moisture Resistant','Excellent Sound Insulation','Thermal Insulation','Supply & Installation Included','Shop Drawing Approved','Engineer Approved'],
-    featuresAr: ['باب مقاوم للحريق معتمد','إطار خشب سويدي صلب','بلوك بورد مقاوم للحريق','قشرة بلوط/ماهوجني','حواف خشب صلب','إكسسوارات مقاومة للحريق','تشطيب مقاوم للخدش','مقاوم للرطوبة','عزل صوتي ممتاز','عزل حراري','التوريد والتركيب مشمولان','معتمد بمخططات التنفيذ','معتمد من المهندس'],
-    specs: {'Product Type':'Fire Rated Wooden Door (B17)','Door Size':'800 × 1800 mm','Frame':'Swedish Hardwood','Core':'Fire Resistant Blockboard','Leaf':'Oak / Mahogany Veneer','Finish':'Protective Coating','Accessories':'Complete Fire Rated Hardware','Installation':'Included','Warranty':'1 Year','Unit':'Per Piece (Nos)','Package Includes':'Door Leaf, Frame, Hardware, Door Closer, Lockset, Painting, Installation, Quality Inspection'},
-    specsAr: {'نوع المنتج':'باب خشبي مقاوم للحريق (B17)','مقاس الباب':'800 × 1800 مم','الإطار':'خشب سويدي صلب','القلب':'بلوك بورد مقاوم للحريق','الضلفة':'قشرة بلوط / ماهوجني','التشطيب':'طلاء واقٍ','الإكسسوارات':'إكسسوارات كاملة مقاومة للحريق','التركيب':'مشمول','الضمان':'سنة واحدة','الوحدة':'للقطعة (عدد)','يشمل التغليف':'ضلفة الباب، إطار، إكسسوارات، غالق باب، مجموعة قفل، دهان، تركيب، فحص الجودة'},
-    applications: ['Commercial Buildings','Hospitals','Hotels','Schools','Government Buildings','Industrial Buildings','Fire Escape Routes','Emergency Exits'],
-    applicationsAr: ['المباني التجارية','المستشفيات','الفنادق','المدارس','المباني الحكومية','المباني الصناعية','مسارات الهروب من الحريق','مخارج الطوارئ'],
-    finishes: ['Oak','Mahogany','Walnut','Paint Finish'],
-    finishesAr: ['بلوط','ماهوجني','جوز','تشطيب دهان'],
-    sizes: ['800 × 1800 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')]
-  },
-  {
-    id: 13, cat: 'beds', material: 'Chipboard Melamine', availability: 'In Stock',
-    rating: 5.0, reviewCount: 0,
-    tags: ['Bedroom', 'Furniture', 'Storage'],
-    name: 'Premium Night Stand with Two Drawers',
-    nameAr: 'طاولة سرير جانبية فاخرة بدرجين',
-    desc: 'Premium bedside night stand manufactured using high-quality chipboard melamine with two spacious drawers, durable construction, and a modern finish. Ideal for bedrooms, hotels, apartments, and hospitality projects.',
-    descAr: 'طاولة سرير جانبية فاخرة مصنوعة من ألواح شيبورد ميلامين عالية الجودة مع درجين واسعين وبناء متين وتشطيب عصري. مثالية لغرف النوم والفنادق والشقق ومشاريع الضيافة.',
-    price: 250,
-    img: _NIGHTSTAND_IMGS[0], imgs: _NIGHTSTAND_IMGS,
-    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
-    features: [
-      'Premium Chipboard Melamine Construction',
-      'Modern Contemporary Bedside Design',
-      'Two Spacious Storage Drawers',
-      'Durable Moisture-Resistant Melamine Finish',
-      'High-Quality Drawer Runners',
-      'Strong & Stable Construction',
-      'Smooth Edge Banding Finish',
-      'Scratch & Stain Resistant Surface',
-      'Easy to Clean & Maintain',
-      'Colour as Per Customer Selection',
-      'Professional Supply & Installation Included',
-      'Manufactured as Per Approved Drawings',
-      'Suitable for Residential & Commercial Projects',
-      '1-Year Manufacturer Warranty'
-    ],
-    featuresAr: [
-      'بناء فاخر من شيبورد ميلامين',
-      'تصميم عصري ومعاصر لطاولة السرير الجانبية',
-      'درجان واسعان للتخزين',
-      'تشطيب ميلامين متين ومقاوم للرطوبة',
-      'مجاري أدراج عالية الجودة',
-      'بناء قوي ومستقر',
-      'تشطيب حواف ناعم',
-      'سطح مقاوم للخدش والبقع',
-      'سهل التنظيف والصيانة',
-      'اللون حسب اختيار العميل',
-      'توريد وتركيب احترافي مشمولان',
-      'مصنّع وفقاً للمخططات المعتمدة',
-      'مناسب للمشاريع السكنية والتجارية',
-      'ضمان المصنع لمدة سنة واحدة'
-    ],
-    specs: {
-      'Product Type':     'Night Stand',
-      'Model':            'Two Drawer Bedside Cabinet',
-      'Overall Size':     '350 × 530 × 500 mm',
-      'Material':         'Premium Chipboard Melamine',
-      'Number of Drawers':'2',
-      'Drawer Hardware':  'Heavy-Duty Smooth Sliding Runners',
-      'Finish':           'Melamine Finish',
-      'Colour':           'As Per Customer Selection',
-      'Edge Finish':      'PVC Edge Banding',
-      'Installation':     'Included',
-      'Warranty':         '1 Year',
-      'Application':      'Residential & Commercial',
-      'Country':          'Saudi Arabia',
-      'Package Includes': 'Night Stand Cabinet, Two Storage Drawers, Premium Drawer Slides, Handles (As Selected), Complete Fixing Accessories, Professional Installation, Final Inspection & Quality Check'
-    },
-    specsAr: {
-      'نوع المنتج':      'طاولة سرير جانبية',
-      'الموديل':         'خزانة جانبية بدرجين',
-      'المقاس الكلي':    '350 × 530 × 500 مم',
-      'المادة':          'شيبورد ميلامين فاخر',
-      'عدد الأدراج':     '2',
-      'مجاري الأدراج':   'مجاري انزلاق سلسة عالية التحمل',
-      'التشطيب':         'تشطيب ميلامين',
-      'اللون':           'حسب اختيار العميل',
-      'تشطيب الحواف':    'حواف PVC',
-      'التركيب':         'مشمول',
-      'الضمان':          'سنة واحدة',
-      'التطبيق':         'سكني وتجاري',
-      'البلد':           'المملكة العربية السعودية',
-      'محتويات الطلب':   'خزانة طاولة السرير، درجان للتخزين، مجاري أدراج فاخرة، مقابض (حسب الاختيار)، كامل معدات التثبيت، تركيب احترافي، فحص جودة نهائي'
-    },
-    applications: ['Residential Bedrooms','Villas','Apartments','Hotels & Resorts','Guest Rooms','Staff Accommodation','Furnished Apartments','Hospitality Projects','Student Accommodation','Healthcare Facilities'],
-    applicationsAr: ['غرف النوم السكنية','الفلل','الشقق','الفنادق والمنتجعات','غرف الضيوف','سكن الموظفين','الشقق المفروشة','مشاريع الضيافة','سكن الطلاب','المرافق الصحية'],
-    finishes: ['Walnut','Oak','White','Grey Oak','Wenge','Black Wood Grain','Custom Colours Available'],
-    finishesAr: ['جوز','بلوط','أبيض','بلوط رمادي','وينج','حبوب خشب أسود','ألوان مخصصة متاحة'],
-    sizes: ['350 × 530 × 500 mm (Standard)', t('Custom sizes on request','أحجام مخصصة عند الطلب')]
-  }
-];
-
-/* ════ O(1) product lookup map ════ */
+   window.__productsReady resolves once the fetch settles (success or
+   failure) so anything that reads PRODUCTS on page load — this file's
+   own renderProducts() and product-filter.js's pfRenderAll() — waits for
+   it first instead of racing an empty array. */
+var PRODUCTS = [];
 var PRODUCTS_MAP = {};
-PRODUCTS.forEach(function(p){ PRODUCTS_MAP[p.id] = p; });
 function getProduct(id) { return PRODUCTS_MAP[id] || null; }
+
+var _productsReadyResolve;
+window.__productsReady = new Promise(function (resolve) { _productsReadyResolve = resolve; });
+
+(function loadProductsFromApi() {
+  fetch('/api/products')
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      var rows = (data && data.products) || [];
+      PRODUCTS = rows.map(function (row) {
+        /* sizes is the only field the old static catalog didn't already
+           split by language at the data layer (t() baked the fallback
+           string into whichever language the page happened to be at
+           parse time) — pick the right one here, once, so every other
+           part of this file keeps reading p.sizes exactly as before. */
+        row.sizes = (IS_AR && row.sizesAr && row.sizesAr.length) ? row.sizesAr : row.sizes;
+        return row;
+      });
+      PRODUCTS_MAP = {};
+      PRODUCTS.forEach(function (p) { PRODUCTS_MAP[p.id] = p; });
+    })
+    .catch(function (err) {
+      console.error('[Products] Failed to load catalog from /api/products:', err);
+      PRODUCTS = [];
+      PRODUCTS_MAP = {};
+    })
+    .then(function () { _productsReadyResolve(); });
+})();
 
 /* ════ Helper ════ */
 function t(en, ar) { return IS_AR ? ar : en; }
@@ -2136,7 +1674,13 @@ var imgGallery = {
 /* ════════════════════════════════════════════
    INIT
    ════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  /* Wait for the live catalog (see PRODUCT DATA above) before anything
+     below reads PRODUCTS/getProduct() — otherwise the very first render
+     of the grid/cart would run against an empty array. Resolves quickly
+     (same-origin JSON) and only once, on either success or failure. */
+  await window.__productsReady;
+
   slider.init();
   renderProducts();
   cart.init();

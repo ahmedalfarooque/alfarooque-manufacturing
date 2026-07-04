@@ -627,9 +627,16 @@ function pfWireEvents() {
 }
 
 /* ── Init — runs after products.js DOMContentLoaded ──────── */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   var section = document.getElementById('products');
   if (!section || !grid) return;
+
+  /* pfBuildToolbar() below reads the live catalog (window.PRODUCTS,
+     populated by products.js from /api/products) to build the
+     category/material dropdown options — wait for it first, same as
+     products.js's own DOMContentLoaded handler, so those dropdowns
+     aren't built from an empty array. */
+  if (window.__productsReady) await window.__productsReady;
 
   var toolbarDiv = document.createElement('div');
   toolbarDiv.innerHTML = pfBuildToolbar();
