@@ -287,7 +287,7 @@ function pfBuildToolbar() {
 
   var catOpts = '<option value="all">' + t('All Categories', 'جميع الفئات') + '</option>' +
     categories.map(function(c) {
-      return '<option value="' + c + '">' + pfCapitalize(c) + '</option>';
+      return '<option value="' + c + '">' + (typeof catLabel === 'function' ? catLabel(c) : pfCapitalize(c)) + '</option>';
     }).join('');
 
   var matOpts = '<option value="all">' + t('All Materials', 'جميع المواد') + '</option>' +
@@ -364,7 +364,7 @@ function pfBuildSheet() {
 
   var catOpts = '<option value="all">' + t('All Categories', 'جميع الفئات') + '</option>' +
     categories.map(function(c) {
-      return '<option value="' + c + '">' + pfCapitalize(c) + '</option>';
+      return '<option value="' + c + '">' + (typeof catLabel === 'function' ? catLabel(c) : pfCapitalize(c)) + '</option>';
     }).join('');
 
   var matOpts = '<option value="all">' + t('All Materials', 'جميع المواد') + '</option>' +

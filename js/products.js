@@ -37,13 +37,23 @@ var PRODUCTS = [];
 var PRODUCTS_MAP = {};
 function getProduct(id) { return PRODUCTS_MAP[id] || null; }
 
+/* Category display names/order also come live from the database (the
+   same public.categories table the Admin Dashboard's Categories module
+   edits) — previously catLabel() below used a hardcoded name map, so
+   renaming a category in the admin never showed up on this page. */
+var CATEGORIES_MAP = {};
+
 var _productsReadyResolve;
 window.__productsReady = new Promise(function (resolve) { _productsReadyResolve = resolve; });
 
 (function loadProductsFromApi() {
-  fetch('/api/products')
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
+  Promise.all([
+    fetch('/api/products').then(function (res) { return res.json(); }),
+    fetch('/api/categories').then(function (res) { return res.json(); }).catch(function () { return { categories: [] }; }),
+  ])
+    .then(function (results) {
+      var data = results[0], catData = results[1];
+
       var rows = (data && data.products) || [];
       PRODUCTS = rows.map(function (row) {
         /* sizes is the only field the old static catalog didn't already
@@ -56,11 +66,17 @@ window.__productsReady = new Promise(function (resolve) { _productsReadyResolve 
       });
       PRODUCTS_MAP = {};
       PRODUCTS.forEach(function (p) { PRODUCTS_MAP[p.id] = p; });
+
+      CATEGORIES_MAP = {};
+      ((catData && catData.categories) || []).forEach(function (c) {
+        CATEGORIES_MAP[c.slug] = { name: c.name, nameAr: c.name_ar || c.name };
+      });
     })
     .catch(function (err) {
-      console.error('[Products] Failed to load catalog from /api/products:', err);
+      console.error('[Products] Failed to load catalog from /api/products or /api/categories:', err);
       PRODUCTS = [];
       PRODUCTS_MAP = {};
+      CATEGORIES_MAP = {};
     })
     .then(function () { _productsReadyResolve(); });
 })();
@@ -277,18 +293,26 @@ var slider = {
    ════════════════════════════════════════════ */
 var grid = document.getElementById('prodGrid');
 
+/* Category display name comes from the live public.categories table
+   (CATEGORIES_MAP, populated in loadProductsFromApi() above) — renaming
+   a category in the Admin Dashboard shows up here on next load. The
+   small map below is only a graceful-degradation fallback (e.g. a
+   momentary network hiccup on /api/categories), not a second source of
+   truth: it's never preferred over live data when live data exists. */
 function catLabel(cat) {
-  var map = {
+  var live = CATEGORIES_MAP[cat];
+  if (live) return IS_AR ? live.nameAr : live.name;
+  var fallback = {
     doors:     t('Doors','الأبواب'),
     wood:      t('Wood Works','أعمال الخشب'),
     steel:     t('Steel Works','أعمال الحديد'),
     aluminium: t('Aluminium Works','أعمال الألومنيوم'),
     beds:      t('Beds & Accessories','الأسرة والإكسسوارات'),
     sofa:      t('Sofa','الكنب'),
-    'Aluminium Windows': t('Aluminium Windows','نوافذ الألمنيوم'),
-    'Fire Rated Doors':  t('Fire Rated Doors','أبواب مقاومة للحريق')
+    'aluminium-windows': t('Aluminium Windows','نوافذ الألمنيوم'),
+    'fire-rated-doors':  t('Fire Rated Doors','أبواب مقاومة للحريق')
   };
-  return map[cat] || cat;
+  return fallback[cat] || cat;
 }
 
 /* ════════════════════════════════════════════
