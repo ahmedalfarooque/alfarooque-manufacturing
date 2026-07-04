@@ -79,6 +79,18 @@ function notConfigured() {
 const AFAuth = {
   isConfigured: function () { return CONFIGURED; },
 
+  /* Start loading the Supabase SDK (a sizeable multi-module bundle) ahead
+     of time, e.g. the moment the login modal opens — rather than the
+     first time it's actually needed, which used to be the Login button's
+     own click handler, and showed up as a ~300ms INP hit on that click
+     (module evaluation is synchronous main-thread work once it lands).
+     getClient() already caches/memoizes, so calling this more than once,
+     or on a page that never ends up needing auth, is a safe no-op. */
+  preload: function () {
+    if (!CONFIGURED) return;
+    getClient().catch(function () {});
+  },
+
   /* Current user (sync cache) + a promise variant that hydrates session */
   currentUser: function () { return _cachedUser; },
 

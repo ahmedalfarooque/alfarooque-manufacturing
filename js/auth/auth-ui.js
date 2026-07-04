@@ -199,6 +199,7 @@ function switchTab(tab) {
 }
 
 function openModal(tab) {
+  AFAuth.preload(); // start loading the Supabase SDK now, not on submit click
   buildModal();
   lastFocus = document.activeElement;
   modalEl.hidden = false;
