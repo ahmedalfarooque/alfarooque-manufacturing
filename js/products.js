@@ -95,6 +95,12 @@ var _FIRE_DOOR_IMGS = [
   'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_3.png',
   'assets/images/Products/Fire Rated Doors/Fire Rated Doors 01_4.png'
 ];
+var _NIGHTSTAND_IMGS = [
+  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_1.png',
+  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_2.png',
+  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_3.png',
+  'assets/images/Products/NIGHT STAND/NIGHT STAND 01_4.png'
+];
 
 var PRODUCTS = [
   {
@@ -432,6 +438,87 @@ var PRODUCTS = [
     finishes: ['Oak','Mahogany','Walnut','Paint Finish'],
     finishesAr: ['بلوط','ماهوجني','جوز','تشطيب دهان'],
     sizes: ['800 × 1800 mm', t('Custom sizes on request','أحجام مخصصة عند الطلب')]
+  },
+  {
+    id: 13, cat: 'beds', material: 'Chipboard Melamine', availability: 'In Stock',
+    rating: 5.0, reviewCount: 0,
+    tags: ['Bedroom', 'Furniture', 'Storage'],
+    name: 'Premium Night Stand with Two Drawers',
+    nameAr: 'طاولة سرير جانبية فاخرة بدرجين',
+    desc: 'Premium bedside night stand manufactured using high-quality chipboard melamine with two spacious drawers, durable construction, and a modern finish. Ideal for bedrooms, hotels, apartments, and hospitality projects.',
+    descAr: 'طاولة سرير جانبية فاخرة مصنوعة من ألواح شيبورد ميلامين عالية الجودة مع درجين واسعين وبناء متين وتشطيب عصري. مثالية لغرف النوم والفنادق والشقق ومشاريع الضيافة.',
+    price: 250,
+    img: _NIGHTSTAND_IMGS[0], imgs: _NIGHTSTAND_IMGS,
+    warrantyLabel: '1-Year Warranty', warrantyLabelAr: 'ضمان سنة واحدة',
+    features: [
+      'Premium Chipboard Melamine Construction',
+      'Modern Contemporary Bedside Design',
+      'Two Spacious Storage Drawers',
+      'Durable Moisture-Resistant Melamine Finish',
+      'High-Quality Drawer Runners',
+      'Strong & Stable Construction',
+      'Smooth Edge Banding Finish',
+      'Scratch & Stain Resistant Surface',
+      'Easy to Clean & Maintain',
+      'Colour as Per Customer Selection',
+      'Professional Supply & Installation Included',
+      'Manufactured as Per Approved Drawings',
+      'Suitable for Residential & Commercial Projects',
+      '1-Year Manufacturer Warranty'
+    ],
+    featuresAr: [
+      'بناء فاخر من شيبورد ميلامين',
+      'تصميم عصري ومعاصر لطاولة السرير الجانبية',
+      'درجان واسعان للتخزين',
+      'تشطيب ميلامين متين ومقاوم للرطوبة',
+      'مجاري أدراج عالية الجودة',
+      'بناء قوي ومستقر',
+      'تشطيب حواف ناعم',
+      'سطح مقاوم للخدش والبقع',
+      'سهل التنظيف والصيانة',
+      'اللون حسب اختيار العميل',
+      'توريد وتركيب احترافي مشمولان',
+      'مصنّع وفقاً للمخططات المعتمدة',
+      'مناسب للمشاريع السكنية والتجارية',
+      'ضمان المصنع لمدة سنة واحدة'
+    ],
+    specs: {
+      'Product Type':     'Night Stand',
+      'Model':            'Two Drawer Bedside Cabinet',
+      'Overall Size':     '350 × 530 × 500 mm',
+      'Material':         'Premium Chipboard Melamine',
+      'Number of Drawers':'2',
+      'Drawer Hardware':  'Heavy-Duty Smooth Sliding Runners',
+      'Finish':           'Melamine Finish',
+      'Colour':           'As Per Customer Selection',
+      'Edge Finish':      'PVC Edge Banding',
+      'Installation':     'Included',
+      'Warranty':         '1 Year',
+      'Application':      'Residential & Commercial',
+      'Country':          'Saudi Arabia',
+      'Package Includes': 'Night Stand Cabinet, Two Storage Drawers, Premium Drawer Slides, Handles (As Selected), Complete Fixing Accessories, Professional Installation, Final Inspection & Quality Check'
+    },
+    specsAr: {
+      'نوع المنتج':      'طاولة سرير جانبية',
+      'الموديل':         'خزانة جانبية بدرجين',
+      'المقاس الكلي':    '350 × 530 × 500 مم',
+      'المادة':          'شيبورد ميلامين فاخر',
+      'عدد الأدراج':     '2',
+      'مجاري الأدراج':   'مجاري انزلاق سلسة عالية التحمل',
+      'التشطيب':         'تشطيب ميلامين',
+      'اللون':           'حسب اختيار العميل',
+      'تشطيب الحواف':    'حواف PVC',
+      'التركيب':         'مشمول',
+      'الضمان':          'سنة واحدة',
+      'التطبيق':         'سكني وتجاري',
+      'البلد':           'المملكة العربية السعودية',
+      'محتويات الطلب':   'خزانة طاولة السرير، درجان للتخزين، مجاري أدراج فاخرة، مقابض (حسب الاختيار)، كامل معدات التثبيت، تركيب احترافي، فحص جودة نهائي'
+    },
+    applications: ['Residential Bedrooms','Villas','Apartments','Hotels & Resorts','Guest Rooms','Staff Accommodation','Furnished Apartments','Hospitality Projects','Student Accommodation','Healthcare Facilities'],
+    applicationsAr: ['غرف النوم السكنية','الفلل','الشقق','الفنادق والمنتجعات','غرف الضيوف','سكن الموظفين','الشقق المفروشة','مشاريع الضيافة','سكن الطلاب','المرافق الصحية'],
+    finishes: ['Walnut','Oak','White','Grey Oak','Wenge','Black Wood Grain','Custom Colours Available'],
+    finishesAr: ['جوز','بلوط','أبيض','بلوط رمادي','وينج','حبوب خشب أسود','ألوان مخصصة متاحة'],
+    sizes: ['350 × 530 × 500 mm (Standard)', t('Custom sizes on request','أحجام مخصصة عند الطلب')]
   }
 ];
 
