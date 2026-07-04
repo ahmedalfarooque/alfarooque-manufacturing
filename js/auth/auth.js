@@ -312,6 +312,24 @@ const AFAuth = {
     return sb.from('orders').select('*').eq('user_id', _cachedUser.id).order('created_at', { ascending: false });
   },
 
+  /* ── Customer-initiated cancel / delete — restricted to the caller's
+     own orders via an explicit user_id match (defense in depth on top
+     of the "own rows" RLS policy, matching addresses' delete/update
+     pattern below). Cancel only makes sense before the order has moved
+     past pending/processing; delete only for cancelled/completed — both
+     are enforced in the UI (js/auth/account.js), not re-validated here,
+     same division of responsibility as the rest of this file. ── */
+  cancelOrder: async function (id) {
+    if (!CONFIGURED || !_cachedUser) return notConfigured();
+    const sb = await getClient();
+    return sb.from('orders').update({ status: 'cancelled' }).match({ id: id, user_id: _cachedUser.id });
+  },
+  deleteOrder: async function (id) {
+    if (!CONFIGURED || !_cachedUser) return notConfigured();
+    const sb = await getClient();
+    return sb.from('orders').delete().match({ id: id, user_id: _cachedUser.id });
+  },
+
   /* ── Live order sync — admin status/tracking updates land in this same
      table, so subscribing here makes them appear in the dashboard the
      instant they're saved, with no page reload needed. Returns an

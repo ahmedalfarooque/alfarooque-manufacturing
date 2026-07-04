@@ -541,6 +541,11 @@ select.af-input {
   font-family: var(--font-body); transition: border-color 0.18s, color 0.18s;
 }
 .acct-order-btn:hover { border-color: var(--bd-teal-2); color: var(--pr-2); }
+/* Same size/spacing as .acct-order-btn — only the color differs, matching
+   the red already used for cancelled-status badges and danger buttons
+   elsewhere in this dashboard. */
+.acct-order-btn--danger { background: rgba(239,68,68,0.10); color: #f87171; border-color: rgba(239,68,68,0.30); }
+.acct-order-btn--danger:hover { background: rgba(239,68,68,0.20); border-color: rgba(239,68,68,0.45); color: #f87171; }
 
 /* ────────────────── WISHLIST ────────────────── */
 .acct-wish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 14px; }

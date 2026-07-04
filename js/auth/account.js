@@ -443,6 +443,8 @@ async function loadOrders() {
 }
 
 const ORDER_STATUS_LIST = ['pending','confirmed','processing','completed','cancelled'];
+const CANCELLABLE_STATUSES = ['pending', 'processing'];
+const DELETABLE_STATUSES = ['cancelled', 'completed'];
 function stClass(s) { return ORDER_STATUS_LIST.includes(s) ? s : 'pending'; }
 function orderStatusLabel(st) {
   const ST_LABEL = {
@@ -505,6 +507,10 @@ function renderOrders() {
           '<button class="acct-order-btn" data-view="' + esc(o.id) + '">' + t('View Details','تفاصيل الطلب') + '</button>' +
           '<button class="acct-order-btn" data-invoice="' + esc(o.id) + '">' + t('Invoice','الفاتورة') + '</button>' +
           '<button class="acct-order-btn" data-reorder="' + esc(o.id) + '">' + t('Reorder','إعادة الطلب') + '</button>' +
+          (CANCELLABLE_STATUSES.includes(st) ?
+            '<button class="acct-order-btn acct-order-btn--danger" data-cancel-order="' + esc(o.id) + '">' + t('Cancel Order','إلغاء الطلب') + '</button>' : '') +
+          (DELETABLE_STATUSES.includes(st) ?
+            '<button class="acct-order-btn acct-order-btn--danger" data-delete-order="' + esc(o.id) + '">' + t('Delete Order','حذف الطلب') + '</button>' : '') +
         '</div>' +
       '</div>';
     }).join('') + '</div>' +
@@ -524,6 +530,30 @@ function renderOrders() {
     msg($('#profMsg') && !$('#profMsg').hidden ? $('#profMsg') : ensureToast(), t('Invoice download coming soon.','تحميل الفاتورة قريباً.'), 'success');
   }));
   $$('[data-reorder]', el).forEach(b => b.addEventListener('click', () => reorderOrder(b.getAttribute('data-reorder'))));
+  $$('[data-cancel-order]', el).forEach(b => b.addEventListener('click', () => cancelOrderAction(b.getAttribute('data-cancel-order'))));
+  $$('[data-delete-order]', el).forEach(b => b.addEventListener('click', () => deleteOrderAction(b.getAttribute('data-delete-order'))));
+}
+
+/* ── Cancel an order (Pending/Processing only — enforced above by which
+   button even renders) ── */
+async function cancelOrderAction(id) {
+  if (!window.confirm(t('Are you sure you want to cancel this order?','هل أنت متأكد أنك تريد إلغاء هذا الطلب؟'))) return;
+  const res = await AFAuth.cancelOrder(id);
+  if (res && res.error) { showToast(t('Could not cancel the order. Please try again.','تعذّر إلغاء الطلب. يرجى المحاولة مرة أخرى.')); return; }
+  const o = findOrder(id);
+  if (o) o.status = 'cancelled';
+  renderOrders();
+  showToast(t('Order cancelled successfully.','تم إلغاء الطلب بنجاح.'));
+}
+
+/* ── Permanently delete an order (Cancelled/Completed only) ── */
+async function deleteOrderAction(id) {
+  if (!window.confirm(t('Are you sure you want to permanently delete this order? This action cannot be undone.','هل أنت متأكد أنك تريد حذف هذا الطلب نهائياً؟ لا يمكن التراجع عن هذا الإجراء.'))) return;
+  const res = await AFAuth.deleteOrder(id);
+  if (res && res.error) { showToast(t('Could not delete the order. Please try again.','تعذّر حذف الطلب. يرجى المحاولة مرة أخرى.')); return; }
+  ALL_ORDERS = ALL_ORDERS.filter(o => String(o.id) !== String(id));
+  renderOrders();
+  showToast(t('Order deleted successfully.','تم حذف الطلب بنجاح.'));
 }
 
 /* ── Toast (lightweight, reused for action feedback outside forms) ── */
