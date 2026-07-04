@@ -412,3 +412,23 @@ create table if not exists public.admin_customer_notes (
 alter table public.admin_customer_notes enable row level security;
 -- No policies — only the service role (admin API) can read/write this table.
 -- ═══════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════
+-- REALTIME — the customer dashboard's "My Orders" subscribes to
+-- postgres_changes on public.orders (js/auth/auth.js subscribeOrders())
+-- so a status/tracking update — or a new order landing — appears live,
+-- with no manual reload. That subscription is a no-op unless the table
+-- is actually in the supabase_realtime publication, which it wasn't.
+-- RLS still applies to what each subscriber receives ("own rows" policy
+-- already restricts this to the customer's own orders).
+-- ═══════════════════════════════════════════════════════════════════
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'orders'
+  ) then
+    alter publication supabase_realtime add table public.orders;
+  end if;
+end $$;
+-- ═══════════════════════════════════════════════════════════════════
