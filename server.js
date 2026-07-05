@@ -69,6 +69,40 @@ const MIME = {
   '.zip':  'application/zip',
 };
 
+/* ── Proxy /cars and /projects to their own Next.js dev servers ──
+   Mirrors the production setup: each app is deployed independently and
+   alfarooque.com/cars + /projects reach it via a Vercel rewrite (see
+   apps/DEPLOYMENT.md). Locally there's no Vercel rewrite layer, so
+   without this, hitting localhost:3000/cars or /projects 404s here —
+   those apps only exist on their own dev servers (ports 3010/3020).
+   This makes localhost:3000 behave the same way production will. */
+const PROXY_TARGETS = { '/cars': 3010, '/projects': 3020 };
+function proxyTarget(urlPath) {
+  for (const prefix of Object.keys(PROXY_TARGETS)) {
+    if (urlPath === prefix || urlPath.startsWith(prefix + '/')) return PROXY_TARGETS[prefix];
+  }
+  return null;
+}
+function proxyRequest(port, req, res) {
+  const upstream = http.request(
+    { hostname: '127.0.0.1', port, path: req.url, method: req.method, headers: req.headers },
+    upstreamRes => {
+      res.writeHead(upstreamRes.statusCode, upstreamRes.headers);
+      upstreamRes.pipe(res);
+    }
+  );
+  upstream.on('error', () => {
+    const appName = port === 3010 ? 'cars-app' : 'projects-app';
+    res.writeHead(502, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(`<!DOCTYPE html><html lang="en"><body style="font-family:sans-serif;max-width:600px;margin:80px auto;padding:0 20px">
+<h1>502 — dev server not running on port ${port}</h1>
+<p>Start it first: <code>npm --prefix apps/${port === 3010 ? 'cars' : 'projects'} run dev</code></p>
+<p>(or via the preview tool's "${appName}" launch config)</p>
+</body></html>`);
+  });
+  req.pipe(upstream);
+}
+
 /* ── API handlers ── */
 const emailService = require('./api/_email');
 
@@ -127,7 +161,13 @@ const server = http.createServer((req, res) => {
   if (urlPath !== '/' && urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
   try { urlPath = decodeURIComponent(urlPath); } catch (e) { /* leave as-is on malformed encoding */ }
 
-  /* 0. API routes — must come before static-file handling */
+  /* 0. Proxy to the Cars/Projects apps — must come first, before the
+     /api/ check below, since /cars/api/* and /projects/api/* need to
+     reach THOSE apps' own API routes, not this site's. */
+  const targetPort = proxyTarget(urlPath);
+  if (targetPort) return proxyRequest(targetPort, req, res);
+
+  /* 0.5. API routes — must come before static-file handling */
   if (urlPath.startsWith('/api/')) {
     const handler = loadApiHandler(urlPath);
     if (handler) return dispatchApi(handler, req, res, urlPath);
@@ -175,6 +215,26 @@ function send404(res, url) {
 <h1>404 — Page Not Found</h1><p><code>${url}</code></p><a href="/">← Home</a>
 </body></html>`);
 }
+
+/* Next.js dev servers hot-reload over a WebSocket — without forwarding
+   the upgrade too, pages viewed through this proxy would load fine but
+   never live-refresh on file changes. */
+server.on('upgrade', (req, clientSocket, head) => {
+  const urlPath = req.url.split('?')[0];
+  const targetPort = proxyTarget(urlPath);
+  if (!targetPort) { clientSocket.destroy(); return; }
+
+  const upstreamSocket = require('net').connect(targetPort, '127.0.0.1', () => {
+    const headerLines = [`${req.method} ${req.url} HTTP/1.1`];
+    for (let i = 0; i < req.rawHeaders.length; i += 2) headerLines.push(`${req.rawHeaders[i]}: ${req.rawHeaders[i + 1]}`);
+    upstreamSocket.write(headerLines.join('\r\n') + '\r\n\r\n');
+    upstreamSocket.write(head);
+    upstreamSocket.pipe(clientSocket);
+    clientSocket.pipe(upstreamSocket);
+  });
+  upstreamSocket.on('error', () => clientSocket.destroy());
+  clientSocket.on('error', () => upstreamSocket.destroy());
+});
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log('\n  AL FAROOQUE Manufacturing — dev server');
