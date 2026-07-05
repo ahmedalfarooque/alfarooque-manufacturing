@@ -16,7 +16,7 @@ export default function CustomerPicker({ value, onChange }) {
   const boxRef = useRef(null);
 
   useEffect(() => {
-    fetch('/projects/api/customers', { credentials: 'same-origin' })
+    fetch('/api/customers', { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { customers: [] })
       .then(d => setCustomers(d.customers || []))
       .catch(() => {});
@@ -39,7 +39,7 @@ export default function CustomerPicker({ value, onChange }) {
   }
 
   async function handleNewCustomer(form) {
-    const res = await fetch('/projects/api/customers', {
+    const res = await fetch('/api/customers', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
       body: JSON.stringify(form),
     });

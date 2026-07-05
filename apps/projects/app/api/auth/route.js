@@ -1,7 +1,7 @@
 'use strict';
 
-/* POST /projects/api/auth  { action: 'login' | 'verify-otp' | 'resend-otp' | 'logout' }
-   GET  /projects/api/auth            → current session ("me")
+/* POST /api/auth  { action: 'login' | 'verify-otp' | 'resend-otp' | 'logout' }
+   GET  /api/auth            → current session ("me")
    Identical design to apps/cars/app/api/auth/route.js — see that file's
    header comment for the two hardened lessons this shares (checked DB
    writes, retrying email sends). */

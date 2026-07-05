@@ -15,7 +15,7 @@ const STATUS_BADGE = {
 const REFRESH_MS = 15000;
 
 export default function DashboardPage() {
-  const { data: stats, error } = useLiveData('/projects/api/stats', REFRESH_MS);
+  const { data: stats, error } = useLiveData('/api/stats', REFRESH_MS);
 
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
   if (!stats) return <Shell active="/dashboard"><div className="text-slate-400">Loading dashboard…</div></Shell>;
@@ -28,11 +28,11 @@ export default function DashboardPage() {
           is only ever shown on a project's own View page, and only
           when it's actually set (see the brief: never show $0/SAR 0). */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <StatCard icon={'\u{1F4C1}'} tone="brand" label="Total Projects" value={stats.totalProjects} sub="All projects" href="/projects/projects" />
-        <StatCard icon="▶" tone="blue" label="Running Projects" value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% of total`} href="/projects/projects?status=Running" />
-        <StatCard icon="✔" tone="emerald" label="Completed Projects" value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% of total`} href="/projects/projects?status=Completed" />
-        <StatCard icon={'\u{1F4C5}'} tone="amber" label="Upcoming Projects" value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% of total`} href="/projects/projects?status=Upcoming" />
-        <StatCard icon="⏸" tone="red" label="On Hold Projects" value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% of total`} href={'/projects/projects?status=' + encodeURIComponent('On Hold')} />
+        <StatCard icon={'\u{1F4C1}'} tone="brand" label="Total Projects" value={stats.totalProjects} sub="All projects" href="/projects" />
+        <StatCard icon="▶" tone="blue" label="Running Projects" value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% of total`} href="/projects?status=Running" />
+        <StatCard icon="✔" tone="emerald" label="Completed Projects" value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% of total`} href="/projects?status=Completed" />
+        <StatCard icon={'\u{1F4C5}'} tone="amber" label="Upcoming Projects" value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% of total`} href="/projects?status=Upcoming" />
+        <StatCard icon="⏸" tone="red" label="On Hold Projects" value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% of total`} href={'/projects?status=' + encodeURIComponent('On Hold')} />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">
@@ -106,7 +106,7 @@ function ProjectListCard({ title, projects, dateKey, dateLabel }) {
         <ul className="space-y-1">
           {projects.map(p => (
             <li key={p.id}>
-              <button type="button" onClick={() => { window.location.href = '/projects/projects/' + p.id; }}
+              <button type="button" onClick={() => { window.location.href = '/projects/' + p.id; }}
                 className="w-full text-left text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
                 <div className="flex items-center justify-between">
                   <span className="font-medium truncate">{p.project_name}</span>

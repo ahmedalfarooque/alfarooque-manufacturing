@@ -2,7 +2,7 @@
   "name": "af-project-management",
   "version": "1.0.0",
   "private": true,
-  "description": "AL FAROOQUE — Project Management System (deployed independently, proxied under alfarooque.com/projects)",
+  "description": "AL FAROOQUE — Project Management System (deployed independently at projects.alfarooque.com)",
   "scripts": {
     "dev": "next dev -p 3020",
     "build": "next build",

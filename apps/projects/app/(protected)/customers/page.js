@@ -13,16 +13,16 @@ export default function CustomersPage() {
   const [modal, setModal] = useState(null); // { mode: 'add'|'edit'|'view', data }
 
   const isAdmin = me?.role === 'admin';
-  const url = '/projects/api/customers' + (search ? '?search=' + encodeURIComponent(search) : '');
+  const url = '/api/customers' + (search ? '?search=' + encodeURIComponent(search) : '');
   const { data, error, refresh } = useLiveData(url, REFRESH_MS);
   const customers = data?.customers || [];
 
   useEffect(() => {
-    fetch('/projects/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
 
   async function saveCustomer(form, mode, id) {
-    const url = mode === 'add' ? '/projects/api/customers' : `/projects/api/customers/${id}`;
+    const url = mode === 'add' ? '/api/customers' : `/api/customers/${id}`;
     const res = await fetch(url, {
       method: mode === 'add' ? 'POST' : 'PATCH',
       headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
@@ -36,7 +36,7 @@ export default function CustomersPage() {
 
   async function deleteCustomer(id) {
     if (!confirm('Delete this customer? This cannot be undone.')) return;
-    const res = await fetch(`/projects/api/customers/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+    const res = await fetch(`/api/customers/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) refresh();
     else { const d = await res.json().catch(() => ({})); alert(d.error || 'Could not delete customer.'); }
   }

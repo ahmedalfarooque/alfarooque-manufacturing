@@ -5,10 +5,12 @@ Neither touches the main static site's code, build, or `vercel.json`. Each is
 deployed as its **own Vercel project**. The main site never rebuilds, never
 redeploys its own code, and is never at risk from a bug in either app.
 
-- **`apps/cars`** → its own subdomain, **`cars.alfarooque.com`**, pointed
-  directly at its Vercel project (no basePath, no rewrite — see §2 below).
-- **`apps/projects`** → still proxied at `alfarooque.com/projects` via a
-  rewrite in the root `vercel.json`, unchanged from before.
+- **`apps/cars`** → its own subdomain, **`cars.alfarooque.com`**.
+- **`apps/projects`** → its own subdomain, **`projects.alfarooque.com`**.
+
+Both are pointed directly at their Vercel project (no basePath, no
+`vercel.json` rewrite needed for either — see §2 below). The main site's
+`vercel.json` is untouched.
 
 ## 0. One-time database setup (do this first)
 
@@ -58,50 +60,35 @@ Each command above prints a production URL like:
 `https://af-cars-tracking-xxxx.vercel.app`. Note both URLs — you need them
 for step 2.
 
-## 2a. Point `cars.alfarooque.com` at the Cars app (its own subdomain)
+## 2. Point each subdomain at its app
 
-`apps/cars` has **no basePath** — it's built to live at the root of whatever
-domain serves it. Do this in the Vercel dashboard, not in code:
+Neither `apps/cars` nor `apps/projects` has a basePath — each is built to
+live at the root of whatever domain serves it. Do this in the Vercel
+dashboard (or CLI) per app, not in code:
 
-1. Open the `af-cars-tracking` Vercel project → **Settings → Domains**.
-2. Add `cars.alfarooque.com` as a **Production Domain**.
-3. At your DNS provider, add a `CNAME` record: `cars` → `cname.vercel-dns.com`
-   (Vercel shows the exact target once you add the domain — follow its
-   instructions; it also auto-provisions the SSL certificate).
-4. No `vercel.json` rewrite is needed or wanted for this app — a rewrite
+1. Open the app's Vercel project (`af-cars-tracking` or
+   `af-project-management`) → **Settings → Domains**.
+2. Add its subdomain (`cars.alfarooque.com` or `projects.alfarooque.com`) as
+   a **Production Domain**. Or via CLI: `npx vercel domains add <subdomain>`
+   from inside the app directory once it's linked.
+3. At your DNS provider, add an **A record**: host = the subdomain prefix
+   (`cars` or `projects`), value = `76.76.21.21` (Vercel's anycast IP —
+   confirm the exact value Vercel shows you when you add the domain; it can
+   change). Vercel auto-provisions the SSL certificate once DNS resolves,
+   usually within a few minutes.
+4. No `vercel.json` rewrite is needed or wanted for either app — a rewrite
    would still be path-based, which is exactly what the subdomain move
    avoids. DNS + the Vercel domain binding is the entire mechanism.
 
-## 2b. Proxy `/projects` from the main site (do this last)
-
-This is the only change made to the existing, live site — one additive
-`rewrites` entry in the **root** `vercel.json` (the one at the repo root, not
-inside `apps/*`). It does not touch any existing route, page, or asset.
-
-```jsonc
-// root vercel.json — add inside the existing "rewrites" array
-{ "source": "/projects",       "destination": "https://af-project-management-xxxx.vercel.app/projects" },
-{ "source": "/projects/:path*", "destination": "https://af-project-management-xxxx.vercel.app/projects/:path*" }
-```
-
-Replace the `xxxx` URL with the real production URL from step 1, then
-`git commit` + push (or `npx vercel --prod` from the repo root) to publish the
-change to the live domain. This step was intentionally **not** applied
-automatically — it's the one change that touches the live site's routing, so
-it's done last, deliberately, once the Projects app is confirmed working on
-its own Vercel URL.
-
 ## 3. Verify
 
-- `https://cars.alfarooque.com/login` — sign in with the seed admin, confirm
-  the OTP email arrives (or check the Vercel function logs for the
-  `[email:MOCK] ... code: 123456` line if `RESEND_API_KEY` wasn't set), then
-  confirm the dashboard and vehicles table load.
-- `https://af-project-management-xxxx.vercel.app/projects/login` — same
-  check on the Projects app's own URL, before the rewrite goes live.
-- Only after both are confirmed working, do 2b and check
-  `alfarooque.com/projects`. `cars.alfarooque.com` is already live the moment
-  the DNS record propagates — there's no separate main-site step for it.
+- `https://cars.alfarooque.com/login` and `https://projects.alfarooque.com/login`
+  — sign in with the seed admin on each, confirm the OTP email arrives (or
+  check the Vercel function logs for the `[email:MOCK] ... code: 123456`
+  line if `RESEND_API_KEY` wasn't set), then confirm each dashboard loads.
+- Each subdomain goes live independently the moment its DNS record
+  propagates and Vercel issues the certificate — there's no main-site step
+  for either, and no dependency between the two apps' rollouts.
 
 ## Local development
 
@@ -110,13 +97,14 @@ cd apps/cars      && cp .env.example .env.local   # fill in the values, then:
 npm install && npm run dev     # http://localhost:3010 (root paths — no /cars prefix)
 
 cd apps/projects  && cp .env.example .env.local
-npm install && npm run dev     # http://localhost:3020/projects
+npm install && npm run dev     # http://localhost:3020 (root paths — no /projects prefix)
 ```
 
-`server.js` at the repo root also proxies `localhost:3000/cars/*` →
-`localhost:3010/*` (stripping the prefix) purely as a local convenience,
+`server.js` at the repo root auto-starts both dev servers (and also proxies
+`localhost:3000/cars/*` → `localhost:3010/*` and `localhost:3000/projects/*`
+→ `localhost:3020/*`, stripping the prefix) purely as a local convenience,
 since there's no real subdomain to hit on a dev machine. In production there
-is no such proxy — `cars.alfarooque.com` reaches the Cars app directly.
+is no such proxy — each subdomain reaches its app directly.
 
 If `RESEND_API_KEY` is left blank, OTP codes are logged to the terminal
 instead of emailed (`[email:MOCK] ... code: 123456`) — useful for local

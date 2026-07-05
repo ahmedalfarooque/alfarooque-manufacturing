@@ -50,11 +50,11 @@ function parseCookies(header) {
 }
 function sessionCookieHeader(token, maxAgeSeconds) {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=' + token + '; Path=/projects; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
+  return COOKIE_NAME + '=' + token + '; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
 }
 function clearCookieHeader() {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=; Path=/projects; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
+  return COOKIE_NAME + '=; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
 }
 
 function readSession(req) {

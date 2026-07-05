@@ -1,6 +1,6 @@
 'use strict';
 
-/* POST /projects/api/projects/[id]/documents — multipart/form-data,
+/* POST /api/projects/[id]/documents — multipart/form-data,
    field "file". Uploads to the "project-documents" Supabase Storage
    bucket (public read, write only via this server-side route using
    the service role key) and records the row in pm_project_documents.

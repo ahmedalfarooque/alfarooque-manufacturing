@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 
-const API = '/projects/api/auth';
+const API = '/api/auth';
 
 async function call(action, extra) {
   const res = await fetch(API, {
@@ -86,7 +86,7 @@ export default function LoginPage() {
     try {
       await call(mode === 'admin' ? 'verify-otp' : 'view-verify-otp', { email, code });
       setMsg({ kind: 'success', text: 'Success — redirecting…' });
-      setTimeout(() => { window.location.href = mode === 'admin' ? '/projects/dashboard' : '/projects/view'; }, 400);
+      setTimeout(() => { window.location.href = mode === 'admin' ? '/dashboard' : '/view'; }, 400);
     } catch (err) {
       setMsg({ kind: 'error', text: err.message });
       setBusy(false);

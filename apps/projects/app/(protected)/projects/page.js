@@ -34,17 +34,17 @@ export default function ProjectsPage() {
   const [modal, setModal] = useState(null);
 
   const isAdmin = me?.role === 'admin';
-  const url = '/projects/api/projects?' + new URLSearchParams({ search, status, page: String(page), pageSize: String(pageSize) }).toString();
+  const url = '/api/projects?' + new URLSearchParams({ search, status, page: String(page), pageSize: String(pageSize) }).toString();
   const { data, error, refresh } = useLiveData(url, REFRESH_MS);
   const rows = data?.projects || [];
   const total = data?.total || 0;
 
   useEffect(() => {
-    fetch('/projects/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
 
   async function saveProject(form, mode, id) {
-    const reqUrl = mode === 'add' ? '/projects/api/projects' : `/projects/api/projects/${id}`;
+    const reqUrl = mode === 'add' ? '/api/projects' : `/api/projects/${id}`;
     const res = await fetch(reqUrl, {
       method: mode === 'add' ? 'POST' : 'PATCH',
       headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
@@ -58,11 +58,11 @@ export default function ProjectsPage() {
 
   async function deleteProject(id) {
     if (!confirm('Delete this project? This cannot be undone.')) return;
-    const res = await fetch(`/projects/api/projects/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+    const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) refresh();
   }
 
-  function exportExcel() { window.location.href = '/projects/api/projects/export'; }
+  function exportExcel() { window.location.href = '/api/projects/export'; }
 
   async function exportPdf() {
     const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
@@ -121,7 +121,7 @@ export default function ProjectsPage() {
               <tr><td colSpan={9} className="py-8 text-center text-slate-400">No projects match these filters.</td></tr>
             ) : rows.map((p, i) => (
               <tr key={p.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
-                onClick={() => { window.location.href = '/projects/projects/' + p.id; }}>
+                onClick={() => { window.location.href = '/projects/' + p.id; }}>
                 <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
                 <td className="font-medium">{p.customer_name}</td>
                 <td>{p.company_name || '—'}</td>
@@ -136,7 +136,7 @@ export default function ProjectsPage() {
                   <span className="text-xs text-slate-500">{p.progress}%</span>
                 </td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/projects/projects/' + p.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
+                  <button onClick={() => { window.location.href = '/projects/' + p.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
                   {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: p })} title="Edit" className="text-brand-500">✎</button>}
                   {isAdmin && <button onClick={() => deleteProject(p.id)} title="Delete" className="text-red-500">🗑</button>}
                 </td>

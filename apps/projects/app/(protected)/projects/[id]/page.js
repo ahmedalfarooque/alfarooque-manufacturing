@@ -22,15 +22,15 @@ export default function ProjectViewPage() {
   const [uploadErr, setUploadErr] = useState(null);
   const fileRef = useRef(null);
 
-  const { data, error, refresh } = useLiveData('/projects/api/projects/' + id, 15000);
+  const { data, error, refresh } = useLiveData('/api/projects/' + id, 15000);
   const isAdmin = me?.role === 'admin';
 
   useEffect(() => {
-    fetch('/projects/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
 
   async function saveProject(form, mode, projectId) {
-    const res = await fetch(`/projects/api/projects/${projectId}`, {
+    const res = await fetch(`/api/projects/${projectId}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
       body: JSON.stringify(form),
     });
@@ -47,7 +47,7 @@ export default function ProjectViewPage() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch(`/projects/api/projects/${id}/documents`, { method: 'POST', credentials: 'same-origin', body: fd });
+      const res = await fetch(`/api/projects/${id}/documents`, { method: 'POST', credentials: 'same-origin', body: fd });
       const respData = await res.json();
       if (!res.ok) throw new Error(respData.error);
       refresh();
@@ -68,7 +68,7 @@ export default function ProjectViewPage() {
     <Shell active="/projects">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <a href="/projects/projects" className="text-xs text-brand-500 hover:underline">← Back to Projects</a>
+          <a href="/projects" className="text-xs text-brand-500 hover:underline">← Back to Projects</a>
           <h2 className="text-lg font-semibold mt-1">{p.project_name}</h2>
           <p className="text-xs text-slate-500">Dashboard &gt; Projects &gt; {p.project_name}</p>
         </div>

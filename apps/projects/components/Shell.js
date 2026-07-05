@@ -14,7 +14,7 @@ export default function Shell({ children, active }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/projects/api/auth', { credentials: 'same-origin' })
+    fetch('/api/auth', { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : null)
       .then(d => d && setUser(d.user))
       .catch(() => {});
@@ -32,8 +32,8 @@ export default function Shell({ children, active }) {
   }
 
   async function logout() {
-    try { await fetch('/projects/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ action: 'logout' }) }); } catch (_) {}
-    window.location.href = '/projects/login';
+    try { await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ action: 'logout' }) }); } catch (_) {}
+    window.location.href = '/login';
   }
 
   return (
@@ -61,7 +61,7 @@ export default function Shell({ children, active }) {
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2">
           {NAV.map(item => (
-            <a key={item.href} href={'/projects' + item.href}
+            <a key={item.href} href={item.href}
               className={
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ' +
                 (active === item.href ? 'bg-brand-500 text-white' : 'hover:bg-white/5 text-slate-300')

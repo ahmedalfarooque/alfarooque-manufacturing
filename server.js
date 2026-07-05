@@ -72,14 +72,12 @@ const MIME = {
 };
 
 /* ── Proxy /cars and /projects to their own Next.js dev servers ──
-   /projects mirrors production: alfarooque.com/projects reaches it via
-   a Vercel rewrite (see apps/DEPLOYMENT.md), so the prefix is forwarded
-   as-is. /cars is different — that app now deploys to its own
-   cars.alfarooque.com subdomain and has no basePath, so its dev server
-   expects root-relative paths; the "/cars" prefix here is purely a
-   local convenience (no subdomain in local dev) and must be stripped
-   before forwarding, or every route on port 3010 would 404. */
-const PROXY_TARGETS = { '/cars': { port: 3010, stripPrefix: true }, '/projects': { port: 3020, stripPrefix: false } };
+   Both apps now deploy to their own subdomains (cars.alfarooque.com,
+   projects.alfarooque.com) and have no basePath — their dev servers
+   expect root-relative paths. The "/cars"/"/projects" prefixes here are
+   purely a local convenience (no real subdomains in local dev) and
+   must be stripped before forwarding, or every route would 404. */
+const PROXY_TARGETS = { '/cars': { port: 3010, stripPrefix: true }, '/projects': { port: 3020, stripPrefix: true } };
 function proxyTarget(urlPath) {
   for (const prefix of Object.keys(PROXY_TARGETS)) {
     if (urlPath === prefix || urlPath.startsWith(prefix + '/')) return { prefix, ...PROXY_TARGETS[prefix] };
@@ -262,24 +260,25 @@ server.listen(PORT, '127.0.0.1', () => {
     console.warn('  └──────────────────────────────────────────────────────────┘\n');
   }
 
-  startCarsApp().catch(err => console.error('  [cars-app] Unexpected error starting: ' + err.message));
+  for (const app of MANAGED_APPS) {
+    startManagedApp(app).catch(err => console.error('  [' + app.name + '] Unexpected error starting: ' + err.message));
+  }
 });
 
-/* ── Auto-start the Cars app alongside the main site ──
-   The user wants apps/cars always up whenever this server runs, instead of
-   remembering to launch it separately — this site's /cars proxy (see
-   PROXY_TARGETS above) is useless without it anyway. Spawns `npm run dev`
-   inside apps/cars, restarts it if it crashes (capped, so a real bug
-   doesn't spin forever), and shuts it down when this process exits.
-   Skips spawning if port 3010 is already occupied (e.g. started manually,
-   or via the preview tool's own "cars-app" launch config) rather than
-   fighting over the port. */
-const CARS_APP_DIR = path.join(ROOT, 'apps', 'cars');
-const CARS_APP_PORT = 3010;
-const CARS_APP_MAX_RESTARTS = 5;
-let carsAppChild = null;
-let carsAppRestarts = 0;
-let carsAppShuttingDown = false;
+/* ── Auto-start apps/cars and apps/projects alongside the main site ──
+   Both apps should always be up whenever this server runs, instead of
+   remembering to launch each separately — the /cars and /projects local
+   proxies (see PROXY_TARGETS above) are useless without them anyway.
+   Spawns `npm run dev` inside each app dir, restarts it if it crashes
+   (capped per app, so a real bug doesn't spin forever), and shuts it
+   down when this process exits. Skips spawning an app whose port is
+   already occupied (e.g. started manually, or via the preview tool's
+   own launch config) rather than fighting over the port. */
+const MAX_RESTARTS = 5;
+const MANAGED_APPS = [
+  { name: 'cars-app', dir: path.join(ROOT, 'apps', 'cars'), port: 3010 },
+  { name: 'projects-app', dir: path.join(ROOT, 'apps', 'projects'), port: 3020 },
+].map(app => ({ ...app, child: null, restarts: 0, shuttingDown: false }));
 
 function isPortInUse(port) {
   return new Promise(resolve => {
@@ -289,40 +288,42 @@ function isPortInUse(port) {
   });
 }
 
-async function startCarsApp() {
-  if (!fs.existsSync(CARS_APP_DIR)) return;
-  if (await isPortInUse(CARS_APP_PORT)) {
-    console.log('  [cars-app] Already running on port ' + CARS_APP_PORT + ' — leaving it as-is.\n');
+async function startManagedApp(app) {
+  if (!fs.existsSync(app.dir)) return;
+  if (await isPortInUse(app.port)) {
+    console.log('  [' + app.name + '] Already running on port ' + app.port + ' — leaving it as-is.\n');
     return;
   }
-  console.log('  [cars-app] Starting dev server on port ' + CARS_APP_PORT + '…');
+  console.log('  [' + app.name + '] Starting dev server on port ' + app.port + '…');
   try {
-    carsAppChild = spawn('npm', ['run', 'dev'], { cwd: CARS_APP_DIR, stdio: 'inherit', shell: true });
+    app.child = spawn('npm', ['run', 'dev'], { cwd: app.dir, stdio: 'inherit', shell: true });
   } catch (err) {
-    console.error('  [cars-app] Failed to spawn: ' + err.message);
+    console.error('  [' + app.name + '] Failed to spawn: ' + err.message);
     return;
   }
-  carsAppChild.on('error', (err) => {
-    console.error('  [cars-app] Failed to start: ' + err.message);
-    carsAppChild = null;
+  app.child.on('error', (err) => {
+    console.error('  [' + app.name + '] Failed to start: ' + err.message);
+    app.child = null;
   });
-  carsAppChild.on('exit', (code) => {
-    carsAppChild = null;
-    if (carsAppShuttingDown) return;
-    if (carsAppRestarts >= CARS_APP_MAX_RESTARTS) {
-      console.error('  [cars-app] Exited (code ' + code + ') too many times — giving up. Start it manually to see the error.');
+  app.child.on('exit', (code) => {
+    app.child = null;
+    if (app.shuttingDown) return;
+    if (app.restarts >= MAX_RESTARTS) {
+      console.error('  [' + app.name + '] Exited (code ' + code + ') too many times — giving up. Start it manually to see the error.');
       return;
     }
-    carsAppRestarts++;
-    console.warn('  [cars-app] Exited unexpectedly (code ' + code + ') — restarting (' + carsAppRestarts + '/' + CARS_APP_MAX_RESTARTS + ')…');
-    setTimeout(startCarsApp, 1000);
+    app.restarts++;
+    console.warn('  [' + app.name + '] Exited unexpectedly (code ' + code + ') — restarting (' + app.restarts + '/' + MAX_RESTARTS + ')…');
+    setTimeout(() => startManagedApp(app), 1000);
   });
 }
 
-function stopCarsApp() {
-  carsAppShuttingDown = true;
-  if (carsAppChild) carsAppChild.kill();
+function stopManagedApps() {
+  for (const app of MANAGED_APPS) {
+    app.shuttingDown = true;
+    if (app.child) app.child.kill();
+  }
 }
-process.on('exit', stopCarsApp);
-process.on('SIGINT', () => { stopCarsApp(); process.exit(0); });
-process.on('SIGTERM', () => { stopCarsApp(); process.exit(0); });
+process.on('exit', stopManagedApps);
+process.on('SIGINT', () => { stopManagedApps(); process.exit(0); });
+process.on('SIGTERM', () => { stopManagedApps(); process.exit(0); });
