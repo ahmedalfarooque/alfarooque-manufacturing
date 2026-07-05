@@ -58,6 +58,12 @@ export default function ProjectViewPage() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
+  async function deleteFile(docId) {
+    if (!confirm('Delete this file? This cannot be undone.')) return;
+    const res = await fetch(`/api/projects/${id}/documents/${docId}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (res.ok) { setLightbox(null); refresh(); }
+  }
+
   if (error) return <Shell active="/projects"><div className="text-red-500">{error}</div></Shell>;
   if (!data) return <Shell active="/projects"><div className="text-slate-400">Loading…</div></Shell>;
 
@@ -130,14 +136,22 @@ export default function ProjectViewPage() {
             {documents.map(d => {
               const isImage = /\.(jpe?g|png|gif|webp)$/i.test(d.file_name);
               return (
-                <button key={d.id} type="button" onClick={() => isImage && setLightbox(d)}
-                  className="aspect-square rounded-lg border border-black/10 dark:border-white/10 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
-                  {isImage ? (
-                    <img src={d.url} alt={d.file_name} className="w-full h-full object-cover" />
-                  ) : (
-                    <a href={d.url} target="_blank" rel="noreferrer" className="text-xs text-center p-2 text-slate-500">📄<br />{d.file_name}</a>
+                <div key={d.id} className="relative group">
+                  <button type="button" onClick={() => isImage && setLightbox(d)}
+                    className="aspect-square w-full rounded-lg border border-black/10 dark:border-white/10 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
+                    {isImage ? (
+                      <img src={d.url} alt={d.file_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <a href={d.url} target="_blank" rel="noreferrer" className="text-xs text-center p-2 text-slate-500">📄<br />{d.file_name}</a>
+                    )}
+                  </button>
+                  {isAdmin && (
+                    <button type="button" onClick={() => deleteFile(d.id)} title="Delete"
+                      className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/70 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                      🗑
+                    </button>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
@@ -146,7 +160,13 @@ export default function ProjectViewPage() {
 
       {lightbox && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
-          <img src={lightbox.url} alt={lightbox.file_name} className="max-w-full max-h-full rounded-lg" />
+          <div className="relative max-w-full max-h-full" onClick={e => e.stopPropagation()}>
+            <img src={lightbox.url} alt={lightbox.file_name} className="max-w-full max-h-full rounded-lg" />
+            <div className="absolute top-2 right-2 flex gap-2">
+              {isAdmin && <button onClick={() => deleteFile(lightbox.id)} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm">🗑 Delete</button>}
+              <button onClick={() => setLightbox(null)} className="px-3 py-1.5 rounded-lg bg-black/70 text-white text-sm">✕ Close</button>
+            </div>
+          </div>
         </div>
       )}
 
