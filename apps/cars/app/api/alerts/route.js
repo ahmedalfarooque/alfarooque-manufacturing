@@ -15,7 +15,7 @@ export async function GET(req) {
 }
 
 export async function PATCH(req) {
-  const { response } = requireSession(req);
+  const { response } = requireSession(req, { adminOnly: true });
   if (response) return response;
   const body = await req.json().catch(() => ({}));
   if (!body.id) return json({ error: 'Alert id is required.' }, 400);

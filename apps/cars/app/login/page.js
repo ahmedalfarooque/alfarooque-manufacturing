@@ -21,8 +21,16 @@ async function call(action, extra) {
   return data;
 }
 
+/* "User" (no password, OTP-only, view access) is always the default —
+   on first load, after a refresh, after logout, after session expiry.
+   Nothing about the last-selected tab is ever persisted (no
+   localStorage, no cookie) — component state simply starts at 'user'
+   every time this page mounts, which is exactly what "never remembered"
+   requires. The one exception is an explicit ?mode=admin deep link,
+   which only matters for the instant of that specific page load. */
 export default function LoginPage() {
-  const [step, setStep] = useState('password');
+  const [mode, setMode] = useState('user'); // 'user' (email only) | 'admin' (email+password)
+  const [step, setStep] = useState('credentials'); // 'credentials' | 'otp'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -31,6 +39,9 @@ export default function LoginPage() {
   const [cooldown, setCooldown] = useState(0);
   const timerRef = useRef(null);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('mode') === 'admin') setMode('admin');
+  }, []);
   useEffect(() => () => clearInterval(timerRef.current), []);
 
   function startCooldown(seconds) {
@@ -44,11 +55,21 @@ export default function LoginPage() {
     }, 1000);
   }
 
-  async function submitPassword(e) {
+  function switchMode(next) {
+    setMode(next);
+    setStep('credentials');
+    setMsg(null);
+    setPassword('');
+    setCode('');
+    clearInterval(timerRef.current);
+    setCooldown(0);
+  }
+
+  async function submitCredentials(e) {
     e.preventDefault();
     setMsg(null); setBusy(true);
     try {
-      const data = await call('login', { email, password });
+      const data = mode === 'admin' ? await call('login', { email, password }) : await call('view-login', { email });
       setMsg({ kind: 'success', text: data.message });
       setStep('otp');
       startCooldown(60);
@@ -63,9 +84,9 @@ export default function LoginPage() {
     e.preventDefault();
     setMsg(null); setBusy(true);
     try {
-      await call('verify-otp', { email, code });
+      await call(mode === 'admin' ? 'verify-otp' : 'view-verify-otp', { email, code });
       setMsg({ kind: 'success', text: 'Success — redirecting…' });
-      setTimeout(() => { window.location.href = '/cars/dashboard'; }, 400);
+      setTimeout(() => { window.location.href = mode === 'admin' ? '/cars/dashboard' : '/cars/view'; }, 400);
     } catch (err) {
       setMsg({ kind: 'error', text: err.message });
       setBusy(false);
@@ -75,7 +96,7 @@ export default function LoginPage() {
   async function resend() {
     setMsg(null);
     try {
-      const data = await call('resend-otp', { email });
+      const data = await call(mode === 'admin' ? 'resend-otp' : 'view-resend-otp', { email });
       setMsg({ kind: 'success', text: data.message });
       startCooldown(60);
     } catch (err) {
@@ -95,25 +116,40 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {step === 'credentials' && (
+          <div className="grid grid-cols-2 gap-1 mb-6 rounded-lg bg-white/5 p-1">
+            <button type="button" onClick={() => switchMode('user')}
+              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'user' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200')}>
+              User
+            </button>
+            <button type="button" onClick={() => switchMode('admin')}
+              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'admin' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200')}>
+              Admin
+            </button>
+          </div>
+        )}
+
         {msg && (
           <div className={
-            'mb-4 rounded-lg px-3 py-2 text-sm ' +
+            'mb-4 rounded-lg px-3 py-2 text-sm whitespace-pre-line ' +
             (msg.kind === 'success' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30')
           }>{msg.text}</div>
         )}
 
-        {step === 'password' ? (
-          <form onSubmit={submitPassword} className="space-y-4">
+        {step === 'credentials' ? (
+          <form onSubmit={submitCredentials} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Email</label>
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Password</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
-            </div>
+            {mode === 'admin' && (
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Password</label>
+                <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+              </div>
+            )}
             <button disabled={busy} type="submit"
               className="w-full rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition">
               {busy ? 'Signing in…' : 'Continue'}
@@ -133,8 +169,8 @@ export default function LoginPage() {
               className="w-full rounded-lg border border-white/10 text-slate-300 text-sm py-2 disabled:opacity-50">
               {cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}
             </button>
-            <button type="button" onClick={() => { setStep('password'); setMsg(null); }}
-              className="w-full text-center text-xs text-slate-500 hover:text-slate-300">← Back to email &amp; password</button>
+            <button type="button" onClick={() => switchMode(mode)}
+              className="w-full text-center text-xs text-slate-500 hover:text-slate-300">← Back to email{mode === 'admin' ? ' & password' : ''}</button>
           </form>
         )}
       </div>

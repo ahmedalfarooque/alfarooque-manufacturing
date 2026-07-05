@@ -36,7 +36,12 @@ export async function middleware(req) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = token ? await verify(token) : null;
 
-  if (pathname.startsWith('/login')) {
+  /* One login page (/login) with a switch between "User" (email-only
+     OTP, view access — always the default) and "Admin" (email+
+     password) — the switch changes only the credentials box, not the
+     route. /view-login still exists as a redirect into /login for any
+     old links. */
+  if (pathname.startsWith('/login') || pathname.startsWith('/view-login')) {
     if (session) return redirectTo(req, '/dashboard');
     return NextResponse.next();
   }
@@ -53,5 +58,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/maintenance/:path*', '/alerts/:path*', '/reports/:path*'],
+  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/maintenance/:path*', '/alerts/:path*', '/reports/:path*', '/view/:path*'],
 };

@@ -200,11 +200,18 @@ async function findOrCreateViewUser(sb, email) {
   return { user: created, error };
 }
 
+/* Every pre-OTP rejection in this flow — bad format, wrong domain,
+   disabled account — returns the exact same "Invalid username."
+   message. Per the brief: never confirm/deny which part was wrong
+   (not "wrong domain", not "OTP failed", not "account disabled") —
+   a uniform response is the only way this doesn't leak which emails
+   are valid company accounts. */
+const INVALID_USERNAME = () => json({ error: 'Invalid username.' }, 400);
+
 async function handleViewLogin(sb, body) {
   const email = String(body.email || '').trim().toLowerCase();
-  if (!EMAIL_RE.test(email)) return json({ error: 'Please enter a valid email address.' }, 400);
-  if (!email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) {
-    return json({ error: 'Unauthorized email address.\nOnly @alfarooque.com email accounts are permitted.' }, 403);
+  if (!EMAIL_RE.test(email) || !email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) {
+    return INVALID_USERNAME();
   }
 
   const { user, error: findErr } = await findOrCreateViewUser(sb, email);
@@ -212,7 +219,7 @@ async function handleViewLogin(sb, body) {
     console.error('[projects/auth] view-login user lookup/create failed:', findErr && findErr.message);
     return json({ error: 'Could not start verification. Please try again.' }, 500);
   }
-  if (!user.is_active) return json({ error: 'This account has been disabled.' }, 403);
+  if (!user.is_active) return INVALID_USERNAME();
 
   const code = generateOtp();
   const { error: otpInsertErr } = await sb.from('platform_otp_codes').insert({
@@ -236,10 +243,8 @@ async function handleViewLogin(sb, body) {
 async function handleViewVerifyOtp(sb, body, ip, ua) {
   const email = String(body.email || '').trim().toLowerCase();
   const code = String(body.code || '').trim();
+  if (!email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) return INVALID_USERNAME();
   if (!EMAIL_RE.test(email) || !/^\d{6}$/.test(code)) return json({ error: 'Please enter the 6-digit code.' }, 400);
-  if (!email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) {
-    return json({ error: 'Unauthorized email address.\nOnly @alfarooque.com email accounts are permitted.' }, 403);
-  }
 
   const { data: user } = await sb.from('platform_users').select('*').eq('email', email).maybeSingle();
   if (!user || !user.is_active) return json({ error: 'Invalid session — please start over.' }, 401);

@@ -6,6 +6,8 @@ import Shell from '@/components/Shell';
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState(null);
   const [error, setError] = useState(null);
+  const [me, setMe] = useState(null);
+  const isAdmin = me?.role === 'admin';
 
   function load() {
     fetch('/cars/api/alerts', { credentials: 'same-origin' })
@@ -14,6 +16,9 @@ export default function AlertsPage() {
       .catch(e => setError(e.message));
   }
   useEffect(load, []);
+  useEffect(() => {
+    fetch('/cars/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+  }, []);
 
   async function markRead(id) {
     await fetch('/cars/api/alerts', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id }) });
@@ -37,7 +42,7 @@ export default function AlertsPage() {
                 <div className="text-xs text-slate-500 mt-1">{a.body}</div>
                 <div className="text-[11px] text-slate-400 mt-1">{new Date(a.created_at).toLocaleString()}</div>
               </div>
-              {!a.is_read && <button onClick={() => markRead(a.id)} className="text-xs px-2 py-1 rounded border border-black/10 dark:border-white/10 shrink-0">Mark read</button>}
+              {isAdmin && !a.is_read && <button onClick={() => markRead(a.id)} className="text-xs px-2 py-1 rounded border border-black/10 dark:border-white/10 shrink-0">Mark read</button>}
             </div>
           ))}
         </div>

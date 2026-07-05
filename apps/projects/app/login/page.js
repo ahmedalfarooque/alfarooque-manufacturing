@@ -21,8 +21,15 @@ async function call(action, extra) {
   return data;
 }
 
+/* "User" (no password, OTP-only, view access) is always the default —
+   on first load, after a refresh, after logout, after session expiry.
+   Nothing about the last-selected tab is ever persisted (no
+   localStorage, no cookie) — component state simply starts at 'user'
+   every time this page mounts, which is exactly what "never remembered"
+   requires. The one exception is an explicit ?mode=admin deep link,
+   which only matters for the instant of that specific page load. */
 export default function LoginPage() {
-  const [mode, setMode] = useState('admin'); // 'admin' (email+password) | 'view' (email only, no password)
+  const [mode, setMode] = useState('user'); // 'user' (email only) | 'admin' (email+password)
   const [step, setStep] = useState('credentials'); // 'credentials' | 'otp'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +40,7 @@ export default function LoginPage() {
   const timerRef = useRef(null);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('mode') === 'view') setMode('view');
+    if (new URLSearchParams(window.location.search).get('mode') === 'admin') setMode('admin');
   }, []);
   useEffect(() => () => clearInterval(timerRef.current), []);
 
@@ -111,13 +118,13 @@ export default function LoginPage() {
 
         {step === 'credentials' && (
           <div className="grid grid-cols-2 gap-1 mb-6 rounded-lg bg-white/5 p-1">
+            <button type="button" onClick={() => switchMode('user')}
+              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'user' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200')}>
+              User
+            </button>
             <button type="button" onClick={() => switchMode('admin')}
               className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'admin' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200')}>
-              Admin Login
-            </button>
-            <button type="button" onClick={() => switchMode('view')}
-              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'view' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200')}>
-              View Only
+              Admin
             </button>
           </div>
         )}
@@ -133,9 +140,8 @@ export default function LoginPage() {
           <form onSubmit={submitCredentials} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Email</label>
-              <input type="email" required placeholder={mode === 'view' ? 'name@alfarooque.com' : undefined} value={email} onChange={e => setEmail(e.target.value)}
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
-              {mode === 'view' && <p className="text-[11px] text-slate-500 mt-1">Only @alfarooque.com accounts can use View Only — no password needed, a one-time code will be emailed to you.</p>}
             </div>
             {mode === 'admin' && (
               <div>
@@ -146,7 +152,7 @@ export default function LoginPage() {
             )}
             <button disabled={busy} type="submit"
               className="w-full rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition">
-              {busy ? (mode === 'admin' ? 'Signing in…' : 'Sending code…') : (mode === 'admin' ? 'Continue' : 'Send Code')}
+              {busy ? 'Signing in…' : 'Continue'}
             </button>
           </form>
         ) : (

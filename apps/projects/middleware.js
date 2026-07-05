@@ -30,22 +30,20 @@ export async function middleware(req) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = token ? await verify(token) : null;
 
-  /* One login page (/login) with a switch between "Admin" (password)
-     and "View Only" (email-only OTP) — the switch changes only the
-     credentials box, not the route. /view-login still exists as a
-     redirect into /login?mode=view for any old links. Neither requires
-     a session; both bounce an already-logged-in visitor straight to
-     the dashboard instead of re-showing a login form. */
+  /* One login page (/login) with a switch between "User" (email-only
+     OTP, view access — always the default) and "Admin" (email+
+     password) — the switch changes only the credentials box, not the
+     route. /view-login still exists as a redirect into /login for any
+     old links. Neither requires a session; both bounce an
+     already-logged-in visitor straight to the dashboard instead of
+     re-showing a login form. */
   if (pathname.startsWith('/login') || pathname.startsWith('/view-login')) {
     if (session) return redirectTo(req, '/dashboard');
     return NextResponse.next();
   }
 
   if (!session) {
-    /* A visitor landing on /view/* hasn't signed in yet — send them to
-       the login page with the View Only tab pre-selected. */
-    const loginPath = pathname.startsWith('/view') ? '/login?mode=view' : '/login';
-    return redirectTo(req, loginPath);
+    return redirectTo(req, '/login');
   }
 
   if (ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p)) && session.role !== 'admin') {
