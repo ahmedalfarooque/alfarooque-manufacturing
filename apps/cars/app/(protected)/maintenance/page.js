@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
+import Dropdown from '@/components/Dropdown';
 import { ShopModal, EMPTY_FORM as EMPTY_SHOP_FORM } from '@/app/(protected)/maintenance-shops/page';
 
 const PAYMENT_BADGE = {
@@ -90,11 +91,11 @@ export default function MaintenanceRecordsPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder="Search invoice, type, technician…" value={search} onChange={e => { setPage(1); setSearch(e.target.value); }}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Select value={carId} onChange={v => { setPage(1); setCarId(v); }} placeholder="All Vehicles" options={cars.map(c => [c.id, c.vehicle_number])} />
-        <Select value={driverId} onChange={v => { setPage(1); setDriverId(v); }} placeholder="All Drivers" options={drivers.map(d => [d.id, d.full_name])} />
-        <Select value={shopId} onChange={v => { setPage(1); setShopId(v); }} placeholder="All Shops" options={shops.map(s => [s.id, s.name])} />
-        <Select value={category} onChange={v => { setPage(1); setCategory(v); }} placeholder="All Categories" options={categories.map(c => [c.name, c.name])} />
-        <Select value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder="All Payment Status" options={[['Paid', 'Paid'], ['Unpaid', 'Unpaid'], ['Partial', 'Partial']]} />
+        <Dropdown value={carId} onChange={v => { setPage(1); setCarId(v); }} placeholder="All Vehicles" options={cars.map(c => [c.id, c.vehicle_number])} />
+        <Dropdown value={driverId} onChange={v => { setPage(1); setDriverId(v); }} placeholder="All Drivers" options={drivers.map(d => [d.id, d.full_name])} />
+        <Dropdown value={shopId} onChange={v => { setPage(1); setShopId(v); }} placeholder="All Shops" options={shops.map(s => [s.id, s.name])} />
+        <Dropdown value={category} onChange={v => { setPage(1); setCategory(v); }} placeholder="All Categories" options={categories.map(c => [c.name, c.name])} />
+        <Dropdown value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder="All Payment Status" options={[['Paid', 'Paid'], ['Unpaid', 'Unpaid'], ['Partial', 'Partial']]} />
         <div className="flex items-center gap-1">
           <input type="date" value={dateFrom} onChange={e => { setPage(1); setDateFrom(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
           <span className="text-slate-400 text-xs">to</span>
@@ -199,34 +200,26 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs text-slate-500 mb-1">Vehicle</label>
-            <select value={form.car_id} onChange={set('car_id')} required className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              <option value="">Select vehicle…</option>
-              {cars.map(c => <option key={c.id} value={c.id}>{c.vehicle_number}</option>)}
-            </select>
+            <Dropdown value={form.car_id} onChange={v => setForm(f => ({ ...f, car_id: v }))} placeholder="Select vehicle…"
+              options={cars.map(c => [c.id, c.vehicle_number])} />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Driver</label>
-            <select value={form.driver_id || ''} onChange={set('driver_id')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              <option value="">— None —</option>
-              {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
-            </select>
+            <Dropdown value={form.driver_id || ''} onChange={v => setForm(f => ({ ...f, driver_id: v }))} placeholder="— None —"
+              options={[['', '— None —'], ...drivers.map(d => [d.id, d.full_name])]} />
           </div>
           <Field label="Maintenance Date" type="date" value={form.maintenance_date} onChange={set('maintenance_date')} required />
           <div>
             <label className="block text-xs text-slate-500 mb-1">Category</label>
-            <select value={form.category} onChange={set('category')} required className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              <option value="">Select category…</option>
-              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
+            <Dropdown value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} placeholder="Select category…"
+              options={categories.map(c => [c.name, c.name])} />
           </div>
           <Field label="Maintenance Type" value={form.maintenance_type} onChange={set('maintenance_type')} />
           <div>
             <label className="block text-xs text-slate-500 mb-1">Workshop / Shop</label>
             <div className="flex gap-1">
-              <select value={form.shop_id || ''} onChange={set('shop_id')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-                <option value="">— None —</option>
-                {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              <Dropdown className="flex-1" value={form.shop_id || ''} onChange={v => setForm(f => ({ ...f, shop_id: v }))} placeholder="— None —"
+                options={[['', '— None —'], ...shops.map(s => [s.id, s.name])]} />
               <button type="button" onClick={() => setAddShopOpen(true)} title="Add New Shop" className="px-2 rounded-lg border border-black/10 dark:border-white/10 text-sm shrink-0">+</button>
             </div>
           </div>
@@ -236,9 +229,7 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
           <Field label="Invoice Number" value={form.invoice_number} onChange={set('invoice_number')} />
           <div>
             <label className="block text-xs text-slate-500 mb-1">Payment Status</label>
-            <select value={form.payment_status} onChange={set('payment_status')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              {['Unpaid', 'Paid', 'Partial'].map(s => <option key={s}>{s}</option>)}
-            </select>
+            <Dropdown value={form.payment_status} onChange={v => setForm(f => ({ ...f, payment_status: v }))} options={['Unpaid', 'Paid', 'Partial']} />
           </div>
           <Field label="Technician" value={form.technician} onChange={set('technician')} />
           <Field label="Warranty" value={form.warranty} onChange={set('warranty')} />
@@ -267,14 +258,6 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
   );
 }
 
-function Select({ value, onChange, options, placeholder }) {
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)} className="rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-      <option value="">{placeholder}</option>
-      {options.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-    </select>
-  );
-}
 function Field({ label, ...props }) {
   return (
     <div>

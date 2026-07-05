@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
+import Dropdown from '@/components/Dropdown';
 
 const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -115,9 +116,9 @@ export default function VehiclesPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-5 gap-3">
         <input placeholder="Search vehicles…" value={search} onChange={e => { setPage(1); setSearch(e.target.value); }}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Select value={status} onChange={v => { setPage(1); setStatus(v); }} options={['All', 'Running', 'Idle', 'Stopped', 'Offline']} />
-        <Select value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={['All', 'Diesel', 'Petrol', 'Electric']} />
-        <Select value={assignment} onChange={v => { setPage(1); setAssignment(v); }} options={['All', 'Assigned', 'Unassigned']} />
+        <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={['All', 'Running', 'Idle', 'Stopped', 'Offline']} />
+        <Dropdown value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={['All', 'Diesel', 'Petrol', 'Electric']} />
+        <Dropdown value={assignment} onChange={v => { setPage(1); setAssignment(v); }} options={['All', 'Assigned', 'Unassigned']} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -172,14 +173,6 @@ export default function VehiclesPage() {
   );
 }
 
-function Select({ value, onChange, options }) {
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)} className="rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-      {options.map(o => <option key={o} value={o}>{o}</option>)}
-    </select>
-  );
-}
-
 export function VehicleModal({ modal, drivers, onClose, onSave }) {
   const [form, setForm] = useState(modal.data);
   const [busy, setBusy] = useState(false);
@@ -210,18 +203,14 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
           <Field label="Driver" value={form.driver || ''} onChange={set('driver')} />
           <div>
             <label className="block text-xs text-slate-500 mb-1">Status</label>
-            <select value={form.status} onChange={set('status')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              {['Running', 'Idle', 'Stopped', 'Offline'].map(s => <option key={s}>{s}</option>)}
-            </select>
+            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Running', 'Idle', 'Stopped', 'Offline']} />
           </div>
           <Field label="Current KM" value={form.current_km ?? ''} onChange={set('current_km')} type="number" />
           <Field label="Location" value={form.location || ''} onChange={set('location')} />
           <div>
             <label className="block text-xs text-slate-500 mb-1">Assigned Driver</label>
-            <select value={form.assigned_driver_id || ''} onChange={set('assigned_driver_id')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              <option value="">— None —</option>
-              {drivers?.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
-            </select>
+            <Dropdown value={form.assigned_driver_id || ''} onChange={v => setForm(f => ({ ...f, assigned_driver_id: v }))} placeholder="— None —"
+              options={[['', '— None —'], ...(drivers || []).map(d => [d.id, d.full_name])]} />
           </div>
         </div>
 

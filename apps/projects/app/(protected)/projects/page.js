@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import CustomerPicker from '@/components/CustomerPicker';
+import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 
 const STATUS_BADGE = {
@@ -99,9 +100,7 @@ export default function ProjectsPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder="Search projects…" value={search} onChange={e => { setPage(1); setSearch(e.target.value); }}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <select value={status} onChange={e => { setPage(1); setStatus(e.target.value); }} className="rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-          {['All', 'Running', 'Completed', 'Upcoming', 'On Hold'].map(s => <option key={s}>{s}</option>)}
-        </select>
+        <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={['All', 'Running', 'Completed', 'Upcoming', 'On Hold']} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -211,9 +210,7 @@ export function ProjectModal({ modal, onClose, onSave }) {
           <Field label="End Date" value={form.end_date || ''} onChange={set('end_date')} type="date" />
           <div>
             <label className="block text-xs text-slate-500 mb-1">Status</label>
-            <select value={form.status} onChange={set('status')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              {['Running', 'Completed', 'Upcoming', 'On Hold'].map(s => <option key={s}>{s}</option>)}
-            </select>
+            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Running', 'Completed', 'Upcoming', 'On Hold']} />
           </div>
           <Field label="Progress %" value={form.progress ?? 0} onChange={set('progress')} type="number" min={0} max={100} />
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
+import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 
@@ -89,9 +90,7 @@ export default function DriversPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder="Search by name, phone, license, iqama…" value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <select value={status} onChange={e => setStatus(e.target.value)} className="rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-          {['All', 'Active', 'Inactive', 'On Leave', 'Terminated'].map(s => <option key={s}>{s}</option>)}
-        </select>
+        <Dropdown value={status} onChange={setStatus} options={['All', 'Active', 'Inactive', 'On Leave', 'Terminated']} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -186,16 +185,12 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
           <Field label="Joining Date" type="date" value={form.joining_date || ''} onChange={set('joining_date')} />
           <div>
             <label className="block text-xs text-slate-500 mb-1">Status</label>
-            <select value={form.status} onChange={set('status')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              {['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => <option key={s}>{s}</option>)}
-            </select>
+            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive', 'On Leave', 'Terminated']} />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Assigned Vehicle</label>
-            <select value={form.assigned_car_id || ''} onChange={set('assigned_car_id')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
-              <option value="">— None —</option>
-              {cars.map(c => <option key={c.id} value={c.id}>{c.vehicle_number} — {c.name}</option>)}
-            </select>
+            <Dropdown value={form.assigned_car_id || ''} onChange={v => setForm(f => ({ ...f, assigned_car_id: v }))} placeholder="— None —"
+              options={[['', '— None —'], ...cars.map(c => [c.id, c.vehicle_number + ' — ' + c.name])]} />
           </div>
           <Field label="Experience (years)" type="number" value={form.experience_years ?? ''} onChange={set('experience_years')} />
           <Field label="Driving Category" value={form.driving_category || ''} onChange={set('driving_category')} />
