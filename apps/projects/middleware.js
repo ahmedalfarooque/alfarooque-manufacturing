@@ -15,27 +15,46 @@ async function verify(token) {
 
 const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit'];
 
+/* NextResponse.redirect(new URL(path, req.url)) does NOT automatically
+   prepend this app's basePath ('/projects') — confirmed by direct
+   testing; a bare '/login' redirect target 404s since the app's entire
+   route tree lives under /projects. req.nextUrl.basePath holds the
+   configured basePath at runtime, so every redirect below is built
+   through this helper instead of a raw `new URL(path, req.url)`. */
+function redirectTo(req, path) {
+  return NextResponse.redirect(new URL(req.nextUrl.basePath + path, req.url));
+}
+
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = token ? await verify(token) : null;
 
-  if (pathname.startsWith('/login')) {
-    if (session) return NextResponse.redirect(new URL('/dashboard', req.url));
+  /* One login page (/login) with a switch between "Admin" (password)
+     and "View Only" (email-only OTP) — the switch changes only the
+     credentials box, not the route. /view-login still exists as a
+     redirect into /login?mode=view for any old links. Neither requires
+     a session; both bounce an already-logged-in visitor straight to
+     the dashboard instead of re-showing a login form. */
+  if (pathname.startsWith('/login') || pathname.startsWith('/view-login')) {
+    if (session) return redirectTo(req, '/dashboard');
     return NextResponse.next();
   }
 
   if (!session) {
-    return NextResponse.redirect(new URL('/login', req.url));
+    /* A visitor landing on /view/* hasn't signed in yet — send them to
+       the login page with the View Only tab pre-selected. */
+    const loginPath = pathname.startsWith('/view') ? '/login?mode=view' : '/login';
+    return redirectTo(req, loginPath);
   }
 
   if (ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p)) && session.role !== 'admin') {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    return redirectTo(req, '/dashboard');
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*'],
+  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*'],
 };

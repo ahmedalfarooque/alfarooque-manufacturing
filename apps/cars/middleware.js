@@ -21,23 +21,32 @@ async function verify(token) {
 
 const ADMIN_ONLY_PREFIXES = ['/vehicles/new', '/vehicles/edit'];
 
+/* NextResponse.redirect(new URL(path, req.url)) does NOT automatically
+   prepend this app's basePath ('/cars') — confirmed by direct testing;
+   a bare '/login' redirect target 404s since the app's entire route
+   tree lives under /cars. req.nextUrl.basePath holds the configured
+   basePath at runtime, so every redirect below is built through this
+   helper instead of a raw `new URL(path, req.url)`. */
+function redirectTo(req, path) {
+  return NextResponse.redirect(new URL(req.nextUrl.basePath + path, req.url));
+}
+
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = token ? await verify(token) : null;
 
   if (pathname.startsWith('/login')) {
-    if (session) return NextResponse.redirect(new URL('/dashboard', req.url));
+    if (session) return redirectTo(req, '/dashboard');
     return NextResponse.next();
   }
 
   if (!session) {
-    const url = new URL('/login', req.url);
-    return NextResponse.redirect(url);
+    return redirectTo(req, '/login');
   }
 
   if (ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p)) && session.role !== 'admin') {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    return redirectTo(req, '/dashboard');
   }
 
   return NextResponse.next();

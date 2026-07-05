@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
+import CustomerPicker from '@/components/CustomerPicker';
+import { useLiveData } from '@/lib/useLiveData';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -10,56 +12,47 @@ const STATUS_BADGE = {
   'On Hold': 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
 
-const EMPTY_FORM = { customer_name: '', company_name: '', project_name: '', value: '', start_date: '', end_date: '', status: 'Upcoming', progress: 0 };
+const EMPTY_FORM = {
+  customer_id: null, customer_name: '', company_name: '', contact_person: '', contact_email: '', contact_phone: '', address: '',
+  project_name: '', short_summary: '', project_details: '', value: '', start_date: '', end_date: '', status: 'Upcoming', progress: 0,
+};
+const REFRESH_MS = 15000;
 
 export default function ProjectsPage() {
   const [me, setMe] = useState(null);
-  const [rows, setRows] = useState([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [modal, setModal] = useState(null);
 
   const isAdmin = me?.role === 'admin';
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const q = new URLSearchParams({ search, status, page: String(page), pageSize: String(pageSize) });
-    try {
-      const res = await fetch('/projects/api/projects?' + q.toString(), { credentials: 'same-origin' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setRows(data.projects); setTotal(data.total); setError(null);
-    } catch (e) { setError(e.message); }
-    setLoading(false);
-  }, [search, status, page]);
+  const url = '/projects/api/projects?' + new URLSearchParams({ search, status, page: String(page), pageSize: String(pageSize) }).toString();
+  const { data, error, refresh } = useLiveData(url, REFRESH_MS);
+  const rows = data?.projects || [];
+  const total = data?.total || 0;
 
   useEffect(() => {
     fetch('/projects/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
-  useEffect(() => { load(); }, [load]);
 
   async function saveProject(form, mode, id) {
-    const url = mode === 'add' ? '/projects/api/projects' : `/projects/api/projects/${id}`;
-    const res = await fetch(url, {
+    const reqUrl = mode === 'add' ? '/projects/api/projects' : `/projects/api/projects/${id}`;
+    const res = await fetch(reqUrl, {
       method: mode === 'add' ? 'POST' : 'PATCH',
       headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
       body: JSON.stringify(form),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+    const respData = await res.json();
+    if (!res.ok) throw new Error(respData.error);
     setModal(null);
-    load();
+    refresh();
   }
 
   async function deleteProject(id) {
     if (!confirm('Delete this project? This cannot be undone.')) return;
     const res = await fetch(`/projects/api/projects/${id}`, { method: 'DELETE', credentials: 'same-origin' });
-    if (res.ok) load();
+    if (res.ok) refresh();
   }
 
   function exportExcel() { window.location.href = '/projects/api/projects/export'; }
@@ -71,11 +64,13 @@ export default function ProjectsPage() {
     doc.text('AL FAROOQUE — Projects', 14, 14);
     doc.autoTable({
       startY: 20,
-      head: [['#', 'Customer', 'Company', 'Project', 'Value', 'Status', 'Progress']],
-      body: rows.map((p, i) => [i + 1, p.customer_name, p.company_name || '—', p.project_name, '$' + Number(p.value).toLocaleString(), p.status, p.progress + '%']),
+      head: [['#', 'Customer', 'Company', 'Project', 'Status', 'Progress']],
+      body: rows.map((p, i) => [i + 1, p.customer_name, p.company_name || '—', p.project_name, p.status, p.progress + '%']),
     });
     doc.save('projects.pdf');
   }
+
+  function printReport() { window.print(); }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -89,6 +84,7 @@ export default function ProjectsPage() {
         <div className="flex items-center gap-2">
           <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ Export Excel</button>
           <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ Export PDF</button>
+          <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 Print</button>
           {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ Add Project</button>}
         </div>
       </div>
@@ -104,25 +100,25 @@ export default function ProjectsPage() {
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
-        <table className="w-full text-sm min-w-[900px]">
+        <table className="w-full text-sm min-w-[800px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10">
             <tr>
-              <th className="py-3 px-4">#</th><th>Customer</th><th>Company</th><th>Project</th><th>Value</th>
-              <th>Start</th><th>End</th><th>Status</th><th>Progress</th>{isAdmin && <th className="text-right px-4">Actions</th>}
+              <th className="py-3 px-4">#</th><th>Customer</th><th>Company</th><th>Project</th>
+              <th>Start</th><th>End</th><th>Status</th><th>Progress</th><th className="text-right px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={10} className="py-8 text-center text-slate-400">Loading…</td></tr>
+            {!data ? (
+              <tr><td colSpan={9} className="py-8 text-center text-slate-400">Loading…</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={10} className="py-8 text-center text-slate-400">No projects match these filters.</td></tr>
+              <tr><td colSpan={9} className="py-8 text-center text-slate-400">No projects match these filters.</td></tr>
             ) : rows.map((p, i) => (
-              <tr key={p.id} className="border-b border-black/5 dark:border-white/5">
+              <tr key={p.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                onClick={() => { window.location.href = '/projects/projects/' + p.id; }}>
                 <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
                 <td className="font-medium">{p.customer_name}</td>
                 <td>{p.company_name || '—'}</td>
-                <td>{p.project_name}</td>
-                <td>${Number(p.value).toLocaleString()}</td>
+                <td className="max-w-[220px] truncate">{p.project_name}</td>
                 <td>{p.start_date || '—'}</td>
                 <td>{p.end_date || '—'}</td>
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span></td>
@@ -132,12 +128,11 @@ export default function ProjectsPage() {
                   </div>
                   <span className="text-xs text-slate-500">{p.progress}%</span>
                 </td>
-                {isAdmin && (
-                  <td className="text-right px-4 space-x-2">
-                    <button onClick={() => setModal({ mode: 'edit', data: p })} title="Edit" className="text-brand-500">✎</button>
-                    <button onClick={() => deleteProject(p.id)} title="Delete" className="text-red-500">🗑</button>
-                  </td>
-                )}
+                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => { window.location.href = '/projects/projects/' + p.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
+                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: p })} title="Edit" className="text-brand-500">✎</button>}
+                  {isAdmin && <button onClick={() => deleteProject(p.id)} title="Delete" className="text-red-500">🗑</button>}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -158,8 +153,8 @@ export default function ProjectsPage() {
   );
 }
 
-function ProjectModal({ modal, onClose, onSave }) {
-  const [form, setForm] = useState(modal.data);
+export function ProjectModal({ modal, onClose, onSave }) {
+  const [form, setForm] = useState({ ...EMPTY_FORM, ...modal.data });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
 
@@ -174,14 +169,37 @@ function ProjectModal({ modal, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h3 className="font-semibold text-lg">{modal.mode === 'add' ? 'Add Project' : 'Edit Project'}</h3>
         {err && <div className="text-red-500 text-sm">{err}</div>}
+
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Customer Name" value={form.customer_name} onChange={set('customer_name')} required />
+          <div className="col-span-2">
+            <CustomerPicker
+              value={{ customer_id: form.customer_id, customer_name: form.customer_name, company_name: form.company_name }}
+              onChange={patch => setForm(f => ({ ...f, ...patch }))}
+            />
+          </div>
           <Field label="Company Name" value={form.company_name || ''} onChange={set('company_name')} />
-          <Field label="Project Name" value={form.project_name} onChange={set('project_name')} required />
-          <Field label="Total Value" value={form.value ?? ''} onChange={set('value')} type="number" />
+          <Field label="Contact Person" value={form.contact_person || ''} onChange={set('contact_person')} />
+          <Field label="Contact Email" type="email" value={form.contact_email || ''} onChange={set('contact_email')} />
+          <Field label="Contact Phone" value={form.contact_phone || ''} onChange={set('contact_phone')} />
+          <div className="col-span-2"><Field label="Project Address" value={form.address || ''} onChange={set('address')} /></div>
+
+          <div className="col-span-2">
+            <Field label="Project Name (optional — auto-generated from details if left blank)" value={form.project_name} onChange={set('project_name')} />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs text-slate-500 mb-1">Short Summary (optional)</label>
+            <input value={form.short_summary || ''} onChange={set('short_summary')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs text-slate-500 mb-1">Complete Project Details</label>
+            <textarea value={form.project_details || ''} onChange={set('project_details')} rows={4}
+              className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+          </div>
+
+          <Field label="Total Value (optional)" value={form.value ?? ''} onChange={set('value')} type="number" />
           <Field label="Start Date" value={form.start_date || ''} onChange={set('start_date')} type="date" />
           <Field label="End Date" value={form.end_date || ''} onChange={set('end_date')} type="date" />
           <div>

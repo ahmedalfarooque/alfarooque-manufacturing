@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import StatCard from '@/components/StatCard';
+import { useLiveData } from '@/lib/useLiveData';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, RadialBarChart, RadialBar } from 'recharts';
 
 const COLORS = { Running: '#3b82f6', Completed: '#10b981', Upcoming: '#f59e0b', 'On Hold': '#ef4444' };
@@ -12,17 +12,10 @@ const STATUS_BADGE = {
   Upcoming: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   'On Hold': 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
+const REFRESH_MS = 15000;
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetch('/projects/api/stats', { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : r.json().then(d => Promise.reject(new Error(d.error))))
-      .then(setStats)
-      .catch(e => setError(e.message));
-  }, []);
+  const { data: stats, error } = useLiveData('/projects/api/stats', REFRESH_MS);
 
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
   if (!stats) return <Shell active="/dashboard"><div className="text-slate-400">Loading dashboard…</div></Shell>;
@@ -31,13 +24,15 @@ export default function DashboardPage() {
 
   return (
     <Shell active="/dashboard">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <StatCard icon="\u{1F4C1}" tone="brand" label="Total Projects" value={stats.totalProjects} sub="All projects" />
+      {/* Total Project Value card intentionally removed — project value
+          is only ever shown on a project's own View page, and only
+          when it's actually set (see the brief: never show $0/SAR 0). */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        <StatCard icon={'\u{1F4C1}'} tone="brand" label="Total Projects" value={stats.totalProjects} sub="All projects" />
         <StatCard icon="▶" tone="blue" label="Running Projects" value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% of total`} />
         <StatCard icon="✔" tone="emerald" label="Completed Projects" value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% of total`} />
-        <StatCard icon="\u{1F4C5}" tone="amber" label="Upcoming Projects" value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% of total`} />
+        <StatCard icon={'\u{1F4C5}'} tone="amber" label="Upcoming Projects" value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% of total`} />
         <StatCard icon="⏸" tone="red" label="On Hold Projects" value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% of total`} />
-        <StatCard icon="$" tone="slate" label="Total Project Value" value={'$' + fmtCompact(stats.totalValue)} sub="All Projects Value" />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">

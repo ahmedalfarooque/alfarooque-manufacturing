@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: '▦' },
   { href: '/projects', label: 'Projects', icon: '\u{1F4C1}' },
+  { href: '/customers', label: 'Customers', icon: '\u{1F465}' },
 ];
 
 export default function Shell({ children, active }) {

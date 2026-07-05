@@ -8,7 +8,6 @@ const COLUMNS = [
   { header: 'Customer Name', key: 'customer_name', width: 18 },
   { header: 'Company', key: 'company_name', width: 18 },
   { header: 'Project Name', key: 'project_name', width: 22 },
-  { header: 'Total Value', key: 'value', width: 14 },
   { header: 'Start Date', key: 'start_date', width: 14 },
   { header: 'End Date', key: 'end_date', width: 14 },
   { header: 'Status', key: 'status', width: 12 },

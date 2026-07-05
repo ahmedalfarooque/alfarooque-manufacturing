@@ -2,6 +2,7 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
+const { autoProjectName } = require('@/lib/autoProjectName');
 
 const SORTS = {
   latest: { column: 'created_at', ascending: false },
@@ -44,13 +45,23 @@ export async function POST(req) {
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));
-  if (!body.project_name || !body.customer_name) return json({ error: 'Project name and customer name are required.' }, 400);
+  const projectDetails = String(body.project_details || '').trim();
+  const projectName = String(body.project_name || '').trim();
+  if (!body.customer_name) return json({ error: 'Customer is required.' }, 400);
+  if (!projectName && !projectDetails) return json({ error: 'Enter a project name or the project details (a short name will be generated automatically).' }, 400);
 
   const sb = getDb();
   const row = {
+    customer_id: body.customer_id || null,
     customer_name: body.customer_name,
     company_name: body.company_name || null,
-    project_name: body.project_name,
+    contact_person: body.contact_person || null,
+    contact_email: body.contact_email || null,
+    contact_phone: body.contact_phone || null,
+    address: body.address || null,
+    project_name: projectName || autoProjectName(projectDetails),
+    short_summary: body.short_summary || null,
+    project_details: projectDetails || null,
     value: body.value ? Number(body.value) : 0,
     start_date: body.start_date || null,
     end_date: body.end_date || null,
