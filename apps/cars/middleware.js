@@ -21,12 +21,9 @@ async function verify(token) {
 
 const ADMIN_ONLY_PREFIXES = ['/vehicles/new', '/vehicles/edit'];
 
-/* NextResponse.redirect(new URL(path, req.url)) does NOT automatically
-   prepend this app's basePath ('/cars') — confirmed by direct testing;
-   a bare '/login' redirect target 404s since the app's entire route
-   tree lives under /cars. req.nextUrl.basePath holds the configured
-   basePath at runtime, so every redirect below is built through this
-   helper instead of a raw `new URL(path, req.url)`. */
+/* This app has no basePath (it lives at the root of cars.alfarooque.com),
+   so req.nextUrl.basePath is always '' here — kept as a helper anyway so
+   redirects stay correct if a basePath is ever reintroduced. */
 function redirectTo(req, path) {
   return NextResponse.redirect(new URL(req.nextUrl.basePath + path, req.url));
 }
@@ -58,5 +55,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/maintenance/:path*', '/alerts/:path*', '/reports/:path*', '/view/:path*'],
+  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/drivers/:path*', '/maintenance/:path*', '/maintenance-schedule/:path*', '/maintenance-shops/:path*', '/alerts/:path*', '/reports/:path*', '/view/:path*'],
 };

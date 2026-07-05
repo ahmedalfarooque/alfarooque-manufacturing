@@ -8,6 +8,8 @@
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
+const net  = require('net');
+const { spawn } = require('child_process');
 
 /* ── Load .env.local (zero-dependency — runs before anything else) ── */
 (function loadEnvLocal() {
@@ -70,22 +72,25 @@ const MIME = {
 };
 
 /* ── Proxy /cars and /projects to their own Next.js dev servers ──
-   Mirrors the production setup: each app is deployed independently and
-   alfarooque.com/cars + /projects reach it via a Vercel rewrite (see
-   apps/DEPLOYMENT.md). Locally there's no Vercel rewrite layer, so
-   without this, hitting localhost:3000/cars or /projects 404s here —
-   those apps only exist on their own dev servers (ports 3010/3020).
-   This makes localhost:3000 behave the same way production will. */
-const PROXY_TARGETS = { '/cars': 3010, '/projects': 3020 };
+   /projects mirrors production: alfarooque.com/projects reaches it via
+   a Vercel rewrite (see apps/DEPLOYMENT.md), so the prefix is forwarded
+   as-is. /cars is different — that app now deploys to its own
+   cars.alfarooque.com subdomain and has no basePath, so its dev server
+   expects root-relative paths; the "/cars" prefix here is purely a
+   local convenience (no subdomain in local dev) and must be stripped
+   before forwarding, or every route on port 3010 would 404. */
+const PROXY_TARGETS = { '/cars': { port: 3010, stripPrefix: true }, '/projects': { port: 3020, stripPrefix: false } };
 function proxyTarget(urlPath) {
   for (const prefix of Object.keys(PROXY_TARGETS)) {
-    if (urlPath === prefix || urlPath.startsWith(prefix + '/')) return PROXY_TARGETS[prefix];
+    if (urlPath === prefix || urlPath.startsWith(prefix + '/')) return { prefix, ...PROXY_TARGETS[prefix] };
   }
   return null;
 }
-function proxyRequest(port, req, res) {
+function proxyRequest(target, req, res) {
+  const { port, prefix, stripPrefix } = target;
+  const forwardPath = stripPrefix ? (req.url.slice(prefix.length) || '/') : req.url;
   const upstream = http.request(
-    { hostname: '127.0.0.1', port, path: req.url, method: req.method, headers: req.headers },
+    { hostname: '127.0.0.1', port, path: forwardPath, method: req.method, headers: req.headers },
     upstreamRes => {
       res.writeHead(upstreamRes.statusCode, upstreamRes.headers);
       upstreamRes.pipe(res);
@@ -164,8 +169,8 @@ const server = http.createServer((req, res) => {
   /* 0. Proxy to the Cars/Projects apps — must come first, before the
      /api/ check below, since /cars/api/* and /projects/api/* need to
      reach THOSE apps' own API routes, not this site's. */
-  const targetPort = proxyTarget(urlPath);
-  if (targetPort) return proxyRequest(targetPort, req, res);
+  const target = proxyTarget(urlPath);
+  if (target) return proxyRequest(target, req, res);
 
   /* 0.5. API routes — must come before static-file handling */
   if (urlPath.startsWith('/api/')) {
@@ -221,11 +226,12 @@ function send404(res, url) {
    never live-refresh on file changes. */
 server.on('upgrade', (req, clientSocket, head) => {
   const urlPath = req.url.split('?')[0];
-  const targetPort = proxyTarget(urlPath);
-  if (!targetPort) { clientSocket.destroy(); return; }
+  const target = proxyTarget(urlPath);
+  if (!target) { clientSocket.destroy(); return; }
+  const forwardUrl = target.stripPrefix ? (req.url.slice(target.prefix.length) || '/') : req.url;
 
-  const upstreamSocket = require('net').connect(targetPort, '127.0.0.1', () => {
-    const headerLines = [`${req.method} ${req.url} HTTP/1.1`];
+  const upstreamSocket = require('net').connect(target.port, '127.0.0.1', () => {
+    const headerLines = [`${req.method} ${forwardUrl} HTTP/1.1`];
     for (let i = 0; i < req.rawHeaders.length; i += 2) headerLines.push(`${req.rawHeaders[i]}: ${req.rawHeaders[i + 1]}`);
     upstreamSocket.write(headerLines.join('\r\n') + '\r\n\r\n');
     upstreamSocket.write(head);
@@ -255,4 +261,68 @@ server.listen(PORT, '127.0.0.1', () => {
     console.warn('  │  in .env.local. See .env.example for details.              │');
     console.warn('  └──────────────────────────────────────────────────────────┘\n');
   }
+
+  startCarsApp().catch(err => console.error('  [cars-app] Unexpected error starting: ' + err.message));
 });
+
+/* ── Auto-start the Cars app alongside the main site ──
+   The user wants apps/cars always up whenever this server runs, instead of
+   remembering to launch it separately — this site's /cars proxy (see
+   PROXY_TARGETS above) is useless without it anyway. Spawns `npm run dev`
+   inside apps/cars, restarts it if it crashes (capped, so a real bug
+   doesn't spin forever), and shuts it down when this process exits.
+   Skips spawning if port 3010 is already occupied (e.g. started manually,
+   or via the preview tool's own "cars-app" launch config) rather than
+   fighting over the port. */
+const CARS_APP_DIR = path.join(ROOT, 'apps', 'cars');
+const CARS_APP_PORT = 3010;
+const CARS_APP_MAX_RESTARTS = 5;
+let carsAppChild = null;
+let carsAppRestarts = 0;
+let carsAppShuttingDown = false;
+
+function isPortInUse(port) {
+  return new Promise(resolve => {
+    const socket = net.connect({ port, host: '127.0.0.1' });
+    socket.once('connect', () => { socket.destroy(); resolve(true); });
+    socket.once('error', () => resolve(false));
+  });
+}
+
+async function startCarsApp() {
+  if (!fs.existsSync(CARS_APP_DIR)) return;
+  if (await isPortInUse(CARS_APP_PORT)) {
+    console.log('  [cars-app] Already running on port ' + CARS_APP_PORT + ' — leaving it as-is.\n');
+    return;
+  }
+  console.log('  [cars-app] Starting dev server on port ' + CARS_APP_PORT + '…');
+  try {
+    carsAppChild = spawn('npm', ['run', 'dev'], { cwd: CARS_APP_DIR, stdio: 'inherit', shell: true });
+  } catch (err) {
+    console.error('  [cars-app] Failed to spawn: ' + err.message);
+    return;
+  }
+  carsAppChild.on('error', (err) => {
+    console.error('  [cars-app] Failed to start: ' + err.message);
+    carsAppChild = null;
+  });
+  carsAppChild.on('exit', (code) => {
+    carsAppChild = null;
+    if (carsAppShuttingDown) return;
+    if (carsAppRestarts >= CARS_APP_MAX_RESTARTS) {
+      console.error('  [cars-app] Exited (code ' + code + ') too many times — giving up. Start it manually to see the error.');
+      return;
+    }
+    carsAppRestarts++;
+    console.warn('  [cars-app] Exited unexpectedly (code ' + code + ') — restarting (' + carsAppRestarts + '/' + CARS_APP_MAX_RESTARTS + ')…');
+    setTimeout(startCarsApp, 1000);
+  });
+}
+
+function stopCarsApp() {
+  carsAppShuttingDown = true;
+  if (carsAppChild) carsAppChild.kill();
+}
+process.on('exit', stopCarsApp);
+process.on('SIGINT', () => { stopCarsApp(); process.exit(0); });
+process.on('SIGTERM', () => { stopCarsApp(); process.exit(0); });

@@ -74,6 +74,17 @@ export async function POST(req) {
     distance_km: body.distance_km ? Number(body.distance_km) : 0,
     location: body.location || null,
     notes: body.notes || null,
+    insurance_company: body.insurance_company || null,
+    insurance_number: body.insurance_number || null,
+    insurance_expiry: body.insurance_expiry || null,
+    registration_expiry: body.registration_expiry || null,
+    vin_number: body.vin_number || null,
+    engine_number: body.engine_number || null,
+    last_service_date: body.last_service_date || null,
+    next_service_date: body.next_service_date || null,
+    assigned_driver_id: body.assigned_driver_id || null,
+    purchase_date: body.purchase_date || null,
+    purchase_cost: body.purchase_cost ? Number(body.purchase_cost) : null,
   };
   const { data, error } = await sb.from('cars').insert(row).select().single();
   if (error) { console.error('[cars] create failed:', error.message); return json({ error: 'Could not add vehicle.' }, 500); }

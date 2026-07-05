@@ -1,7 +1,7 @@
 'use strict';
 
-/* POST /cars/api/auth  { action: 'login' | 'verify-otp' | 'resend-otp' | 'logout' }
-   GET  /cars/api/auth            → current session ("me")
+/* POST /api/auth  { action: 'login' | 'verify-otp' | 'resend-otp' | 'logout' }
+   GET  /api/auth            → current session ("me")
 
    Flow: email + password → OTP emailed (or mock-logged) → verify OTP →
    JWT session cookie. Mirrors the main site's api/admin/auth.js design

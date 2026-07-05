@@ -10,18 +10,18 @@ export default function AlertsPage() {
   const isAdmin = me?.role === 'admin';
 
   function load() {
-    fetch('/cars/api/alerts', { credentials: 'same-origin' })
+    fetch('/api/alerts', { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : r.json().then(d => Promise.reject(new Error(d.error))))
       .then(d => setAlerts(d.alerts))
       .catch(e => setError(e.message));
   }
   useEffect(load, []);
   useEffect(() => {
-    fetch('/cars/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
 
   async function markRead(id) {
-    await fetch('/cars/api/alerts', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id }) });
+    await fetch('/api/alerts', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id }) });
     load();
   }
 

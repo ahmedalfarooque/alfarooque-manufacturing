@@ -1,6 +1,6 @@
 'use strict';
 
-/* POST /cars/api/import — multipart/form-data, field "file" = .xlsx
+/* POST /api/import — multipart/form-data, field "file" = .xlsx
    Parses the uploaded workbook, auto-maps columns (supports both plain
    English headers AND the real AL FAROOQUE fleet sheet's Arabic
    headers — رقم اللوحة/الماركة/الطراز/etc, since that's the actual

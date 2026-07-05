@@ -1,55 +1,294 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
+import { ShopModal, EMPTY_FORM as EMPTY_SHOP_FORM } from '@/app/(protected)/maintenance-shops/page';
 
-const STATUS_BADGE = {
-  Healthy: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  Upcoming: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  Overdue: 'bg-red-500/10 text-red-600 dark:text-red-400',
+const PAYMENT_BADGE = {
+  Paid: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  Unpaid: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  Partial: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
 };
 
-export default function MaintenancePage() {
-  const [items, setItems] = useState(null);
+export const EMPTY_FORM = {
+  car_id: '', driver_id: '', maintenance_date: new Date().toISOString().slice(0, 10), category: '', maintenance_type: '',
+  shop_id: '', odometer_km: '', amount: '', currency: 'SAR', invoice_number: '', payment_status: 'Unpaid',
+  technician: '', warranty: '', work_performed: '', parts_changed: '', labor_details: '', notes: '',
+};
+
+export default function MaintenanceRecordsPage() {
+  const [me, setMe] = useState(null);
+  const [records, setRecords] = useState([]);
+  const [cars, setCars] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [shops, setShops] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
+  const [search, setSearch] = useState('');
+  const [carId, setCarId] = useState('');
+  const [driverId, setDriverId] = useState('');
+  const [shopId, setShopId] = useState('');
+  const [category, setCategory] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [costMin, setCostMin] = useState('');
+  const [costMax, setCostMax] = useState('');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modal, setModal] = useState(null);
+  const isAdmin = me?.role === 'admin';
+
+  const loadRefs = useCallback(() => {
+    fetch('/api/cars?pageSize=100', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setCars(d.vehicles || [])).catch(() => {});
+    fetch('/api/drivers', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setDrivers(d.drivers || [])).catch(() => {});
+    fetch('/api/shops', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setShops(d.shops || [])).catch(() => {});
+    fetch('/api/categories', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setCategories(d.categories || [])).catch(() => {});
+  }, []);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const q = new URLSearchParams({
+      search, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax,
+      page: String(page), pageSize: String(pageSize),
+    });
+    try {
+      const res = await fetch('/api/maintenance-records?' + q.toString(), { credentials: 'same-origin' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setRecords(data.records); setTotal(data.total); setError(null);
+    } catch (e) { setError(e.message); }
+    setLoading(false);
+  }, [search, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax, page]);
 
   useEffect(() => {
-    fetch('/cars/api/maintenance', { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : r.json().then(d => Promise.reject(new Error(d.error))))
-      .then(d => setItems(d.items))
-      .catch(e => setError(e.message));
-  }, []);
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    loadRefs();
+  }, [loadRefs]);
+  useEffect(() => { load(); }, [load]);
+
+  async function deleteRecord(id) {
+    if (!confirm('Delete this maintenance record and all its attachments? This cannot be undone.')) return;
+    const res = await fetch(`/api/maintenance-records/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (res.ok) load();
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <Shell active="/maintenance">
-      <h2 className="text-lg font-semibold mb-1">Maintenance Schedule</h2>
-      <p className="text-xs text-slate-500 mb-4">Status is computed live from each vehicle's current odometer reading.</p>
-      {error && <div className="text-red-500 text-sm">{error}</div>}
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Maintenance</h2>
+          <p className="text-xs text-slate-500">Dashboard &gt; Maintenance</p>
+        </div>
+        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ Add Maintenance Record</button>}
+      </div>
+
+      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <input placeholder="Search invoice, type, technician…" value={search} onChange={e => { setPage(1); setSearch(e.target.value); }}
+          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+        <Select value={carId} onChange={v => { setPage(1); setCarId(v); }} placeholder="All Vehicles" options={cars.map(c => [c.id, c.vehicle_number])} />
+        <Select value={driverId} onChange={v => { setPage(1); setDriverId(v); }} placeholder="All Drivers" options={drivers.map(d => [d.id, d.full_name])} />
+        <Select value={shopId} onChange={v => { setPage(1); setShopId(v); }} placeholder="All Shops" options={shops.map(s => [s.id, s.name])} />
+        <Select value={category} onChange={v => { setPage(1); setCategory(v); }} placeholder="All Categories" options={categories.map(c => [c.name, c.name])} />
+        <Select value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder="All Payment Status" options={[['Paid', 'Paid'], ['Unpaid', 'Unpaid'], ['Partial', 'Partial']]} />
+        <div className="flex items-center gap-1">
+          <input type="date" value={dateFrom} onChange={e => { setPage(1); setDateFrom(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
+          <span className="text-slate-400 text-xs">to</span>
+          <input type="date" value={dateTo} onChange={e => { setPage(1); setDateTo(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
+        </div>
+        <div className="flex items-center gap-1">
+          <input type="number" placeholder="Min cost" value={costMin} onChange={e => { setPage(1); setCostMin(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
+          <span className="text-slate-400 text-xs">–</span>
+          <input type="number" placeholder="Max cost" value={costMax} onChange={e => { setPage(1); setCostMax(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
+        </div>
+      </div>
+
+      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
-        <table className="w-full text-sm min-w-[700px]">
+        <table className="w-full text-sm min-w-[1000px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10">
-            <tr><th className="py-3 px-4">Vehicle</th><th>Type</th><th>Last Service (km)</th><th>Interval (km)</th><th>Next Due (km)</th><th>Remaining</th><th>Status</th></tr>
+            <tr>
+              <th className="py-3 px-4">Date</th><th>Vehicle</th><th>Driver</th><th>Category</th><th>Shop</th>
+              <th>Amount</th><th>KM</th><th>Invoice</th><th>Status</th><th>Created By</th><th className="text-right px-4">Actions</th>
+            </tr>
           </thead>
           <tbody>
-            {!items ? (
-              <tr><td colSpan={7} className="py-8 text-center text-slate-400">Loading…</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={7} className="py-8 text-center text-slate-400">No maintenance items yet.</td></tr>
-            ) : items.map(m => (
-              <tr key={m.id} className="border-b border-black/5 dark:border-white/5">
-                <td className="py-3 px-4 font-medium">{m.vehicle_number}</td>
-                <td>{m.maintenance_type}</td>
-                <td>{fmt(m.last_service_km)}</td>
-                <td>{fmt(m.interval_km)}</td>
-                <td>{fmt(m.next_due_km)}</td>
-                <td className={m.remaining_km < 0 ? 'text-red-500' : ''}>{fmt(m.remaining_km)} km</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{m.status}</span></td>
+            {loading ? (
+              <tr><td colSpan={11} className="py-8 text-center text-slate-400">Loading…</td></tr>
+            ) : records.length === 0 ? (
+              <tr><td colSpan={11} className="py-8 text-center text-slate-400">No maintenance records match these filters.</td></tr>
+            ) : records.map(r => (
+              <tr key={r.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                onClick={() => { window.location.href = '/maintenance/' + r.id; }}>
+                <td className="py-3 px-4">{r.maintenance_date}</td>
+                <td className="font-medium">{r.cars?.vehicle_number || '—'}</td>
+                <td>{r.drivers?.full_name || '—'}</td>
+                <td>{r.category}</td>
+                <td>{r.maintenance_shops?.name || '—'}</td>
+                <td>{r.currency} {fmt(r.amount)}</td>
+                <td>{r.odometer_km ? fmt(r.odometer_km) : '—'}</td>
+                <td>{r.invoice_number || '—'}</td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{r.payment_status}</span></td>
+                <td>{r.platform_users?.full_name || r.platform_users?.email || '—'}</td>
+                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
+                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: r })} title="Edit" className="text-brand-500">✎</button>}
+                  {isAdmin && <button onClick={() => deleteRecord(r.id)} title="Delete" className="text-red-500">🗑</button>}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
+        <span>Showing {records.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + records.length} of {total} entries</span>
+        <div className="flex gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <span className="px-3 py-1">{page} / {totalPages}</span>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+        </div>
+      </div>
+
+      {modal && (
+        <RecordModal modal={modal} cars={cars} drivers={drivers} shops={shops} categories={categories}
+          onShopAdded={s => setShops(prev => [...prev, s].sort((a, b) => a.name.localeCompare(b.name)))}
+          onClose={() => setModal(null)}
+          onSaved={id => { setModal(null); load(); if (modal.mode === 'add' && id) window.location.href = '/maintenance/' + id; }} />
+      )}
     </Shell>
+  );
+}
+
+export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdded, onClose, onSaved }) {
+  const [form, setForm] = useState(() => ({ ...EMPTY_FORM, ...modal.data }));
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const [addShopOpen, setAddShopOpen] = useState(false);
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    try {
+      const url = modal.mode === 'add' ? '/api/maintenance-records' : `/api/maintenance-records/${modal.data.id}`;
+      const res = await fetch(url, {
+        method: modal.mode === 'add' ? 'POST' : 'PATCH',
+        headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      onSaved(data.record?.id);
+    } catch (e2) { setErr(e2.message); }
+    setBusy(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-3xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
+        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? 'Add Maintenance Record' : 'Edit Maintenance Record'}</h3>
+        {err && <div className="text-red-500 text-sm">{err}</div>}
+
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Basic Information</div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Vehicle</label>
+            <select value={form.car_id} onChange={set('car_id')} required className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
+              <option value="">Select vehicle…</option>
+              {cars.map(c => <option key={c.id} value={c.id}>{c.vehicle_number}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Driver</label>
+            <select value={form.driver_id || ''} onChange={set('driver_id')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
+              <option value="">— None —</option>
+              {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+            </select>
+          </div>
+          <Field label="Maintenance Date" type="date" value={form.maintenance_date} onChange={set('maintenance_date')} required />
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Category</label>
+            <select value={form.category} onChange={set('category')} required className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
+              <option value="">Select category…</option>
+              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+          </div>
+          <Field label="Maintenance Type" value={form.maintenance_type} onChange={set('maintenance_type')} />
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Workshop / Shop</label>
+            <div className="flex gap-1">
+              <select value={form.shop_id || ''} onChange={set('shop_id')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
+                <option value="">— None —</option>
+                {shops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <button type="button" onClick={() => setAddShopOpen(true)} title="Add New Shop" className="px-2 rounded-lg border border-black/10 dark:border-white/10 text-sm shrink-0">+</button>
+            </div>
+          </div>
+          <Field label="Odometer (KM)" type="number" value={form.odometer_km} onChange={set('odometer_km')} />
+          <Field label="Amount" type="number" value={form.amount} onChange={set('amount')} />
+          <Field label="Currency" value={form.currency} onChange={set('currency')} />
+          <Field label="Invoice Number" value={form.invoice_number} onChange={set('invoice_number')} />
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Payment Status</label>
+            <select value={form.payment_status} onChange={set('payment_status')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
+              {['Unpaid', 'Paid', 'Partial'].map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <Field label="Technician" value={form.technician} onChange={set('technician')} />
+          <Field label="Warranty" value={form.warranty} onChange={set('warranty')} />
+        </div>
+
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Maintenance Details</div>
+        <div className="grid gap-3">
+          <TextArea label="Work Performed" value={form.work_performed} onChange={set('work_performed')} />
+          <TextArea label="Parts Changed" value={form.parts_changed} onChange={set('parts_changed')} />
+          <TextArea label="Labor Details" value={form.labor_details} onChange={set('labor_details')} />
+          <TextArea label="Additional Notes" value={form.notes} onChange={set('notes')} />
+        </div>
+        {modal.mode === 'add' && <p className="text-xs text-slate-500">Attachments (invoice, photos, documents) can be added from the record's detail page after saving.</p>}
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
+          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>
+        </div>
+      </form>
+
+      {addShopOpen && (
+        <ShopModal modal={{ mode: 'add', data: EMPTY_SHOP_FORM }} onClose={() => setAddShopOpen(false)}
+          onSaved={shop => { onShopAdded(shop); setForm(f => ({ ...f, shop_id: shop.id })); setAddShopOpen(false); }} />
+      )}
+    </div>
+  );
+}
+
+function Select({ value, onChange, options, placeholder }) {
+  return (
+    <select value={value} onChange={e => onChange(e.target.value)} className="rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
+      <option value="">{placeholder}</option>
+      {options.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+    </select>
+  );
+}
+function Field({ label, ...props }) {
+  return (
+    <div>
+      <label className="block text-xs text-slate-500 mb-1">{label}</label>
+      <input {...props} value={props.value ?? ''} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+    </div>
+  );
+}
+function TextArea({ label, ...props }) {
+  return (
+    <div>
+      <label className="block text-xs text-slate-500 mb-1">{label}</label>
+      <textarea {...props} value={props.value || ''} rows={2} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+    </div>
   );
 }
 function fmt(n) { return Number(n || 0).toLocaleString(); }

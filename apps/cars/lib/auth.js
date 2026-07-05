@@ -53,11 +53,11 @@ function parseCookies(header) {
 }
 function sessionCookieHeader(token, maxAgeSeconds) {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=' + token + '; Path=/cars; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
+  return COOKIE_NAME + '=' + token + '; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
 }
 function clearCookieHeader() {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=; Path=/cars; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
+  return COOKIE_NAME + '=; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
 }
 
 /* Reads the session from the request's Cookie header and returns the

@@ -10,11 +10,17 @@ const STATUS_BADGE = {
   Offline: 'bg-slate-500/10 text-slate-500',
 };
 
-const EMPTY_FORM = { vehicle_number: '', name: '', type: 'Truck', fuel_type: 'Diesel', driver: '', status: 'Idle', location: '', current_km: '' };
+const EMPTY_FORM = {
+  vehicle_number: '', name: '', type: 'Truck', fuel_type: 'Diesel', driver: '', status: 'Idle', location: '', current_km: '',
+  insurance_company: '', insurance_number: '', insurance_expiry: '', registration_expiry: '',
+  vin_number: '', engine_number: '', last_service_date: '', next_service_date: '',
+  assigned_driver_id: '', purchase_date: '', purchase_cost: '',
+};
 
 export default function VehiclesPage() {
   const [me, setMe] = useState(null);
   const [vehicles, setVehicles] = useState([]);
+  const [drivers, setDrivers] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const pageSize = 100;
@@ -41,7 +47,7 @@ export default function VehiclesPage() {
     setLoading(true);
     const q = new URLSearchParams({ search, status, type, fuelType, assignment, sort, page: String(page), pageSize: String(pageSize) });
     try {
-      const res = await fetch('/cars/api/cars?' + q.toString(), { credentials: 'same-origin' });
+      const res = await fetch('/api/cars?' + q.toString(), { credentials: 'same-origin' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setVehicles(data.vehicles); setTotal(data.total); setError(null);
@@ -50,12 +56,13 @@ export default function VehiclesPage() {
   }, [search, status, type, fuelType, assignment, sort, page]);
 
   useEffect(() => {
-    fetch('/cars/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    fetch('/api/drivers', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setDrivers(d.drivers || [])).catch(() => {});
   }, []);
   useEffect(() => { load(); }, [load]);
 
   async function saveVehicle(form, mode, id) {
-    const url = mode === 'add' ? '/cars/api/cars' : `/cars/api/cars/${id}`;
+    const url = mode === 'add' ? '/api/cars' : `/api/cars/${id}`;
     const res = await fetch(url, {
       method: mode === 'add' ? 'POST' : 'PATCH',
       headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
@@ -69,11 +76,11 @@ export default function VehiclesPage() {
 
   async function deleteVehicle(id) {
     if (!confirm('Delete this vehicle? This can be reversed by a database admin, but not from this screen.')) return;
-    const res = await fetch(`/cars/api/cars/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+    const res = await fetch(`/api/cars/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) load();
   }
 
-  function exportExcel() { window.location.href = '/cars/api/cars/export'; }
+  function exportExcel() { window.location.href = '/api/cars/export'; }
 
   async function exportPdf() {
     const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
@@ -129,7 +136,8 @@ export default function VehiclesPage() {
             ) : vehicles.length === 0 ? (
               <tr><td colSpan={9} className="py-8 text-center text-slate-400">No vehicles match these filters.</td></tr>
             ) : vehicles.map((v, i) => (
-              <tr key={v.id} className="border-b border-black/5 dark:border-white/5">
+              <tr key={v.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                onClick={() => { window.location.href = '/vehicles/' + v.id; }}>
                 <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
                 <td className="font-medium">{v.vehicle_number}</td>
                 <td>{v.name || '—'}</td>
@@ -138,12 +146,11 @@ export default function VehiclesPage() {
                 <td>{v.driver || '—'}</td>
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{v.status}</span></td>
                 <td>{v.location || '—'}</td>
-                {isAdmin && (
-                  <td className="text-right px-4 space-x-2">
-                    <button onClick={() => setModal({ mode: 'edit', data: v })} title="Edit" className="text-brand-500">✎</button>
-                    <button onClick={() => deleteVehicle(v.id)} title="Delete" className="text-red-500">🗑</button>
-                  </td>
-                )}
+                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
+                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title="Edit" className="text-brand-500">✎</button>}
+                  {isAdmin && <button onClick={() => deleteVehicle(v.id)} title="Delete" className="text-red-500">🗑</button>}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -159,7 +166,7 @@ export default function VehiclesPage() {
         </div>
       </div>
 
-      {modal && <VehicleModal modal={modal} onClose={() => setModal(null)} onSave={saveVehicle} />}
+      {modal && <VehicleModal modal={modal} drivers={drivers} onClose={() => setModal(null)} onSave={saveVehicle} />}
       {importOpen && <ImportModal onClose={() => setImportOpen(false)} onDone={() => { setImportOpen(false); load(); }} />}
     </Shell>
   );
@@ -173,7 +180,7 @@ function Select({ value, onChange, options }) {
   );
 }
 
-function VehicleModal({ modal, onClose, onSave }) {
+export function VehicleModal({ modal, drivers, onClose, onSave }) {
   const [form, setForm] = useState(modal.data);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -189,10 +196,12 @@ function VehicleModal({ modal, onClose, onSave }) {
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
         <h3 className="font-semibold text-lg">{modal.mode === 'add' ? 'Add Vehicle' : 'Edit Vehicle'}</h3>
         {err && <div className="text-red-500 text-sm">{err}</div>}
+
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Basic Information</div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Vehicle Number" value={form.vehicle_number} onChange={set('vehicle_number')} required />
           <Field label="Name" value={form.name || ''} onChange={set('name')} />
@@ -207,7 +216,33 @@ function VehicleModal({ modal, onClose, onSave }) {
           </div>
           <Field label="Current KM" value={form.current_km ?? ''} onChange={set('current_km')} type="number" />
           <Field label="Location" value={form.location || ''} onChange={set('location')} />
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Assigned Driver</label>
+            <select value={form.assigned_driver_id || ''} onChange={set('assigned_driver_id')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm">
+              <option value="">— None —</option>
+              {drivers?.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+            </select>
+          </div>
         </div>
+
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Insurance &amp; Registration</div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Insurance Company" value={form.insurance_company || ''} onChange={set('insurance_company')} />
+          <Field label="Insurance Number" value={form.insurance_number || ''} onChange={set('insurance_number')} />
+          <Field label="Insurance Expiry" value={form.insurance_expiry || ''} onChange={set('insurance_expiry')} type="date" />
+          <Field label="Registration Expiry" value={form.registration_expiry || ''} onChange={set('registration_expiry')} type="date" />
+          <Field label="VIN Number" value={form.vin_number || ''} onChange={set('vin_number')} />
+          <Field label="Engine Number" value={form.engine_number || ''} onChange={set('engine_number')} />
+        </div>
+
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Service &amp; Purchase</div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Last Service Date" value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" />
+          <Field label="Next Service Date" value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" />
+          <Field label="Purchase Date" value={form.purchase_date || ''} onChange={set('purchase_date')} type="date" />
+          <Field label="Purchase Cost" value={form.purchase_cost ?? ''} onChange={set('purchase_cost')} type="number" />
+        </div>
+
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
           <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>
@@ -238,7 +273,7 @@ function ImportModal({ onClose, onDone }) {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/cars/api/import', { method: 'POST', credentials: 'same-origin', body: fd });
+      const res = await fetch('/api/import', { method: 'POST', credentials: 'same-origin', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult(data);

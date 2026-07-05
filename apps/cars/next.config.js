@@ -1,12 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  /* This app is proxied under alfarooque.com/cars via a Vercel rewrite
-     from the main site's vercel.json — basePath makes every route,
-     asset, and Link resolve correctly under that prefix whether you're
-     hitting this app directly on its own Vercel URL or through the
-     proxy. */
-  basePath: '/cars',
+  /* Deployed as its own Vercel project with cars.alfarooque.com as its
+     production domain — the app lives at the domain root, so no
+     basePath. (It used to be proxied under alfarooque.com/cars; every
+     internal fetch/href in this app was updated to root-relative paths
+     when it moved to a dedicated subdomain — see apps/DEPLOYMENT.md.) */
   async headers() {
     return [
       { source: '/(.*)', headers: [{ key: 'X-Frame-Options', value: 'SAMEORIGIN' }] },

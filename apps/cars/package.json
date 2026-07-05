@@ -2,7 +2,7 @@
   "name": "af-cars-tracking",
   "version": "1.0.0",
   "private": true,
-  "description": "AL FAROOQUE — Cars Tracking System (deployed independently, proxied under alfarooque.com/cars)",
+  "description": "AL FAROOQUE — Cars Tracking System (deployed independently at cars.alfarooque.com)",
   "scripts": {
     "dev": "next dev -p 3010",
     "build": "next build",
