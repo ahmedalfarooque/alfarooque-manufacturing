@@ -12,6 +12,18 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
       "port": 3011
+    },
+    {
+      "name": "cars-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/cars", "run", "dev"],
+      "port": 3010
+    },
+    {
+      "name": "projects-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/projects", "run", "dev"],
+      "port": 3020
     }
   ]
 }

@@ -1,0 +1,66 @@
+'use strict';
+
+const { getDb } = require('@/lib/db');
+const { json, requireSession } = require('@/lib/http');
+
+const SORTS = {
+  latest: { column: 'created_at', ascending: false },
+  oldest: { column: 'created_at', ascending: true },
+  value: { column: 'value', ascending: false },
+  name: { column: 'project_name', ascending: true },
+};
+
+export async function GET(req) {
+  const { response } = requireSession(req);
+  if (response) return response;
+
+  const url = new URL(req.url);
+  const q = url.searchParams;
+  const search = (q.get('search') || '').trim();
+  const status = q.get('status') || 'All';
+  const company = q.get('company') || 'All';
+  const customer = q.get('customer') || 'All';
+  const sort = SORTS[q.get('sort')] || SORTS.latest;
+  const page = Math.max(1, parseInt(q.get('page') || '1', 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '10', 10)));
+
+  const sb = getDb();
+  let query = sb.from('pm_projects').select('*', { count: 'exact' });
+  if (search) query = query.or(`project_name.ilike.%${search}%,customer_name.ilike.%${search}%,company_name.ilike.%${search}%`);
+  if (status !== 'All') query = query.eq('status', status);
+  if (company !== 'All') query = query.eq('company_name', company);
+  if (customer !== 'All') query = query.eq('customer_name', customer);
+
+  query = query.order(sort.column, { ascending: sort.ascending })
+    .range((page - 1) * pageSize, page * pageSize - 1);
+
+  const { data, error, count } = await query;
+  if (error) { console.error('[projects] list failed:', error.message); return json({ error: 'Could not load projects.' }, 500); }
+  return json({ projects: data, total: count || 0, page, pageSize });
+}
+
+export async function POST(req) {
+  const { response } = requireSession(req, { adminOnly: true });
+  if (response) return response;
+
+  const body = await req.json().catch(() => ({}));
+  if (!body.project_name || !body.customer_name) return json({ error: 'Project name and customer name are required.' }, 400);
+
+  const sb = getDb();
+  const row = {
+    customer_name: body.customer_name,
+    company_name: body.company_name || null,
+    project_name: body.project_name,
+    value: body.value ? Number(body.value) : 0,
+    start_date: body.start_date || null,
+    end_date: body.end_date || null,
+    status: body.status || 'Upcoming',
+    progress: body.progress != null ? Math.max(0, Math.min(100, Number(body.progress))) : 0,
+    notes: body.notes || null,
+  };
+  const { data, error } = await sb.from('pm_projects').insert(row).select().single();
+  if (error) { console.error('[projects] create failed:', error.message); return json({ error: 'Could not add project.' }, 500); }
+
+  await sb.from('pm_project_logs').insert({ project_id: data.id, activity: 'Project created' });
+  return json({ project: data }, 201);
+}
