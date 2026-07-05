@@ -2,8 +2,12 @@
 
 /* POST /api/projects/[id]/documents — multipart/form-data,
    field "file". Uploads to the "project-documents" Supabase Storage
-   bucket (public read, write only via this server-side route using
-   the service role key) and records the row in pm_project_documents.
+   bucket via the service role key and records the row in
+   pm_project_documents. The URL returned to the client always points
+   back at THIS app (/api/projects/[id]/documents/[documentId]), never
+   at the raw supabase.co storage URL — see that route's GET handler,
+   which streams the bytes through so the browser never talks to
+   Supabase directly (some networks block that domain outright).
    Images/drawings/documents only ever appear on the Project View
    page — never in the dashboard list, per the brief. */
 
@@ -46,8 +50,7 @@ export async function POST(req, { params }) {
     return json({ error: 'Could not save the upload record. Please try again.' }, 500);
   }
 
-  const { data: pub } = sb.storage.from(BUCKET).getPublicUrl(path);
-  return json({ document: { ...row, url: pub.publicUrl } }, 201);
+  return json({ document: { ...row, url: `/api/projects/${params.id}/documents/${row.id}` } }, 201);
 }
 
 export async function GET(req, { params }) {
@@ -56,6 +59,6 @@ export async function GET(req, { params }) {
   const sb = getDb();
   const { data, error } = await sb.from('pm_project_documents').select('*').eq('project_id', params.id).order('created_at', { ascending: false });
   if (error) return json({ error: 'Could not load documents.' }, 500);
-  const documents = (data || []).map(d => ({ ...d, url: sb.storage.from(BUCKET).getPublicUrl(d.storage_path).data.publicUrl }));
+  const documents = (data || []).map(d => ({ ...d, url: `/api/projects/${params.id}/documents/${d.id}` }));
   return json({ documents });
 }
