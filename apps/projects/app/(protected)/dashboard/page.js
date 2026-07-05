@@ -103,14 +103,17 @@ function ProjectListCard({ title, projects, dateKey, dateLabel }) {
       {projects.length === 0 ? (
         <div className="text-sm text-slate-400 py-6 text-center">None yet.</div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-1">
           {projects.map(p => (
-            <li key={p.id} className="text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium truncate">{p.project_name}</span>
-                <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span>
-              </div>
-              <div className="text-xs text-slate-500">{p.customer_name} · {dateLabel} {p[dateKey] || '—'}</div>
+            <li key={p.id}>
+              <button type="button" onClick={() => { window.location.href = '/projects/projects/' + p.id; }}
+                className="w-full text-left text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium truncate">{p.project_name}</span>
+                  <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span>
+                </div>
+                <div className="text-xs text-slate-500">{p.customer_name} · {dateLabel} {p[dateKey] || '—'}</div>
+              </button>
             </li>
           ))}
         </ul>

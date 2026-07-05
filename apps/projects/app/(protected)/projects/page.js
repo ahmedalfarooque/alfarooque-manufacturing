@@ -21,7 +21,7 @@ const REFRESH_MS = 15000;
 export default function ProjectsPage() {
   const [me, setMe] = useState(null);
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 100;
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
   const [modal, setModal] = useState(null);
