@@ -17,9 +17,15 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 100;
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('All');
+  /* Reads ?status= from the URL on first render — this is how the
+     dashboard's KPI cards (Running/Idle/Stopped) link straight into a
+     pre-filtered list instead of landing on "All". */
+  const [status, setStatus] = useState(() => {
+    if (typeof window === 'undefined') return 'All';
+    return new URLSearchParams(window.location.search).get('status') || 'All';
+  });
   const [type, setType] = useState('All');
   const [fuelType, setFuelType] = useState('All');
   const [assignment, setAssignment] = useState('All');

@@ -28,11 +28,11 @@ export default function DashboardPage() {
           is only ever shown on a project's own View page, and only
           when it's actually set (see the brief: never show $0/SAR 0). */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <StatCard icon={'\u{1F4C1}'} tone="brand" label="Total Projects" value={stats.totalProjects} sub="All projects" />
-        <StatCard icon="▶" tone="blue" label="Running Projects" value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% of total`} />
-        <StatCard icon="✔" tone="emerald" label="Completed Projects" value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% of total`} />
-        <StatCard icon={'\u{1F4C5}'} tone="amber" label="Upcoming Projects" value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% of total`} />
-        <StatCard icon="⏸" tone="red" label="On Hold Projects" value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% of total`} />
+        <StatCard icon={'\u{1F4C1}'} tone="brand" label="Total Projects" value={stats.totalProjects} sub="All projects" href="/projects/projects" />
+        <StatCard icon="▶" tone="blue" label="Running Projects" value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% of total`} href="/projects/projects?status=Running" />
+        <StatCard icon="✔" tone="emerald" label="Completed Projects" value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% of total`} href="/projects/projects?status=Completed" />
+        <StatCard icon={'\u{1F4C5}'} tone="amber" label="Upcoming Projects" value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% of total`} href="/projects/projects?status=Upcoming" />
+        <StatCard icon="⏸" tone="red" label="On Hold Projects" value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% of total`} href={'/projects/projects?status=' + encodeURIComponent('On Hold')} />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">

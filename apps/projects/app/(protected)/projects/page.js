@@ -23,7 +23,14 @@ export default function ProjectsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 100;
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('All');
+  /* Reads ?status= from the URL on first render — this is how the
+     dashboard's KPI cards (Running/Completed/Upcoming/On Hold) link
+     straight into a pre-filtered list instead of landing on "All" and
+     making the visitor re-select the filter they just clicked. */
+  const [status, setStatus] = useState(() => {
+    if (typeof window === 'undefined') return 'All';
+    return new URLSearchParams(window.location.search).get('status') || 'All';
+  });
   const [modal, setModal] = useState(null);
 
   const isAdmin = me?.role === 'admin';

@@ -23,10 +23,10 @@ export default function DashboardPage() {
   return (
     <Shell active="/dashboard">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <StatCard icon="🚗" tone="brand" label="Total Vehicles" value={stats.totalVehicles} sub="All vehicles" />
-        <StatCard icon="▶" tone="emerald" label="Running" value={stats.running} sub={`${pct(stats.running, stats.totalVehicles)}% of total`} />
-        <StatCard icon="⏸" tone="amber" label="Idle" value={stats.idle} sub={`${pct(stats.idle, stats.totalVehicles)}% of total`} />
-        <StatCard icon="⏹" tone="red" label="Stopped" value={stats.stopped} sub={`${pct(stats.stopped, stats.totalVehicles)}% of total`} />
+        <StatCard icon="🚗" tone="brand" label="Total Vehicles" value={stats.totalVehicles} sub="All vehicles" href="/cars/vehicles" />
+        <StatCard icon="▶" tone="emerald" label="Running" value={stats.running} sub={`${pct(stats.running, stats.totalVehicles)}% of total`} href="/cars/vehicles?status=Running" />
+        <StatCard icon="⏸" tone="amber" label="Idle" value={stats.idle} sub={`${pct(stats.idle, stats.totalVehicles)}% of total`} href="/cars/vehicles?status=Idle" />
+        <StatCard icon="⏹" tone="red" label="Stopped" value={stats.stopped} sub={`${pct(stats.stopped, stats.totalVehicles)}% of total`} href="/cars/vehicles?status=Stopped" />
         <StatCard icon={'\u{1F464}'} tone="blue" label="Total Drivers" value={stats.totalDrivers} sub="Active drivers" />
         <StatCard icon={'\u{1F4CD}'} tone="slate" label="Total Distance" value={fmt(stats.totalDistance) + ' km'} sub="This period" />
       </div>
@@ -36,8 +36,8 @@ export default function DashboardPage() {
         <StatCard icon={'\u{1F4A8}'} tone="blue" label="Avg Speed" value={stats.avgSpeed != null ? stats.avgSpeed + ' km/h' : '—'} sub={stats.avgSpeed != null ? 'From logged trips' : 'No trips logged yet'} />
         <StatCard icon="⛽" tone="amber" label="Fuel Consumed" value={fmt(stats.fuelConsumed) + ' L'} sub="This period" />
         <StatCard icon={'\u{1F4B0}'} tone="slate" label="Fuel Cost" value={'SAR ' + fmt(stats.fuelCost)} sub="This period" />
-        <StatCard icon={'\u{1F527}'} tone="amber" label="Maintenance Due" value={stats.maintenanceDueCount} sub="Vehicles" />
-        <StatCard icon="⚠" tone="red" label="Active Alerts" value={stats.activeAlerts} sub="Unread" />
+        <StatCard icon={'\u{1F527}'} tone="amber" label="Maintenance Due" value={stats.maintenanceDueCount} sub="Vehicles" href="/cars/maintenance" />
+        <StatCard icon="⚠" tone="red" label="Active Alerts" value={stats.activeAlerts} sub="Unread" href="/cars/alerts" />
         <StatCard icon={'\u{1F6E2}'} tone="slate" label="Maintenance Cost" value={'SAR ' + fmt(stats.maintenanceCost)} sub="Logged services" />
       </div>
 
