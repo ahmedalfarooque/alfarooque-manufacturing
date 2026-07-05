@@ -102,12 +102,20 @@ async function handleLogin(req, res, sb, body, ip, ua) {
 
   /* Password verified — issue an OTP and email it. */
   const code = generateOtp();
-  await sb.from('admin_otp_codes').insert({
+  const { error: otpInsertErr } = await sb.from('admin_otp_codes').insert({
     admin_id: admin.id,
     code_hash: sha256Hex(code),
     purpose: 'login',
     expires_at: new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString(),
   });
+  if (otpInsertErr) {
+    /* Never silently continue to email a code that wasn't actually saved
+       — verify-otp would find nothing and the admin would be stuck
+       looking at "no active code" with no idea why. Fail fast here
+       instead so the client's existing retry (resubmit the form) works. */
+    console.error('[admin/auth] OTP insert failed:', otpInsertErr.message);
+    return res.status(500).json({ error: 'Could not start verification. Please try again.' });
+  }
 
   try {
     await mailer.sendEmail({ to: admin.email, subject: 'Your AL FAROOQUE Admin login code', html: otpEmailHtml(code) });
@@ -149,12 +157,19 @@ async function handleVerifyOtp(req, res, sb, body, ip, ua) {
   await sb.from('admin_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
   const token = generateSessionToken();
-  await sb.from('admin_sessions').insert({
+  const { error: sessionInsertErr } = await sb.from('admin_sessions').insert({
     admin_id: admin.id,
     token_hash: sha256Hex(token),
     ip, user_agent: ua,
     expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
   });
+  if (sessionInsertErr) {
+    /* Never set a cookie for a session that wasn't actually saved — the
+       very next request would 401 with "Session expired or invalid" and
+       land the admin back on the login page for no visible reason. */
+    console.error('[admin/auth] session insert failed:', sessionInsertErr.message);
+    return res.status(500).json({ error: 'Could not complete sign-in. Please try again.' });
+  }
   await sb.from('admin_users').update({ last_login_at: new Date().toISOString() }).eq('id', admin.id);
   setSessionCookie(res, token, SESSION_TTL_SECONDS);
 
@@ -182,14 +197,19 @@ async function handleResendOtp(req, res, sb, body) {
   }
 
   const code = generateOtp();
-  await sb.from('admin_otp_codes').insert({
+  const { error: otpInsertErr } = await sb.from('admin_otp_codes').insert({
     admin_id: admin.id, code_hash: sha256Hex(code), purpose: 'login',
     expires_at: new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString(),
   });
+  if (otpInsertErr) {
+    console.error('[admin/auth] resend OTP insert failed:', otpInsertErr.message);
+    return res.status(500).json({ error: 'Could not start verification. Please try again.' });
+  }
   try {
     await mailer.sendEmail({ to: admin.email, subject: 'Your AL FAROOQUE Admin login code', html: otpEmailHtml(code) });
   } catch (err) {
-    return res.status(500).json({ error: 'Could not send the verification email.' });
+    console.error('[admin/auth] resend OTP email failed:', err.message);
+    return res.status(500).json({ error: 'Could not send the verification email. Please try again shortly.' });
   }
   return res.status(200).json({ ok: true, message: 'A new code has been sent.' });
 }

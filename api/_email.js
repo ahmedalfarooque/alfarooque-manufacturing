@@ -95,13 +95,44 @@ async function sendEmail(opts) {
     html:    opts.html,
   };
 
-  if (status.provider === 'resend') return sendViaResend(payload);
-  return sendViaSmtp(payload);
+  const send = () => (status.provider === 'resend' ? sendViaResend(payload) : sendViaSmtp(payload));
+  return withRetries(send, isRetryableEmailError);
+}
+
+/* ── Retry transient send failures (flaky network, provider rate limit,
+   provider 5xx) with short backoff — a single hiccup must never be the
+   difference between an OTP arriving or not. Never retry definitive
+   failures (bad config, missing dependency, 4xx validation/auth errors)
+   since those will just fail identically every time. ── */
+const RETRY_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 350;
+function isRetryableEmailError(err) {
+  if (err.code === 'NETWORK') return true;
+  if (err.code === 'SEND_FAILED') {
+    if (typeof err.status === 'number') return err.status === 429 || err.status >= 500;
+    return true; // SMTP transport error with no HTTP status — safe to retry
+  }
+  return false; // NO_CONFIG, NO_NODEMAILER — retrying changes nothing
+}
+async function withRetries(fn, isRetryable) {
+  let lastErr;
+  for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt === RETRY_ATTEMPTS || !isRetryable(err)) throw err;
+      await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * attempt));
+    }
+  }
+  throw lastErr;
 }
 
 /* ── Resend (HTTP) ── */
 async function sendViaResend(p) {
   let res, data;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -112,12 +143,15 @@ async function sendViaResend(p) {
       body: JSON.stringify({
         from: p.from, to: [p.to], reply_to: p.replyTo, subject: p.subject, html: p.html,
       }),
+      signal: controller.signal,
     });
     data = await res.json().catch(() => ({}));
   } catch (e) {
     const err = new Error('Could not reach Resend: ' + e.message);
     err.code = 'NETWORK';
     throw err;
+  } finally {
+    clearTimeout(timeout);
   }
   if (!res.ok) {
     const err = new Error((data && data.message) || ('Resend error (HTTP ' + res.status + ')'));

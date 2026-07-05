@@ -262,7 +262,7 @@ function strongPassword(pw) {
    straight into that flow on the admin login page instead of asking for
    the password again. */
 async function tryAdminHandoff(email, password) {
-  if (!isAdminAccountEmail(email)) return false;
+  if (!isAdminAccountEmail(email)) return null; // not an admin account — normal customer path
   try {
     const res = await fetch('/api/admin/auth', {
       method: 'POST',
@@ -270,9 +270,15 @@ async function tryAdminHandoff(email, password) {
       credentials: 'same-origin',
       body: JSON.stringify({ action: 'login', email, password }),
     });
-    return res.ok;
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    return { ok: res.ok, message: data.error || null };
   } catch (_) {
-    return false; // network hiccup — fall back to normal customer login
+    /* Network hiccup talking to our own API — this is still an admin
+       account, so we must NOT fall back to a customer sign-in attempt
+       (that's guaranteed to fail with a misleading "wrong password").
+       Ask the admin to retry instead. */
+    return { ok: false, message: t('Could not reach the server. Please try again.','تعذر الوصول إلى الخادم. يرجى المحاولة مرة أخرى.') };
   }
 }
 
@@ -286,9 +292,22 @@ async function handleLogin(e) {
   if (!pw) return showMsg('login', t('Please enter your password.','يرجى إدخال كلمة المرور.'));
 
   setLoading(form, true);
-  if (await tryAdminHandoff(email, pw)) {
-    showMsg('login', t('Verified — continuing to admin sign-in…','تم التحقق — جارٍ المتابعة إلى دخول المشرف…'), 'success');
-    setTimeout(function () { location.href = '/admin?otp=1&email=' + encodeURIComponent(email); }, 500);
+  const adminAttempt = await tryAdminHandoff(email, pw);
+  if (adminAttempt) {
+    /* This IS an admin account (arshad@/ahmed@) — never fall through to a
+       customer sign-in attempt below, even if this admin attempt failed.
+       An admin email has no customer account, so that fallback would
+       always fail with a misleading "Incorrect email or password", no
+       matter how the admin's real error occurred (wrong password, a
+       transient email-send hiccup, a momentary rate limit, etc). Show the
+       real reason instead so the admin can retry correctly. */
+    setLoading(form, false);
+    if (adminAttempt.ok) {
+      showMsg('login', t('Verified — continuing to admin sign-in…','تم التحقق — جارٍ المتابعة إلى دخول المشرف…'), 'success');
+      setTimeout(function () { location.href = '/admin?otp=1&email=' + encodeURIComponent(email); }, 500);
+    } else {
+      showMsg('login', adminAttempt.message || t('Login failed. Please try again.','فشل تسجيل الدخول. حاول مرة أخرى.'));
+    }
     return;
   }
   setLoading(form, false);
