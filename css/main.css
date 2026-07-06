@@ -1048,37 +1048,44 @@ html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
 .form-select option{background:var(--bg-dark);}
 
 /* ═══ FOOTER ═══ */
+/* ── Footer: always dark, by design, regardless of site theme —
+   a deliberate grounding band under the light-luxury pages (colors
+   below are fixed literals, not theme tokens, so this never breaks
+   when the rest of the site toggles between light/dark). ── */
 .footer{
   position:relative;z-index:1;
-  padding:80px var(--px) 36px;border-top:1px solid var(--border-1);
-  display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr;gap:64px;
+  margin-top:clamp(40px,6vw,80px);
+  padding:clamp(56px,7vw,88px) var(--px) 32px;
+  border-radius:32px 32px 0 0;
+  background:#14140F;
+  display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr;gap:56px;
 }
 .footer-brand{display:flex;flex-direction:column;gap:20px;}
 .footer-logo-row{display:flex;align-items:center;gap:12px;}
-.footer-logo-row img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(107,122,79,0.45));}
-.footer-name{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#fff;}
-.footer-tag{font-size:13px;line-height:1.80;color:var(--grey-600);}
+.footer-logo-row img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(140,160,91,0.45));}
+.footer-name{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#F5F3EE;}
+.footer-tag{font-size:13px;line-height:1.80;color:#A8A497;}
 .footer-social{display:flex;gap:10px;margin-top:4px;}
 .footer-social a{
-  width:36px;height:36px;border-radius:9px;
-  background:var(--glass-1);border:1px solid var(--border-1);
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);
   display:flex;align-items:center;justify-content:center;
-  transition:background var(--t2),border-color var(--t2),box-shadow var(--t2);
+  transition:background 0.25s ease,border-color 0.25s ease,transform 0.2s ease;
 }
-.footer-social a:hover{background:var(--glass-teal);border-color:var(--border-teal);box-shadow:var(--glow-xs);}
-.footer-social svg{width:16px;height:16px;stroke:var(--grey-500);fill:none;stroke-width:1.8;transition:stroke var(--t1);}
-.footer-social a:hover svg{stroke:var(--teal-300);}
-.footer-col-h{font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:var(--teal-500);margin-bottom:18px;}
+.footer-social a:hover{background:rgba(140,160,91,0.16);border-color:rgba(140,160,91,0.40);transform:translateY(-2px);}
+.footer-social svg{width:16px;height:16px;stroke:#A8A497;fill:none;stroke-width:1.8;transition:stroke 0.2s ease;}
+.footer-social a:hover svg{stroke:#CFDDA8;}
+.footer-col-h{font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:#A3B873;margin-bottom:18px;}
 .footer-links li{margin-bottom:10px;}
-.footer-links a{font-size:13px;color:var(--grey-600);transition:color var(--t1);}
-.footer-links a:hover{color:#fff;}
+.footer-links a{font-size:13px;color:#A8A497;transition:color 0.2s ease;}
+.footer-links a:hover{color:#F5F3EE;}
 .footer-bottom{
-  grid-column:1/-1;padding-top:24px;border-top:1px solid var(--border-1);
+  grid-column:1/-1;margin-top:16px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);
   display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
 }
-.footer-copy{font-size:12px;color:var(--grey-700);}
+.footer-copy{font-size:12px;color:#79766B;}
 .footer-badges{display:flex;gap:6px;flex-wrap:wrap;}
-.footer-badge{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--border-1);border-radius:var(--r-full);color:var(--grey-700);}
+.footer-badge{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;border:1px solid rgba(255,255,255,0.09);border-radius:var(--r-full);color:#79766B;}
 
 /* ═══ PAGE HERO (inner pages) ═══ */
 .page-hero{
