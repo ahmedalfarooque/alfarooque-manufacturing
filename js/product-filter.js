@@ -15,6 +15,8 @@ var pfState = {
   material:     'all',
   priceMin:     0,
   priceMax:     20000,
+  availability: 'all',   /* 'all' | 'In Stock' | 'Made to Order' */
+  minRating:    0,       /* 0 = any, else 3 / 4 / 4.5 */
   sort:         'featured'
 };
 
@@ -93,6 +95,8 @@ function pfGetFiltered() {
     if (pfState.category !== 'all' && p.cat !== pfState.category) return false;
     if (pfState.material !== 'all' && (p.material || '') !== pfState.material) return false;
     if (p.price < pfState.priceMin || p.price > pfState.priceMax) return false;
+    if (pfState.availability !== 'all' && (p.availability || '') !== pfState.availability) return false;
+    if (pfState.minRating > 0 && (p.rating || 0) < pfState.minRating) return false;
     return true;
   });
 
@@ -205,6 +209,8 @@ function pfUpdateChips() {
   if (pfState.priceMin > 0 || pfState.priceMax < 20000) {
     chips.push({ key: 'price', label: 'SAR ' + pfState.priceMin.toLocaleString('en-US') + '–' + pfState.priceMax.toLocaleString('en-US') });
   }
+  if (pfState.availability !== 'all') chips.push({ key: 'availability', label: pfState.availability === 'In Stock' ? t('In Stock','متوفر') : t('Made to Order','حسب الطلب') });
+  if (pfState.minRating > 0) chips.push({ key: 'minRating', label: pfState.minRating + '★+' });
   chips.forEach(function(c) {
     var chip = document.createElement('button');
     chip.className = 'pf-chip';
@@ -213,6 +219,7 @@ function pfUpdateChips() {
     chip.addEventListener('click', function() {
       if (c.key === 'query')      { pfState.query = ''; pfSyncSearchInput(); }
       else if (c.key === 'price') { pfState.priceMin = 0; pfState.priceMax = 20000; }
+      else if (c.key === 'minRating') { pfState.minRating = 0; }
       else                          pfState[c.key] = 'all';
       pfSyncUI();
       pfRenderAll();
@@ -221,23 +228,28 @@ function pfUpdateChips() {
   });
 }
 
-/* ── Filter badge — active filter count on mobile button ──── */
+/* ── Filter badge — active filter count on the mobile + desktop
+   "more filters" buttons ──────────────────────────────────── */
 function pfUpdateFilterBadge() {
-  var badge = document.getElementById('pfFilterBadge');
-  if (!badge) return;
   var count = 0;
   if (pfState.query)               count++;
   if (pfState.category !== 'all')  count++;
   if (pfState.material !== 'all')  count++;
   if (pfState.priceMin > 0 || pfState.priceMax < 20000) count++;
+  if (pfState.availability !== 'all') count++;
+  if (pfState.minRating > 0) count++;
   if (pfState.sort !== 'featured') count++;
-  if (count > 0) {
-    badge.textContent = count;
-    badge.classList.add('visible');
-  } else {
-    badge.textContent = '';
-    badge.classList.remove('visible');
-  }
+  ['pfFilterBadge', 'pfMoreFilterBadge'].forEach(function(id) {
+    var badge = document.getElementById(id);
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count;
+      badge.classList.add('visible');
+    } else {
+      badge.textContent = '';
+      badge.classList.remove('visible');
+    }
+  });
 }
 
 /* ── UI sync ──────────────────────────────────────────────── */
@@ -279,12 +291,14 @@ function pfSyncPriceInputs(minId, maxId) {
 
 /* ── Reset ────────────────────────────────────────────────── */
 function pfReset() {
-  pfState.query    = '';
-  pfState.category = 'all';
-  pfState.material = 'all';
-  pfState.priceMin = 0;
-  pfState.priceMax = 20000;
-  pfState.sort     = 'featured';
+  pfState.query        = '';
+  pfState.category     = 'all';
+  pfState.material     = 'all';
+  pfState.priceMin     = 0;
+  pfState.priceMax     = 20000;
+  pfState.availability = 'all';
+  pfState.minRating    = 0;
+  pfState.sort         = 'featured';
   pfSyncUI();
   pfRenderAll();
 }
@@ -358,6 +372,12 @@ function pfBuildToolbar() {
     '      <input type="number" class="pf-price-input" id="pfPriceMax" value="20000" min="0" max="20000" step="100" placeholder="' + t('Max', 'أقصى') + '">',
     '    </div>',
     '    <select class="pf-select" id="pfSortSelect" aria-label="' + t('Sort By', 'الترتيب') + '">' + sortOpts + '</select>',
+    /* Desktop entry point into the same filter sheet mobile uses —
+       carries Availability/Rating plus a slider-based price range. */
+    '    <button class="pf-more-filters-btn" id="pfMoreFiltersBtn" type="button" aria-label="' + t('More Filters', 'المزيد من المرشحات') + '">',
+    '      ' + icoFilter + '<span>' + t('More Filters', 'المزيد') + '</span>',
+    '      <span class="pf-filter-badge" id="pfMoreFilterBadge" aria-hidden="true"></span>',
+    '    </button>',
     '    <button class="pf-reset-btn" id="pfResetBtn" type="button">' + icoReset + ' <span>' + t('Reset', 'إعادة ضبط') + '</span></button>',
     '    <button class="pf-login-btn" id="pfLoginBtn" type="button" aria-label="' + t('Login', 'تسجيل الدخول') + '">' +
       icoUser + '<span class="pf-login-text">' + t('Login', 'تسجيل الدخول') + '</span>' +
@@ -425,10 +445,33 @@ function pfBuildSheet() {
     '      </div>' +
     '      <div class="pf-sheet-group">' +
     '        <label class="pf-sheet-label">' + t('Price Range (SAR)', 'نطاق السعر (ريال)') + '</label>' +
+    '        <div class="pf-price-slider-wrap">' +
+    '          <div class="pf-price-slider-track">' +
+    '            <input type="range" class="pf-price-slider" id="pfMPriceMinRange" min="0" max="20000" step="100" value="0">' +
+    '            <input type="range" class="pf-price-slider" id="pfMPriceMaxRange" min="0" max="20000" step="100" value="20000">' +
+    '          </div>' +
+    '        </div>' +
     '        <div class="pf-price-row pf-sheet-price-row">' +
     '          <input type="number" class="pf-price-input" id="pfMPriceMin" value="0" min="0" max="20000" step="100" placeholder="' + t('Min', 'أدنى') + '">' +
     '          <span class="pf-price-sep">—</span>' +
     '          <input type="number" class="pf-price-input" id="pfMPriceMax" value="20000" min="0" max="20000" step="100" placeholder="' + t('Max', 'أقصى') + '">' +
+    '        </div>' +
+    '      </div>' +
+    '      <div class="pf-sheet-group">' +
+    '        <label class="pf-sheet-label">' + t('Availability', 'التوفر') + '</label>' +
+    '        <div class="pf-pill-row" id="pfMAvailability">' +
+    '          <button type="button" class="pf-mini-pill active" data-val="all">' + t('All', 'الكل') + '</button>' +
+    '          <button type="button" class="pf-mini-pill" data-val="In Stock">' + t('In Stock', 'متوفر') + '</button>' +
+    '          <button type="button" class="pf-mini-pill" data-val="Made to Order">' + t('Made to Order', 'حسب الطلب') + '</button>' +
+    '        </div>' +
+    '      </div>' +
+    '      <div class="pf-sheet-group">' +
+    '        <label class="pf-sheet-label">' + t('Rating', 'التقييم') + '</label>' +
+    '        <div class="pf-pill-row" id="pfMRating">' +
+    '          <button type="button" class="pf-mini-pill active" data-val="0">' + t('Any', 'الكل') + '</button>' +
+    '          <button type="button" class="pf-mini-pill" data-val="4.5">4.5★+</button>' +
+    '          <button type="button" class="pf-mini-pill" data-val="4">4★+</button>' +
+    '          <button type="button" class="pf-mini-pill" data-val="3">3★+</button>' +
     '        </div>' +
     '      </div>' +
     '      <div class="pf-sheet-group">' +
@@ -483,11 +526,25 @@ function pfSyncMobileSheet() {
   var sortSel  = document.getElementById('pfMSortSelect');
   var priceMin = document.getElementById('pfMPriceMin');
   var priceMax = document.getElementById('pfMPriceMax');
+  var rangeMin = document.getElementById('pfMPriceMinRange');
+  var rangeMax = document.getElementById('pfMPriceMaxRange');
   if (catSel)   catSel.value   = pfState.category;
   if (matSel)   matSel.value   = pfState.material;
   if (sortSel)  sortSel.value  = pfState.sort;
   if (priceMin) priceMin.value = pfState.priceMin;
   if (priceMax) priceMax.value = pfState.priceMax;
+  if (rangeMin) rangeMin.value = pfState.priceMin;
+  if (rangeMax) rangeMax.value = pfState.priceMax;
+  pfSyncPillRow('pfMAvailability', String(pfState.availability));
+  pfSyncPillRow('pfMRating', String(pfState.minRating));
+}
+
+function pfSyncPillRow(wrapId, val) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  wrap.querySelectorAll('.pf-mini-pill').forEach(function(pill) {
+    pill.classList.toggle('active', pill.dataset.val === val);
+  });
 }
 
 /* ── Apply sheet selections → pfState, render, close ─────── */
@@ -497,10 +554,14 @@ function pfApplyFromSheet() {
   var sortSel  = document.getElementById('pfMSortSelect');
   var priceMin = document.getElementById('pfMPriceMin');
   var priceMax = document.getElementById('pfMPriceMax');
+  var availPill  = document.querySelector('#pfMAvailability .pf-mini-pill.active');
+  var ratingPill = document.querySelector('#pfMRating .pf-mini-pill.active');
 
   if (catSel)  pfState.category = catSel.value;
   if (matSel)  pfState.material = matSel.value;
   if (sortSel) pfState.sort     = sortSel.value;
+  pfState.availability = availPill ? availPill.dataset.val : 'all';
+  pfState.minRating    = ratingPill ? parseFloat(ratingPill.dataset.val) : 0;
 
   var lo = parseInt((priceMin && priceMin.value) || '0', 10);
   var hi = parseInt((priceMax && priceMax.value) || '20000', 10);
@@ -532,6 +593,40 @@ function pfWireSheetEvents() {
     pfSyncMobileSheet();
     pfCloseSheet();
   });
+
+  /* Availability / Rating pill rows — single-select, applied on "Apply" */
+  ['pfMAvailability', 'pfMRating'].forEach(function(wrapId) {
+    var wrap = document.getElementById(wrapId);
+    if (!wrap) return;
+    wrap.addEventListener('click', function(e) {
+      var pill = e.target.closest('.pf-mini-pill');
+      if (!pill) return;
+      wrap.querySelectorAll('.pf-mini-pill').forEach(function(p) { p.classList.remove('active'); });
+      pill.classList.add('active');
+    });
+  });
+
+  /* Dual price range slider — keeps the number inputs in sync */
+  var rangeMin = document.getElementById('pfMPriceMinRange');
+  var rangeMax = document.getElementById('pfMPriceMaxRange');
+  var numMin   = document.getElementById('pfMPriceMin');
+  var numMax   = document.getElementById('pfMPriceMax');
+  if (rangeMin && rangeMax && numMin && numMax) {
+    rangeMin.addEventListener('input', function() {
+      var lo = parseInt(rangeMin.value, 10);
+      var hi = parseInt(rangeMax.value, 10);
+      if (lo > hi) { rangeMin.value = hi; lo = hi; }
+      numMin.value = lo;
+    });
+    rangeMax.addEventListener('input', function() {
+      var lo = parseInt(rangeMin.value, 10);
+      var hi = parseInt(rangeMax.value, 10);
+      if (hi < lo) { rangeMax.value = lo; hi = lo; }
+      numMax.value = hi;
+    });
+    numMin.addEventListener('change', function() { rangeMin.value = numMin.value; });
+    numMax.addEventListener('change', function() { rangeMax.value = numMax.value; });
+  }
 
   /* Tap outside (on the semi-transparent backdrop) to close */
   if (overlay) {
@@ -588,6 +683,10 @@ function pfWireEvents() {
   /* Mobile filter button → open bottom sheet */
   var filterBtn = document.getElementById('pfFilterBtn');
   if (filterBtn) filterBtn.addEventListener('click', pfOpenSheet);
+
+  /* Desktop "More Filters" → same sheet (Availability/Rating/price slider) */
+  var moreFiltersBtn = document.getElementById('pfMoreFiltersBtn');
+  if (moreFiltersBtn) moreFiltersBtn.addEventListener('click', pfOpenSheet);
 
   /* Desktop selects */
   function wireSelect(id, key) {
