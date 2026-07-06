@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
+import Dropdown from '@/components/Dropdown';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 
 const STATUS_BADGE = {
   Healthy: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -14,6 +17,10 @@ export default function MaintenanceSchedulePage() {
   const [error, setError] = useState(null);
   const [me, setMe] = useState(null);
   const [modal, setModal] = useState(null);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const isAdmin = me?.role === 'admin';
 
   function load() {
@@ -26,6 +33,16 @@ export default function MaintenanceSchedulePage() {
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
+
+  const filtered = (items || []).filter(m =>
+    !debouncedSearch || m.vehicle_number?.toLowerCase().includes(debouncedSearch.toLowerCase()) || m.maintenance_type?.toLowerCase().includes(debouncedSearch.toLowerCase())
+  );
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   async function saveItem(form, id) {
     const res = await fetch(`/api/maintenance/${id}`, {
@@ -48,21 +65,29 @@ export default function MaintenanceSchedulePage() {
     <Shell active="/maintenance-schedule">
       <h2 className="text-lg font-semibold mb-1">Maintenance Schedule</h2>
       <p className="text-xs text-slate-500 mb-4">Status is computed live from each vehicle's current odometer reading.</p>
+      <input placeholder="Search by vehicle or maintenance type…" value={search} onChange={e => setSearch(e.target.value)}
+        className="w-full max-w-sm rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm mb-4" />
       {error && <div className="text-red-500 text-sm">{error}</div>}
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
         <table className="w-full text-sm min-w-[800px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">Vehicle</th><th>Type</th><th>Last Service (km)</th><th>Interval (km)</th><th>Next Due (km)</th><th>Remaining</th><th>Status</th>
+              <th onClick={() => toggleSort('vehicle_number')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('maintenance_type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Type<SortIndicator column="maintenance_type" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('last_service_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Last Service (km)<SortIndicator column="last_service_km" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('interval_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Interval (km)<SortIndicator column="interval_km" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('next_due_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Next Due (km)<SortIndicator column="next_due_km" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('remaining_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Remaining<SortIndicator column="remaining_km" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
               {isAdmin && <th className="text-right px-4">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {!items ? (
               <tr><td colSpan={8} className="py-8 text-center text-slate-400">Loading…</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">No maintenance items yet.</td></tr>
-            ) : items.map(m => (
+            ) : pageRows.length === 0 ? (
+              <tr><td colSpan={8} className="py-8 text-center text-slate-400">No maintenance items match these filters.</td></tr>
+            ) : pageRows.map(m => (
               <tr key={m.id} className="border-b border-black/5 dark:border-white/5">
                 <td className="py-3 px-4 font-medium">{m.vehicle_number}</td>
                 <td>{m.maintenance_type}</td>
@@ -82,6 +107,22 @@ export default function MaintenanceSchedulePage() {
           </tbody>
         </table>
       </div>
+
+      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span>Showing {pageRows.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + pageRows.length} of {total} entries</span>
+          <div className="flex items-center gap-1.5">
+            <span>Rows:</span>
+            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <span className="px-3 py-1">{page} / {totalPages}</span>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+        </div>
+      </div>
+
       {modal && <ScheduleModal item={modal} onClose={() => setModal(null)} onSave={saveItem} />}
     </Shell>
   );

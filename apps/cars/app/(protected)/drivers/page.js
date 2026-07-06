@@ -5,6 +5,8 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 
 const STATUS_BADGE = {
   Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -25,14 +27,26 @@ const EMPTY_FORM = {
 export default function DriversPage() {
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState('All');
   const [modal, setModal] = useState(null);
   const [cars, setCars] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const isAdmin = me?.role === 'admin';
-  const url = '/api/drivers?' + new URLSearchParams({ search, status }).toString();
+  const url = '/api/drivers?' + new URLSearchParams({ search: debouncedSearch, status }).toString();
   const { data, error, refresh } = useLiveData(url, 15000);
-  const drivers = data?.drivers || [];
+  const allDrivers = data?.drivers || [];
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(allDrivers, {
+    cars: d => d.cars?.vehicle_number, license_expiry_date: d => d.license_expiry_date || '',
+    iqama_expiry_date: d => d.iqama_expiry_date || '',
+  });
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const drivers = sorted.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch, status]);
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
@@ -68,7 +82,7 @@ export default function DriversPage() {
     doc.autoTable({
       startY: 20,
       head: [['#', 'Name', 'Phone', 'Vehicle', 'License Expiry', 'Iqama Expiry', 'Status']],
-      body: drivers.map((d, i) => [i + 1, d.full_name, d.phone || '—', d.cars?.vehicle_number || '—', d.license_expiry_date || '—', d.iqama_expiry_date || '—', d.status]),
+      body: sorted.map((d, i) => [i + 1, d.full_name, d.phone || '—', d.cars?.vehicle_number || '—', d.license_expiry_date || '—', d.iqama_expiry_date || '—', d.status]),
     });
     doc.save('drivers.pdf');
   }
@@ -99,8 +113,14 @@ export default function DriversPage() {
         <table className="w-full text-sm min-w-[900px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">Photo</th><th>Name</th><th>Phone</th><th>Vehicle</th>
-              <th>License Expiry</th><th>Iqama Expiry</th><th>Status</th><th className="text-right px-4">Actions</th>
+              <th className="py-3 px-4">Photo</th>
+              <th onClick={() => toggleSort('full_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Name<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('phone')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Phone<SortIndicator column="phone" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('cars')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle<SortIndicator column="cars" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('license_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">License Expiry<SortIndicator column="license_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('iqama_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Iqama Expiry<SortIndicator column="iqama_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -137,6 +157,21 @@ export default function DriversPage() {
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span>Showing {drivers.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + drivers.length} of {total} entries</span>
+          <div className="flex items-center gap-1.5">
+            <span>Rows:</span>
+            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <span className="px-3 py-1">{page} / {totalPages}</span>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+        </div>
       </div>
 
       {modal && <DriverModal modal={modal} cars={cars} onClose={() => setModal(null)} onSave={saveDriver} />}

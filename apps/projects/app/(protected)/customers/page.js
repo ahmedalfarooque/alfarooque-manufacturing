@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
+import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 
 const EMPTY_FORM = { full_name: '', company_name: '', email: '', mobile_number: '', vat_number: '', cr_number: '', address: '', city: '', country: '', notes: '' };
 const REFRESH_MS = 15000;
@@ -10,16 +13,24 @@ const REFRESH_MS = 15000;
 export default function CustomersPage() {
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
   const [modal, setModal] = useState(null); // { mode: 'add'|'edit'|'view', data }
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const isAdmin = me?.role === 'admin';
-  const url = '/api/customers' + (search ? '?search=' + encodeURIComponent(search) : '');
+  const url = '/api/customers' + (debouncedSearch ? '?search=' + encodeURIComponent(debouncedSearch) : '');
   const { data, error, refresh } = useLiveData(url, REFRESH_MS);
-  const customers = data?.customers || [];
+  const allCustomers = data?.customers || [];
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(allCustomers);
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const customers = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   async function saveCustomer(form, mode, id) {
     const url = mode === 'add' ? '/api/customers' : `/api/customers/${id}`;
@@ -62,8 +73,15 @@ export default function CustomersPage() {
         <table className="w-full text-sm min-w-[950px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">Full Name</th><th>Company</th><th>Email</th><th>Mobile</th>
-              <th>VAT Number</th><th>CR Number</th><th>City</th><th>Created</th><th className="text-right px-4">Actions</th>
+              <th onClick={() => toggleSort('full_name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Full Name<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('company_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Company<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('email')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Email<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('mobile_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Mobile<SortIndicator column="mobile_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">VAT Number<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('cr_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">CR Number<SortIndicator column="cr_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">City<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('created_at')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Created<SortIndicator column="created_at" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -90,6 +108,21 @@ export default function CustomersPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span>Showing {customers.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + customers.length} of {total} entries</span>
+          <div className="flex items-center gap-1.5">
+            <span>Rows:</span>
+            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <span className="px-3 py-1">{page} / {totalPages}</span>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+        </div>
       </div>
 
       {modal && <CustomerModal modal={modal} isAdmin={isAdmin} onClose={() => setModal(null)} onSave={saveCustomer} />}

@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { ShopModal, EMPTY_FORM as EMPTY_SHOP_FORM } from '@/app/(protected)/maintenance-shops/page';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 
 const PAYMENT_BADGE = {
   Paid: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -26,8 +28,9 @@ export default function MaintenanceRecordsPage() {
   const [categories, setCategories] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
   const [carId, setCarId] = useState('');
   const [driverId, setDriverId] = useState('');
   const [shopId, setShopId] = useState('');
@@ -52,7 +55,7 @@ export default function MaintenanceRecordsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const q = new URLSearchParams({
-      search, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax,
+      search: debouncedSearch, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax,
       page: String(page), pageSize: String(pageSize),
     });
     try {
@@ -62,13 +65,19 @@ export default function MaintenanceRecordsPage() {
       setRecords(data.records); setTotal(data.total); setError(null);
     } catch (e) { setError(e.message); }
     setLoading(false);
-  }, [search, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax, page]);
+  }, [debouncedSearch, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax, page, pageSize]);
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(records, {
+    vehicle: r => r.cars?.vehicle_number, driver: r => r.drivers?.full_name, shop: r => r.maintenance_shops?.name,
+    amount: r => Number(r.amount || 0), created_by: r => r.platform_users?.full_name || r.platform_users?.email,
+  });
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
     loadRefs();
   }, [loadRefs]);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   async function deleteRecord(id) {
     if (!confirm('Delete this maintenance record and all its attachments? This cannot be undone.')) return;
@@ -89,7 +98,7 @@ export default function MaintenanceRecordsPage() {
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder="Search invoice, type, technician…" value={search} onChange={e => { setPage(1); setSearch(e.target.value); }}
+        <input placeholder="Search invoice, type, technician…" value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
         <Dropdown value={carId} onChange={v => { setPage(1); setCarId(v); }} placeholder="All Vehicles" options={cars.map(c => [c.id, c.vehicle_number])} />
         <Dropdown value={driverId} onChange={v => { setPage(1); setDriverId(v); }} placeholder="All Drivers" options={drivers.map(d => [d.id, d.full_name])} />
@@ -114,16 +123,25 @@ export default function MaintenanceRecordsPage() {
         <table className="w-full text-sm min-w-[1000px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">Date</th><th>Vehicle</th><th>Driver</th><th>Category</th><th>Shop</th>
-              <th>Amount</th><th>KM</th><th>Invoice</th><th>Status</th><th>Created By</th><th className="text-right px-4">Actions</th>
+              <th onClick={() => toggleSort('maintenance_date')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Date<SortIndicator column="maintenance_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('vehicle')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle<SortIndicator column="vehicle" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('driver')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Driver<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('category')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Category<SortIndicator column="category" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('shop')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Shop<SortIndicator column="shop" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('amount')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Amount<SortIndicator column="amount" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('odometer_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">KM<SortIndicator column="odometer_km" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('invoice_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Invoice<SortIndicator column="invoice_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('payment_status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="payment_status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('created_by')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Created By<SortIndicator column="created_by" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan={11} className="py-8 text-center text-slate-400">Loading…</td></tr>
-            ) : records.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <tr><td colSpan={11} className="py-8 text-center text-slate-400">No maintenance records match these filters.</td></tr>
-            ) : records.map(r => (
+            ) : sorted.map(r => (
               <tr key={r.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                 onClick={() => { window.location.href = '/maintenance/' + r.id; }}>
                 <td className="py-3 px-4">{r.maintenance_date}</td>
@@ -147,8 +165,14 @@ export default function MaintenanceRecordsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
-        <span>Showing {records.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + records.length} of {total} entries</span>
+      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span>Showing {records.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + records.length} of {total} entries</span>
+          <div className="flex items-center gap-1.5">
+            <span>Rows:</span>
+            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+          </div>
+        </div>
         <div className="flex gap-1">
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>

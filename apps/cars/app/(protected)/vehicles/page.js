@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 
 const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -24,8 +26,9 @@ export default function VehiclesPage() {
   const [drivers, setDrivers] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 100;
+  const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
   /* Reads ?status= from the URL on first render — this is how the
      dashboard's KPI cards (Running/Idle/Stopped) link straight into a
      pre-filtered list instead of landing on "All". */
@@ -46,7 +49,7 @@ export default function VehiclesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const q = new URLSearchParams({ search, status, type, fuelType, assignment, sort, page: String(page), pageSize: String(pageSize) });
+    const q = new URLSearchParams({ search: debouncedSearch, status, type, fuelType, assignment, sort, page: String(page), pageSize: String(pageSize) });
     try {
       const res = await fetch('/api/cars?' + q.toString(), { credentials: 'same-origin' });
       const data = await res.json();
@@ -54,13 +57,16 @@ export default function VehiclesPage() {
       setVehicles(data.vehicles); setTotal(data.total); setError(null);
     } catch (e) { setError(e.message); }
     setLoading(false);
-  }, [search, status, type, fuelType, assignment, sort, page]);
+  }, [debouncedSearch, status, type, fuelType, assignment, sort, page, pageSize]);
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(vehicles);
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
     fetch('/api/drivers', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setDrivers(d.drivers || [])).catch(() => {});
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   async function saveVehicle(form, mode, id) {
     const url = mode === 'add' ? '/api/cars' : `/api/cars/${id}`;
@@ -114,7 +120,7 @@ export default function VehiclesPage() {
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-5 gap-3">
-        <input placeholder="Search vehicles…" value={search} onChange={e => { setPage(1); setSearch(e.target.value); }}
+        <input placeholder="Search vehicles…" value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
         <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={['All', 'Running', 'Idle', 'Stopped', 'Offline']} />
         <Dropdown value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={['All', 'Diesel', 'Petrol', 'Electric']} />
@@ -127,16 +133,23 @@ export default function VehiclesPage() {
         <table className="w-full text-sm min-w-[900px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">#</th><th>Vehicle Number</th><th>Name</th><th>Type</th><th>Fuel</th>
-              <th>Driver</th><th>Status</th><th>Location</th>{isAdmin && <th className="text-right px-4">Actions</th>}
+              <th className="py-3 px-4">#</th>
+              <th onClick={() => toggleSort('vehicle_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle Number<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Name<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Type<SortIndicator column="type" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('fuel_type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Fuel<SortIndicator column="fuel_type" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('driver')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Driver<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('location')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Location<SortIndicator column="location" sortKey={sortKey} sortDir={sortDir} /></th>
+              {isAdmin && <th className="text-right px-4">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan={9} className="py-8 text-center text-slate-400">Loading…</td></tr>
-            ) : vehicles.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <tr><td colSpan={9} className="py-8 text-center text-slate-400">No vehicles match these filters.</td></tr>
-            ) : vehicles.map((v, i) => (
+            ) : sorted.map((v, i) => (
               <tr key={v.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                 onClick={() => { window.location.href = '/vehicles/' + v.id; }}>
                 <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
@@ -158,8 +171,14 @@ export default function VehiclesPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500">
-        <span>Showing {vehicles.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + vehicles.length} of {total} entries</span>
+      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span>Showing {vehicles.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + vehicles.length} of {total} entries</span>
+          <div className="flex items-center gap-1.5">
+            <span>Rows:</span>
+            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+          </div>
+        </div>
         <div className="flex gap-1">
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>

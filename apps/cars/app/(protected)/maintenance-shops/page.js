@@ -2,32 +2,44 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
+import Dropdown from '@/components/Dropdown';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 
 export default function MaintenanceShopsPage() {
   const [me, setMe] = useState(null);
   const [shops, setShops] = useState([]);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 350);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const isAdmin = me?.role === 'admin';
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const q = new URLSearchParams({ search });
+      const q = new URLSearchParams({ search: debouncedSearch });
       const res = await fetch('/api/shops?' + q.toString(), { credentials: 'same-origin' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setShops(data.shops); setError(null);
     } catch (e) { setError(e.message); }
     setLoading(false);
-  }, [search]);
+  }, [debouncedSearch]);
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(shops);
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   async function deleteShop(id) {
     if (!confirm('Delete this shop? This can be undone by a database admin, but not from this screen.')) return;
@@ -56,16 +68,20 @@ export default function MaintenanceShopsPage() {
         <table className="w-full text-sm min-w-[800px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">Shop Name</th><th>Contact Person</th><th>Mobile</th><th>City</th><th>VAT Number</th>
+              <th onClick={() => toggleSort('name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Shop Name<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('contact_person')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Contact Person<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('mobile')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Mobile<SortIndicator column="mobile" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">City<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">VAT Number<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
               {isAdmin && <th className="text-right px-4">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan={6} className="py-8 text-center text-slate-400">Loading…</td></tr>
-            ) : shops.length === 0 ? (
+            ) : pageRows.length === 0 ? (
               <tr><td colSpan={6} className="py-8 text-center text-slate-400">No shops added yet.</td></tr>
-            ) : shops.map(s => (
+            ) : pageRows.map(s => (
               <tr key={s.id} className="border-b border-black/5 dark:border-white/5">
                 <td className="py-3 px-4 font-medium">{s.name}</td>
                 <td>{s.contact_person || '—'}</td>
@@ -82,6 +98,21 @@ export default function MaintenanceShopsPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span>Showing {pageRows.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + pageRows.length} of {total} entries</span>
+          <div className="flex items-center gap-1.5">
+            <span>Rows:</span>
+            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <span className="px-3 py-1">{page} / {totalPages}</span>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+        </div>
       </div>
 
       {modal && <ShopModal modal={modal} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
