@@ -135,9 +135,13 @@ var wishlist = {
 };
 
 /* ════ Share ════ */
+function productDetailUrl(id) {
+  return (IS_AR ? '/product-ar.html' : '/product.html') + '?id=' + id;
+}
+
 function shareProduct(p) {
   var name = IS_AR ? p.nameAr : p.name;
-  var url  = window.location.href.split('#')[0] + '#product-' + p.id;
+  var url  = window.location.origin + productDetailUrl(p.id);
   if (navigator.share) {
     navigator.share({ title: name, text: name + ' — AL FAROOQUE Manufacturing', url: url }).catch(function(){});
   } else {
@@ -723,14 +727,21 @@ function pcCardClickHandler(e) {
     if (svg) svg.setAttribute('fill', added ? 'currentColor' : 'none');
   } else if (qvBtn) {
     e.stopPropagation();
-    prodModal.open(parseInt(qvBtn.dataset.id, 10));
+    var qvId = parseInt(qvBtn.dataset.id, 10);
+    /* On the standalone detail page #prodModal is rendered inline
+       (.pd-inline, no visible close/backdrop) rather than as a real
+       overlay — opening it there would just silently swap the page's
+       main product and lock body scroll with no way to close it.
+       Navigate to that product's own detail page instead. */
+    if (window.__isProductDetailPage) location.href = productDetailUrl(qvId);
+    else prodModal.open(qvId);
   } else if (shareBtn) {
     e.stopPropagation();
     var sp = getProduct(parseInt(shareBtn.dataset.id, 10));
     if (sp) shareProduct(sp);
   } else if (detBtn) {
     e.stopPropagation();
-    prodModal.open(parseInt(detBtn.dataset.id, 10));
+    location.href = productDetailUrl(parseInt(detBtn.dataset.id, 10));
   } else if (ord) {
     e.stopPropagation();
     orderModal.open(parseInt(ord.dataset.id, 10), 1);
@@ -742,7 +753,7 @@ function pcCardClickHandler(e) {
     var imgCard = imgArea.closest('.prod-card');
     if (imgCard) imgGallery.open(parseInt(imgCard.dataset.id, 10), 0);
   } else if (card) {
-    prodModal.open(parseInt(card.dataset.id, 10));
+    location.href = productDetailUrl(parseInt(card.dataset.id, 10));
   }
 }
 
