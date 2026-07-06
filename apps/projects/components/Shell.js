@@ -91,7 +91,7 @@ export default function Shell({ children, active }) {
             </button>
           </div>
         </header>
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="flex-1 p-4 lg:p-6 min-w-0"><div className="max-w-[1800px] mx-auto">{children}</div></main>
       </div>
     </div>
   );

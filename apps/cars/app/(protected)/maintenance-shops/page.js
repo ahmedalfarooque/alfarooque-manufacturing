@@ -54,7 +54,7 @@ export default function MaintenanceShopsPage() {
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10">
+          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
               <th className="py-3 px-4">Shop Name</th><th>Contact Person</th><th>Mobile</th><th>City</th><th>VAT Number</th>
               {isAdmin && <th className="text-right px-4">Actions</th>}

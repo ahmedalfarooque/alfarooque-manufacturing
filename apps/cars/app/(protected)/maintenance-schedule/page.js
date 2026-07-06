@@ -51,7 +51,7 @@ export default function MaintenanceSchedulePage() {
       {error && <div className="text-red-500 text-sm">{error}</div>}
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10">
+          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
               <th className="py-3 px-4">Vehicle</th><th>Type</th><th>Last Service (km)</th><th>Interval (km)</th><th>Next Due (km)</th><th>Remaining</th><th>Status</th>
               {isAdmin && <th className="text-right px-4">Actions</th>}

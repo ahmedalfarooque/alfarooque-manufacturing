@@ -60,7 +60,7 @@ export default function CustomersPage() {
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
         <table className="w-full text-sm min-w-[950px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10">
+          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
               <th className="py-3 px-4">Full Name</th><th>Company</th><th>Email</th><th>Mobile</th>
               <th>VAT Number</th><th>CR Number</th><th>City</th><th>Created</th><th className="text-right px-4">Actions</th>
