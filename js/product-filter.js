@@ -254,6 +254,15 @@ function pfSyncUI() {
   pfSyncSelect('pfMatSelect',  pfState.material);
   pfSyncSelect('pfSortSelect', pfState.sort);
   pfSyncPriceInputs('pfPriceMin', 'pfPriceMax');
+  pfSyncPills();
+}
+
+function pfSyncPills() {
+  var wrap = document.getElementById('pfCatPills');
+  if (!wrap) return;
+  wrap.querySelectorAll('.pf-cat-pill').forEach(function(pill) {
+    pill.classList.toggle('active', pill.dataset.cat === pfState.category);
+  });
 }
 
 function pfSyncSelect(id, val) {
@@ -311,8 +320,20 @@ function pfBuildToolbar() {
   var icoUser   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
   var icoCart   = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
 
+  var catPillsHtml = '<button type="button" class="pf-cat-pill active" data-cat="all">' +
+      t('All', 'الكل') + '</button>' +
+    categories.map(function(c) {
+      var label = typeof catLabel === 'function' ? catLabel(c) : pfCapitalize(c);
+      return '<button type="button" class="pf-cat-pill" data-cat="' + c + '">' + label + '</button>';
+    }).join('');
+
   return [
     '<div class="pf-toolbar" id="pfToolbar">',
+
+    /* Rounded category pill row — the "Collections" style filter row.
+       Drives pfState.category directly; #pfCatSelect stays in the DOM
+       (hidden) purely so pfSyncUI()/wireSelect() keep working unchanged. */
+    '  <div class="pf-cat-pills" id="pfCatPills">' + catPillsHtml + '</div>',
 
     /* Single horizontal control bar */
     '  <div class="pf-bar">',
@@ -579,6 +600,18 @@ function pfWireEvents() {
   wireSelect('pfCatSelect',  'category');
   wireSelect('pfMatSelect',  'material');
   wireSelect('pfSortSelect', 'sort');
+
+  /* Category pills — mirror the select's state, drive it directly */
+  var pillsWrap = document.getElementById('pfCatPills');
+  if (pillsWrap) {
+    pillsWrap.addEventListener('click', function(e) {
+      var pill = e.target.closest('.pf-cat-pill');
+      if (!pill) return;
+      pfState.category = pill.dataset.cat;
+      pfSyncUI();
+      pfRenderAll();
+    });
+  }
 
   /* Desktop price inputs */
   function wirePriceInputs(minId, maxId) {

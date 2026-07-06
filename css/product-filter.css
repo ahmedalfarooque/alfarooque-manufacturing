@@ -40,6 +40,71 @@ body.products-page .products-section { padding-top: 28px; }
   margin-top: 4px;
 }
 
+/* ── Category pill row ("Collections" style) ─────────────────
+   Replaces #pfCatSelect visually; the select stays in the DOM
+   (hidden) so pfSyncUI()/wireSelect() don't need to change. ── */
+#pfCatSelect { display: none !important; }
+
+.pf-cat-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px 2px 4px;
+}
+.pf-cat-pills::-webkit-scrollbar { display: none; }
+
+.pf-cat-pill {
+  flex-shrink: 0;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--tx-3, #94a3b8);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+.pf-cat-pill:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.20);
+  color: var(--tx, #fff);
+  transform: translateY(-1px);
+}
+.pf-cat-pill.active {
+  background: linear-gradient(135deg, var(--pr, #8CA05B), var(--pr-2, #A3B873));
+  border-color: var(--pr-2, #A3B873);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(140,160,91,0.36);
+}
+:is(html.light, body.light) .pf-cat-pill {
+  background: rgba(255,255,255,0.75);
+  border-color: rgba(203,213,225,0.65);
+  color: #64748b;
+}
+:is(html.light, body.light) .pf-cat-pill:hover {
+  background: #fff;
+  border-color: rgba(107,122,79,0.35);
+  color: #1A1A18;
+}
+:is(html.light, body.light) .pf-cat-pill.active {
+  background: linear-gradient(135deg, var(--pr, #6B7A4F), var(--pr-2, #7D8F5C));
+  border-color: var(--pr-2, #7D8F5C);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(107,122,79,0.28);
+}
+
+@media (max-width: 768px) {
+  .pf-cat-pills { display: none; }
+}
+
 /* ── The single horizontal glass control bar ──────────────── */
 .pf-bar {
   display: flex;
