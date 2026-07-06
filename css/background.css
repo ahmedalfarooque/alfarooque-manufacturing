@@ -15,9 +15,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 10% 15%, rgba(8,145,168,0.13) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 10% 15%, rgba(107,122,79,0.13) 0%, transparent 55%),
     radial-gradient(ellipse 60% 50% at 92% 80%, rgba(0,95,110,0.10) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 40% at 55% 50%, rgba(8,145,168,0.04) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 55% 50%, rgba(107,122,79,0.04) 0%, transparent 65%),
     #111418;
 }
 
@@ -26,8 +26,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(8,145,168,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(8,145,168,0.035) 1px, transparent 1px);
+    linear-gradient(rgba(107,122,79,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(107,122,79,0.035) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 20%, transparent 100%);
 }
@@ -43,14 +43,14 @@
 
 .orb-1 {
   width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(8,145,168,0.16) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(107,122,79,0.16) 0%, transparent 70%);
   top: -8%; left: -5%;
   animation-duration: 20s;
   opacity: 0.8;
 }
 .orb-2 {
   width: 350px; height: 350px;
-  background: radial-gradient(circle, rgba(14,165,192,0.11) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(125,143,92,0.11) 0%, transparent 70%);
   top: 35%; right: 3%;
   animation-duration: 26s;
   animation-delay: -10s;
@@ -66,7 +66,7 @@
 }
 .orb-4 {
   width: 180px; height: 180px;
-  background: radial-gradient(circle, rgba(8,145,168,0.10) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(107,122,79,0.10) 0%, transparent 70%);
   top: 65%; left: 60%;
   animation-duration: 22s;
   animation-delay: -14s;
@@ -81,7 +81,7 @@
 /* ── Floating geometric shapes ── */
 .geo {
   position: absolute;
-  border: 1px solid rgba(8,145,168,0.07);
+  border: 1px solid rgba(107,122,79,0.07);
   animation: geo-float ease-in-out infinite;
   will-change: transform;
 }
@@ -90,7 +90,7 @@
   width: 130px; height: 130px;
   border-radius: 50%;
   top: 12%; right: 18%;
-  background: rgba(8,145,168,0.025);
+  background: rgba(107,122,79,0.025);
   backdrop-filter: blur(4px);
   animation-duration: 22s;
 }
@@ -107,7 +107,7 @@
   width: 90px; height: 32px;
   border-radius: 30px;
   top: 82%; right: 32%;
-  background: rgba(8,145,168,0.04);
+  background: rgba(107,122,79,0.04);
   animation-duration: 18s;
   animation-delay: -12s;
 }
@@ -116,7 +116,7 @@
   border-radius: 50%;
   top: 28%; left: 18%;
   background: rgba(255,255,255,0.02);
-  border-color: rgba(8,145,168,0.14);
+  border-color: rgba(107,122,79,0.14);
   animation-duration: 16s;
   animation-delay: -4s;
 }
@@ -124,7 +124,7 @@
   width: 48px; height: 48px;
   border-radius: 10px;
   bottom: 35%; right: 12%;
-  background: rgba(8,145,168,0.03);
+  background: rgba(107,122,79,0.03);
   animation-duration: 24s;
   animation-delay: -18s;
   transform: rotate(45deg);
@@ -140,7 +140,7 @@
 .ray {
   position: absolute;
   width: 1px;
-  background: linear-gradient(to bottom, transparent, rgba(8,145,168,0.22), transparent);
+  background: linear-gradient(to bottom, transparent, rgba(107,122,79,0.22), transparent);
   animation: ray-breathe ease-in-out infinite;
 }
 .ray-1 { height: 350px; top: 0; left: 22%; animation-duration: 5s; }
@@ -161,7 +161,7 @@
   position: absolute;
   width: 2px; height: 2px;
   border-radius: 50%;
-  background: rgba(8,145,168,0.50);
+  background: rgba(107,122,79,0.50);
   animation: particle-twinkle ease-in-out infinite;
 }
 @keyframes particle-twinkle {

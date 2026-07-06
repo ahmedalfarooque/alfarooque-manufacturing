@@ -31,11 +31,11 @@
 .nav-logo-svg {
   width: 40px; height: 40px;
   animation: logo-float 7s ease-in-out infinite;
-  filter: drop-shadow(0 0 8px rgba(8,145,168,0.50));
+  filter: drop-shadow(0 0 8px rgba(107,122,79,0.50));
   transition: filter 0.3s;
 }
 .nav-logo:hover .nav-logo-svg {
-  filter: drop-shadow(0 0 16px rgba(8,145,168,0.80));
+  filter: drop-shadow(0 0 16px rgba(107,122,79,0.80));
 }
 @keyframes logo-float {
   0%,100% { transform: translateY(0); }
@@ -92,7 +92,7 @@
 .nav-cta {
   margin-left: 12px;
   padding: 10px 22px;
-  background: rgba(8,145,168,0.12);
+  background: rgba(107,122,79,0.12);
   border: 1px solid var(--glass-border-teal);
   border-radius: var(--radius-md);
   font-size: 12px;
@@ -103,10 +103,10 @@
   transition: all 0.3s;
 }
 .nav-cta:hover {
-  background: rgba(8,145,168,0.25);
+  background: rgba(107,122,79,0.25);
   box-shadow: var(--glow-teal-sm);
   color: #fff;
-  border-color: rgba(8,145,168,0.50);
+  border-color: rgba(107,122,79,0.50);
 }
 
 /* ── Mobile toggle ── */

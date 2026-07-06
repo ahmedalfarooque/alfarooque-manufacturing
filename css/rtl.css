@@ -317,8 +317,8 @@ html[dir="rtl"] .lang-switcher { margin-left: 0; margin-right: 10px; }
 }
 .lang-btn:hover { color: var(--t-text, #fff); background: var(--t-glass-1, rgba(255,255,255,0.04)); }
 .lang-btn.active {
-  color: var(--t-primary-2, #0EA5C0);
-  background: var(--t-glass-teal, rgba(8,145,168,0.08));
+  color: var(--t-primary-2, #7D8F5C);
+  background: var(--t-glass-teal, rgba(107,122,79,0.08));
 }
 .lang-btn.ar-btn {
   font-family: 'Cairo', 'Tajawal', sans-serif;

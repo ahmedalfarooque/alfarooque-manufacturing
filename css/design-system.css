@@ -5,49 +5,54 @@
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  --teal-900: #003d47;
-  --teal-800: #005f6e;
-  --teal-700: #007a8c;
-  --teal-600: #0891a8;
-  --teal-500: #0ea5c0;
-  --teal-400: #22c4de;
-  --teal-300: #67dff0;
-  --teal-200: #a5eef8;
-  --teal-100: #e0f8fd;
+  /* Olive scale — replaces the old teal accent scale. Same variable
+     names kept everywhere they're referenced (80+ usages across
+     components.css/main.css/nav.css/rtl.css) so recoloring the palette
+     doesn't require touching every consumer, only these definitions. */
+  --teal-900: #2E3620;
+  --teal-800: #46512F;
+  --teal-700: #566440;
+  --teal-600: #6B7A4F;
+  --teal-500: #7D8F5C;
+  --teal-400: #93A374;
+  --teal-300: #B0BD97;
+  --teal-200: #D3DBC4;
+  --teal-100: #EEF1E7;
 
-  --grey-950: #0a0d10;
-  --grey-900: #111418;
-  --grey-800: #1c2128;
-  --grey-700: #252d38;
-  --grey-600: #374151;
-  --grey-500: #6b7280;
-  --grey-400: #9ca3af;
-  --grey-300: #d1d5db;
-  --grey-200: #e5e7eb;
-  --grey-100: #f3f4f6;
+  /* Warm neutral scale — replaces the old cool blue-grey scale */
+  --grey-950: #16150F;
+  --grey-900: #1A1A18;
+  --grey-800: #2B2A25;
+  --grey-700: #4A4A45;
+  --grey-600: #6B6B63;
+  --grey-500: #8C8A80;
+  --grey-400: #A6A399;
+  --grey-300: #D8D4CC;
+  --grey-200: #E5E2DD;
+  --grey-100: #F7F5F1;
 
-  --glass-bg:        rgba(255,255,255,0.04);
-  --glass-bg-mid:    rgba(255,255,255,0.07);
-  --glass-bg-strong: rgba(255,255,255,0.11);
-  --glass-teal:      rgba(8,145,168,0.08);
-  --glass-teal-mid:  rgba(8,145,168,0.14);
+  --glass-bg:        rgba(26,26,24,0.03);
+  --glass-bg-mid:    rgba(26,26,24,0.045);
+  --glass-bg-strong: rgba(26,26,24,0.06);
+  --glass-teal:      rgba(107,122,79,0.055);
+  --glass-teal-mid:  rgba(107,122,79,0.10);
 
-  --glass-border:        rgba(255,255,255,0.07);
-  --glass-border-bright: rgba(255,255,255,0.18);
-  --glass-border-teal:   rgba(8,145,168,0.30);
+  --glass-border:        rgba(26,26,24,0.08);
+  --glass-border-bright: rgba(26,26,24,0.14);
+  --glass-border-teal:   rgba(107,122,79,0.26);
 
   --blur-light: blur(8px);
   --blur-mid:   blur(20px);
   --blur-heavy: blur(40px);
 
-  --glow-teal-sm: 0 0 20px rgba(8,145,168,0.30);
-  --glow-teal:    0 0 60px rgba(8,145,168,0.25), 0 0 120px rgba(8,145,168,0.10);
+  --glow-teal-sm: 0 0 16px rgba(107,122,79,0.14);
+  --glow-teal:    0 0 40px rgba(107,122,79,0.10), 0 0 80px rgba(107,122,79,0.05);
 
-  --shadow-card: 0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.30);
-  --shadow-lg:   0 20px 60px rgba(0,0,0,0.50);
-  --shadow-btn:  0 4px 20px rgba(8,145,168,0.40);
+  --shadow-card: 0 2px 8px rgba(26,26,24,0.05), 0 10px 28px rgba(26,26,24,0.07);
+  --shadow-lg:   0 20px 50px rgba(26,26,24,0.10);
+  --shadow-btn:  0 4px 16px rgba(107,122,79,0.26);
 
-  --font-display: 'Space Grotesk', sans-serif;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
   --font-body:    'Inter', sans-serif;
 
   --nav-h:      72px;
@@ -68,8 +73,8 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--font-body);
-  background: var(--grey-900);
-  color: #fff;
+  background: #FFFFFF;
+  color: var(--grey-900);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -79,9 +84,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 ul { list-style: none; }
 
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--grey-900); }
-::-webkit-scrollbar-thumb { background: var(--teal-700); border-radius: 2px; }
-::selection { background: rgba(8,145,168,0.30); color: #fff; }
+::-webkit-scrollbar-track { background: var(--grey-100); }
+::-webkit-scrollbar-thumb { background: var(--teal-600); border-radius: 2px; }
+::selection { background: rgba(107,122,79,0.22); color: var(--grey-900); }
 
 /* ── Utility Classes ── */
 .container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--px); }
@@ -140,7 +145,7 @@ ul { list-style: none; }
 }
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(8,145,168,0.55);
+  box-shadow: 0 8px 30px rgba(107,122,79,0.55);
   background: linear-gradient(135deg, var(--teal-500), var(--teal-700));
 }
 
