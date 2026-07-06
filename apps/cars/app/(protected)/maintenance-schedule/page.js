@@ -68,9 +68,9 @@ export default function MaintenanceSchedulePage() {
       <input placeholder="Search by vehicle or maintenance type…" value={search} onChange={e => setSearch(e.target.value)}
         className="w-full max-w-sm rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm mb-4" />
       {error && <div className="text-red-500 text-sm">{error}</div>}
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
+      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
               <th onClick={() => toggleSort('vehicle_number')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
               <th onClick={() => toggleSort('maintenance_type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Type<SortIndicator column="maintenance_type" sortKey={sortKey} sortDir={sortDir} /></th>

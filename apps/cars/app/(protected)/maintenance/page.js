@@ -119,9 +119,9 @@ export default function MaintenanceRecordsPage() {
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-x-auto">
+      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-16 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
               <th onClick={() => toggleSort('maintenance_date')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Date<SortIndicator column="maintenance_date" sortKey={sortKey} sortDir={sortDir} /></th>
               <th onClick={() => toggleSort('vehicle')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle<SortIndicator column="vehicle" sortKey={sortKey} sortDir={sortDir} /></th>
