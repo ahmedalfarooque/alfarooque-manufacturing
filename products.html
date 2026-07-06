@@ -104,11 +104,35 @@
 <section class="products-section" id="products">
   <div class="container">
 
-    <!-- Section header -->
-    <div class="prod-section-header">
-      <div class="eyebrow" style="justify-content:center;">Our Products</div>
-      <h1 class="ps-page-title">Engineered to <span class="accent">Impress</span></h1>
-      <p class="ps-page-sub">Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.</p>
+    <!-- Section header / hero -->
+    <div class="prod-section-header ps-hero">
+      <div class="ps-hero-text">
+        <div class="eyebrow">Our Products</div>
+        <h1 class="ps-page-title">Engineered to <span class="accent">Impress</span></h1>
+        <p class="ps-page-sub">Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.</p>
+        <div class="ps-hero-cta reveal d3">
+          <a href="#prodGrid" class="btn btn-primary" data-mag>Shop Collection <span class="arrow">→</span></a>
+          <a href="/pages/contact.html" class="btn btn-ghost">Request Custom Quote</a>
+        </div>
+      </div>
+      <div class="ps-hero-media reveal d2" data-tilt>
+        <div class="ps-hero-media-glow"></div>
+        <img src="/assets/images/Products/Premium Solid Teak Exterior Door 1.png" alt="Premium Solid Teak Exterior Door" loading="eager" fetchpriority="high">
+        <div class="float-chip ps-hero-chip">
+          <div class="chip-lbl">Factory Direct</div>
+          <div class="chip-val">0% <em>Markup</em></div>
+          <div class="chip-sub">Jeddah Factory Pricing</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Arrivals — populated by products.js from live catalog -->
+    <div class="new-arrival" id="newArrival" style="display:none;">
+      <div class="new-arrival-head">
+        <div class="section-label">New In</div>
+        <h2 class="new-arrival-title">Latest <span class="accent">Arrivals</span></h2>
+      </div>
+      <div class="new-arrival-track" id="newArrivalTrack"></div>
     </div>
 
     <!-- Product Grid — populated by products.js -->
@@ -119,6 +143,35 @@
       <button class="prod-loadmore" id="prodLoadMore" type="button">Load More Products</button>
     </div>
 
+  </div>
+</section>
+
+<!-- ═══ FEATURED COLLECTION BANNER ═══ -->
+<section class="featured-banner">
+  <div class="container featured-banner-inner">
+    <div class="featured-banner-media">
+      <img src="/assets/images/Home/Home_02.jpg" alt="AL FAROOQUE craftsmanship" loading="lazy">
+    </div>
+    <div class="featured-banner-body">
+      <div class="section-label">Featured Collection</div>
+      <h2 class="section-title">Doors, Crafted <span class="accent">to Endure</span></h2>
+      <p class="section-body">From solid teak exterior doors to fire-rated interior systems — explore our most-ordered collection, built to the highest Saudi and international standards.</p>
+      <a href="/products.html?category=doors" class="btn btn-primary" data-mag>Shop Doors Collection <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NEWSLETTER ═══ -->
+<section class="newsletter">
+  <div class="container newsletter-inner">
+    <div class="newsletter-copy">
+      <h2 class="newsletter-title">Stay Ahead of <span class="accent">New Releases</span></h2>
+      <p class="newsletter-sub">Subscribe for new product launches, factory promotions, and seasonal offers — no spam, unsubscribe anytime.</p>
+    </div>
+    <form class="newsletter-form" id="newsletterForm">
+      <input type="email" id="newsletterEmail" class="newsletter-input" placeholder="Enter your email address" required autocomplete="email">
+      <button type="submit" class="btn btn-primary newsletter-submit">Subscribe</button>
+    </form>
   </div>
 </section>
 

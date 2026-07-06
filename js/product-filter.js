@@ -696,8 +696,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (searchInputEl) searchInputEl.value = qParam;
   }
 
+  /* Prefill from ?category= — lets banners/links deep-link into a
+     pre-filtered category (e.g. the Featured Collection banner). */
+  var catParam = new URLSearchParams(location.search).get('category');
+  if (catParam && pfExtract('cat').indexOf(catParam) !== -1) {
+    pfState.category = catParam;
+  }
+
   /* Wire events */
   pfWireEvents();
+  pfSyncUI();
 
   /* Initial render — replaces the one from products.js */
   pfRenderAll();

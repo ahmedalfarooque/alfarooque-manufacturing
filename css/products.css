@@ -1373,6 +1373,170 @@
   color: rgba(26,26,24,0.72);
 }
 
+/* ── Split hero (text + featured product image) ──────────── */
+.ps-hero {
+  display: flex;
+  align-items: center;
+  gap: clamp(28px, 5vw, 64px);
+  text-align: left;
+}
+[dir="rtl"] .ps-hero { text-align: right; }
+.ps-hero-text { flex: 1 1 52%; min-width: 0; }
+.ps-hero-text .ps-page-sub { margin: 0; }
+.ps-hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.ps-hero-media {
+  position: relative;
+  flex: 1 1 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+.ps-hero-media-glow {
+  position: absolute;
+  inset: 6%;
+  background: radial-gradient(circle, rgba(140,160,91,0.28) 0%, transparent 68%);
+  filter: blur(30px);
+  z-index: 0;
+}
+.ps-hero-media img {
+  position: relative;
+  z-index: 1;
+  max-width: 78%;
+  max-height: 380px;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 50px rgba(0,0,0,0.35));
+}
+.ps-hero-chip {
+  position: absolute;
+  bottom: 6%;
+  right: 4%;
+  z-index: 2;
+  animation-duration: 11s;
+}
+[dir="rtl"] .ps-hero-chip { right: auto; left: 4%; }
+
+@media (max-width: 900px) {
+  .ps-hero { flex-direction: column; text-align: center; }
+  [dir="rtl"] .ps-hero { text-align: center; }
+  .ps-hero-text { flex: 1 1 auto; }
+  .ps-hero-cta { justify-content: center; }
+  .ps-hero-media { flex: 1 1 auto; width: 100%; }
+  .ps-hero-chip { right: 6%; }
+  [dir="rtl"] .ps-hero-chip { left: 6%; }
+}
+
+/* ── New Arrivals strip ──────────────────────────────────── */
+.new-arrival { margin-bottom: clamp(32px, 4vw, 56px); }
+.new-arrival-head { margin-bottom: 20px; }
+.new-arrival-title {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 700;
+  color: var(--tx, #fff);
+  margin: 4px 0 0;
+}
+.new-arrival-title .accent { color: var(--pr, #8CA05B); }
+.new-arrival-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x proximity;
+}
+.new-arrival-track::-webkit-scrollbar { height: 5px; }
+.new-arrival-track::-webkit-scrollbar-thumb { background: var(--bd-teal, rgba(107,122,79,0.32)); border-radius: 4px; }
+.new-arrival-track .prod-card {
+  flex: 0 0 260px;
+  scroll-snap-align: start;
+}
+
+/* ── Featured Collection Banner ──────────────────────────── */
+.featured-banner {
+  position: relative;
+  z-index: 1;
+  padding: clamp(56px, 7vw, 100px) 0;
+}
+.featured-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(28px, 5vw, 72px);
+}
+.featured-banner-media {
+  flex: 1 1 44%;
+  border-radius: 24px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  box-shadow: var(--sh-lg, 0 20px 60px rgba(0,0,0,0.30));
+}
+.featured-banner-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.featured-banner-body { flex: 1 1 48%; }
+.featured-banner-body .section-title { margin-bottom: 18px; }
+.featured-banner-body .section-body { margin-bottom: 28px; }
+@media (max-width: 860px) {
+  .featured-banner-inner { flex-direction: column; text-align: center; }
+  .featured-banner-media { width: 100%; }
+}
+
+/* ── Newsletter ───────────────────────────────────────────── */
+.newsletter {
+  position: relative;
+  z-index: 1;
+  padding: clamp(48px, 6vw, 80px) 0;
+  background: var(--bg-2, #1B1B14);
+  border-top: 1px solid var(--bd, rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--bd, rgba(255,255,255,0.08));
+}
+.newsletter-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.newsletter-copy { flex: 1 1 380px; }
+.newsletter-title {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(22px, 2.8vw, 32px);
+  font-weight: 700;
+  color: var(--tx, #fff);
+  margin: 0 0 8px;
+}
+.newsletter-title .accent { color: var(--pr, #8CA05B); }
+.newsletter-sub { font-size: 14px; color: var(--tx-3, rgba(255,255,255,0.65)); max-width: 480px; margin: 0; }
+.newsletter-form {
+  display: flex;
+  gap: 10px;
+  flex: 1 1 380px;
+  max-width: 460px;
+}
+.newsletter-input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid var(--bd, rgba(255,255,255,0.14));
+  background: var(--bg-card, rgba(255,255,255,0.06));
+  color: var(--tx, #fff);
+  font-family: inherit;
+  font-size: 14px;
+}
+.newsletter-input::placeholder { color: var(--tx-4, rgba(255,255,255,0.4)); }
+.newsletter-input:focus { outline: none; border-color: var(--bd-teal, rgba(107,122,79,0.45)); }
+.newsletter-submit { height: 48px; white-space: nowrap; }
+@media (max-width: 640px) {
+  .newsletter-inner { flex-direction: column; align-items: stretch; text-align: center; }
+  .newsletter-form { max-width: none; }
+}
+
 /* ── View Details card button ───────────── */
 .btn-view-details {
   font-family: var(--font-body, inherit);

@@ -105,11 +105,35 @@
 <section class="products-section" id="products">
   <div class="container">
 
-    <!-- Section header -->
-    <div class="prod-section-header">
-      <div class="eyebrow" style="justify-content:center;">منتجاتنا</div>
-      <h1 class="ps-page-title">مُصنَّع ليبهر <span class="accent">عيونكم</span></h1>
-      <p class="ps-page-sub">اطلب منتجات خشبية وحديدية وألومنيوم مُصنَّعة بدقة عالية مباشرةً من مصنعنا في جدة. أحجام وتشطيبات ومواصفات مخصصة متاحة.</p>
+    <!-- Section header / hero -->
+    <div class="prod-section-header ps-hero">
+      <div class="ps-hero-text">
+        <div class="eyebrow">منتجاتنا</div>
+        <h1 class="ps-page-title">مُصنَّع ليبهر <span class="accent">عيونكم</span></h1>
+        <p class="ps-page-sub">اطلب منتجات خشبية وحديدية وألومنيوم مُصنَّعة بدقة عالية مباشرةً من مصنعنا في جدة. أحجام وتشطيبات ومواصفات مخصصة متاحة.</p>
+        <div class="ps-hero-cta reveal d3">
+          <a href="#prodGrid" class="btn btn-primary" data-mag>تسوّق المجموعة <span class="arrow">←</span></a>
+          <a href="/pages/contact-ar.html" class="btn btn-ghost">اطلب مواصفات مخصصة</a>
+        </div>
+      </div>
+      <div class="ps-hero-media reveal d2" data-tilt>
+        <div class="ps-hero-media-glow"></div>
+        <img src="/assets/images/Products/Premium Solid Teak Exterior Door 1.png" alt="باب خارجي فاخر من خشب الساج" loading="eager" fetchpriority="high">
+        <div class="float-chip ps-hero-chip">
+          <div class="chip-lbl">مباشرة من المصنع</div>
+          <div class="chip-val">0% <em>هامش</em></div>
+          <div class="chip-sub">أسعار مصنع جدة</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Arrivals — populated by products.js from live catalog -->
+    <div class="new-arrival" id="newArrival" style="display:none;">
+      <div class="new-arrival-head">
+        <div class="section-label">جديدنا</div>
+        <h2 class="new-arrival-title">أحدث <span class="accent">المنتجات</span></h2>
+      </div>
+      <div class="new-arrival-track" id="newArrivalTrack"></div>
     </div>
 
     <!-- Product Grid — populated by products.js -->
@@ -120,6 +144,35 @@
       <button class="prod-loadmore" id="prodLoadMore" type="button">عرض المزيد من المنتجات</button>
     </div>
 
+  </div>
+</section>
+
+<!-- ═══ FEATURED COLLECTION BANNER ═══ -->
+<section class="featured-banner">
+  <div class="container featured-banner-inner">
+    <div class="featured-banner-media">
+      <img src="/assets/images/Home/Home_02.jpg" alt="حرفية الفاروقي" loading="lazy">
+    </div>
+    <div class="featured-banner-body">
+      <div class="section-label">مجموعة مميزة</div>
+      <h2 class="section-title">أبواب مصنوعة <span class="accent">لتدوم</span></h2>
+      <p class="section-body">من أبواب الساج الخارجية الفاخرة إلى أنظمة الأبواب الداخلية المقاومة للحريق — اكتشف مجموعتنا الأكثر طلباً، المصنّعة وفق أعلى المعايير السعودية والدولية.</p>
+      <a href="/products-ar.html?category=doors" class="btn btn-primary" data-mag>تسوّق مجموعة الأبواب <span class="arrow">←</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NEWSLETTER ═══ -->
+<section class="newsletter">
+  <div class="container newsletter-inner">
+    <div class="newsletter-copy">
+      <h2 class="newsletter-title">كن أول من يعلم <span class="accent">بالمنتجات الجديدة</span></h2>
+      <p class="newsletter-sub">اشترك للحصول على إصدارات المنتجات الجديدة وعروض المصنع والعروض الموسمية — بدون رسائل مزعجة، ويمكنك إلغاء الاشتراك في أي وقت.</p>
+    </div>
+    <form class="newsletter-form" id="newsletterForm">
+      <input type="email" id="newsletterEmail" class="newsletter-input" placeholder="أدخل بريدك الإلكتروني" required autocomplete="email">
+      <button type="submit" class="btn btn-primary newsletter-submit">اشتراك</button>
+    </form>
   </div>
 </section>
 

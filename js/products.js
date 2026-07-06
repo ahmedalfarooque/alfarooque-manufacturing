@@ -702,6 +702,50 @@ function renderBatch() {
   if (wrap) wrap.style.display = (renderedCount < PRODUCTS.length) ? '' : 'none';
 }
 
+/* Shared delegated click handler for any container of .prod-card
+   elements — used by both the main grid and the New Arrivals strip. */
+function pcCardClickHandler(e) {
+  var detBtn   = e.target.closest('.btn-view-details');
+  var ord      = e.target.closest('.btn-order-now');
+  var addCart  = e.target.closest('.btn-add-cart');
+  var wlBtn    = e.target.closest('.btn-wishlist');
+  var qvBtn    = e.target.closest('.btn-quickview');
+  var shareBtn = e.target.closest('.btn-share');
+  var imgArea  = e.target.closest('.prod-card-img');
+  var card     = e.target.closest('.prod-card');
+
+  if (wlBtn) {
+    e.stopPropagation();
+    var id = parseInt(wlBtn.dataset.id, 10);
+    var added = wishlist.toggle(id);
+    wlBtn.classList.toggle('wishlisted', added);
+    var svg = wlBtn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', added ? 'currentColor' : 'none');
+  } else if (qvBtn) {
+    e.stopPropagation();
+    prodModal.open(parseInt(qvBtn.dataset.id, 10));
+  } else if (shareBtn) {
+    e.stopPropagation();
+    var sp = getProduct(parseInt(shareBtn.dataset.id, 10));
+    if (sp) shareProduct(sp);
+  } else if (detBtn) {
+    e.stopPropagation();
+    prodModal.open(parseInt(detBtn.dataset.id, 10));
+  } else if (ord) {
+    e.stopPropagation();
+    orderModal.open(parseInt(ord.dataset.id, 10), 1);
+  } else if (addCart) {
+    e.stopPropagation();
+    var p = getProduct(parseInt(addCart.dataset.id, 10));
+    if (p) { cart.add(p.id, 1); showCartToast(IS_AR ? p.nameAr : p.name); }
+  } else if (imgArea) {
+    var imgCard = imgArea.closest('.prod-card');
+    if (imgCard) imgGallery.open(parseInt(imgCard.dataset.id, 10), 0);
+  } else if (card) {
+    prodModal.open(parseInt(card.dataset.id, 10));
+  }
+}
+
 function renderProducts() {
   if (!grid) return;
   grid.innerHTML = '';
@@ -714,46 +758,55 @@ function renderProducts() {
     lm.addEventListener('click', renderBatch);
   }
   // Delegate card click events (attached once)
-  grid.addEventListener('click', function(e) {
-    var detBtn   = e.target.closest('.btn-view-details');
-    var ord      = e.target.closest('.btn-order-now');
-    var addCart  = e.target.closest('.btn-add-cart');
-    var wlBtn    = e.target.closest('.btn-wishlist');
-    var qvBtn    = e.target.closest('.btn-quickview');
-    var shareBtn = e.target.closest('.btn-share');
-    var imgArea  = e.target.closest('.prod-card-img');
-    var card     = e.target.closest('.prod-card');
+  grid.addEventListener('click', pcCardClickHandler);
+}
 
-    if (wlBtn) {
-      e.stopPropagation();
-      var id = parseInt(wlBtn.dataset.id, 10);
-      var added = wishlist.toggle(id);
-      wlBtn.classList.toggle('wishlisted', added);
-      var svg = wlBtn.querySelector('svg');
-      if (svg) svg.setAttribute('fill', added ? 'currentColor' : 'none');
-    } else if (qvBtn) {
-      e.stopPropagation();
-      prodModal.open(parseInt(qvBtn.dataset.id, 10));
-    } else if (shareBtn) {
-      e.stopPropagation();
-      var sp = getProduct(parseInt(shareBtn.dataset.id, 10));
-      if (sp) shareProduct(sp);
-    } else if (detBtn) {
-      e.stopPropagation();
-      prodModal.open(parseInt(detBtn.dataset.id, 10));
-    } else if (ord) {
-      e.stopPropagation();
-      orderModal.open(parseInt(ord.dataset.id, 10), 1);
-    } else if (addCart) {
-      e.stopPropagation();
-      var p = getProduct(parseInt(addCart.dataset.id, 10));
-      if (p) { cart.add(p.id, 1); showCartToast(IS_AR ? p.nameAr : p.name); }
-    } else if (imgArea) {
-      var imgCard = imgArea.closest('.prod-card');
-      if (imgCard) imgGallery.open(parseInt(imgCard.dataset.id, 10), 0);
-    } else if (card) {
-      prodModal.open(parseInt(card.dataset.id, 10));
-    }
+/* ── New Arrivals strip — newest/"New"-badged products from the
+   live catalog, reusing the same card builder + click handling. ── */
+function renderNewArrival() {
+  var wrap  = document.getElementById('newArrival');
+  var track = document.getElementById('newArrivalTrack');
+  if (!wrap || !track || !PRODUCTS.length) return;
+
+  var items = PRODUCTS.filter(function(p) {
+    return p.badge && p.badge.toLowerCase() === 'new';
+  });
+  if (items.length < 3) items = PRODUCTS.slice(0, 6);
+  items = items.slice(0, 8);
+  if (!items.length) return;
+
+  track.innerHTML = '';
+  items.forEach(function(p) {
+    var card = buildCard(p);
+    card.classList.add('visible');
+    track.appendChild(card);
+  });
+  track.addEventListener('click', pcCardClickHandler);
+  wrap.style.display = '';
+}
+
+/* ── Newsletter — front-end only for now. No backend endpoint exists
+   for storing subscriber emails, so this just confirms the intent to
+   the visitor via the existing cart toast; wire to a real endpoint
+   (e.g. a Supabase table + API route) before relying on it to grow a
+   list. ── */
+function initNewsletterForm() {
+  var form = document.getElementById('newsletterForm');
+  if (!form) return;
+  var btn = form.querySelector('.newsletter-submit');
+  var defaultLabel = btn ? btn.textContent : '';
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var input = document.getElementById('newsletterEmail');
+    var email = input ? input.value.trim() : '';
+    if (!email || !btn) return;
+    btn.textContent = t('Subscribed ✓', 'تم الاشتراك ✓');
+    btn.disabled = true;
+    setTimeout(function() {
+      btn.textContent = defaultLabel;
+      btn.disabled = false;
+      form.reset();
+    }, 2600);
   });
 }
 
@@ -1707,6 +1760,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   slider.init();
   renderProducts();
+  renderNewArrival();
+  initNewsletterForm();
   cart.init();
   prodModal.init();
   orderModal.init();

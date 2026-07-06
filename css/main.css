@@ -694,7 +694,7 @@ html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
   animation:chip-float ease-in-out infinite;
 }
 .chip-1{top:-22px;right:-32px;background:rgba(107,122,79,0.11);border:1px solid rgba(107,122,79,0.30);animation-duration:10s;}
-.chip-2{bottom:30px;left:-44px;background:rgba(11,15,22,0.80);border:1px solid var(--border-2);animation-duration:12s;animation-delay:-6s;}
+.chip-2{bottom:30px;left:-44px;background:rgba(20,20,15,0.80);border:1px solid var(--border-2);animation-duration:12s;animation-delay:-6s;}
 @keyframes chip-float{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-16px) rotate(1deg);}}
 .chip-lbl{font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--grey-600);margin-bottom:3px;}
 .chip-val{font-family:var(--font-display);font-size:18px;font-weight:700;color:#fff;line-height:1.2;}
