@@ -109,6 +109,121 @@
   border-color: rgba(107,122,79,0.50);
 }
 
+/* ── Nav Action Icons (search / wishlist / cart / account) ──
+   Theme-aware via themes.css tokens (--tx-3 etc.) so these render
+   correctly in both the light-luxury default and the dark toggle. ── */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 14px;
+  flex-shrink: 0;
+}
+html[dir="rtl"] .nav-actions { margin-left: 0; margin-right: 14px; }
+
+.nav-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--tx-3, #94a3b8);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.nav-icon-btn svg { stroke: currentColor; display: block; }
+.nav-icon-btn:hover {
+  background: rgba(107,122,79,0.12);
+  border-color: var(--glass-border-teal);
+  color: var(--teal-300);
+  transform: translateY(-1px);
+}
+.nav-icon-btn.is-authed { color: var(--teal-300); }
+.nav-icon-btn.is-authed .af-avatar { width: 24px; height: 24px; border-radius: 50%; }
+.nav-icon-btn.is-authed .pf-login-text { display: none; }
+
+.nav-search-btn.is-active {
+  background: rgba(107,122,79,0.14);
+  border-color: var(--glass-border-teal);
+  color: var(--teal-300);
+}
+
+.nav-icon-badge {
+  position: absolute;
+  top: -1px; right: -1px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--teal-500, #8CA05B);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg-dark, var(--nav-bg));
+}
+html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
+
+@media (max-width: 768px) {
+  .nav-actions { gap: 0; margin-left: auto; margin-right: 6px; }
+  html[dir="rtl"] .nav-actions { margin-right: auto; margin-left: 6px; }
+  .nav-icon-btn { width: 34px; height: 34px; }
+}
+
+/* ── Slide-down search panel ── */
+.nav-search-panel {
+  position: fixed;
+  top: var(--nav-h);
+  left: 0; right: 0;
+  z-index: 195;
+  background: var(--nav-bg-s);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-bottom: 1px solid var(--nav-bd);
+  padding: 20px var(--px);
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+}
+.nav-search-panel.is-open { transform: translateY(0); opacity: 1; pointer-events: all; }
+.nav-search-form {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 640px;
+  margin: 0 auto;
+  color: var(--tx-4, #64748b);
+}
+.nav-search-form svg { flex-shrink: 0; stroke: currentColor; }
+.nav-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bd, rgba(255,255,255,0.14));
+  padding: 8px 2px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--tx, #fff);
+}
+.nav-search-input::placeholder { color: var(--tx-4, #64748b); }
+.nav-search-input:focus { outline: none; border-color: var(--pr, #8CA05B); }
+.nav-search-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--tx-4, #64748b);
+  font-size: 15px;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+.nav-search-close:hover { color: var(--tx, #fff); }
+
 /* ── Mobile toggle ── */
 .nav-burger {
   display: none;

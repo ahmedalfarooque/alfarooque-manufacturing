@@ -1137,7 +1137,7 @@
 [dir="rtl"] .prod-q-badge { right: auto; left: 12px; }
 .prod-q-badge--best-seller  { background: #b45309; }
 .prod-q-badge--new          { background: #15803d; }
-.prod-q-badge--featured     { background: #0e7490; }
+.prod-q-badge--featured     { background: #475569; }
 .prod-q-badge--sale         { background: #b91c1c; }
 .prod-q-badge--limited      { background: #9333ea; }
 .prod-q-badge--custom       { background: #475569; }
@@ -1182,7 +1182,7 @@
   transition: background 0.18s, color 0.18s, transform 0.18s;
   flex-shrink: 0;
 }
-.pqa-btn:hover  { background: var(--pr-1, #06b6d4); color: #fff; transform: scale(1.1); }
+.pqa-btn:hover  { background: var(--pr, #8CA05B); color: #fff; transform: scale(1.1); }
 .pqa-btn.wishlisted { color: #f43f5e; }
 .pqa-btn.wishlisted:hover { background: #f43f5e; color: #fff; }
 .pqa-btn svg    { display: block; pointer-events: none; }
@@ -1286,7 +1286,7 @@
   text-decoration: none;
   transition: color 0.18s;
 }
-.ps-bc-link:hover { color: var(--pr-1, #06b6d4); }
+.ps-bc-link:hover { color: var(--pr, #8CA05B); }
 .ps-bc-sep {
   font-size: 13px;
   color: rgba(255,255,255,0.22);
@@ -1312,7 +1312,7 @@
   text-shadow: 0 2px 24px rgba(7,9,12,0.50);
   min-height: 1.1em; /* reserve one line during typewriter clear */
 }
-.ps-page-title .accent { color: var(--pr-1, #06b6d4); }
+.ps-page-title .accent { color: var(--pr, #8CA05B); }
 
 /* ── Typewriter cursor ─────────────────────────────────────────── */
 .ps-page-title.ps-typing::after {
@@ -1320,7 +1320,7 @@
   display: inline-block;
   width: 3px;
   height: 0.82em;
-  background: var(--pr-1, #06b6d4);
+  background: var(--pr, #8CA05B);
   margin-left: 5px;
   vertical-align: middle;
   border-radius: 2px;
@@ -1335,7 +1335,7 @@
   50%       { opacity: 0; }
 }
 :is(html.light, body.light) .ps-page-title.ps-typing::after {
-  background: #0891b2;
+  background: #6B7A4F;
 }
 .ps-page-sub {
   font-size: 15px;
@@ -1349,7 +1349,7 @@
 /* OS-preference query — kept for non-heading UI elements only */
 @media (prefers-color-scheme: light) {
   .pqa-btn { background: rgba(255,255,255,0.85); color: rgba(26,26,24,0.6); }
-  .pqa-btn:hover { background: var(--pr-1, #06b6d4); color: #fff; }
+  .pqa-btn:hover { background: var(--pr, #8CA05B); color: #fff; }
   .star-empty { color: rgba(26,26,24,0.15); }
   .prod-review-count { color: rgba(26,26,24,0.4); }
   .prod-old-price { color: rgba(26,26,24,0.35); }
@@ -2032,8 +2032,8 @@
   width: 100%;
   padding: 15px 16px;
   border-radius: 10px;
-  background: linear-gradient(100deg, #06b6d4, #0891b2);
-  border: 1px solid #0aa5c2;
+  background: linear-gradient(100deg, #8CA05B, #6B7A4F);
+  border: 1px solid #7D8F5C;
   color: #fff;
   font-family: var(--font-body, inherit);
   font-size: 13px; font-weight: 700;
@@ -2044,7 +2044,7 @@
   transition: box-shadow 0.3s ease, transform 0.3s ease, opacity 0.2s ease;
 }
 .om-submit-btn:hover {
-  box-shadow: 0 8px 28px rgba(6, 182, 212, 0.40);
+  box-shadow: 0 8px 28px rgba(140, 160, 91, 0.40);
   transform: translateY(-2px);
 }
 .om-submit-btn:disabled {
@@ -2067,8 +2067,8 @@
 }
 .om-status-info {
   display: block;
-  background: rgba(6, 182, 212, 0.10);
-  border: 1px solid rgba(6, 182, 212, 0.30);
+  background: rgba(140, 160, 91, 0.10);
+  border: 1px solid rgba(140, 160, 91, 0.30);
   color: #67e8f9;
 }
 .om-status-success {
@@ -2083,7 +2083,7 @@
   border: 1px solid rgba(239, 68, 68, 0.40);
   color: #f87171;
 }
-:is(html.light, body.light) .om-status-info    { color: #0e7490; }
+:is(html.light, body.light) .om-status-info    { color: #475569; }
 :is(html.light, body.light) .om-status-success { color: #15803d; }
 :is(html.light, body.light) .om-status-error   { color: #b91c1c; }
 

@@ -654,6 +654,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (header) header.insertAdjacentElement('beforebegin', toolbar);
   }
 
+  /* Prefill from ?search= — lets the nav search bar on every other page
+     link here with a query pre-applied. */
+  var qParam = new URLSearchParams(location.search).get('search');
+  if (qParam) {
+    pfState.query = qParam;
+    var searchInputEl = toolbar.querySelector('#pfSearchInput');
+    if (searchInputEl) searchInputEl.value = qParam;
+  }
+
   /* Wire events */
   pfWireEvents();
 

@@ -412,6 +412,124 @@ input,textarea,select{font-family:inherit;}
 .nav-mobile.open{transform:translateY(0);opacity:1;pointer-events:all;}
 .nav-mobile a{font-size:18px;font-weight:600;color:var(--grey-400);padding:14px 0;border-bottom:1px solid var(--border-1);transition:color var(--t1);}
 .nav-mobile a:hover{color:var(--teal-300);}
+
+/* ── Nav Action Icons (search / wishlist / cart / account) ──
+   Theme-aware via themes.css tokens (--tx-3 etc.) so these render
+   correctly in both the light-luxury default and the dark toggle.
+   (css/nav.css also defines these but is not linked from any page —
+   main.css is the file that's actually loaded everywhere, so the
+   live copy of this component lives here.) ── */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 14px;
+  flex-shrink: 0;
+}
+html[dir="rtl"] .nav-actions { margin-left: 0; margin-right: 14px; }
+
+.nav-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--tx-3, #94a3b8);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.nav-icon-btn svg { stroke: currentColor; display: block; }
+.nav-icon-btn:hover {
+  background: rgba(107,122,79,0.12);
+  border-color: var(--border-teal);
+  color: var(--teal-300);
+  transform: translateY(-1px);
+}
+.nav-icon-btn.is-authed { color: var(--teal-300); }
+.nav-icon-btn.is-authed .af-avatar { width: 24px; height: 24px; border-radius: 50%; }
+.nav-icon-btn.is-authed .pf-login-text { display: none; }
+
+.nav-search-btn.is-active {
+  background: rgba(107,122,79,0.14);
+  border-color: var(--border-teal);
+  color: var(--teal-300);
+}
+
+.nav-icon-badge {
+  position: absolute;
+  top: -1px; right: -1px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--teal-500, #8CA05B);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg-dark, #14140F);
+}
+html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
+
+@media (max-width: 768px) {
+  .nav-actions { gap: 0; margin-left: auto; margin-right: 6px; }
+  html[dir="rtl"] .nav-actions { margin-right: auto; margin-left: 6px; }
+  .nav-icon-btn { width: 34px; height: 34px; }
+}
+
+/* ── Slide-down search panel ── */
+.nav-search-panel {
+  position: fixed;
+  top: var(--nav-h);
+  left: 0; right: 0;
+  z-index: 195;
+  background: var(--nav-bg-s, rgba(20,20,15,0.92));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-bottom: 1px solid var(--nav-bd, var(--border-1));
+  padding: 20px var(--px);
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+}
+.nav-search-panel.is-open { transform: translateY(0); opacity: 1; pointer-events: all; }
+.nav-search-form {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 640px;
+  margin: 0 auto;
+  color: var(--tx-4, #64748b);
+}
+.nav-search-form svg { flex-shrink: 0; stroke: currentColor; }
+.nav-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bd, rgba(255,255,255,0.14));
+  padding: 8px 2px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--tx, #fff);
+}
+.nav-search-input::placeholder { color: var(--tx-4, #64748b); }
+.nav-search-input:focus { outline: none; border-color: var(--pr, #8CA05B); }
+.nav-search-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--tx-4, #64748b);
+  font-size: 15px;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+.nav-search-close:hover { color: var(--tx, #fff); }
 .nav-mobile a:last-child{border-bottom:none;}
 
 /* ═══ BACKGROUND SYSTEM ═══ */
@@ -1016,11 +1134,17 @@ input,textarea,select{font-family:inherit;}
   .gallery-masonry{columns:2;}
   .machines-grid{grid-template-columns:repeat(2,1fr);}
 }
-@media(max-width:768px){
+/* Raised from 768 to 1100 — the header now also carries the
+   search/wishlist/cart/account icon cluster + language/theme
+   controls, which no longer fit alongside the full link row past
+   that width without wrapping. */
+@media(max-width:1100px){
   :root{--nav-h:64px;}
   .nav-links,.nav-cta{display:none;}
   .nav-burger{display:flex;}
   .hero{padding-top:calc(var(--nav-h)+50px);}
+}
+@media(max-width:768px){
   .stats-grid{grid-template-columns:1fr;}
   .cert-grid{grid-template-columns:1fr;}
   .footer{grid-template-columns:1fr;gap:28px;}
@@ -1042,7 +1166,7 @@ input,textarea,select{font-family:inherit;}
    Component styles moved here so each dedicated page can use them.
    ═══════════════════════════════════════════════════════════ */
 .svc-hero{position:relative;min-height:48vh;display:flex;align-items:flex-end;padding:calc(var(--nav-h) + 60px) var(--px) 60px;overflow:hidden;border-bottom:1px solid var(--border-1);}
-.svc-hero-bg{position:absolute;inset:0;background:linear-gradient(160deg,rgba(107,122,79,0.09) 0%,rgba(11,15,22,0.75) 70%);z-index:0;}
+.svc-hero-bg{position:absolute;inset:0;background:linear-gradient(160deg,rgba(107,122,79,0.09) 0%,rgba(20,20,15,0.75) 70%);z-index:0;}
 .svc-hero-img{position:absolute;top:-18%;left:0;right:0;height:136%;z-index:-1;will-change:transform;}
 .svc-hero-img img{width:100%;height:100%;object-fit:cover;opacity:0.25;}
 .svc-hero-num{position:absolute;right:var(--px);bottom:48px;font-family:var(--font-display);font-size:200px;font-weight:700;color:rgba(255,255,255,0.022);line-height:1;pointer-events:none;z-index:0;}
@@ -1152,7 +1276,7 @@ input,textarea,select{font-family:inherit;}
   box-shadow:0 22px 46px -14px rgba(26,26,24,0.55),0 8px 18px rgba(26,26,24,0.35);
 }
 .gallery3d-card:focus-visible{
-  outline:2px solid var(--teal-200,#a5eef8);outline-offset:4px;
+  outline:2px solid var(--teal-200,#D3DBC4);outline-offset:4px;
 }
 .gallery3d-card img{
   width:100%;height:100%;object-fit:cover;display:block;

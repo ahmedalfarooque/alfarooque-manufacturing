@@ -1712,6 +1712,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   orderModal.init();
   imgGallery.init();
   updateYear();
+
+  /* Nav cart icon (present on every page) links here with ?openCart=1
+     when the page itself has no cart drawer of its own. */
+  if (new URLSearchParams(location.search).get('openCart') === '1') {
+    cart.openDrawer();
+  }
   /* Patch language switcher after it initialises */
   setTimeout(patchLangSwitcher, 50);
 

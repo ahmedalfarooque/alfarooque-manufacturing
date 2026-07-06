@@ -39,8 +39,21 @@
     <li><a href="/products-ar.html">المنتجات</a></li>
     <li><a href="/pages/contact-ar.html" class="nav-cta">اتصل بنا</a></li>
   </ul>
+  <div class="nav-actions">
+    <button type="button" class="nav-icon-btn nav-search-btn" id="navSearchBtn" aria-label="Search" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+    <a href="/products.html" class="nav-icon-btn nav-wishlist-btn" id="navWishlistBtn" aria-label="Wishlist"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span class="nav-icon-badge" id="navWishlistBadge" hidden>0</span></a>
+    <button type="button" class="nav-icon-btn nav-cart-btn" id="navCartBtn" aria-label="Cart"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg><span class="nav-icon-badge" id="navCartBadge" hidden>0</span></button>
+    <button type="button" class="nav-icon-btn nav-acct-btn" id="navAcctBtn" data-af-login aria-label="Account"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></button>
+  </div>
   <button class="nav-burger"><span></span><span></span><span></span></button>
 </nav>
+<div class="nav-search-panel" id="navSearchPanel" hidden>
+  <form id="navSearchForm" class="nav-search-form" role="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input type="search" id="navSearchInput" class="nav-search-input" placeholder="Search products…" aria-label="Search products" autocomplete="off">
+    <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Close search">&#x2715;</button>
+  </form>
+</div>
 <div class="nav-mobile">
   <a href="/index-ar.html">الرئيسية</a><a href="/pages/about-ar.html">من نحن</a><a href="/pages/services-ar.html">خدماتنا</a>
   <a href="/pages/woodworks-ar.html" class="nav-mobile-sub">الأعمال الخشبية</a>
@@ -58,7 +71,7 @@
   <div class="ph-overlay" aria-hidden="true"></div>
   <div class="container">
     <div class="eyebrow reveal ph-hero-el" style="justify-content:center;">ما نصنعه</div>
-    <h1 class="page-hero-title reveal d1 ph-hero-el ph-d2">أقسام <span style="background:linear-gradient(100deg,#22c4de,#a5eef8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">التصنيع</span></h1>
+    <h1 class="page-hero-title reveal d1 ph-hero-el ph-d2">أقسام <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">التصنيع</span></h1>
     <p class="page-hero-body reveal d2 ph-hero-el ph-d3">ثلاثة أقسام متخصصة. معيار واحد موحد للدقة والجودة والحرفية.</p>
   </div>
 </div>
@@ -141,6 +154,7 @@
 <script src="/js/machinery.js"></script>
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>
+<script src="/js/nav-actions.js"></script>
 <!-- ── Authentication (Supabase) ── -->
 <script src="/js/auth/config.js"></script>
 <script type="module" src="/js/auth/auth-ui.js"></script>

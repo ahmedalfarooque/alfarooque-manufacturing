@@ -224,7 +224,7 @@ body:has(#acctGate:not([hidden])) .acct-topbar { display: none; }
   position: relative; overflow: hidden;
 }
 .acct-stat:hover { transform: translateY(-4px); }
-.acct-stat--orders:hover { border-color: rgba(6,182,212,0.5); box-shadow: 0 8px 28px rgba(6,182,212,0.16); }
+.acct-stat--orders:hover { border-color: rgba(140,160,91,0.5); box-shadow: 0 8px 28px rgba(140,160,91,0.16); }
 .acct-stat--wish:hover   { border-color: rgba(248,113,113,0.5); box-shadow: 0 8px 28px rgba(248,113,113,0.16); }
 .acct-stat--addr:hover   { border-color: rgba(74,222,128,0.5); box-shadow: 0 8px 28px rgba(74,222,128,0.16); }
 .acct-stat--verify:hover { border-color: rgba(251,191,36,0.5); box-shadow: 0 8px 28px rgba(251,191,36,0.16); }
@@ -235,7 +235,7 @@ body:has(#acctGate:not([hidden])) .acct-topbar { display: none; }
   width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
   border-radius: var(--r-sm); margin-bottom: 4px; flex-shrink: 0;
 }
-.acct-stat-icon-wrap--orders { background: rgba(6,182,212,0.14); color: #22d3ee; }
+.acct-stat-icon-wrap--orders { background: rgba(140,160,91,0.14); color: #A3B873; }
 .acct-stat-icon-wrap--wish   { background: rgba(248,113,113,0.14); color: #f87171; }
 .acct-stat-icon-wrap--addr   { background: rgba(74,222,128,0.14); color: #4ade80; }
 .acct-stat-icon-wrap--verify { background: rgba(251,191,36,0.14); color: #fbbf24; }
@@ -276,7 +276,7 @@ body:has(#acctGate:not([hidden])) .acct-topbar { display: none; }
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   border-radius: var(--r-sm); flex-shrink: 0;
 }
-.acct-quick-icon--profile { background: rgba(6,182,212,0.12); color: #22d3ee; }
+.acct-quick-icon--profile { background: rgba(140,160,91,0.12); color: #A3B873; }
 .acct-quick-icon--orders  { background: rgba(139,92,246,0.12); color: #a78bfa; }
 .acct-quick-icon--addr    { background: rgba(74,222,128,0.12); color: #4ade80; }
 .acct-quick-icon--pw      { background: rgba(251,191,36,0.12); color: #fbbf24; }
@@ -526,7 +526,7 @@ select.af-input {
 }
 .acct-order-status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .acct-order-status--pending    { background: rgba(251,191,36,0.14); color: #fbbf24; }
-.acct-order-status--confirmed  { background: rgba(6,182,212,0.14); color: #22d3ee; }
+.acct-order-status--confirmed  { background: rgba(140,160,91,0.14); color: #A3B873; }
 .acct-order-status--processing { background: rgba(139,92,246,0.14); color: #a78bfa; }
 .acct-order-status--completed  { background: rgba(74,222,128,0.14); color: #4ade80; }
 .acct-order-status--cancelled  { background: rgba(248,113,113,0.14); color: #f87171; }
@@ -593,7 +593,7 @@ select.af-input {
 .acct-addr-label { font-weight: 700; color: var(--tx); font-size: 14px; }
 .acct-addr-default {
   display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700;
-  background: rgba(6,182,212,0.14); color: var(--pr-2); border: 1px solid var(--bd-teal-2);
+  background: rgba(140,160,91,0.14); color: var(--pr-2); border: 1px solid var(--bd-teal-2);
 }
 .acct-addr-text { font-size: 13px; color: var(--tx-3); line-height: 1.65; }
 .acct-addr-text--sub { font-size: 12px; color: var(--tx-4); }

@@ -450,10 +450,10 @@ function renderAccountControls(user) {
       host.appendChild(wrap);
     }
   });
-  /* Products toolbar button = the ONLY login entry point. It becomes the
-     e-commerce user menu (avatar/initial + name) once logged in. */
-  const pf = document.getElementById('pfLoginBtn');
-  if (pf) {
+  /* Products toolbar button (#pfLoginBtn) and any nav-level account
+     buttons (.nav-acct-btn) all become the e-commerce user menu
+     (avatar/initial + name) once logged in. */
+  document.querySelectorAll('#pfLoginBtn, .nav-acct-btn').forEach(function (pf) {
     if (user) {
       pf.classList.add('is-authed');
       pf.setAttribute('aria-haspopup', 'true');
@@ -468,7 +468,7 @@ function renderAccountControls(user) {
       pf.innerHTML = '<span class="af-login-ico" style="display:inline-flex;width:16px;height:16px;">' + ICON.user +
         '</span><span class="pf-login-text">' + t('Login','تسجيل الدخول') + '</span>';
     }
-  }
+  });
 }
 
 function buildDropdown() {
@@ -482,7 +482,7 @@ function buildDropdown() {
   dropdownEl = el;
   document.addEventListener('click', function (e) {
     if (!dropdownEl || dropdownEl.hidden) return;
-    if (!dropdownEl.contains(e.target) && !e.target.closest('[data-af-acct], #pfLoginBtn.is-authed')) closeDropdown();
+    if (!dropdownEl.contains(e.target) && !e.target.closest('[data-af-acct], #pfLoginBtn.is-authed, .nav-acct-btn.is-authed')) closeDropdown();
   });
   window.addEventListener('resize', closeDropdown);
   return el;
@@ -530,11 +530,13 @@ function closeDropdown() {
 /* ════════════════════════════════════════════════════════════════
    NAV INJECTION + GLOBAL EVENT DELEGATION
    ════════════════════════════════════════════════════════════════ */
-/* The main site stays fully public — the ONLY login entry point is the
-   Products toolbar button (#pfLoginBtn). We do NOT inject any account
-   control into the main navigation. (Pages that genuinely need an inline
-   account control, e.g. account.html, carry their own [data-af-account]
-   host in markup; renderAccountControls() still populates those.) */
+/* The main site stays fully public. Login entry points are the Products
+   toolbar button (#pfLoginBtn) and the account icon in the main nav
+   (.nav-acct-btn, marked data-af-login) — both become the e-commerce
+   user menu (avatar/initial + name) once logged in, kept in sync by
+   renderAccountControls(). (Pages that need an inline account control,
+   e.g. account.html, carry their own [data-af-account] host in markup;
+   renderAccountControls() still populates those.) */
 
 /* ── Route protection: gate commerce actions behind login ──────────────
    Capture phase runs before products.js's bubble handlers, so stopping
