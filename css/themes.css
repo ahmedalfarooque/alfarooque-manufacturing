@@ -26,12 +26,72 @@
     color 0.3s ease;
 }
 
-/* ══ LIGHT LUXURY TOKENS (the only theme — dark mode retired) ══
-   Kept the same variable names as the old dark-default system so every
-   consumer across nav/hero/cards/forms/footer keeps working unchanged;
-   only the values moved from a dark glass palette to a warm, minimal
-   light one (pure white / warm light gray / olive accent). */
+/* ══ DARK TOKENS (default) — warm olive-branded dark, matches the
+   light-luxury palette's accent (olive instead of the old teal) ══ */
 :root {
+  --bg:        #14140F;
+  --bg-2:      #1B1B14;
+  --bg-3:      #22221A;
+  --bg-card:   rgba(255,255,255,0.05);
+  --bg-card-2: rgba(255,255,255,0.08);
+  --bg-card-3: rgba(255,255,255,0.12);
+  --bg-teal:   rgba(140,160,91,0.09);
+  --bg-teal-2: rgba(140,160,91,0.16);
+  --bd:        rgba(255,255,255,0.08);
+  --bd-2:      rgba(255,255,255,0.14);
+  --bd-3:      rgba(255,255,255,0.22);
+  --bd-teal:   rgba(140,160,91,0.34);
+  --bd-teal-2: rgba(140,160,91,0.60);
+  --tx:        #F5F3EE;
+  --tx-90:     rgba(245,243,238,0.90);
+  --tx-70:     rgba(245,243,238,0.70);
+  --tx-40:     rgba(245,243,238,0.40);
+  --tx-2:      #D6D2C4;
+  --tx-3:      #A8A497;
+  --tx-4:      #79766B;
+  --pr:        #8CA05B;
+  --pr-2:      #A3B873;
+  --ac:        #B9CC8B;
+  --ac-2:      #CFDDA8;
+  --sh-sm:     0 2px 12px rgba(0,0,0,0.40);
+  --sh-md:     0 8px 32px rgba(0,0,0,0.50);
+  --sh-lg:     0 20px 60px rgba(0,0,0,0.60);
+  --sh-xl:     0 40px 100px rgba(0,0,0,0.65);
+  --sh-btn:    0 4px 24px rgba(140,160,91,0.42);
+  --sh-btn-h:  0 10px 36px rgba(140,160,91,0.62);
+  --gw-xs:     0 0 12px rgba(140,160,91,0.28);
+  --gw-sm:     0 0 24px rgba(140,160,91,0.36);
+  --gw-md:     0 0 55px rgba(140,160,91,0.24), 0 0 110px rgba(140,160,91,0.10);
+  --gw-lg:     0 0 80px rgba(140,160,91,0.35), 0 0 160px rgba(140,160,91,0.14);
+  --nav-bg:    rgba(20,20,15,0.55);
+  --nav-bg-s:  rgba(20,20,15,0.92);
+  --nav-bd:    rgba(255,255,255,0.07);
+  --fm-bg:     rgba(255,255,255,0.04);
+  --fm-bd:     rgba(255,255,255,0.09);
+  --fm-ph:     #57544A;
+  --ft-bg:     #0D0D09;
+  --sc-t:      #8CA05B;
+  --env-orb1:  rgba(140,160,91,0.16);
+  --env-orb2:  rgba(163,184,115,0.10);
+  --env-grid:  rgba(140,160,91,0.032);
+  --env-ray:   rgba(140,160,91,0.22);
+  --env-pt:    rgba(140,160,91,0.55);
+
+  /* New named tokens from the brief, for use by product/e-commerce
+     components (badges, success states) that don't map to an existing
+     --pr/--ac slot. */
+  --terracotta:      #D98A67;
+  --terracotta-bg:   rgba(217,138,103,0.14);
+  --success:         #9BC378;
+  --success-bg:      rgba(155,195,120,0.14);
+  --beige:           #3A362B;
+}
+
+/* ══ LIGHT LUXURY TOKENS ══
+   Pure white / warm light gray / olive accent — the site's default
+   theme. Kept the same variable names as the dark tokens above so
+   every consumer across nav/hero/cards/forms/footer works unchanged. */
+:is(html.light, body.light) {
   --bg:        #FFFFFF;
   --bg-2:      #F7F5F1;
   --bg-3:      #F1EEE7;

@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════
-   AL FAROOQUE MANUFACTURING — THEME SWITCHER v4.1
-   ▸ Dark is ALWAYS default for first-time visitors
+   AL FAROOQUE MANUFACTURING — THEME SWITCHER v4.2
+   ▸ Light is ALWAYS default for first-time visitors
    ▸ Reads localStorage key: "theme" ("dark"|"light")
-   ▸ No system-preference override — dark always wins
+   ▸ No system-preference override — light always wins
    ▸ Flash-free: early script in <head> handles first paint
    ═══════════════════════════════════════════════════════ */
 'use strict';
@@ -11,11 +11,11 @@
   var STORE = 'theme';
 
   if (!localStorage.getItem(STORE)) {
-    localStorage.setItem(STORE, 'dark');
+    localStorage.setItem(STORE, 'light');
   }
 
   function current() {
-    return localStorage.getItem(STORE) || 'dark';
+    return localStorage.getItem(STORE) || 'light';
   }
 
   /* Cached button list — populated once after DOMContentLoaded */
@@ -84,7 +84,7 @@
     d.id = 'theme-overlay';
     d.style.cssText =
       'position:fixed;inset:0;z-index:9990;pointer-events:none;' +
-      'background:#0b0f14;opacity:0;transition:opacity 0.18s ease;';
+      'background:#14140F;opacity:0;transition:opacity 0.18s ease;';
     document.body.appendChild(d);
     /* Style already defined in themes.css — no dynamic <style> injection needed */
   }

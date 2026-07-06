@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
 <head>
-<script>/* language from ?lang */(function(){var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("language");if(q)localStorage.setItem("language",q);if(l==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}else{document.documentElement.lang="en";document.documentElement.dir="ltr";}})();</script>
+<script>/* light default, flash-free + language from ?lang */(function(){var t=localStorage.getItem("theme");if(!t){t="light";localStorage.setItem("theme","light");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}var q=new URLSearchParams(location.search).get("lang");var l=q||localStorage.getItem("language");if(q)localStorage.setItem("language",q);if(l==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}else{document.documentElement.lang="en";document.documentElement.dir="ltr";}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex">
@@ -582,6 +582,7 @@
      used site-wide), so the dashboard shell below is unaffected. -->
 <script src="/js/main.js"></script>
 <script src="/js/language-switcher.js"></script>
+<script src="/js/theme-switcher.js"></script>
 <script src="/js/auth/config.js"></script>
 <script type="module" src="/js/auth/auth-ui.js"></script>
 <script type="module" src="/js/auth/account.js"></script>
