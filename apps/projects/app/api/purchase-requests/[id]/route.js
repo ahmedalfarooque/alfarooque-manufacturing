@@ -91,9 +91,10 @@ export async function PATCH(req, { params }) {
     /* Also notify the requester so they see the status change without polling — mirrors the admin-notification-on-create below. */
     const { data: prRow } = await sb.from('pm_purchase_requests').select('requested_by').eq('id', params.id).maybeSingle();
     if (prRow?.requested_by) {
+      const notifType = patch.status === 'Approved' ? 'purchase_approved' : patch.status === 'Rejected' ? 'purchase_rejected' : 'purchase_request';
       await sb.from('notifications').insert({
         user_id: prRow.requested_by,
-        type: 'purchase_request',
+        type: notifType, project_id: existing.project_id,
         title: `Purchase Request ${patch.status}`,
         body: existing.material_description,
         link: `/projects/${existing.project_id}?tab=purchase-requests`,

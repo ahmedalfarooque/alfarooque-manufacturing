@@ -36,7 +36,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response, session } = requireSession(req, { adminOnly: true });
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));
@@ -59,6 +59,18 @@ export async function PATCH(req, { params }) {
   if ('progress' in patch) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Completion changed to ${patch.progress}%` });
   const otherFieldsChanged = Object.keys(patch).some(k => k !== 'status' && k !== 'progress');
   if (otherFieldsChanged) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: 'Project Edited' });
+
+  const { data: assignees } = await sb.from('pm_project_assignees').select('user_id').eq('project_id', params.id);
+  const notifyIds = (assignees || []).map(a => a.user_id).filter(id => id !== session.sub);
+  if (notifyIds.length) {
+    const summary = patch.status ? `Status changed to ${patch.status}` : 'Project details updated';
+    await sb.from('notifications').insert(notifyIds.map(uid => ({
+      user_id: uid, type: 'project_updated', project_id: params.id,
+      title: 'Project Updated', body: summary,
+      link: `/projects/${params.id}`,
+    }))).catch(() => {});
+  }
+
   return json({ project: data });
 }
 

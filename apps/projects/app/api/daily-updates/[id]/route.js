@@ -75,8 +75,9 @@ export async function PATCH(req, { params }) {
   await sb.from('pm_project_logs').insert({ project_id: existing.project_id, activity: patch.status ? `Daily Update ${patch.status}` : 'Daily Update Edited' });
 
   if (patch.status && existing.author_id) {
+    const notifType = patch.status === 'Approved' ? 'daily_update_approved' : patch.status === 'Rejected' ? 'daily_update_rejected' : 'daily_update';
     await sb.from('notifications').insert({
-      user_id: existing.author_id, type: 'daily_update', title: `Daily Update ${patch.status}`,
+      user_id: existing.author_id, type: notifType, project_id: existing.project_id, title: `Daily Update ${patch.status}`,
       link: `/projects/${existing.project_id}?tab=daily-updates`,
     }).catch(() => {});
   }

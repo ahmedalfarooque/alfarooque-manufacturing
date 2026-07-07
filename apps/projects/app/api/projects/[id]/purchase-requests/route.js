@@ -65,7 +65,7 @@ export async function POST(req, { params }) {
   const { data: admins } = await sb.from('platform_users').select('id').eq('role', 'admin');
   if (admins?.length) {
     await sb.from('notifications').insert(admins.map(a => ({
-      user_id: a.id, type: 'purchase_request', title: 'New Purchase Request',
+      user_id: a.id, type: 'purchase_request', project_id: params.id, title: 'New Purchase Request',
       body: `${materialDescription} — ${project.project_name}`, link,
     }))).catch(() => {});
   }

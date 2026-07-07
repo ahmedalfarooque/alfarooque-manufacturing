@@ -28,7 +28,7 @@ export async function POST(req, { params }) {
   if (response) return response;
 
   const sb = getDb();
-  const { data: pr } = await sb.from('pm_purchase_requests').select('project_id').eq('id', params.id).maybeSingle();
+  const { data: pr } = await sb.from('pm_purchase_requests').select('project_id, requested_by, material_description').eq('id', params.id).maybeSingle();
   if (!pr) return json({ error: 'Purchase request not found.' }, 404);
   if (!(await isAssignedOrAdmin(session, pr.project_id))) return json({ error: 'Not permitted.' }, 403);
 
@@ -42,6 +42,16 @@ export async function POST(req, { params }) {
     comment,
   }).select('*, platform_users(full_name, email)').single();
   if (error) { console.error('[pr-comments] create failed:', error.message); return json({ error: 'Could not add comment.' }, 500); }
+
+  // Notify the requester when someone else comments — never notify yourself for your own comment.
+  if (pr.requested_by && pr.requested_by !== session.sub) {
+    await sb.from('notifications').insert({
+      user_id: pr.requested_by, type: 'comment_added', project_id: pr.project_id,
+      title: 'New Comment on Purchase Request',
+      body: `${data.platform_users?.full_name || data.platform_users?.email || 'Someone'}: ${comment.slice(0, 120)}`,
+      link: `/purchase-requests/${params.id}`,
+    }).catch(() => {});
+  }
 
   return json({ comment: { ...data, author_name: data.platform_users?.full_name || data.platform_users?.email || null, platform_users: undefined } }, 201);
 }

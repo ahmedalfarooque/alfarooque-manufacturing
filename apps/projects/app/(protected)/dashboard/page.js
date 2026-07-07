@@ -143,28 +143,71 @@ export default function DashboardPage() {
         <ProjectListCard title="Upcoming Projects" projects={stats.upcomingProjects} dateKey="start_date" dateLabel="Start" />
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
-        <h3 className="font-medium text-sm mb-3">Latest Purchase Requests</h3>
-        {stats.purchaseRequests.recent.length === 0 ? (
-          <div className="text-sm text-slate-400 py-6 text-center">No purchase requests yet.</div>
-        ) : (
-          <ul className="space-y-1">
-            {stats.purchaseRequests.recent.map(r => (
-              <li key={r.id}>
-                <button type="button" onClick={() => { window.location.href = '/projects/' + r.project_id + '?tab=purchase-requests'; }}
-                  className="w-full text-left text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium truncate">{r.material_description}</span>
-                    <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (PR_STATUS_BADGE[r.status] || '')}>{r.status}</span>
-                  </div>
-                  <div className="text-xs text-slate-500">{r.project_name} · {r.priority} · {new Date(r.created_at).toLocaleDateString()}</div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <h3 className="font-medium text-sm mb-3">Latest Purchase Requests</h3>
+          {stats.purchaseRequests.recent.length === 0 ? (
+            <div className="text-sm text-slate-400 py-6 text-center">No purchase requests yet.</div>
+          ) : (
+            <ul className="space-y-1">
+              {stats.purchaseRequests.recent.map(r => (
+                <li key={r.id}>
+                  <button type="button" onClick={() => { window.location.href = '/projects/' + r.project_id + '?tab=purchase-requests'; }}
+                    className="w-full text-left text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate">{r.material_description}</span>
+                      <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (PR_STATUS_BADGE[r.status] || '')}>{r.status}</span>
+                    </div>
+                    <div className="text-xs text-slate-500">{r.project_name} · {r.priority} · {new Date(r.created_at).toLocaleDateString()}</div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <RecentNotificationsCard />
       </div>
     </Shell>
+  );
+}
+
+function RecentNotificationsCard() {
+  const { data, refresh } = useLiveData('/api/notifications', REFRESH_MS);
+  const notifications = (data?.notifications || []).slice(0, 6);
+
+  async function open(n) {
+    if (!n.is_read) {
+      await fetch(`/api/notifications/${n.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ is_read: true }),
+      }).catch(() => {});
+      refresh();
+    }
+    if (n.link) window.location.href = n.link;
+  }
+
+  return (
+    <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+      <h3 className="font-medium text-sm mb-3">Recent Notifications</h3>
+      {notifications.length === 0 ? (
+        <div className="text-sm text-slate-400 py-6 text-center">No notifications yet.</div>
+      ) : (
+        <ul className="space-y-1">
+          {notifications.map(n => (
+            <li key={n.id}>
+              <button type="button" onClick={() => open(n)}
+                className={'w-full text-left text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition ' + (n.is_read ? 'opacity-60' : '')}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium truncate">{n.title}</span>
+                  {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-500 shrink-0" />}
+                </div>
+                {n.body && <div className="text-xs text-slate-500 truncate">{n.body}</div>}
+                <div className="text-[11px] text-slate-400">{new Date(n.created_at).toLocaleString()}</div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -236,6 +279,10 @@ function ExternalDashboard({ stats, error }) {
             </ul>
           )}
         </div>
+      </div>
+
+      <div className="mt-4">
+        <RecentNotificationsCard />
       </div>
     </Shell>
   );

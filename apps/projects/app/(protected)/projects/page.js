@@ -250,6 +250,9 @@ export function ProjectModal({ modal, onClose, onSave }) {
           })),
           ...toRemove.map(id => fetch(`/api/projects/${projectId}/assignees/${id}`, { method: 'DELETE', credentials: 'same-origin' })),
         ]);
+        if (toAdd.length > 0) {
+          alert(`Assigned successfully to ${toAdd.length} user${toAdd.length === 1 ? '' : 's'}.`);
+        }
       }
     }
     catch (e2) { setErr(e2.message); }

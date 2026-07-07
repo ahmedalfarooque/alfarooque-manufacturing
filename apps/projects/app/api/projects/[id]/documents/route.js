@@ -52,6 +52,16 @@ export async function POST(req, { params }) {
 
   await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Files Uploaded: ${file.name}` });
 
+  const { data: assignees } = await sb.from('pm_project_assignees').select('user_id').eq('project_id', params.id);
+  const notifyIds = (assignees || []).map(a => a.user_id).filter(id => id !== session.sub);
+  if (notifyIds.length) {
+    await sb.from('notifications').insert(notifyIds.map(uid => ({
+      user_id: uid, type: 'document_added', project_id: params.id,
+      title: 'Document Added', body: file.name,
+      link: `/projects/${params.id}?tab=documents`,
+    }))).catch(() => {});
+  }
+
   return json({ document: { ...row, url: `/api/projects/${params.id}/documents/${row.id}` } }, 201);
 }
 
