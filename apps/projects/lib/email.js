@@ -63,15 +63,34 @@ async function sendViaResend(p) {
   return { id: data.id };
 }
 
+/* General-purpose sender used by the Purchase Request / Daily Update
+   notification emails — same Resend account/retry logic as the OTP
+   flow below, just not shaped around a one-time code. Defaults `to`
+   to EMAIL_TO (the admin inbox already configured in .env.local) so
+   callers can omit it entirely for "notify the admin" emails. */
+async function sendEmail({ to, subject, html, mockLabel }) {
+  const recipient = to || env('EMAIL_TO');
+  if (!recipient) {
+    console.warn('[email:MOCK] ' + (mockLabel || 'Notification') + ' — no recipient (set EMAIL_TO in apps/projects/.env.local).');
+    return { mocked: true };
+  }
+  if (!isConfigured()) {
+    console.warn('[email:MOCK] ' + (mockLabel || 'Notification') + ' for ' + recipient +
+      '  (set RESEND_API_KEY in apps/projects/.env.local to send real emails)');
+    return { mocked: true };
+  }
+  const from = env('EMAIL_FROM') || 'noreply@alfarooque.com';
+  await withRetries(() => sendViaResend({ to: recipient, from, subject, html }));
+  return { mocked: false };
+}
+
 async function sendOtpEmail({ to, subject, html, mockLabel, code }) {
   if (!isConfigured()) {
     console.warn('[email:MOCK] ' + (mockLabel || 'OTP') + ' for ' + to + ' — code: ' + code +
       '  (set RESEND_API_KEY in apps/projects/.env.local to send real emails)');
     return { mocked: true };
   }
-  const from = env('EMAIL_FROM') || 'noreply@alfarooque.com';
-  await withRetries(() => sendViaResend({ to, from, subject, html }));
-  return { mocked: false };
+  return sendEmail({ to, subject, html, mockLabel });
 }
 
-module.exports = { isConfigured, sendOtpEmail };
+module.exports = { isConfigured, sendOtpEmail, sendEmail };

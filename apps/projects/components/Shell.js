@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: '▦' },
   { href: '/projects', label: 'Projects', icon: '\u{1F4C1}' },
+  { href: '/purchase-requests', label: 'Purchase Requests', icon: '\u{1F9FE}', adminOnly: true },
   { href: '/customers', label: 'Customers', icon: '\u{1F465}' },
 ];
 
@@ -60,7 +61,7 @@ export default function Shell({ children, active }) {
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2">
-          {NAV.map(item => (
+          {NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
             <a key={item.href} href={item.href}
               className={
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ' +

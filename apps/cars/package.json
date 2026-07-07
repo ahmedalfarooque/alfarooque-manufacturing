@@ -4,7 +4,7 @@
   "private": true,
   "description": "AL FAROOQUE — Cars Tracking System (deployed independently at cars.alfarooque.com)",
   "scripts": {
-    "dev": "next dev -p 3010",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start -p 3010",
     "lint": "next lint"

@@ -12,6 +12,14 @@ const STATUS_BADGE = {
   Upcoming: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   'On Hold': 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
+const PR_STATUS_BADGE = {
+  Pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  Approved: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  Rejected: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  Ordered: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  Delivered: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
+  Completed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+};
 const REFRESH_MS = 15000;
 
 export default function DashboardPage() {
@@ -33,6 +41,19 @@ export default function DashboardPage() {
         <StatCard icon="✔" tone="emerald" label="Completed Projects" value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% of total`} href="/projects?status=Completed" />
         <StatCard icon={'\u{1F4C5}'} tone="amber" label="Upcoming Projects" value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% of total`} href="/projects?status=Upcoming" />
         <StatCard icon="⏸" tone="red" label="On Hold Projects" value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% of total`} href={'/projects?status=' + encodeURIComponent('On Hold')} />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <StatCard icon={'\u{1F9FE}'} tone="amber" label="PR: Pending" value={stats.purchaseRequests.pending} sub="Awaiting review" href="/purchase-requests?status=Pending" />
+        <StatCard icon="✔" tone="blue" label="PR: Approved" value={stats.purchaseRequests.approved} sub="Approved requests" href="/purchase-requests?status=Approved" />
+        <StatCard icon="⚠" tone="red" label="PR: Urgent" value={stats.purchaseRequests.urgent} sub="Urgent/Critical pending" href="/purchase-requests?status=Pending" />
+        <StatCard icon={'\u{1F4CB}'} tone="brand" label="PR: All Requests" value={stats.purchaseRequests.recent.length ? stats.purchaseRequests.pending + stats.purchaseRequests.approved : 0} sub="View all" href="/purchase-requests" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={'\u{1F4C6}'} tone="emerald" label="Updates Today" value={stats.dailyUpdates.today} sub="Submitted today" href="/projects" />
+        <StatCard icon={'\u{1F4C5}'} tone="slate" label="Updates Yesterday" value={stats.dailyUpdates.yesterday} sub="Submitted yesterday" href="/projects" />
+        <StatCard icon={'\u{1F4C8}'} tone="blue" label="This Week" value={stats.dailyUpdates.thisWeek} sub="Last 7 days" href="/projects" />
+        <StatCard icon={'\u{1F6A8}'} tone="red" label="Missing Updates" value={stats.dailyUpdates.missing} sub="Assigned projects, no update today" href="/projects" />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">
@@ -87,10 +108,32 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid lg:grid-cols-3 gap-4 mb-6">
         <ProjectListCard title="Running Projects" projects={stats.runningProjects} dateKey="end_date" dateLabel="End" />
         <ProjectListCard title="Recently Completed" projects={stats.recentlyCompleted} dateKey="end_date" dateLabel="End" />
         <ProjectListCard title="Upcoming Projects" projects={stats.upcomingProjects} dateKey="start_date" dateLabel="Start" />
+      </div>
+
+      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <h3 className="font-medium text-sm mb-3">Latest Purchase Requests</h3>
+        {stats.purchaseRequests.recent.length === 0 ? (
+          <div className="text-sm text-slate-400 py-6 text-center">No purchase requests yet.</div>
+        ) : (
+          <ul className="space-y-1">
+            {stats.purchaseRequests.recent.map(r => (
+              <li key={r.id}>
+                <button type="button" onClick={() => { window.location.href = '/projects/' + r.project_id + '?tab=purchase-requests'; }}
+                  className="w-full text-left text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium truncate">{r.material_description}</span>
+                    <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (PR_STATUS_BADGE[r.status] || '')}>{r.status}</span>
+                  </div>
+                  <div className="text-xs text-slate-500">{r.project_name} · {r.priority} · {new Date(r.created_at).toLocaleDateString()}</div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </Shell>
   );

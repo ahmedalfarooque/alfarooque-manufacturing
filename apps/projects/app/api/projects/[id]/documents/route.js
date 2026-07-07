@@ -50,6 +50,8 @@ export async function POST(req, { params }) {
     return json({ error: 'Could not save the upload record. Please try again.' }, 500);
   }
 
+  await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Files Uploaded: ${file.name}` });
+
   return json({ document: { ...row, url: `/api/projects/${params.id}/documents/${row.id}` } }, 201);
 }
 

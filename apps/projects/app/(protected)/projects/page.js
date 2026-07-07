@@ -182,10 +182,63 @@ export function ProjectModal({ modal, onClose, onSave }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
 
+  const [allUsers, setAllUsers] = useState([]);
+  const [assigneeIds, setAssigneeIds] = useState(new Set());
+  const [initialAssigneeIds, setInitialAssigneeIds] = useState(new Set());
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [newUserInfo, setNewUserInfo] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/users', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setAllUsers(d.users || []));
+  }, []);
+  useEffect(() => {
+    if (modal.mode !== 'edit' || !modal.data.id) return;
+    fetch(`/api/projects/${modal.data.id}/assignees`, { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return;
+      const ids = new Set((d.assignees || []).map(u => u.id));
+      setAssigneeIds(ids);
+      setInitialAssigneeIds(ids);
+    });
+  }, [modal.mode, modal.data.id]);
+
+  function toggleAssignee(id) {
+    setAssigneeIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function submitNewUser(userForm) {
+    const res = await fetch('/api/users', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+      body: JSON.stringify(userForm),
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error);
+    setAllUsers(prev => [...prev, d.user].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')));
+    setAssigneeIds(prev => new Set([...prev, d.user.id]));
+    setNewUserInfo({ name: d.user.full_name, email: d.user.email, password: d.temp_password });
+    setAddUserOpen(false);
+  }
+
   async function submit(e) {
     e.preventDefault();
     setBusy(true); setErr(null);
-    try { await onSave(form, modal.mode, modal.data.id); }
+    try {
+      const saved = await onSave(form, modal.mode, modal.data.id);
+      const projectId = modal.data.id || saved?.id;
+      if (projectId) {
+        const toAdd = [...assigneeIds].filter(id => !initialAssigneeIds.has(id));
+        const toRemove = [...initialAssigneeIds].filter(id => !assigneeIds.has(id));
+        await Promise.all([
+          ...toAdd.map(id => fetch(`/api/projects/${projectId}/assignees`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ user_id: id }),
+          })),
+          ...toRemove.map(id => fetch(`/api/projects/${projectId}/assignees/${id}`, { method: 'DELETE', credentials: 'same-origin' })),
+        ]);
+      }
+    }
     catch (e2) { setErr(e2.message); }
     setBusy(false);
   }
@@ -232,6 +285,79 @@ export function ProjectModal({ modal, onClose, onSave }) {
           </div>
           <Field label="Progress %" value={form.progress ?? 0} onChange={set('progress')} type="number" min={0} max={100} />
         </div>
+
+        <div className="pt-2 border-t border-black/5 dark:border-white/10">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-semibold">Assigned Users</h4>
+            <button type="button" onClick={() => setAddUserOpen(true)} className="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white">+ Add User</button>
+          </div>
+          {newUserInfo && (
+            <div className="mb-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs space-y-1">
+              <div className="font-medium text-emerald-600 dark:text-emerald-400">
+                User "{newUserInfo.name}" created — share this temporary password (shown only once):
+              </div>
+              <div className="font-mono text-sm select-all">{newUserInfo.email} / {newUserInfo.password}</div>
+              <button type="button" onClick={() => setNewUserInfo(null)} className="text-slate-500 underline">Dismiss</button>
+            </div>
+          )}
+          <div className="rounded-lg border border-black/10 dark:border-white/10 max-h-48 overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead className="text-left text-slate-400 sticky top-0 bg-white dark:bg-[#0f172a]">
+                <tr>
+                  <th className="py-2 px-3 w-8"></th>
+                  <th className="py-2 px-3">Name</th>
+                  <th className="py-2 px-3">Email</th>
+                  <th className="py-2 px-3">Position</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allUsers.length === 0 ? (
+                  <tr><td colSpan={4} className="py-4 text-center text-slate-400">No users yet — click "+ Add User".</td></tr>
+                ) : allUsers.map(u => (
+                  <tr key={u.id} className="border-t border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]" onClick={() => toggleAssignee(u.id)}>
+                    <td className="px-3"><input type="checkbox" checked={assigneeIds.has(u.id)} onChange={() => toggleAssignee(u.id)} onClick={e => e.stopPropagation()} /></td>
+                    <td className="py-2 px-3 font-medium">{u.full_name}{u.role === 'admin' && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">Admin</span>}</td>
+                    <td>{u.email}</td>
+                    <td>{u.position || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
+          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>
+        </div>
+      </form>
+      {addUserOpen && <AddUserModal onClose={() => setAddUserOpen(false)} onSave={submitNewUser} />}
+    </div>
+  );
+}
+
+function AddUserModal({ onClose, onSave }) {
+  const [form, setForm] = useState({ full_name: '', email: '', position: '' });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    try { await onSave(form); }
+    catch (e2) { setErr(e2.message); }
+    setBusy(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-3">
+        <h3 className="font-semibold text-lg">Add User</h3>
+        {err && <div className="text-red-500 text-sm">{err}</div>}
+        <Field label="Full Name" value={form.full_name} onChange={set('full_name')} required autoFocus />
+        <Field label="Email" type="email" value={form.email} onChange={set('email')} required />
+        <Field label="Position" value={form.position} onChange={set('position')} placeholder="e.g. Project Engineer" />
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
           <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>

@@ -13,7 +13,7 @@ async function verify(token) {
   }
 }
 
-const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit'];
+const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests'];
 
 /* This app has no basePath (it lives at the root of
    projects.alfarooque.com), so req.nextUrl.basePath is always '' here —
@@ -52,5 +52,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*'],
+  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*'],
 };

@@ -22,8 +22,14 @@ export async function GET(req, { params }) {
     customer = data || null;
   }
   const { data: documents } = await sb.from('pm_project_documents').select('*').eq('project_id', params.id).order('created_at', { ascending: false });
+  const { data: assigneeRows } = await sb
+    .from('pm_project_assignees')
+    .select('assigned_at, platform_users(id, full_name, email, position, role)')
+    .eq('project_id', params.id)
+    .order('assigned_at', { ascending: true });
+  const assignees = (assigneeRows || []).filter(r => r.platform_users).map(r => ({ ...r.platform_users, assigned_at: r.assigned_at }));
 
-  return json({ project, customer, documents: documents || [] });
+  return json({ project, customer, documents: documents || [], assignees });
 }
 
 export async function PATCH(req, { params }) {
@@ -47,6 +53,9 @@ export async function PATCH(req, { params }) {
   if (!data) return json({ error: 'Project not found.' }, 404);
 
   if (patch.status) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Status changed to ${patch.status}` });
+  if ('progress' in patch) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Completion changed to ${patch.progress}%` });
+  const otherFieldsChanged = Object.keys(patch).some(k => k !== 'status' && k !== 'progress');
+  if (otherFieldsChanged) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: 'Project Edited' });
   return json({ project: data });
 }
 

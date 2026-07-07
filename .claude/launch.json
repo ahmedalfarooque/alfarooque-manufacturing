@@ -17,13 +17,15 @@
       "name": "cars-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "apps/cars", "run", "dev"],
-      "port": 3010
+      "port": 3010,
+      "autoPort": true
     },
     {
       "name": "projects-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "apps/projects", "run", "dev"],
-      "port": 3020
+      "port": 3020,
+      "autoPort": true
     }
   ]
 }
