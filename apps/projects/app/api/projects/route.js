@@ -12,7 +12,7 @@ const SORTS = {
 };
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response, session } = requireSession(req);
   if (response) return response;
 
   const url = new URL(req.url);
@@ -26,7 +26,19 @@ export async function GET(req) {
   const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '10', 10)));
 
   const sb = getDb();
+
+  /* External users have no visibility into the wider project list —
+     only the projects they're explicitly assigned to. Everyone else
+     (admin/viewer) keeps the unrestricted list. */
+  let assignedOnlyIds = null;
+  if (session.role === 'external') {
+    const { data: rows } = await sb.from('pm_project_assignees').select('project_id').eq('user_id', session.sub);
+    assignedOnlyIds = (rows || []).map(r => r.project_id);
+    if (!assignedOnlyIds.length) return json({ projects: [], total: 0, page, pageSize });
+  }
+
   let query = sb.from('pm_projects').select('*', { count: 'exact' });
+  if (assignedOnlyIds) query = query.in('id', assignedOnlyIds);
   if (search) query = query.or(`project_name.ilike.%${search}%,customer_name.ilike.%${search}%,company_name.ilike.%${search}%`);
   if (status !== 'All') query = query.eq('status', status);
   if (company !== 'All') query = query.eq('company_name', company);
@@ -37,7 +49,23 @@ export async function GET(req) {
 
   const { data, error, count } = await query;
   if (error) { console.error('[projects] list failed:', error.message); return json({ error: 'Could not load projects.' }, 500); }
-  return json({ projects: data, total: count || 0, page, pageSize });
+
+  // Batch-fetch assignee names for just this page's projects — backs the "Assigned Users" avatar-chip column on the list.
+  const ids = (data || []).map(p => p.id);
+  let assigneesByProject = {};
+  if (ids.length) {
+    const { data: rows } = await sb
+      .from('pm_project_assignees')
+      .select('project_id, platform_users(id, full_name)')
+      .in('project_id', ids);
+    for (const r of rows || []) {
+      if (!r.platform_users) continue;
+      (assigneesByProject[r.project_id] ||= []).push({ id: r.platform_users.id, full_name: r.platform_users.full_name });
+    }
+  }
+  const projects = (data || []).map(p => ({ ...p, assignees: assigneesByProject[p.id] || [] }));
+
+  return json({ projects, total: count || 0, page, pageSize });
 }
 
 export async function POST(req) {

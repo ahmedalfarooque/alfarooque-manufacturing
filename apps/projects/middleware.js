@@ -13,7 +13,8 @@ async function verify(token) {
   }
 }
 
-const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests'];
+const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/users'];
+const EXTERNAL_BLOCKED_PREFIXES = ['/customers'];
 
 /* This app has no basePath (it lives at the root of
    projects.alfarooque.com), so req.nextUrl.basePath is always '' here —
@@ -48,9 +49,13 @@ export async function middleware(req) {
     return redirectTo(req, '/dashboard');
   }
 
+  if (EXTERNAL_BLOCKED_PREFIXES.some(p => pathname.startsWith(p)) && session.role === 'external') {
+    return redirectTo(req, '/dashboard');
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*'],
+  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*', '/users/:path*'],
 };

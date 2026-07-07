@@ -1,15 +1,18 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
 const { autoProjectName } = require('@/lib/autoProjectName');
 
 const EDITABLE = ['customer_id', 'customer_name', 'company_name', 'contact_person', 'contact_email', 'contact_phone',
   'address', 'project_name', 'short_summary', 'project_details', 'value', 'start_date', 'end_date', 'status', 'progress', 'notes'];
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req); // any authenticated user — the View page is viewer-accessible
+  const { response, session } = requireSession(req); // any authenticated user — the View page is viewer-accessible; external users are further gated below to only their assigned project
   if (response) return response;
+  if (session.role === 'external' && !(await isAssignedOrAdmin(session, params.id))) {
+    return json({ error: 'Project not found.' }, 404);
+  }
 
   const sb = getDb();
   const { data: project, error } = await sb.from('pm_projects').select('*').eq('id', params.id).maybeSingle();
@@ -24,7 +27,7 @@ export async function GET(req, { params }) {
   const { data: documents } = await sb.from('pm_project_documents').select('*').eq('project_id', params.id).order('created_at', { ascending: false });
   const { data: assigneeRows } = await sb
     .from('pm_project_assignees')
-    .select('assigned_at, platform_users(id, full_name, email, position, role)')
+    .select('assigned_at, platform_users(id, full_name, email, position, role, phone, department, photo_url, status)')
     .eq('project_id', params.id)
     .order('assigned_at', { ascending: true });
   const assignees = (assigneeRows || []).filter(r => r.platform_users).map(r => ({ ...r.platform_users, assigned_at: r.assigned_at }));

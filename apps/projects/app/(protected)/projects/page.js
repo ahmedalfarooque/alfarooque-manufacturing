@@ -111,13 +111,14 @@ export default function ProjectsPage() {
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[800px]">
+        <table className="w-full text-sm min-w-[950px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
               <th className="py-3 px-4">#</th>
               <th onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Customer<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></th>
               <th onClick={() => toggleSort('company_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Company<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></th>
               <th onClick={() => toggleSort('project_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Project<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th>Assigned Users</th>
               <th onClick={() => toggleSort('start_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Start<SortIndicator column="start_date" sortKey={sortKey} sortDir={sortDir} /></th>
               <th onClick={() => toggleSort('end_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">End<SortIndicator column="end_date" sortKey={sortKey} sortDir={sortDir} /></th>
               <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
@@ -127,9 +128,9 @@ export default function ProjectsPage() {
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={10} className="py-8 text-center text-slate-400">Loading…</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">No projects match these filters.</td></tr>
+              <tr><td colSpan={10} className="py-8 text-center text-slate-400">No projects match these filters.</td></tr>
             ) : rows.map((p, i) => (
               <tr key={p.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                 onClick={() => { window.location.href = '/projects/' + p.id; }}>
@@ -137,6 +138,7 @@ export default function ProjectsPage() {
                 <td className="font-medium">{p.customer_name}</td>
                 <td>{p.company_name || '—'}</td>
                 <td className="max-w-[220px] truncate">{p.project_name}</td>
+                <td><AssigneeChips assignees={p.assignees} /></td>
                 <td>{p.start_date || '—'}</td>
                 <td>{p.end_date || '—'}</td>
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span></td>
@@ -174,6 +176,17 @@ export default function ProjectsPage() {
 
       {modal && <ProjectModal modal={modal} onClose={() => setModal(null)} onSave={saveProject} />}
     </Shell>
+  );
+}
+
+function AssigneeChips({ assignees }) {
+  if (!assignees || assignees.length === 0) return <span className="text-slate-400 text-xs">—</span>;
+  const shown = assignees.slice(0, 3);
+  const extra = assignees.length - shown.length;
+  return (
+    <div className="text-xs truncate max-w-[180px]" title={assignees.map(a => a.full_name).join(', ')}>
+      {shown.map(a => a.full_name).join(', ')}{extra > 0 ? `, +${extra}` : ''}
+    </div>
   );
 }
 

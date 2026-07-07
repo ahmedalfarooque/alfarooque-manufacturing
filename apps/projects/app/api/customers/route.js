@@ -4,8 +4,9 @@ const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 
 export async function GET(req) {
-  const { response } = requireSession(req); // any authenticated user (admin or viewer) can view customers
+  const { response, session } = requireSession(req); // any authenticated internal user (admin or viewer) can view customers
   if (response) return response;
+  if (session.role === 'external') return json({ error: 'Not permitted.' }, 403);
 
   const url = new URL(req.url);
   const search = (url.searchParams.get('search') || '').trim();

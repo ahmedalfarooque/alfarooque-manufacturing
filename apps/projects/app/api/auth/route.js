@@ -181,23 +181,39 @@ async function handleResendOtp(sb, body) {
   }
 }
 
-/* ── View Dashboard login — email only, no password, restricted to the
-   @alfarooque.com domain. Anyone with a valid company email can view;
-   nothing here can ever mint an admin-level session (the JWT's role
-   claim is hardcoded to "viewer" at verify time below, regardless of
-   what role — if any — the underlying platform_users row actually
-   has), so this route can never become a backdoor into admin access
-   even if someone's admin email happens to also pass through it. ── */
+/* ── View Dashboard login — email only, no password. Three tiers now
+   share this one OTP flow, distinguished purely by the platform_users
+   row's existing `role`:
+     - 'admin'    — an admin CAN also sign in this way (OTP instead of
+                    password); still never grants MORE than their real
+                    DB role, so this stays safe either way.
+     - 'viewer'   — "Internal Company User": auto-created on first
+                    login for any @alfarooque.com email, sees
+                    everything (unchanged behavior from before).
+     - 'external' — "External Assigned User": NEVER auto-created here.
+                    An admin must pre-create the row (Users page) with
+                    role='external' before that person can log in —
+                    matches the spec's "admin creates name/email/
+                    phone/position only, no password" requirement.
+   So: look up the user FIRST. If found, log them in via OTP using
+   their real role, regardless of email domain (this is what lets an
+   External user with a gmail/hotmail/etc. address in — their row
+   already exists with role='external'). Only when the email is NOT
+   found do we fall back to the old domain-gated auto-create, and only
+   for @alfarooque.com (unknown external emails are rejected — they
+   must be created by an admin first). ── */
 async function findOrCreateViewUser(sb, email) {
   const { data: existing } = await sb.from('platform_users').select('*').eq('email', email).maybeSingle();
-  if (existing) return { user: existing, error: null };
+  if (existing) return { user: existing, error: null, isNew: false };
+
+  if (!email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) return { user: null, error: null, isNew: false };
 
   // Unusable random password — this account can only ever sign in via OTP, never via the password form.
   const unusablePassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
   const { data: created, error } = await sb.from('platform_users').insert({
     email, password_hash: unusablePassword, full_name: email.split('@')[0], role: 'viewer', must_change_password: false,
   }).select().maybeSingle();
-  return { user: created, error };
+  return { user: created, error, isNew: true };
 }
 
 /* Every pre-OTP rejection in this flow — bad format, wrong domain,
@@ -210,16 +226,18 @@ const INVALID_USERNAME = () => json({ error: 'Invalid username.' }, 400);
 
 async function handleViewLogin(sb, body) {
   const email = String(body.email || '').trim().toLowerCase();
-  if (!EMAIL_RE.test(email) || !email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) {
-    return INVALID_USERNAME();
-  }
+  if (!EMAIL_RE.test(email)) return INVALID_USERNAME();
 
   const { user, error: findErr } = await findOrCreateViewUser(sb, email);
-  if (findErr || !user) {
-    console.error('[projects/auth] view-login user lookup/create failed:', findErr && findErr.message);
+  if (findErr) {
+    console.error('[projects/auth] view-login user lookup/create failed:', findErr.message);
     return json({ error: 'Could not start verification. Please try again.' }, 500);
   }
-  if (!user.is_active) return INVALID_USERNAME();
+  // Unknown email + not an @alfarooque.com address → reject (external
+  // users must be pre-created by an admin before they can log in).
+  if (!user) return INVALID_USERNAME();
+  if (!user.is_active || user.status === 'Blocked' || user.status === 'Inactive') return INVALID_USERNAME();
+  if (user.otp_login_enabled === false) return INVALID_USERNAME();
 
   const code = generateOtp();
   const { error: otpInsertErr } = await sb.from('platform_otp_codes').insert({
@@ -243,7 +261,6 @@ async function handleViewLogin(sb, body) {
 async function handleViewVerifyOtp(sb, body, ip, ua) {
   const email = String(body.email || '').trim().toLowerCase();
   const code = String(body.code || '').trim();
-  if (!email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) return INVALID_USERNAME();
   if (!EMAIL_RE.test(email) || !/^\d{6}$/.test(code)) return json({ error: 'Please enter the 6-digit code.' }, 400);
 
   const { data: user } = await sb.from('platform_users').select('*').eq('email', email).maybeSingle();
@@ -265,8 +282,13 @@ async function handleViewVerifyOtp(sb, body, ip, ua) {
 
   await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
-  // Role is always forced to "viewer" for a session minted via this route — see the header comment above.
-  const token = signSession({ ...user, role: 'viewer' });
+  // Role reflects whatever is actually on the platform_users row —
+  // admin/viewer/external. No longer forced to "viewer": an admin or
+  // external user logging in via this OTP-only path keeps their real
+  // permissions (an admin never gets LESS than they should; an
+  // external user never gets MORE, since they're never auto-created
+  // with anything but 'external' or 'viewer' — see findOrCreateViewUser).
+  const token = signSession(user);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,
     expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
@@ -277,14 +299,14 @@ async function handleViewVerifyOtp(sb, body, ip, ua) {
   }
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
-  const res = json({ ok: true, user: sanitizeUser({ ...user, role: 'viewer' }) });
+  const res = json({ ok: true, user: sanitizeUser(user) });
   res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS));
   return res;
 }
 
 async function handleViewResendOtp(sb, body) {
   const email = String(body.email || '').trim().toLowerCase();
-  if (!EMAIL_RE.test(email) || !email.endsWith(VIEW_LOGIN_ALLOWED_DOMAIN)) return json({ error: 'Invalid request.' }, 400);
+  if (!EMAIL_RE.test(email)) return json({ error: 'Invalid request.' }, 400);
 
   const { data: user } = await sb.from('platform_users').select('*').eq('email', email).maybeSingle();
   if (!user || !user.is_active) return json({ error: 'Invalid request.' }, 400);

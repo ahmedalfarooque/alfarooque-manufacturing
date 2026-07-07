@@ -6,12 +6,22 @@ const { json, requireSession } = require('@/lib/http');
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response, session } = requireSession(req);
   if (response) return response;
+  if (session.role === 'external') return json({ error: 'Not permitted. Use /api/my-stats.' }, 403);
   const sb = getDb();
 
-  const { data: projects, error } = await sb.from('pm_projects').select('*');
+  const assignedUser = new URL(req.url).searchParams.get('assignedUser') || '';
+  let scopedProjectIds = null;
+  if (assignedUser) {
+    const { data: rows } = await sb.from('pm_project_assignees').select('project_id').eq('user_id', assignedUser);
+    scopedProjectIds = new Set((rows || []).map(r => r.project_id));
+  }
+
+  let projectsQuery = sb.from('pm_projects').select('*');
+  const { data: allProjects, error } = await projectsQuery;
   if (error) { console.error('[stats] projects failed:', error.message); return json({ error: 'Could not load stats.' }, 500); }
+  const projects = scopedProjectIds ? allProjects.filter(p => scopedProjectIds.has(p.id)) : allProjects;
 
   const total = projects.length;
   const byStatus = { Running: 0, Completed: 0, Upcoming: 0, 'On Hold': 0 };
@@ -43,7 +53,7 @@ export async function GET(req) {
 
   /* ── Purchase Requests widget ── */
   const { data: prs } = await sb.from('pm_purchase_requests').select('*, pm_projects(project_name)').order('created_at', { ascending: false });
-  const prList = prs || [];
+  const prList = scopedProjectIds ? (prs || []).filter(r => scopedProjectIds.has(r.project_id)) : (prs || []);
   const prPending = prList.filter(r => r.status === 'Pending').length;
   const prApproved = prList.filter(r => r.status === 'Approved').length;
   const prUrgent = prList.filter(r => r.status === 'Pending' && (r.priority === 'Urgent' || r.priority === 'Critical')).length;
@@ -59,13 +69,14 @@ export async function GET(req) {
   const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
 
   const { data: dus } = await sb.from('pm_daily_updates').select('project_id, update_date');
-  const duList = dus || [];
+  const duList = scopedProjectIds ? (dus || []).filter(u => scopedProjectIds.has(u.project_id)) : (dus || []);
   const duToday = duList.filter(u => u.update_date === todayStr).length;
   const duYesterday = duList.filter(u => u.update_date === yesterdayStr).length;
   const duThisWeek = duList.filter(u => new Date(u.update_date) >= weekAgo).length;
 
   const { data: assignedProjectIds } = await sb.from('pm_project_assignees').select('project_id');
-  const projectsWithAssignees = new Set((assignedProjectIds || []).map(r => r.project_id));
+  let projectsWithAssignees = new Set((assignedProjectIds || []).map(r => r.project_id));
+  if (scopedProjectIds) projectsWithAssignees = new Set([...projectsWithAssignees].filter(id => scopedProjectIds.has(id)));
   const projectsWithUpdateToday = new Set(duList.filter(u => u.update_date === todayStr).map(u => u.project_id));
   const missingProjects = [...projectsWithAssignees].filter(id => !projectsWithUpdateToday.has(id)).length;
 

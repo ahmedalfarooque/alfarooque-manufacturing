@@ -53,6 +53,9 @@ export async function POST(req, { params }) {
     issues: body.issues || null,
     tomorrow_plan: body.tomorrow_plan || null,
     remarks: body.remarks || null,
+    title: body.title || null,
+    need_help: !!body.need_help,
+    status: 'Pending',
   }).select().single();
   if (error) { console.error('[daily-updates] create failed:', error.message); return json({ error: 'Could not save the daily update.' }, 500); }
 

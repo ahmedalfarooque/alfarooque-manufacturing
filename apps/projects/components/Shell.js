@@ -6,13 +6,17 @@ const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: '▦' },
   { href: '/projects', label: 'Projects', icon: '\u{1F4C1}' },
   { href: '/purchase-requests', label: 'Purchase Requests', icon: '\u{1F9FE}', adminOnly: true },
-  { href: '/customers', label: 'Customers', icon: '\u{1F465}' },
+  { href: '/customers', label: 'Customers', icon: '\u{1F465}', hideExternal: true },
+  { href: '/users', label: 'Users', icon: '\u{1F464}', adminOnly: true },
 ];
 
 export default function Shell({ children, active }) {
   const [user, setUser] = useState(null);
   const [dark, setDark] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' })
@@ -24,6 +28,28 @@ export default function Shell({ children, active }) {
       setDark(saved !== 'light');
     } catch (_) {}
   }, []);
+
+  useEffect(() => {
+    function loadNotifications() {
+      fetch('/api/notifications', { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d) { setNotifications(d.notifications || []); setUnread(d.unread || 0); } })
+        .catch(() => {});
+    }
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function markRead(id, link) {
+    await fetch(`/api/notifications/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ is_read: true }),
+    }).catch(() => {});
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    setUnread(prev => Math.max(0, prev - 1));
+    setNotifOpen(false);
+    if (link) window.location.href = link;
+  }
 
   function toggleTheme() {
     const next = !dark;
@@ -61,7 +87,7 @@ export default function Shell({ children, active }) {
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2">
-          {NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
+          {NAV.filter(item => (!item.adminOnly || user?.role === 'admin') && (!item.hideExternal || user?.role !== 'external')).map(item => (
             <a key={item.href} href={item.href}
               className={
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ' +
@@ -87,6 +113,33 @@ export default function Shell({ children, active }) {
             <h1 className="font-semibold text-lg capitalize">{active.replace('/', '')}</h1>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <button onClick={() => setNotifOpen(o => !o)} className="relative h-9 w-9 rounded-lg border border-black/10 dark:border-white/10 flex items-center justify-center text-sm" aria-label="Notifications">
+                {'\u{1F514}'}
+                {unread > 0 && <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] leading-4 text-center">{unread > 9 ? '9+' : unread}</span>}
+              </button>
+              {notifOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0f172a] shadow-lg z-40">
+                    <div className="px-4 py-3 border-b border-black/5 dark:border-white/10 font-medium text-sm">Notifications</div>
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-sm text-slate-400">No notifications yet.</div>
+                    ) : notifications.map(n => (
+                      <button key={n.id} onClick={() => markRead(n.id, n.link)}
+                        className={'w-full text-left px-4 py-3 border-b border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition ' + (n.is_read ? 'opacity-60' : '')}>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium truncate">{n.title}</span>
+                          {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-500 shrink-0" />}
+                        </div>
+                        {n.body && <div className="text-xs text-slate-500 truncate">{n.body}</div>}
+                        <div className="text-[11px] text-slate-400 mt-0.5">{new Date(n.created_at).toLocaleString()}</div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
             <button onClick={toggleTheme} className="h-9 w-9 rounded-lg border border-black/10 dark:border-white/10 flex items-center justify-center text-sm" aria-label="Toggle theme">
               {dark ? '☀️' : '\u{1F319}'}
             </button>

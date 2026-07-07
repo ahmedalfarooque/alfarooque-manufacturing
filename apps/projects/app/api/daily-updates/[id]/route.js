@@ -3,6 +3,8 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
 
+const REVIEW_STATUSES = ['Pending', 'Approved', 'Rejected', 'Need Revision', 'Published'];
+
 export async function GET(req, { params }) {
   const { response, session } = requireSession(req);
   if (response) return response;
@@ -51,16 +53,34 @@ export async function PATCH(req, { params }) {
 
   const body = await req.json().catch(() => ({}));
   const patch = {};
-  ['weather', 'todays_work', 'description', 'issues', 'tomorrow_plan', 'remarks', 'update_date'].forEach(f => {
+  ['weather', 'todays_work', 'description', 'issues', 'tomorrow_plan', 'remarks', 'update_date', 'title'].forEach(f => {
     if (body[f] !== undefined) patch[f] = body[f];
   });
+  if (body.need_help !== undefined) patch.need_help = !!body.need_help;
   if (body.progress_pct !== undefined) patch.progress_pct = body.progress_pct === '' ? null : Math.max(0, Math.min(100, parseInt(body.progress_pct, 10)));
+
+  // Only an admin reviews/publishes an update — the author can edit their own content fields above, but never self-approve.
+  if (body.status !== undefined) {
+    if (session.role !== 'admin') return json({ error: 'Only an admin can change the review status.' }, 403);
+    if (!REVIEW_STATUSES.includes(body.status)) return json({ error: 'Invalid status.' }, 400);
+    patch.status = body.status;
+    patch.reviewed_by = session.sub;
+    patch.reviewed_at = new Date().toISOString();
+  }
   if (Object.keys(patch).length === 0) return json({ error: 'Nothing to update.' }, 400);
 
   const { data: row, error } = await sb.from('pm_daily_updates').update(patch).eq('id', params.id).select().single();
   if (error) { console.error('[daily-updates] update failed:', error.message); return json({ error: 'Could not update the daily update.' }, 500); }
 
-  await sb.from('pm_project_logs').insert({ project_id: existing.project_id, activity: 'Daily Update Edited' });
+  await sb.from('pm_project_logs').insert({ project_id: existing.project_id, activity: patch.status ? `Daily Update ${patch.status}` : 'Daily Update Edited' });
+
+  if (patch.status && existing.author_id) {
+    await sb.from('notifications').insert({
+      user_id: existing.author_id, type: 'daily_update', title: `Daily Update ${patch.status}`,
+      link: `/projects/${existing.project_id}?tab=daily-updates`,
+    }).catch(() => {});
+  }
+
   return json({ dailyUpdate: row });
 }
 

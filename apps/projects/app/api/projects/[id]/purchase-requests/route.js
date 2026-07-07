@@ -51,6 +51,7 @@ export async function POST(req, { params }) {
     unit: body.unit || null,
     estimated_price: body.estimated_price || null,
     required_date: body.required_date || null,
+    expected_date: body.expected_date || null,
     priority,
     remarks: body.remarks || null,
   }).select().single();
@@ -60,6 +61,14 @@ export async function POST(req, { params }) {
 
   const origin = new URL(req.url).origin;
   const link = `${origin}/projects/${params.id}?tab=purchase-requests`;
+
+  const { data: admins } = await sb.from('platform_users').select('id').eq('role', 'admin');
+  if (admins?.length) {
+    await sb.from('notifications').insert(admins.map(a => ({
+      user_id: a.id, type: 'purchase_request', title: 'New Purchase Request',
+      body: `${materialDescription} — ${project.project_name}`, link,
+    }))).catch(() => {});
+  }
   sendEmail({
     subject: `New Purchase Request — ${project.project_name}`,
     html: `

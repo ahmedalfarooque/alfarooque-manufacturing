@@ -16,10 +16,17 @@ const STATUS_BADGE = {
 
 const PR_STATUS_BADGE = {
   Pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  'Under Review': 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
   Approved: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   Rejected: 'bg-red-500/10 text-red-600 dark:text-red-400',
-  Ordered: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  'On Hold': 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+  Purchased: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
   Delivered: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
+  Cancelled: 'bg-slate-500/10 text-slate-500',
+  'Payment Pending': 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  'Payment Approved': 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  'Payment Completed': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  Ordered: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
   Completed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
 };
 const PR_PRIORITY_BADGE = {
@@ -27,12 +34,26 @@ const PR_PRIORITY_BADGE = {
   Urgent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Critical: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
+const DU_STATUS_BADGE = {
+  Pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  Approved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  Rejected: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  'Need Revision': 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+  Published: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+};
+const DU_REVIEW_ACTIONS = [
+  { to: 'Approved', label: 'Approve' },
+  { to: 'Rejected', label: 'Reject' },
+  { to: 'Need Revision', label: 'Need Revision' },
+  { to: 'Published', label: 'Publish' },
+];
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'purchase-requests', label: 'Purchase Requests' },
   { key: 'daily-updates', label: 'Daily Updates' },
   { key: 'documents', label: 'Documents' },
+  { key: 'assigned-people', label: 'Assigned People' },
   { key: 'activity', label: 'Activity' },
 ];
 
@@ -108,6 +129,7 @@ export default function ProjectViewPage() {
       {tab === 'purchase-requests' && <PurchaseRequestsTab projectId={id} canCreate={canCreate} isAdmin={isAdmin} />}
       {tab === 'daily-updates' && <DailyUpdatesTab projectId={id} canCreate={canCreate} isAdmin={isAdmin} meId={me?.id} />}
       {tab === 'documents' && <DocumentsTab projectId={id} documents={documents} isAdmin={isAdmin} refresh={refresh} />}
+      {tab === 'assigned-people' && <AssignedPeopleTab assignees={assignees || []} isAdmin={isAdmin} onEdit={() => setEditOpen(true)} />}
       {tab === 'activity' && <ActivityTab projectId={id} />}
 
       {editOpen && <ProjectModal modal={{ mode: 'edit', data: p }} onClose={() => setEditOpen(false)} onSave={saveProject} />}
@@ -193,6 +215,59 @@ function OverviewTab({ p, c, hasValue, assignees }) {
         )}
       </div>
     </>
+  );
+}
+
+/* ══════════════════════════════ ASSIGNED PEOPLE ══════════════════════════════ */
+
+function AssignedPeopleTab({ assignees, isAdmin, onEdit }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-medium text-sm">Assigned People</h3>
+        {isAdmin && <button onClick={onEdit} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">✎ Manage Assignees</button>}
+      </div>
+      {assignees.length === 0 ? (
+        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-8 text-center text-sm text-slate-400">
+          No users assigned to this project yet.
+        </div>
+      ) : (
+        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[65vh]">
+          <table className="w-full text-sm min-w-[800px]">
+            <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+              <tr>
+                <th className="py-3 px-4">Name</th>
+                <th>Position</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Department</th>
+                <th>Assigned Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignees.map(u => (
+                <tr key={u.id} className="border-b border-black/5 dark:border-white/5">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <Avatar name={u.full_name} />
+                      <span className="font-medium">{u.full_name}</span>
+                      {u.role === 'admin' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">Admin</span>}
+                    </div>
+                  </td>
+                  <td>{u.position || '—'}</td>
+                  <td>{u.email}</td>
+                  <td>{u.phone || '—'}</td>
+                  <td>{u.department || '—'}</td>
+                  <td>{u.assigned_at ? new Date(u.assigned_at).toLocaleDateString() : '—'}</td>
+                  <td><span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{u.status || 'Active'}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -430,11 +505,15 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
 }
 
 const PR_ACTIONS = [
-  { to: 'Approved', label: 'Accept' },
+  { to: 'Under Review', label: 'Under Review' },
+  { to: 'Approved', label: 'Approve' },
   { to: 'Rejected', label: 'Reject' },
-  { to: 'Ordered', label: 'Mark Ordered' },
+  { to: 'On Hold', label: 'Put On Hold' },
+  { to: 'Purchased', label: 'Mark Purchased' },
   { to: 'Delivered', label: 'Mark Delivered' },
-  { to: 'Completed', label: 'Mark Completed' },
+  { to: 'Payment Pending', label: 'Payment Pending' },
+  { to: 'Payment Completed', label: 'Payment Completed' },
+  { to: 'Cancelled', label: 'Cancel' },
 ];
 
 function PurchaseRequestDetailModal({ id, isAdmin, onClose, onChanged }) {
@@ -514,7 +593,8 @@ function PurchaseRequestDetailModal({ id, isAdmin, onClose, onChanged }) {
                 <button disabled={busy} onClick={del} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-500 ml-auto">🗑 Delete</button>
               </div>
             )}
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-between items-center pt-2">
+              <a href={'/purchase-requests/' + id} className="text-sm text-brand-500 hover:underline">View Full Details, History &amp; Comments →</a>
               <button onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Close</button>
             </div>
           </>
@@ -546,20 +626,22 @@ function DailyUpdatesTab({ projectId, canCreate, isAdmin, meId }) {
               <th>User</th>
               <th>Summary</th>
               <th>Progress</th>
+              <th>Status</th>
               <th className="text-right px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={5} className="py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-slate-400">Loading…</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={5} className="py-8 text-center text-slate-400">No daily updates yet.</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-slate-400">No daily updates yet.</td></tr>
             ) : rows.map(u => (
               <tr key={u.id} className="border-b border-black/5 dark:border-white/5">
                 <td className="py-3 px-4">{u.update_date}</td>
                 <td>{u.author_name || '—'}</td>
-                <td className="max-w-[260px] truncate">{u.todays_work}</td>
+                <td className="max-w-[260px] truncate">{u.title || u.todays_work}</td>
                 <td>{u.progress_pct != null ? `${u.progress_pct}%` : '—'}</td>
+                <td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (DU_STATUS_BADGE[u.status || 'Pending'] || '')}>{u.status || 'Pending'}</span></td>
                 <td className="text-right px-4"><button onClick={() => setModal({ id: u.id })} className="text-slate-400" title="View">{'\u{1F441}'}</button></td>
               </tr>
             ))}
@@ -576,7 +658,7 @@ function DailyUpdatesTab({ projectId, canCreate, isAdmin, meId }) {
 function DailyUpdateModal({ projectId, onClose, onSaved }) {
   const [form, setForm] = useState({
     update_date: new Date().toISOString().slice(0, 10), weather: '', progress_pct: '', todays_work: '',
-    description: '', issues: '', tomorrow_plan: '', remarks: '',
+    description: '', issues: '', tomorrow_plan: '', remarks: '', title: '', need_help: false,
   });
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -628,9 +710,15 @@ function DailyUpdateModal({ projectId, onClose, onSaved }) {
         {err && <div className="text-red-500 text-sm">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Date" type="date" value={form.update_date} onChange={set('update_date')} />
+          <Field label="Title (optional)" value={form.title} onChange={set('title')} />
           <Field label="Weather (optional)" value={form.weather} onChange={set('weather')} />
           <Field label="Progress %" type="number" min={0} max={100} value={form.progress_pct} onChange={set('progress_pct')} />
-          <div />
+          <div className="col-span-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.need_help} onChange={e => setForm(f => ({ ...f, need_help: e.target.checked }))} />
+              I need help / this is blocked
+            </label>
+          </div>
           <div className="col-span-2">
             <label className="block text-xs text-slate-500 mb-1">Today's Work</label>
             <textarea value={form.todays_work} onChange={set('todays_work')} rows={2} required
@@ -673,7 +761,7 @@ function DailyUpdateModal({ projectId, onClose, onSaved }) {
 }
 
 function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
-  const { data } = useLiveData(`/api/daily-updates/${id}`, 0);
+  const { data, refresh } = useLiveData(`/api/daily-updates/${id}`, 0);
   const [busy, setBusy] = useState(false);
   const u = data?.dailyUpdate;
   const attachments = data?.attachments || [];
@@ -688,19 +776,34 @@ function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
     } finally { setBusy(false); }
   }
 
+  async function setReviewStatus(status) {
+    setBusy(true);
+    try {
+      await fetch(`/api/daily-updates/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ status }),
+      });
+      refresh(); onChanged();
+    } finally { setBusy(false); }
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <div onClick={e => e.stopPropagation()} className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         {!u ? <div className="text-slate-400 text-sm">Loading…</div> : (
           <>
             <div className="flex items-start justify-between">
-              <h3 className="font-semibold text-lg">Daily Update — {u.update_date}</h3>
-              {u.progress_pct != null && <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-500/10 text-brand-600 dark:text-brand-400">{u.progress_pct}%</span>}
+              <h3 className="font-semibold text-lg">{u.title || `Daily Update — ${u.update_date}`}</h3>
+              <div className="flex items-center gap-2 shrink-0">
+                {u.progress_pct != null && <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-500/10 text-brand-600 dark:text-brand-400">{u.progress_pct}%</span>}
+                <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (DU_STATUS_BADGE[u.status || 'Pending'] || '')}>{u.status || 'Pending'}</span>
+              </div>
             </div>
             <dl className="space-y-2 text-sm">
+              <Row label="Date" value={u.update_date} />
               <Row label="By" value={u.author_name} />
               <Row label="Weather" value={u.weather} />
             </dl>
+            {u.need_help && <div className="text-sm text-red-500 font-medium">⚠ This update is flagged as needing help.</div>}
             <div>
               <div className="text-xs text-slate-500 mb-1">Today's Work</div>
               <p className="text-sm whitespace-pre-wrap">{u.todays_work}</p>
@@ -746,9 +849,12 @@ function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
                 </div>
               </div>
             )}
-            {canDelete && (
-              <div className="pt-2 border-t border-black/5 dark:border-white/10 flex justify-end">
-                <button disabled={busy} onClick={del} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-500">🗑 Delete</button>
+            {isAdmin && (
+              <div className="pt-2 border-t border-black/5 dark:border-white/10 flex flex-wrap gap-2">
+                {DU_REVIEW_ACTIONS.filter(a => a.to !== u.status).map(a => (
+                  <button key={a.to} disabled={busy} onClick={() => setReviewStatus(a.to)} className="text-xs px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-brand-500/40">{a.label}</button>
+                ))}
+                {canDelete && <button disabled={busy} onClick={del} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-500 ml-auto">🗑 Delete</button>}
               </div>
             )}
             <div className="flex justify-end pt-2">

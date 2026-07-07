@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import StatCard from '@/components/StatCard';
+import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, RadialBarChart, RadialBar } from 'recharts';
 
@@ -23,7 +25,25 @@ const PR_STATUS_BADGE = {
 const REFRESH_MS = 15000;
 
 export default function DashboardPage() {
-  const { data: stats, error } = useLiveData('/api/stats', REFRESH_MS);
+  const [me, setMe] = useState(null);
+  const [assignedUser, setAssignedUser] = useState('All');
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (me?.role === 'external') return;
+    fetch('/api/users', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setUsers(d.users || [])).catch(() => {});
+  }, [me]);
+
+  const statsUrl = '/api/stats' + (assignedUser !== 'All' ? '?assignedUser=' + encodeURIComponent(assignedUser) : '');
+  const { data: stats, error } = useLiveData(me?.role === 'external' ? null : statsUrl, REFRESH_MS);
+  const { data: myStats, error: myStatsError } = useLiveData(me?.role === 'external' ? '/api/my-stats' : null, REFRESH_MS);
+
+  if (!me) return <Shell active="/dashboard"><div className="text-slate-400">Loading dashboard…</div></Shell>;
+
+  if (me.role === 'external') return <ExternalDashboard stats={myStats} error={myStatsError} />;
 
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
   if (!stats) return <Shell active="/dashboard"><div className="text-slate-400">Loading dashboard…</div></Shell>;
@@ -32,6 +52,14 @@ export default function DashboardPage() {
 
   return (
     <Shell active="/dashboard">
+      <div className="flex items-center justify-end mb-4">
+        <div className="w-56">
+          <Dropdown value={assignedUser} onChange={setAssignedUser}
+            options={[['All', 'All Users'], ...users.map(u => [u.id, u.full_name || u.email])]}
+            placeholder="Filter by Assigned User" />
+        </div>
+      </div>
+
       {/* Total Project Value card intentionally removed — project value
           is only ever shown on a project's own View page, and only
           when it's actually set (see the brief: never show $0/SAR 0). */}
@@ -44,6 +72,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <StatCard icon={'\u{1F465}'} tone="brand" label="Team Members" value={users.length} sub="Internal + external users" href="/users" />
         <StatCard icon={'\u{1F9FE}'} tone="amber" label="PR: Pending" value={stats.purchaseRequests.pending} sub="Awaiting review" href="/purchase-requests?status=Pending" />
         <StatCard icon="✔" tone="blue" label="PR: Approved" value={stats.purchaseRequests.approved} sub="Approved requests" href="/purchase-requests?status=Approved" />
         <StatCard icon="⚠" tone="red" label="PR: Urgent" value={stats.purchaseRequests.urgent} sub="Urgent/Critical pending" href="/purchase-requests?status=Pending" />
@@ -134,6 +163,79 @@ export default function DashboardPage() {
             ))}
           </ul>
         )}
+      </div>
+    </Shell>
+  );
+}
+
+function ExternalDashboard({ stats, error }) {
+  if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
+  if (!stats) return <Shell active="/dashboard"><div className="text-slate-400">Loading dashboard…</div></Shell>;
+
+  return (
+    <Shell active="/dashboard">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <StatCard icon={'\u{1F4C1}'} tone="brand" label="My Projects" value={stats.totalProjects} href="/projects" />
+        <StatCard icon="▶" tone="blue" label="Running" value={stats.running} href="/projects" />
+        <StatCard icon="✔" tone="emerald" label="Completed" value={stats.completed} href="/projects" />
+        <StatCard icon={'\u{1F9FE}'} tone="amber" label="Purchase Requests" value={stats.purchaseRequests.pending} sub="Awaiting decision" href="/projects" />
+        <StatCard icon={'\u{1F4C6}'} tone="slate" label="Daily Updates" value={stats.dailyUpdates.thisWeek} sub="This week" href="/projects" />
+        <StatCard icon={'\u{1F514}'} tone="red" label="Notifications" value={stats.notifications.unread} sub="Unread" />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-4 mb-6">
+        {stats.projects.map(p => (
+          <a key={p.id} href={'/projects/' + p.id} className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 hover:border-brand-500/40 transition">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-medium truncate">{p.project_name}</span>
+              <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span>
+            </div>
+            <div className="text-xs text-slate-500">{p.customer_name}</div>
+            <div className="h-1.5 rounded-full bg-black/10 dark:bg-white/10 mt-3 overflow-hidden">
+              <div className="h-full bg-brand-500" style={{ width: `${p.progress || 0}%` }} />
+            </div>
+          </a>
+        ))}
+        {stats.projects.length === 0 && <div className="text-sm text-slate-400 py-6 text-center col-span-3">No projects assigned to you yet.</div>}
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <h3 className="font-medium text-sm mb-3">My Recent Purchase Requests</h3>
+          {stats.purchaseRequests.recent.length === 0 ? <div className="text-sm text-slate-400 py-6 text-center">None yet.</div> : (
+            <ul className="space-y-1">
+              {stats.purchaseRequests.recent.map(r => (
+                <li key={r.id}>
+                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate">{r.material_description}</span>
+                      <span className="text-xs text-slate-400 shrink-0">{r.status}</span>
+                    </div>
+                    <div className="text-xs text-slate-500">{r.project_name}</div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <h3 className="font-medium text-sm mb-3">My Recent Daily Updates</h3>
+          {stats.dailyUpdates.recent.length === 0 ? <div className="text-sm text-slate-400 py-6 text-center">None yet.</div> : (
+            <ul className="space-y-1">
+              {stats.dailyUpdates.recent.map(u => (
+                <li key={u.id}>
+                  <a href={'/projects/' + u.project_id + '?tab=daily-updates'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate">{u.project_name}</span>
+                      <span className="text-xs text-slate-400 shrink-0">{u.status}</span>
+                    </div>
+                    <div className="text-xs text-slate-500">{u.update_date}</div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </Shell>
   );
