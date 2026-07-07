@@ -61,17 +61,16 @@ export default function ProjectViewPage() {
   const { id } = useParams();
   const [me, setMe] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [tab, setTab] = useState(() => {
-    if (typeof window === 'undefined') return 'overview';
-    const t = new URLSearchParams(window.location.search).get('tab');
-    return TABS.some(x => x.key === t) ? t : 'overview';
-  });
+  // Always starts at 'overview' so server and client render identically (no hydration mismatch), then synced from ?tab= right after mount.
+  const [tab, setTab] = useState('overview');
 
   const { data, error, refresh } = useLiveData('/api/projects/' + id, 15000);
   const isAdmin = me?.role === 'admin';
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (TABS.some(x => x.key === t)) setTab(t);
   }, []);
 
   function selectTab(key) {

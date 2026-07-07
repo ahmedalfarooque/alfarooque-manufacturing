@@ -27,15 +27,19 @@ export default function ProjectsPage() {
   const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
-  /* Reads ?status= from the URL on first render — this is how the
-     dashboard's KPI cards (Running/Completed/Upcoming/On Hold) link
-     straight into a pre-filtered list instead of landing on "All" and
-     making the visitor re-select the filter they just clicked. */
-  const [status, setStatus] = useState(() => {
-    if (typeof window === 'undefined') return 'All';
-    return new URLSearchParams(window.location.search).get('status') || 'All';
-  });
+  /* Always starts at 'All' so server and client render identically
+     (no hydration mismatch) — then synced from ?status= right after
+     mount. This is how the dashboard's KPI cards (Running/Completed/
+     Upcoming/On Hold) link straight into a pre-filtered list instead
+     of landing on "All" and making the visitor re-select the filter
+     they just clicked. */
+  const [status, setStatus] = useState('All');
   const [modal, setModal] = useState(null);
+
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('status');
+    if (fromUrl) setStatus(fromUrl);
+  }, []);
 
   const isAdmin = me?.role === 'admin';
   const url = '/api/projects?' + new URLSearchParams({ search: debouncedSearch, status, page: String(page), pageSize: String(pageSize) }).toString();

@@ -40,13 +40,16 @@ export default function PurchaseRequestsPage() {
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
-  const [status, setStatus] = useState(() => {
-    if (typeof window === 'undefined') return 'All';
-    return new URLSearchParams(window.location.search).get('status') || 'All';
-  });
+  // Always starts at 'All' so server and client render identically (no hydration mismatch), then synced from ?status= right after mount.
+  const [status, setStatus] = useState('All');
   const [priority, setPriority] = useState('All');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('status');
+    if (fromUrl) setStatus(fromUrl);
+  }, []);
 
   const isAdmin = me?.role === 'admin';
   const { data, error, refresh } = useLiveData('/api/purchase-requests', REFRESH_MS);
