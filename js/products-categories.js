@@ -103,7 +103,7 @@
     CATS.forEach(function (c) {
       var sliderEl = document.getElementById('catSlider-' + c.slug);
       if (!sliderEl) return;
-      fetch('/api/category-images?category=' + encodeURIComponent(c.slug))
+      fetch('/api/images?set=' + encodeURIComponent(c.slug))
         .then(function (res) { return res.json(); })
         .then(function (data) { initSlider(sliderEl, data && data.images); })
         .catch(function () { initSlider(sliderEl, []); });

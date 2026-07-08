@@ -25,13 +25,19 @@ module.exports = async function handler(req, res) {
 
   try {
     const sb = getAdminClient();
-    const { data, error } = await sb
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .order('id', { ascending: true });
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ products: (data || []).map(toPublicShape) });
+    /* Categories ride along in the same response (formerly the separate
+       /api/categories function — folded in here because the Vercel Hobby
+       plan caps a deployment at 12 serverless functions and the repo sits
+       exactly at that cap; also saves the front-end a second request). */
+    const [prodRes, catRes] = await Promise.all([
+      sb.from('products').select('*').eq('is_active', true).order('id', { ascending: true }),
+      sb.from('categories').select('slug, name, name_ar, image_url, sort_order').eq('is_active', true).order('sort_order', { ascending: true }),
+    ]);
+    if (prodRes.error) return res.status(500).json({ error: prodRes.error.message });
+    return res.status(200).json({
+      products: (prodRes.data || []).map(toPublicShape),
+      categories: catRes.error ? [] : (catRes.data || []),
+    });
   } catch (err) {
     console.error('[api/products] Failed:', err.message);
     return res.status(500).json({ error: 'Could not load products.' });

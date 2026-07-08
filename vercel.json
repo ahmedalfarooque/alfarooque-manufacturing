@@ -3,8 +3,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/category-images.js": { "includeFiles": "assets/images/E-commerse Home Images/**" },
-    "api/division-images.js": { "includeFiles": "assets/images/*Works/**" }
+    "api/images.js": { "includeFiles": "assets/images/{E-commerse Home Images,Steel Works,Aluminium Works}/**" }
   },
   "rewrites": [
     { "source": "/about",         "destination": "/pages/about" },

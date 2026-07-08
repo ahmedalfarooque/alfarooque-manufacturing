@@ -47,12 +47,12 @@ var _productsReadyResolve;
 window.__productsReady = new Promise(function (resolve) { _productsReadyResolve = resolve; });
 
 (function loadProductsFromApi() {
-  Promise.all([
-    fetch('/api/products').then(function (res) { return res.json(); }),
-    fetch('/api/categories').then(function (res) { return res.json(); }).catch(function () { return { categories: [] }; }),
-  ])
-    .then(function (results) {
-      var data = results[0], catData = results[1];
+  /* Categories now arrive in the same /api/products response (the
+     separate /api/categories function was folded in to stay within
+     Vercel's 12-function Hobby-plan cap) — one request instead of two. */
+  fetch('/api/products').then(function (res) { return res.json(); })
+    .then(function (data) {
+      var catData = data;
 
       var rows = (data && data.products) || [];
       PRODUCTS = rows.map(function (row) {
@@ -73,7 +73,7 @@ window.__productsReady = new Promise(function (resolve) { _productsReadyResolve 
       });
     })
     .catch(function (err) {
-      console.error('[Products] Failed to load catalog from /api/products or /api/categories:', err);
+      console.error('[Products] Failed to load catalog from /api/products:', err);
       PRODUCTS = [];
       PRODUCTS_MAP = {};
       CATEGORIES_MAP = {};

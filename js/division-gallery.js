@@ -50,7 +50,7 @@
     const catAttr = division.replace('-works', '');
     const label = LABELS[catAttr] || (catAttr.charAt(0).toUpperCase() + catAttr.slice(1));
 
-    fetch('/api/division-images?division=' + encodeURIComponent(division))
+    fetch('/api/images?set=' + encodeURIComponent(division))
       .then(r => r.ok ? r.json() : { images: [] })
       .then(data => {
         const images = data.images || [];
