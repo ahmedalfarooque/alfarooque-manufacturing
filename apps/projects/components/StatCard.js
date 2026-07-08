@@ -14,9 +14,9 @@ export default function StatCard({ icon, label, value, sub, tone, href }) {
   const Tag = href ? 'a' : 'div';
   return (
     <Tag {...(href ? { href } : {})} className={'glass-card glass-card--pad flex flex-col gap-3' + (href ? ' cursor-pointer' : '')}>
-      <span className="relative inline-flex items-center justify-center h-9 w-9 shrink-0" aria-hidden="true">
-        <span className="absolute -inset-1.5 rounded-full" style={{ background: `radial-gradient(circle, ${color}33, transparent 72%)`, filter: 'blur(3px)' }} />
-        <GlassIcon name={icon} size={32} bare className="relative" />
+      <span className="relative inline-flex items-center justify-center h-12 w-12 shrink-0" aria-hidden="true">
+        <span className="absolute -inset-3 rounded-full" style={{ background: `radial-gradient(circle, ${color}45, transparent 70%)`, filter: 'blur(4px)' }} />
+        <GlassIcon name={icon} size={44} bare className="relative" />
       </span>
       <div className="min-w-0">
         <div className="text-3xl font-bold leading-none tracking-tight text-[#1A1A18] dark:text-[#F5F3EE]">{value}</div>
