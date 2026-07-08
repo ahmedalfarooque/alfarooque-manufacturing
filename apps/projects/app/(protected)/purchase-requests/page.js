@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
+import { useLanguage } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -37,6 +38,7 @@ const ALL_STATUSES = ['Pending', 'Under Review', 'Approved', 'Rejected', 'On Hol
 const REFRESH_MS = 15000;
 
 export default function PurchaseRequestsPage() {
+  const { t } = useLanguage();
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
@@ -107,7 +109,7 @@ export default function PurchaseRequestsPage() {
   useEffect(() => { setPage(1); }, [debouncedSearch, status, priority]);
 
   async function deleteRequest(id) {
-    if (!confirm('Delete this purchase request? This cannot be undone.')) return;
+    if (!confirm(t('pr.deleteConfirm'))) return;
     const res = await fetch(`/api/purchase-requests/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) refresh();
   }
@@ -140,47 +142,47 @@ export default function PurchaseRequestsPage() {
 
   function printReport() { window.print(); }
 
-  if (!isAdmin && me) return <Shell active="/purchase-requests"><div className="text-red-500 text-sm">Only admins can view this page.</div></Shell>;
+  if (!isAdmin && me) return <Shell active="/purchase-requests"><div className="text-red-500 text-sm">{t('pr.adminOnly')}</div></Shell>;
 
   return (
     <Shell active="/purchase-requests">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Purchase Requests</h2>
-          <p className="text-xs text-slate-500">Dashboard &gt; Purchase Requests</p>
+          <h2 className="text-lg font-semibold">{t('pr.title')}</h2>
+          <p className="text-xs text-slate-500">{t('pr.breadcrumb')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ Export Excel</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ Export PDF</button>
-          <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 Print</button>
+          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('common.exportExcel')}</button>
+          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('common.exportPdf')}</button>
+          <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
-        <StatCard icon={'\u{1F551}'} tone="amber" label="Pending" value={kpis.Pending} />
-        <StatCard icon={'\u{1F50E}'} tone="blue" label="Under Review" value={kpis['Under Review']} />
-        <StatCard icon="✔" tone="brand" label="Approved" value={kpis.Approved} />
-        <StatCard icon="✕" tone="red" label="Rejected" value={kpis.Rejected} />
-        <StatCard icon={'\u{1F6D2}'} tone="slate" label="Purchased" value={kpis.Purchased} />
-        <StatCard icon={'\u{1F4B0}'} tone="amber" label="Payment Pending" value={kpis['Payment Pending']} />
-        <StatCard icon="✓" tone="emerald" label="Payment Completed" value={kpis['Payment Completed']} />
+        <StatCard icon={'\u{1F551}'} tone="amber" label={t('pr.kpi.pending')} value={kpis.Pending} />
+        <StatCard icon={'\u{1F50E}'} tone="blue" label={t('pr.kpi.underReview')} value={kpis['Under Review']} />
+        <StatCard icon="✔" tone="brand" label={t('pr.kpi.approved')} value={kpis.Approved} />
+        <StatCard icon="✕" tone="red" label={t('pr.kpi.rejected')} value={kpis.Rejected} />
+        <StatCard icon={'\u{1F6D2}'} tone="slate" label={t('pr.kpi.purchased')} value={kpis.Purchased} />
+        <StatCard icon={'\u{1F4B0}'} tone="amber" label={t('pr.kpi.paymentPending')} value={kpis['Payment Pending']} />
+        <StatCard icon="✓" tone="emerald" label={t('pr.kpi.paymentCompleted')} value={kpis['Payment Completed']} />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
-          <h3 className="font-medium text-sm mb-3">Requests per Month</h3>
+          <h3 className="font-medium text-sm mb-3">{t('pr.chart.requestsPerMonth')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={charts.perMonth}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
               <XAxis dataKey="month" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#14a89b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="count" stroke="#6B7A4F" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
-          <h3 className="font-medium text-sm mb-3">By Supplier</h3>
+          <h3 className="font-medium text-sm mb-3">{t('pr.chart.bySupplier')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={charts.bySupplier}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
@@ -192,7 +194,7 @@ export default function PurchaseRequestsPage() {
           </ResponsiveContainer>
         </div>
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
-          <h3 className="font-medium text-sm mb-3">By Project</h3>
+          <h3 className="font-medium text-sm mb-3">{t('pr.chart.byProject')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={charts.byProject}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
@@ -204,7 +206,7 @@ export default function PurchaseRequestsPage() {
           </ResponsiveContainer>
         </div>
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
-          <h3 className="font-medium text-sm mb-3">By Status</h3>
+          <h3 className="font-medium text-sm mb-3">{t('pr.chart.byStatus')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie data={charts.byStatus} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={2}>
@@ -217,7 +219,7 @@ export default function PurchaseRequestsPage() {
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder="Search purchase requests…" value={search} onChange={e => setSearch(e.target.value)}
+        <input placeholder={t('pr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES]} />
         <Dropdown value={priority} onChange={setPriority} options={['All', 'Normal', 'Urgent', 'Critical']} />
@@ -230,20 +232,20 @@ export default function PurchaseRequestsPage() {
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
               <th className="py-3 px-4">#</th>
-              <th onClick={() => toggleSort('request_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Date<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('project_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Project<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>Materials</th>
-              <th onClick={() => toggleSort('priority')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Priority<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>Requested By</th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">Actions</th>
+              <th onClick={() => toggleSort('request_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.date')}<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('project_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th>{t('pr.col.materials')}</th>
+              <th onClick={() => toggleSort('priority')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.priority')}<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th>{t('pr.col.requestedBy')}</th>
+              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">No purchase requests match these filters.</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('pr.noMatch')}</td></tr>
             ) : pageRows.map((r, i) => (
               <tr key={r.id} className="border-b border-black/5 dark:border-white/5">
                 <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
@@ -254,9 +256,9 @@ export default function PurchaseRequestsPage() {
                 <td>{r.requested_by_name || '—'}</td>
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{r.status}</span></td>
                 <td className="text-right px-4 space-x-2 whitespace-nowrap">
-                  <a href={'/purchase-requests/' + r.id} title="View Details" className="text-slate-400">{'\u{1F441}'}</a>
-                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title="Open Project" className="text-brand-500">↗</a>
-                  <button onClick={() => deleteRequest(r.id)} title="Delete" className="text-red-500">🗑</button>
+                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-slate-400">{'\u{1F441}'}</a>
+                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-500">↗</a>
+                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-red-500">🗑</button>
                 </td>
               </tr>
             ))}
@@ -266,9 +268,9 @@ export default function PurchaseRequestsPage() {
 
       <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <span>Showing {pageRows.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + pageRows.length} of {total} entries</span>
+          <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
-            <span>Rows:</span>
+            <span>{t('common.rows')}</span>
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>

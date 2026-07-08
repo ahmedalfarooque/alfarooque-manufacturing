@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { useLanguage } from '@/lib/i18n';
 
 const STATUS_BADGE = {
   Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -25,6 +26,7 @@ const EMPTY_FORM = {
 };
 
 export default function DriversPage() {
+  const { t } = useLanguage();
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
@@ -91,18 +93,18 @@ export default function DriversPage() {
     <Shell active="/drivers">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Drivers</h2>
-          <p className="text-xs text-slate-500">Dashboard &gt; Drivers</p>
+          <h2 className="text-lg font-semibold">{t('drivers.title')}</h2>
+          <p className="text-xs text-slate-500">{t('drivers.breadcrumb')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ Export Excel</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ Export PDF</button>
-          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ Add Driver</button>}
+          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('drivers.exportExcel')}</button>
+          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('drivers.exportPdf')}</button>
+          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('drivers.addDriver')}</button>}
         </div>
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder="Search by name, phone, license, iqama…" value={search} onChange={e => setSearch(e.target.value)}
+        <input placeholder={t('drivers.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
         <Dropdown value={status} onChange={setStatus} options={['All', 'Active', 'Inactive', 'On Leave', 'Terminated']} />
       </div>
@@ -113,21 +115,21 @@ export default function DriversPage() {
         <table className="w-full text-sm min-w-[900px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">Photo</th>
-              <th onClick={() => toggleSort('full_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Name<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('phone')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Phone<SortIndicator column="phone" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('cars')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle<SortIndicator column="cars" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('license_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">License Expiry<SortIndicator column="license_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('iqama_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Iqama Expiry<SortIndicator column="iqama_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">Actions</th>
+              <th className="py-3 px-4">{t('drivers.colPhoto')}</th>
+              <th onClick={() => toggleSort('full_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('phone')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colPhone')}<SortIndicator column="phone" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('cars')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colVehicle')}<SortIndicator column="cars" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('license_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colLicenseExpiry')}<SortIndicator column="license_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('iqama_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colIqamaExpiry')}<SortIndicator column="iqama_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4">{t('drivers.colActions')}</th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('drivers.loading')}</td></tr>
             ) : drivers.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">No drivers yet.</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('drivers.noneYet')}</td></tr>
             ) : drivers.map(d => {
               const lic = expiryInfo(d.license_expiry_date);
               const iqama = expiryInfo(d.iqama_expiry_date);
@@ -148,9 +150,9 @@ export default function DriversPage() {
                   <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {iqama.label}</span></td>
                   <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{d.status}</span></td>
                   <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
-                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title="Edit" className="text-brand-500">✎</button>}
-                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title="Delete" className="text-red-500">🗑</button>}
+                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-slate-400">{'\u{1F441}'}</button>
+                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} className="text-brand-500">✎</button>}
+                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} className="text-red-500">🗑</button>}
                   </td>
                 </tr>
               );
@@ -161,9 +163,9 @@ export default function DriversPage() {
 
       <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <span>Showing {drivers.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + drivers.length} of {total} entries</span>
+          <span>{t('drivers.showingEntries', { from: drivers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + drivers.length, total })}</span>
           <div className="flex items-center gap-1.5">
-            <span>Rows:</span>
+            <span>{t('drivers.rows')}</span>
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
@@ -180,6 +182,7 @@ export default function DriversPage() {
 }
 
 export function DriverModal({ modal, cars, onClose, onSave }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({ ...EMPTY_FORM, ...modal.data });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -196,10 +199,10 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-3xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? 'Add Driver' : 'Edit Driver'}</h3>
+        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('drivers.addModalTitle') : t('drivers.editModalTitle')}</h3>
         {err && <div className="text-red-500 text-sm">{err}</div>}
 
-        <Section title="Personal Information">
+        <Section title={t('drivers.sectionPersonal')}>
           <Field label="Full Name" value={form.full_name} onChange={set('full_name')} required />
           <Field label="Full Name (Arabic)" value={form.full_name_ar || ''} onChange={set('full_name_ar')} />
           <Field label="Employee ID" value={form.employee_id || ''} onChange={set('employee_id')} />
@@ -214,7 +217,7 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
           <Field label="Emergency Phone" value={form.emergency_phone || ''} onChange={set('emergency_phone')} />
         </Section>
 
-        <Section title="Employment Information">
+        <Section title={t('drivers.sectionEmployment')}>
           <Field label="Department" value={form.department || ''} onChange={set('department')} />
           <Field label="Designation" value={form.designation || ''} onChange={set('designation')} />
           <Field label="Joining Date" type="date" value={form.joining_date || ''} onChange={set('joining_date')} />
@@ -231,14 +234,14 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
           <Field label="Driving Category" value={form.driving_category || ''} onChange={set('driving_category')} />
         </Section>
 
-        <Section title="License Information">
+        <Section title={t('drivers.sectionLicense')}>
           <Field label="License Number" value={form.license_number || ''} onChange={set('license_number')} />
           <Field label="License Type" value={form.license_type || ''} onChange={set('license_type')} />
           <Field label="Issue Date" type="date" value={form.license_issue_date || ''} onChange={set('license_issue_date')} />
           <Field label="Expiry Date" type="date" value={form.license_expiry_date || ''} onChange={set('license_expiry_date')} />
         </Section>
 
-        <Section title="Iqama / Passport / Medical">
+        <Section title={t('drivers.sectionIqama')}>
           <Field label="Iqama Number" value={form.iqama_number || ''} onChange={set('iqama_number')} />
           <Field label="Iqama Expiry" type="date" value={form.iqama_expiry_date || ''} onChange={set('iqama_expiry_date')} />
           <Field label="Passport Number" value={form.passport_number || ''} onChange={set('passport_number')} />
@@ -247,13 +250,13 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
         </Section>
 
         <div>
-          <label className="block text-xs text-slate-500 mb-1">Notes</label>
+          <label className="block text-xs text-slate-500 mb-1">{t('drivers.notes')}</label>
           <textarea value={form.notes || ''} onChange={set('notes')} rows={2} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
         </div>
 
         <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-white dark:bg-[#0f172a] pb-1">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('drivers.cancel')}</button>
+          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('drivers.saving') : t('drivers.save')}</button>
         </div>
       </form>
     </div>

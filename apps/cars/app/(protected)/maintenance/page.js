@@ -6,6 +6,7 @@ import Dropdown from '@/components/Dropdown';
 import { ShopModal, EMPTY_FORM as EMPTY_SHOP_FORM } from '@/app/(protected)/maintenance-shops/page';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { useLanguage } from '@/lib/i18n';
 
 const PAYMENT_BADGE = {
   Paid: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -20,6 +21,7 @@ export const EMPTY_FORM = {
 };
 
 export default function MaintenanceRecordsPage() {
+  const { t } = useLanguage();
   const [me, setMe] = useState(null);
   const [records, setRecords] = useState([]);
   const [cars, setCars] = useState([]);
@@ -91,29 +93,29 @@ export default function MaintenanceRecordsPage() {
     <Shell active="/maintenance">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Maintenance</h2>
-          <p className="text-xs text-slate-500">Dashboard &gt; Maintenance</p>
+          <h2 className="text-lg font-semibold">{t('maint.title')}</h2>
+          <p className="text-xs text-slate-500">{t('maint.breadcrumb')}</p>
         </div>
-        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ Add Maintenance Record</button>}
+        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('maint.addRecord')}</button>}
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder="Search invoice, type, technician…" value={search} onChange={e => setSearch(e.target.value)}
+        <input placeholder={t('maint.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={carId} onChange={v => { setPage(1); setCarId(v); }} placeholder="All Vehicles" options={cars.map(c => [c.id, c.vehicle_number])} />
-        <Dropdown value={driverId} onChange={v => { setPage(1); setDriverId(v); }} placeholder="All Drivers" options={drivers.map(d => [d.id, d.full_name])} />
-        <Dropdown value={shopId} onChange={v => { setPage(1); setShopId(v); }} placeholder="All Shops" options={shops.map(s => [s.id, s.name])} />
-        <Dropdown value={category} onChange={v => { setPage(1); setCategory(v); }} placeholder="All Categories" options={categories.map(c => [c.name, c.name])} />
-        <Dropdown value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder="All Payment Status" options={[['Paid', 'Paid'], ['Unpaid', 'Unpaid'], ['Partial', 'Partial']]} />
+        <Dropdown value={carId} onChange={v => { setPage(1); setCarId(v); }} placeholder={t('maint.allVehicles')} options={cars.map(c => [c.id, c.vehicle_number])} />
+        <Dropdown value={driverId} onChange={v => { setPage(1); setDriverId(v); }} placeholder={t('maint.allDrivers')} options={drivers.map(d => [d.id, d.full_name])} />
+        <Dropdown value={shopId} onChange={v => { setPage(1); setShopId(v); }} placeholder={t('maint.allShops')} options={shops.map(s => [s.id, s.name])} />
+        <Dropdown value={category} onChange={v => { setPage(1); setCategory(v); }} placeholder={t('maint.allCategories')} options={categories.map(c => [c.name, c.name])} />
+        <Dropdown value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder={t('maint.allPaymentStatus')} options={[['Paid', 'Paid'], ['Unpaid', 'Unpaid'], ['Partial', 'Partial']]} />
         <div className="flex items-center gap-1">
           <input type="date" value={dateFrom} onChange={e => { setPage(1); setDateFrom(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
-          <span className="text-slate-400 text-xs">to</span>
+          <span className="text-slate-400 text-xs">{t('maint.to')}</span>
           <input type="date" value={dateTo} onChange={e => { setPage(1); setDateTo(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
         </div>
         <div className="flex items-center gap-1">
-          <input type="number" placeholder="Min cost" value={costMin} onChange={e => { setPage(1); setCostMin(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
+          <input type="number" placeholder={t('maint.minCost')} value={costMin} onChange={e => { setPage(1); setCostMin(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
           <span className="text-slate-400 text-xs">–</span>
-          <input type="number" placeholder="Max cost" value={costMax} onChange={e => { setPage(1); setCostMax(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
+          <input type="number" placeholder={t('maint.maxCost')} value={costMax} onChange={e => { setPage(1); setCostMax(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
         </div>
       </div>
 
@@ -123,24 +125,24 @@ export default function MaintenanceRecordsPage() {
         <table className="w-full text-sm min-w-[1000px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th onClick={() => toggleSort('maintenance_date')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Date<SortIndicator column="maintenance_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('vehicle')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle<SortIndicator column="vehicle" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('driver')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Driver<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('category')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Category<SortIndicator column="category" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('shop')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Shop<SortIndicator column="shop" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('amount')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Amount<SortIndicator column="amount" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('odometer_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">KM<SortIndicator column="odometer_km" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('invoice_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Invoice<SortIndicator column="invoice_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('payment_status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="payment_status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('created_by')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Created By<SortIndicator column="created_by" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">Actions</th>
+              <th onClick={() => toggleSort('maintenance_date')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colDate')}<SortIndicator column="maintenance_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('vehicle')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colVehicle')}<SortIndicator column="vehicle" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('driver')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colDriver')}<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('category')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colCategory')}<SortIndicator column="category" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('shop')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colShop')}<SortIndicator column="shop" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('amount')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colAmount')}<SortIndicator column="amount" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('odometer_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colKm')}<SortIndicator column="odometer_km" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('invoice_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colInvoice')}<SortIndicator column="invoice_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('payment_status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colStatus')}<SortIndicator column="payment_status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('created_by')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maint.colCreatedBy')}<SortIndicator column="created_by" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4">{t('maint.colActions')}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={11} className="py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={11} className="py-8 text-center text-slate-400">{t('maint.loading')}</td></tr>
             ) : sorted.length === 0 ? (
-              <tr><td colSpan={11} className="py-8 text-center text-slate-400">No maintenance records match these filters.</td></tr>
+              <tr><td colSpan={11} className="py-8 text-center text-slate-400">{t('maint.noMatch')}</td></tr>
             ) : sorted.map(r => (
               <tr key={r.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                 onClick={() => { window.location.href = '/maintenance/' + r.id; }}>
@@ -155,9 +157,9 @@ export default function MaintenanceRecordsPage() {
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{r.payment_status}</span></td>
                 <td>{r.platform_users?.full_name || r.platform_users?.email || '—'}</td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: r })} title="Edit" className="text-brand-500">✎</button>}
-                  {isAdmin && <button onClick={() => deleteRecord(r.id)} title="Delete" className="text-red-500">🗑</button>}
+                  <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title={t('maint.view')} className="text-slate-400">{'\u{1F441}'}</button>
+                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: r })} title={t('maint.edit')} className="text-brand-500">✎</button>}
+                  {isAdmin && <button onClick={() => deleteRecord(r.id)} title={t('maint.delete')} className="text-red-500">🗑</button>}
                 </td>
               </tr>
             ))}
@@ -167,9 +169,9 @@ export default function MaintenanceRecordsPage() {
 
       <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <span>Showing {records.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + records.length} of {total} entries</span>
+          <span>{t('maint.showingEntries', { from: records.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + records.length, total })}</span>
           <div className="flex items-center gap-1.5">
-            <span>Rows:</span>
+            <span>{t('maint.rows')}</span>
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
@@ -191,6 +193,7 @@ export default function MaintenanceRecordsPage() {
 }
 
 export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdded, onClose, onSaved }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState(() => ({ ...EMPTY_FORM, ...modal.data }));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -217,10 +220,10 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-3xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? 'Add Maintenance Record' : 'Edit Maintenance Record'}</h3>
+        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('maint.addModalTitle') : t('maint.editModalTitle')}</h3>
         {err && <div className="text-red-500 text-sm">{err}</div>}
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Basic Information</div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('maint.sectionBasic')}</div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs text-slate-500 mb-1">Vehicle</label>
@@ -259,18 +262,18 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
           <Field label="Warranty" value={form.warranty} onChange={set('warranty')} />
         </div>
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Maintenance Details</div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('maint.sectionDetails')}</div>
         <div className="grid gap-3">
           <TextArea label="Work Performed" value={form.work_performed} onChange={set('work_performed')} />
           <TextArea label="Parts Changed" value={form.parts_changed} onChange={set('parts_changed')} />
           <TextArea label="Labor Details" value={form.labor_details} onChange={set('labor_details')} />
           <TextArea label="Additional Notes" value={form.notes} onChange={set('notes')} />
         </div>
-        {modal.mode === 'add' && <p className="text-xs text-slate-500">Attachments (invoice, photos, documents) can be added from the record's detail page after saving.</p>}
+        {modal.mode === 'add' && <p className="text-xs text-slate-500">{t('maint.attachmentsHint')}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('maint.cancel')}</button>
+          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('maint.saving') : t('maint.save')}</button>
         </div>
       </form>
 

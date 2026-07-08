@@ -5,8 +5,10 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { useLanguage } from '@/lib/i18n';
 
 export default function MaintenanceShopsPage() {
+  const { t } = useLanguage();
   const [me, setMe] = useState(null);
   const [shops, setShops] = useState([]);
   const [search, setSearch] = useState('');
@@ -53,13 +55,13 @@ export default function MaintenanceShopsPage() {
     <Shell active="/maintenance-shops">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Maintenance Shops</h2>
-          <p className="text-xs text-slate-500">Dashboard &gt; Maintenance Shops</p>
+          <h2 className="text-lg font-semibold">{t('shops.title')}</h2>
+          <p className="text-xs text-slate-500">{t('shops.breadcrumb')}</p>
         </div>
-        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ Add Shop</button>}
+        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('shops.addShop')}</button>}
       </div>
 
-      <input placeholder="Search shops…" value={search} onChange={e => setSearch(e.target.value)}
+      <input placeholder={t('shops.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
         className="w-full max-w-sm rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm mb-4" />
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -68,19 +70,19 @@ export default function MaintenanceShopsPage() {
         <table className="w-full text-sm min-w-[800px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th onClick={() => toggleSort('name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Shop Name<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('contact_person')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Contact Person<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('mobile')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Mobile<SortIndicator column="mobile" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">City<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">VAT Number<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              {isAdmin && <th className="text-right px-4">Actions</th>}
+              <th onClick={() => toggleSort('name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('contact_person')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colContact')}<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('mobile')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colMobile')}<SortIndicator column="mobile" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colCity')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colVat')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              {isAdmin && <th className="text-right px-4">{t('shops.colActions')}</th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('shops.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">No shops added yet.</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('shops.noneYet')}</td></tr>
             ) : pageRows.map(s => (
               <tr key={s.id} className="border-b border-black/5 dark:border-white/5">
                 <td className="py-3 px-4 font-medium">{s.name}</td>
@@ -90,8 +92,8 @@ export default function MaintenanceShopsPage() {
                 <td>{s.vat_number || '—'}</td>
                 {isAdmin && (
                   <td className="text-right px-4 space-x-2">
-                    <button onClick={() => setModal({ mode: 'edit', data: s })} title="Edit" className="text-brand-500">✎</button>
-                    <button onClick={() => deleteShop(s.id)} title="Delete" className="text-red-500">🗑</button>
+                    <button onClick={() => setModal({ mode: 'edit', data: s })} title={t('shops.edit')} className="text-brand-500">✎</button>
+                    <button onClick={() => deleteShop(s.id)} title={t('shops.delete')} className="text-red-500">🗑</button>
                   </td>
                 )}
               </tr>
@@ -102,9 +104,9 @@ export default function MaintenanceShopsPage() {
 
       <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <span>Showing {pageRows.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + pageRows.length} of {total} entries</span>
+          <span>{t('shops.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
-            <span>Rows:</span>
+            <span>{t('shops.rows')}</span>
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
@@ -123,6 +125,7 @@ export default function MaintenanceShopsPage() {
 export const EMPTY_FORM = { name: '', contact_person: '', mobile: '', telephone: '', email: '', address: '', city: '', vat_number: '', cr_number: '', notes: '' };
 
 export function ShopModal({ modal, onClose, onSaved }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState(modal.data);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -148,17 +151,17 @@ export function ShopModal({ modal, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? 'Add Shop' : 'Edit Shop'}</h3>
+        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('shops.addModalTitle') : t('shops.editModalTitle')}</h3>
         {err && <div className="text-red-500 text-sm">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Shop Name" value={form.name} onChange={set('name')} required className="col-span-2" />
-          <Field label="Contact Person" value={form.contact_person} onChange={set('contact_person')} />
-          <Field label="Mobile" value={form.mobile} onChange={set('mobile')} />
+          <Field label={t('shops.colName')} value={form.name} onChange={set('name')} required className="col-span-2" />
+          <Field label={t('shops.colContact')} value={form.contact_person} onChange={set('contact_person')} />
+          <Field label={t('shops.colMobile')} value={form.mobile} onChange={set('mobile')} />
           <Field label="Telephone" value={form.telephone} onChange={set('telephone')} />
           <Field label="Email" value={form.email} onChange={set('email')} type="email" />
           <Field label="Address" value={form.address} onChange={set('address')} className="col-span-2" />
-          <Field label="City" value={form.city} onChange={set('city')} />
-          <Field label="VAT Number" value={form.vat_number} onChange={set('vat_number')} />
+          <Field label={t('shops.colCity')} value={form.city} onChange={set('city')} />
+          <Field label={t('shops.colVat')} value={form.vat_number} onChange={set('vat_number')} />
           <Field label="CR Number" value={form.cr_number} onChange={set('cr_number')} />
           <div className="col-span-2">
             <label className="block text-xs text-slate-500 mb-1">Notes</label>
@@ -166,8 +169,8 @@ export function ShopModal({ modal, onClose, onSaved }) {
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('shops.cancel')}</button>
+          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('shops.saving') : t('shops.save')}</button>
         </div>
       </form>
     </div>

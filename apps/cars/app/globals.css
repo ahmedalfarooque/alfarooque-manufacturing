@@ -5,13 +5,15 @@
 html.dark { color-scheme: dark; }
 
 body {
-  background: #0b1220;
-  color: #e5e7eb;
+  background: #FFFFFF;
+  color: #1A1A18;
+  transition: background-color .3s ease, color .3s ease;
 }
-html:not(.dark) body {
-  background: #f3f5f7;
-  color: #111827;
+html.dark body {
+  background: #14140F;
+  color: #F5F3EE;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(148,163,184,.4); border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(107,122,79,.4); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(107,122,79,.6); }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '@/lib/i18n';
 
 const API = '/api/auth';
 
@@ -29,6 +30,7 @@ async function call(action, extra) {
    requires. The one exception is an explicit ?mode=admin deep link,
    which only matters for the instant of that specific page load. */
 export default function LoginPage() {
+  const { t, lang, setLang } = useLanguage();
   const [mode, setMode] = useState('user'); // 'user' (email only) | 'admin' (email+password)
   const [step, setStep] = useState('credentials'); // 'credentials' | 'otp'
   const [email, setEmail] = useState('');
@@ -106,25 +108,32 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-2xl p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-11 w-11 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-400 font-bold text-lg">PT</div>
-          <div>
-            <div className="text-white font-semibold text-lg leading-tight">ProTrack</div>
-            <div className="text-slate-400 text-xs">AL FAROOQUE Project Management</div>
+    <div className="min-h-screen flex items-center justify-center bg-[#F7F5F1] dark:bg-[#14140F] px-4 transition-colors duration-200">
+      <div className="w-full max-w-md rounded-2xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] shadow-[0_2px_6px_rgba(26,26,24,0.05),0_20px_50px_rgba(26,26,24,0.10)] dark:shadow-none p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg">PT</div>
+            <div>
+              <div className="text-[#1A1A18] dark:text-white font-semibold text-lg leading-tight">{t('shell.appName')}</div>
+              <div className="text-[#8C8A80] dark:text-slate-400 text-xs">{t('login.tagline')}</div>
+            </div>
           </div>
+          <button type="button" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+            className="h-9 px-2.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-xs font-medium text-[#4A4A45] dark:text-slate-300 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200 shrink-0"
+            aria-label={t('shell.toggleLanguage')}>
+            {lang === 'ar' ? 'EN' : 'ع'}
+          </button>
         </div>
 
         {step === 'credentials' && (
-          <div className="grid grid-cols-2 gap-1 mb-6 rounded-lg bg-white/5 p-1">
+          <div className="grid grid-cols-2 gap-1 mb-6 rounded-lg bg-[#F7F5F1] dark:bg-white/5 p-1">
             <button type="button" onClick={() => switchMode('user')}
-              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'user' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200')}>
-              User
+              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'user' ? 'bg-brand-500 text-white' : 'text-[#8C8A80] dark:text-slate-400 hover:text-[#1A1A18] dark:hover:text-slate-200')}>
+              {t('login.user')}
             </button>
             <button type="button" onClick={() => switchMode('admin')}
-              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'admin' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200')}>
-              Admin
+              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'admin' ? 'bg-brand-500 text-white' : 'text-[#8C8A80] dark:text-slate-400 hover:text-[#1A1A18] dark:hover:text-slate-200')}>
+              {t('login.admin')}
             </button>
           </div>
         )}
@@ -132,45 +141,45 @@ export default function LoginPage() {
         {msg && (
           <div className={
             'mb-4 rounded-lg px-3 py-2 text-sm whitespace-pre-line ' +
-            (msg.kind === 'success' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30')
+            (msg.kind === 'success' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30')
           }>{msg.text}</div>
         )}
 
         {step === 'credentials' ? (
           <form onSubmit={submitCredentials} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Email</label>
+              <label className="block text-xs font-medium text-[#8C8A80] dark:text-slate-400 mb-1">{t('login.email')}</label>
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                className="w-full rounded-lg bg-[#F7F5F1] dark:bg-white/5 border border-[#E5E2DD] dark:border-white/10 px-3 py-2.5 text-[#1A1A18] dark:text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
             </div>
             {mode === 'admin' && (
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Password</label>
+                <label className="block text-xs font-medium text-[#8C8A80] dark:text-slate-400 mb-1">{t('login.password')}</label>
                 <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                  className="w-full rounded-lg bg-[#F7F5F1] dark:bg-white/5 border border-[#E5E2DD] dark:border-white/10 px-3 py-2.5 text-[#1A1A18] dark:text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
               </div>
             )}
             <button disabled={busy} type="submit"
               className="w-full rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition">
-              {busy ? 'Signing in…' : 'Continue'}
+              {busy ? t('login.signingIn') : t('login.continue')}
             </button>
           </form>
         ) : (
           <form onSubmit={submitOtp} className="space-y-4">
-            <p className="text-slate-400 text-sm">We sent a 6-digit code to <span className="text-white">{email}</span></p>
+            <p className="text-[#8C8A80] dark:text-slate-400 text-sm">{t('login.otpSentPrefix')} <span className="text-[#1A1A18] dark:text-white">{email}</span></p>
             <input inputMode="numeric" pattern="[0-9]*" maxLength={6} required value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-              className="w-full text-center tracking-[0.5em] text-lg rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+              className="w-full text-center tracking-[0.5em] text-lg rounded-lg bg-[#F7F5F1] dark:bg-white/5 border border-[#E5E2DD] dark:border-white/10 px-3 py-2.5 text-[#1A1A18] dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
             <button disabled={busy} type="submit"
               className="w-full rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition">
-              {busy ? 'Verifying…' : 'Verify & Sign In'}
+              {busy ? t('login.verifying') : t('login.verifyAndSignIn')}
             </button>
             <button type="button" disabled={cooldown > 0} onClick={resend}
-              className="w-full rounded-lg border border-white/10 text-slate-300 text-sm py-2 disabled:opacity-50">
-              {cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}
+              className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-slate-300 text-sm py-2 disabled:opacity-50">
+              {cooldown > 0 ? t('login.resendCodeCountdown', { seconds: cooldown }) : t('login.resendCode')}
             </button>
             <button type="button" onClick={() => switchMode(mode)}
-              className="w-full text-center text-xs text-slate-500 hover:text-slate-300">← Back to email{mode === 'admin' ? ' & password' : ''}</button>
+              className="w-full text-center text-xs text-[#8C8A80] dark:text-slate-500 hover:text-[#4A4A45] dark:hover:text-slate-300">{mode === 'admin' ? t('login.backToEmailPassword') : t('login.backToEmail')}</button>
           </form>
         )}
       </div>

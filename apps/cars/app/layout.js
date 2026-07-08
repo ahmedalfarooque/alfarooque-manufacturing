@@ -1,4 +1,5 @@
 import './globals.css';
+import { LanguageProvider } from '@/lib/i18n';
 
 export const metadata = {
   title: 'TrackFleet — AL FAROOQUE Cars Tracking',
@@ -11,11 +12,13 @@ export default function RootLayout({ children }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('af-cars-theme');if(t==='light'){}else{document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('af-cars-theme');if(t==='dark'){document.documentElement.classList.add('dark');}var l=localStorage.getItem('af-cars-lang');if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}}catch(e){}})();`,
           }}
         />
       </head>
-      <body className="min-h-screen font-sans antialiased">{children}</body>
+      <body className="min-h-screen font-sans antialiased">
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

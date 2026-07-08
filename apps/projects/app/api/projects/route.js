@@ -21,6 +21,7 @@ export async function GET(req) {
   const status = q.get('status') || 'All';
   const company = q.get('company') || 'All';
   const customer = q.get('customer') || 'All';
+  const assignedUser = q.get('assignedUser') || 'All';
   const sort = SORTS[q.get('sort')] || SORTS.latest;
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
   const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '10', 10)));
@@ -34,6 +35,13 @@ export async function GET(req) {
   if (session.role === 'external') {
     const { data: rows } = await sb.from('pm_project_assignees').select('project_id').eq('user_id', session.sub);
     assignedOnlyIds = (rows || []).map(r => r.project_id);
+    if (!assignedOnlyIds.length) return json({ projects: [], total: 0, page, pageSize });
+  }
+
+  if (assignedUser !== 'All') {
+    const { data: rows } = await sb.from('pm_project_assignees').select('project_id').eq('user_id', assignedUser);
+    const ids = (rows || []).map(r => r.project_id);
+    assignedOnlyIds = assignedOnlyIds ? assignedOnlyIds.filter(id => ids.includes(id)) : ids;
     if (!assignedOnlyIds.length) return json({ projects: [], total: 0, page, pageSize });
   }
 

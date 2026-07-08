@@ -5,6 +5,7 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { useLanguage } from '@/lib/i18n';
 
 const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -21,6 +22,7 @@ const EMPTY_FORM = {
 };
 
 export default function VehiclesPage() {
+  const { t } = useLanguage();
   const [me, setMe] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -108,19 +110,19 @@ export default function VehiclesPage() {
     <Shell active="/vehicles">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Vehicles</h2>
-          <p className="text-xs text-slate-500">Dashboard &gt; Vehicles</p>
+          <h2 className="text-lg font-semibold">{t('vehicles.title')}</h2>
+          <p className="text-xs text-slate-500">{t('vehicles.breadcrumb')}</p>
         </div>
         <div className="flex items-center gap-2">
-          {isAdmin && <button onClick={() => setImportOpen(true)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">⇪ Import Excel</button>}
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ Export Excel</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ Export PDF</button>
-          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ Add Vehicle</button>}
+          {isAdmin && <button onClick={() => setImportOpen(true)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">⇪ {t('vehicles.importExcel')}</button>}
+          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('vehicles.exportExcel')}</button>
+          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('vehicles.exportPdf')}</button>
+          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('vehicles.addVehicle')}</button>}
         </div>
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-5 gap-3">
-        <input placeholder="Search vehicles…" value={search} onChange={e => setSearch(e.target.value)}
+        <input placeholder={t('vehicles.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
         <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={['All', 'Running', 'Idle', 'Stopped', 'Offline']} />
         <Dropdown value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={['All', 'Diesel', 'Petrol', 'Electric']} />
@@ -133,22 +135,22 @@ export default function VehiclesPage() {
         <table className="w-full text-sm min-w-[900px]">
           <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
             <tr>
-              <th className="py-3 px-4">#</th>
-              <th onClick={() => toggleSort('vehicle_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Vehicle Number<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Name<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Type<SortIndicator column="type" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('fuel_type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Fuel<SortIndicator column="fuel_type" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('driver')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Driver<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Status<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('location')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">Location<SortIndicator column="location" sortKey={sortKey} sortDir={sortDir} /></th>
-              {isAdmin && <th className="text-right px-4">Actions</th>}
+              <th className="py-3 px-4">{t('vehicles.colNumber')}</th>
+              <th onClick={() => toggleSort('vehicle_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colVehicleNumber')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colType')}<SortIndicator column="type" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('fuel_type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colFuel')}<SortIndicator column="fuel_type" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('driver')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colDriver')}<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('location')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colLocation')}<SortIndicator column="location" sortKey={sortKey} sortDir={sortDir} /></th>
+              {isAdmin && <th className="text-right px-4">{t('vehicles.colActions')}</th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('vehicles.loading')}</td></tr>
             ) : sorted.length === 0 ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">No vehicles match these filters.</td></tr>
+              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('vehicles.noMatch')}</td></tr>
             ) : sorted.map((v, i) => (
               <tr key={v.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                 onClick={() => { window.location.href = '/vehicles/' + v.id; }}>
@@ -161,9 +163,9 @@ export default function VehiclesPage() {
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{v.status}</span></td>
                 <td>{v.location || '—'}</td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title="View" className="text-slate-400">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title="Edit" className="text-brand-500">✎</button>}
-                  {isAdmin && <button onClick={() => deleteVehicle(v.id)} title="Delete" className="text-red-500">🗑</button>}
+                  <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} className="text-slate-400">{'\u{1F441}'}</button>
+                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title={t('vehicles.edit')} className="text-brand-500">✎</button>}
+                  {isAdmin && <button onClick={() => deleteVehicle(v.id)} title={t('vehicles.delete')} className="text-red-500">🗑</button>}
                 </td>
               </tr>
             ))}
@@ -173,9 +175,9 @@ export default function VehiclesPage() {
 
       <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <span>Showing {vehicles.length ? (page - 1) * pageSize + 1 : 0} to {(page - 1) * pageSize + vehicles.length} of {total} entries</span>
+          <span>{t('vehicles.showingEntries', { from: vehicles.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + vehicles.length, total })}</span>
           <div className="flex items-center gap-1.5">
-            <span>Rows:</span>
+            <span>{t('vehicles.rows')}</span>
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
@@ -193,6 +195,7 @@ export default function VehiclesPage() {
 }
 
 export function VehicleModal({ modal, drivers, onClose, onSave }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState(modal.data);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -210,10 +213,10 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? 'Add Vehicle' : 'Edit Vehicle'}</h3>
+        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('vehicles.addModalTitle') : t('vehicles.editModalTitle')}</h3>
         {err && <div className="text-red-500 text-sm">{err}</div>}
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Basic Information</div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('vehicles.sectionBasic')}</div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Vehicle Number" value={form.vehicle_number} onChange={set('vehicle_number')} required />
           <Field label="Name" value={form.name || ''} onChange={set('name')} />
@@ -233,7 +236,7 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
           </div>
         </div>
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Insurance &amp; Registration</div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('vehicles.sectionInsurance')}</div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Insurance Company" value={form.insurance_company || ''} onChange={set('insurance_company')} />
           <Field label="Insurance Number" value={form.insurance_number || ''} onChange={set('insurance_number')} />
@@ -243,7 +246,7 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
           <Field label="Engine Number" value={form.engine_number || ''} onChange={set('engine_number')} />
         </div>
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">Service &amp; Purchase</div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('vehicles.sectionService')}</div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Last Service Date" value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" />
           <Field label="Next Service Date" value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" />
@@ -252,8 +255,8 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Saving…' : 'Save'}</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('vehicles.cancel')}</button>
+          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('vehicles.saving') : t('vehicles.save')}</button>
         </div>
       </form>
     </div>
@@ -269,6 +272,7 @@ function Field({ label, ...props }) {
 }
 
 function ImportModal({ onClose, onDone }) {
+  const { t } = useLanguage();
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
@@ -292,25 +296,25 @@ function ImportModal({ onClose, onDone }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <div onClick={e => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4">
-        <h3 className="font-semibold text-lg">Import Vehicles from Excel</h3>
-        <p className="text-xs text-slate-500">Upload the fleet workbook (.xlsx). Columns are auto-detected — supports both English headers and the AL FAROOQUE Arabic fleet sheet. Vehicles already in the system (matched by plate/vehicle number) are skipped, never overwritten.</p>
+        <h3 className="font-semibold text-lg">{t('vehicles.importTitle')}</h3>
+        <p className="text-xs text-slate-500">{t('vehicles.importDesc')}</p>
         {err && <div className="text-red-500 text-sm">{err}</div>}
         {result ? (
           <div className="text-sm space-y-1">
-            <div className="text-emerald-500 font-medium">Import complete.</div>
+            <div className="text-emerald-500 font-medium">{t('vehicles.importComplete')}</div>
             <div>Vehicles added: {result.inserted}</div>
             <div>Vehicles skipped (already exists): {result.skippedDuplicate}</div>
             <div>Vehicles skipped (no plate number): {result.skippedEmpty}</div>
             {result.maintenance?.sheetFound && <div>Maintenance items added: {result.maintenance.inserted} (skipped {result.maintenance.skipped})</div>}
             {result.maintenanceLog?.sheetFound && <div>Service history entries added: {result.maintenanceLog.inserted} (skipped {result.maintenanceLog.skipped})</div>}
-            <button onClick={onDone} className="mt-3 w-full px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">Done</button>
+            <button onClick={onDone} className="mt-3 w-full px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{t('vehicles.importDone')}</button>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">
             <input type="file" accept=".xlsx" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm" />
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">Cancel</button>
-              <button disabled={busy || !file} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? 'Importing…' : 'Import'}</button>
+              <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('vehicles.cancel')}</button>
+              <button disabled={busy || !file} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('vehicles.importing') : t('vehicles.importSubmit')}</button>
             </div>
           </form>
         )}
