@@ -5,35 +5,115 @@
    by, the customer-facing site.
    ═══════════════════════════════════════════════════════════════════ */
 
+/* ── DARK TOKENS (default) — warm olive-branded dark, mirrors the main
+   site's css/themes.css palette. Variable NAMES are kept unchanged
+   (--ad-teal* now hold olive values) so every consumer below and every
+   JS-rendered class works with zero changes. ── */
 :root {
-  --ad-bg:            #0a0d10;
-  --ad-bg-2:          #0e1217;
-  --ad-card:          rgba(255,255,255,0.045);
-  --ad-card-2:        rgba(255,255,255,0.07);
-  --ad-card-3:        rgba(16,20,26,0.92);
+  --ad-bg:            #14140F;
+  --ad-bg-2:          #1B1B14;
+  --ad-card:          rgba(255,255,255,0.05);
+  --ad-card-2:        rgba(255,255,255,0.08);
+  --ad-card-3:        rgba(27,27,20,0.94);
   --ad-border:        rgba(255,255,255,0.08);
   --ad-border-2:      rgba(255,255,255,0.14);
-  --ad-teal:          #0891a8;
-  --ad-teal-2:        #22c4de;
-  --ad-teal-glow:      rgba(8,145,168,0.30);
-  --ad-teal-bg:        rgba(8,145,168,0.12);
-  --ad-teal-bg-2:      rgba(8,145,168,0.20);
-  --ad-teal-border:    rgba(8,145,168,0.35);
-  --ad-text:          #f3f5f7;
-  --ad-text-70:       rgba(243,245,247,0.72);
-  --ad-text-50:       rgba(243,245,247,0.52);
-  --ad-text-35:       rgba(243,245,247,0.36);
+  --ad-teal:          #8CA05B;
+  --ad-teal-2:        #A3B873;
+  --ad-teal-glow:      rgba(140,160,91,0.30);
+  --ad-teal-bg:        rgba(140,160,91,0.12);
+  --ad-teal-bg-2:      rgba(140,160,91,0.20);
+  --ad-teal-border:    rgba(140,160,91,0.35);
+  --ad-text:          #F5F3EE;
+  --ad-text-70:       rgba(245,243,238,0.72);
+  --ad-text-50:       rgba(245,243,238,0.52);
+  --ad-text-35:       rgba(245,243,238,0.36);
   --ad-red:           #f87171;
+  --ad-red-bg:        rgba(248,113,113,0.14);
+  --ad-red-border:    rgba(248,113,113,0.30);
   --ad-green:         #4ade80;
+  --ad-green-bg:      rgba(74,222,128,0.14);
+  --ad-green-border:  rgba(74,222,128,0.30);
   --ad-amber:         #fbbf24;
+  --ad-amber-bg:      rgba(251,191,36,0.14);
   --ad-purple:        #a78bfa;
+  --ad-purple-bg:     rgba(167,139,250,0.14);
   --ad-blue:          #60a5fa;
+  --ad-blue-bg:       rgba(96,165,250,0.14);
+  --ad-neutral-fg:    #cbd5e1;
+  --ad-neutral-bg:    rgba(148,163,184,0.16);
+  --ad-btn-fg:        #14140F;
+  --ad-side-bg:       rgba(20,20,15,0.96);
+  --ad-topbar-bg:     rgba(20,20,15,0.85);
+  --ad-input-bg:      rgba(255,255,255,0.05);
+  --ad-input-bg-2:    rgba(255,255,255,0.08);
+  --ad-row-hover:     rgba(255,255,255,0.02);
+  --ad-glow-img:      radial-gradient(ellipse at top left, rgba(140,160,91,0.08), transparent 55%);
   --ad-r-sm: 8px; --ad-r-md: 12px; --ad-r-lg: 18px;
   --ad-sh: 0 8px 32px rgba(0,0,0,0.45);
   --ad-sh-lg: 0 20px 60px rgba(0,0,0,0.55);
-  --ad-font-display: 'Space Grotesk', sans-serif;
+  --ad-font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --ad-font-body: 'Inter', sans-serif;
 }
+
+/* ── LIGHT TOKENS — same convention as the main site: `.light` class on
+   <html> (and <body>) applied by the pre-paint script + toggle. ── */
+:is(html.light, body.light) {
+  --ad-bg:            #F7F5F1;
+  --ad-bg-2:          #FFFFFF;
+  --ad-card:          #FFFFFF;
+  --ad-card-2:        #FBFAF8;
+  --ad-card-3:        #FFFFFF;
+  --ad-border:        #E5E2DD;
+  --ad-border-2:      #D8D4CC;
+  --ad-teal:          #6B7A4F;
+  --ad-teal-2:        #7D8F5C;
+  --ad-teal-glow:      rgba(107,122,79,0.14);
+  --ad-teal-bg:        rgba(107,122,79,0.08);
+  --ad-teal-bg-2:      rgba(107,122,79,0.14);
+  --ad-teal-border:    rgba(107,122,79,0.30);
+  --ad-text:          #1A1A18;
+  --ad-text-70:       #4A4A45;
+  --ad-text-50:       #6B6B63;
+  --ad-text-35:       #8C8A80;
+  --ad-red:           #B91C1C;
+  --ad-red-bg:        rgba(185,28,28,0.08);
+  --ad-red-border:    rgba(185,28,28,0.25);
+  --ad-green:         #3D7A34;
+  --ad-green-bg:      rgba(61,122,52,0.10);
+  --ad-green-border:  rgba(61,122,52,0.28);
+  --ad-amber:         #92600A;
+  --ad-amber-bg:      rgba(180,120,10,0.10);
+  --ad-purple:        #6D28D9;
+  --ad-purple-bg:     rgba(109,40,217,0.08);
+  --ad-blue:          #1D4ED8;
+  --ad-blue-bg:       rgba(29,78,216,0.08);
+  --ad-neutral-fg:    #475569;
+  --ad-neutral-bg:    rgba(100,116,139,0.12);
+  --ad-btn-fg:        #FFFFFF;
+  --ad-side-bg:       #FFFFFF;
+  --ad-topbar-bg:     rgba(247,245,241,0.88);
+  --ad-input-bg:      #FFFFFF;
+  --ad-input-bg-2:    #FBFAF8;
+  --ad-row-hover:     rgba(26,26,24,0.025);
+  --ad-glow-img:      radial-gradient(ellipse at top left, rgba(107,122,79,0.06), transparent 55%);
+  --ad-sh: 0 2px 6px rgba(26,26,24,0.05), 0 12px 28px rgba(26,26,24,0.07);
+  --ad-sh-lg: 0 12px 28px rgba(26,26,24,0.10), 0 24px 54px rgba(26,26,24,0.09);
+}
+
+/* ── Smooth theme transition (mirrors the pattern at the top of
+   css/themes.css) — spinners/skeletons are exempted below. ── */
+.admin-body, .admin-body *, .admin-body *::before, .admin-body *::after {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.admin-body .ad-spinner,
+.admin-body .ad-skel-line,
+.admin-body .ad-toast,
+.admin-body .ad-lb-img,
+.admin-body .ad-switch-knob::after { transition-property: none; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -50,7 +130,7 @@ html body.admin-body {
      it, that rule (equal-or-higher specificity, admin-agnostic, applies
      site-wide) would win and turn this page's background light. */
   background-color: var(--ad-bg);
-  background-image: radial-gradient(ellipse at top left, rgba(8,145,168,0.08), transparent 55%);
+  background-image: var(--ad-glow-img);
   color: var(--ad-text);
   font-family: var(--ad-font-body);
   min-height: 100vh;
@@ -83,14 +163,14 @@ button, input, select, textarea { font-family: inherit; }
 .ad-label { display: block; font-size: 12px; font-weight: 700; color: var(--ad-text-70); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.04em; }
 .ad-input {
   width: 100%; padding: 11px 14px; border-radius: var(--ad-r-sm);
-  background: rgba(255,255,255,0.05); border: 1px solid var(--ad-border-2); color: var(--ad-text);
+  background: var(--ad-input-bg); border: 1px solid var(--ad-border-2); color: var(--ad-text);
   font-size: 14px; transition: border-color 0.18s, background 0.18s;
 }
-.ad-input:focus { outline: none; border-color: var(--ad-teal-2); background: rgba(255,255,255,0.08); }
+.ad-input:focus { outline: none; border-color: var(--ad-teal-2); background: var(--ad-input-bg-2); }
 .ad-otp-input { text-align: center; font-size: 26px; letter-spacing: 10px; font-weight: 700; padding: 14px; }
 .ad-btn {
   width: 100%; padding: 12px; border-radius: var(--ad-r-sm); border: none; cursor: pointer;
-  background: linear-gradient(100deg, var(--ad-teal), var(--ad-teal-2)); color: #06181c;
+  background: linear-gradient(100deg, var(--ad-teal), var(--ad-teal-2)); color: var(--ad-btn-fg);
   font-weight: 700; font-size: 14px; transition: transform 0.18s, box-shadow 0.2s, opacity 0.2s;
   box-shadow: 0 4px 20px var(--ad-teal-glow);
 }
@@ -104,8 +184,8 @@ button, input, select, textarea { font-family: inherit; }
 .ad-btn-ghost:hover:not(:disabled) { border-color: var(--ad-teal-border); color: var(--ad-teal-2); }
 .ad-btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
 .ad-msg { padding: 10px 14px; border-radius: var(--ad-r-sm); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
-.ad-msg--error { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: var(--ad-red); }
-.ad-msg--success { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); color: var(--ad-green); }
+.ad-msg--error { background: var(--ad-red-bg); border: 1px solid var(--ad-red-border); color: var(--ad-red); }
+.ad-msg--success { background: var(--ad-green-bg); border: 1px solid var(--ad-green-border); color: var(--ad-green); }
 .ad-login-back { display: block; text-align: center; font-size: 12px; color: var(--ad-text-50); margin-top: 18px; text-decoration: none; cursor: pointer; background: none; border: none; width: 100%; }
 .ad-login-back:hover { color: var(--ad-teal-2); }
 
@@ -117,7 +197,7 @@ button, input, select, textarea { font-family: inherit; }
 
 /* Sidebar */
 .ad-side {
-  background: rgba(10,13,16,0.96); border-right: 1px solid var(--ad-border);
+  background: var(--ad-side-bg); border-inline-end: 1px solid var(--ad-border);
   display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
   backdrop-filter: blur(20px);
 }
@@ -152,12 +232,12 @@ button, input, select, textarea { font-family: inherit; }
 /* Topbar */
 .ad-topbar {
   position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 14px;
-  padding: 12px 24px; background: rgba(10,13,16,0.85); border-bottom: 1px solid var(--ad-border);
+  padding: 12px 24px; background: var(--ad-topbar-bg); border-bottom: 1px solid var(--ad-border);
   backdrop-filter: blur(16px);
 }
 .ad-search-wrap { position: relative; flex: 1; max-width: 380px; }
-.ad-search-wrap svg { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); width: 15px; height: 15px; color: var(--ad-text-35); }
-.ad-search-input { width: 100%; padding: 8px 12px 8px 34px; border-radius: 99px; background: var(--ad-card-2); border: 1px solid var(--ad-border-2); color: var(--ad-text); font-size: 13px; }
+.ad-search-wrap svg { position: absolute; top: 50%; inset-inline-start: 12px; transform: translateY(-50%); width: 15px; height: 15px; color: var(--ad-text-35); }
+.ad-search-input { width: 100%; padding: 8px 12px; padding-inline-start: 34px; border-radius: 99px; background: var(--ad-card-2); border: 1px solid var(--ad-border-2); color: var(--ad-text); font-size: 13px; }
 .ad-search-input:focus { outline: none; border-color: var(--ad-teal-border); }
 .ad-topbar-right { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
 .ad-clock { font-size: 12px; color: var(--ad-text-50); font-variant-numeric: tabular-nums; margin-inline-end: 6px; white-space: nowrap; }
@@ -168,8 +248,9 @@ button, input, select, textarea { font-family: inherit; }
 }
 .ad-icon-btn svg { width: 16px; height: 16px; }
 .ad-icon-btn:hover { border-color: var(--ad-teal-border); color: var(--ad-teal-2); }
-.ad-icon-badge { position: absolute; top: -3px; right: -3px; background: var(--ad-red); color: #fff; font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 99px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--ad-bg); }
-.ad-profile-btn { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; border-radius: 99px; background: var(--ad-card-2); border: 1px solid var(--ad-border); cursor: pointer; color: var(--ad-text); }
+.ad-icon-badge { position: absolute; top: -3px; inset-inline-end: -3px; background: var(--ad-red); color: #fff; font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 99px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--ad-bg); }
+.ad-profile-btn { display: flex; align-items: center; gap: 8px; padding-block: 5px; padding-inline: 6px 12px; border-radius: 99px; background: var(--ad-card-2); border: 1px solid var(--ad-border); cursor: pointer; color: var(--ad-text); }
+.ad-lang-btn { width: auto; min-width: 36px; padding: 0 11px; font-size: 12px; font-weight: 800; letter-spacing: 0.02em; font-family: 'Cairo', var(--ad-font-body); }
 .ad-profile-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--ad-teal-bg-2); color: var(--ad-teal-2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
 .ad-profile-name { font-size: 12.5px; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -208,27 +289,28 @@ button, input, select, textarea { font-family: inherit; }
 .ad-table th { text-align: start; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ad-text-35); padding: 11px 14px; background: var(--ad-card-2); border-bottom: 1px solid var(--ad-border); white-space: nowrap; }
 .ad-table td { padding: 12px 14px; border-bottom: 1px solid var(--ad-border); color: var(--ad-text-70); vertical-align: middle; }
 .ad-table tr:last-child td { border-bottom: none; }
-.ad-table tr:hover td { background: rgba(255,255,255,0.02); }
+.ad-table tr:hover td { background: var(--ad-row-hover); }
 /* Whole-row click target (Customers table) — buttons inside still work
    independently, handled in JS by checking the click target first. */
 .ad-table tr[data-customer-row] { cursor: pointer; }
 .ad-table tr[data-customer-row]:hover td { background: var(--ad-card-2); }
 .ad-table tr[data-customer-row]:focus-visible { outline: 2px solid var(--ad-teal-2); outline-offset: -2px; }
 .ad-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-.ad-badge--pending, .ad-badge--new { background: rgba(251,191,36,0.14); color: var(--ad-amber); }
-.ad-badge--confirmed, .ad-badge--contacted { background: rgba(96,165,250,0.14); color: var(--ad-blue); }
-.ad-badge--processing, .ad-badge--manufacturing, .ad-badge--quality_check, .ad-badge--quoted { background: rgba(167,139,250,0.14); color: var(--ad-purple); }
-.ad-badge--packed, .ad-badge--ready, .ad-badge--shipped, .ad-badge--out_for_delivery { background: rgba(34,196,222,0.14); color: var(--ad-teal-2); }
-.ad-badge--delivered, .ad-badge--completed, .ad-badge--converted, .ad-badge--active, .ad-badge--paid { background: rgba(74,222,128,0.14); color: var(--ad-green); }
-.ad-badge--cancelled, .ad-badge--returned, .ad-badge--rejected, .ad-badge--failed, .ad-badge--suspended, .ad-badge--closed { background: rgba(248,113,113,0.14); color: var(--ad-red); }
-.ad-badge--refunded { background: rgba(148,163,184,0.16); color: #cbd5e1; }
+.ad-badge--pending, .ad-badge--new { background: var(--ad-amber-bg); color: var(--ad-amber); }
+.ad-badge--confirmed, .ad-badge--contacted { background: var(--ad-blue-bg); color: var(--ad-blue); }
+.ad-badge--processing, .ad-badge--manufacturing, .ad-badge--quality_check, .ad-badge--quoted { background: var(--ad-purple-bg); color: var(--ad-purple); }
+.ad-badge--packed, .ad-badge--ready, .ad-badge--shipped, .ad-badge--out_for_delivery { background: var(--ad-teal-bg-2); color: var(--ad-teal-2); }
+.ad-badge--delivered, .ad-badge--completed, .ad-badge--converted, .ad-badge--active, .ad-badge--paid { background: var(--ad-green-bg); color: var(--ad-green); }
+.ad-badge--cancelled, .ad-badge--returned, .ad-badge--rejected, .ad-badge--failed, .ad-badge--suspended, .ad-badge--closed { background: var(--ad-red-bg); color: var(--ad-red); }
+.ad-badge--refunded { background: var(--ad-neutral-bg); color: var(--ad-neutral-fg); }
 
 /* Buttons */
 .ad-btn-sm { padding: 6px 13px; border-radius: var(--ad-r-sm); font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--ad-border-2); background: var(--ad-card-2); color: var(--ad-text-70); transition: border-color 0.16s, color 0.16s; }
 .ad-btn-sm:hover { border-color: var(--ad-teal-border); color: var(--ad-teal-2); }
-.ad-btn-sm--primary { background: linear-gradient(100deg, var(--ad-teal), var(--ad-teal-2)); color: #06181c; border-color: transparent; }
-.ad-btn-sm--danger { border-color: rgba(248,113,113,0.3); color: var(--ad-red); }
-.ad-btn-sm--danger:hover { background: rgba(248,113,113,0.1); }
+.ad-btn-sm--primary { background: linear-gradient(100deg, var(--ad-teal), var(--ad-teal-2)); color: var(--ad-btn-fg); border-color: transparent; }
+.ad-btn-sm--primary:hover { color: var(--ad-btn-fg); }
+.ad-btn-sm--danger { border-color: var(--ad-red-border); color: var(--ad-red); }
+.ad-btn-sm--danger:hover { background: var(--ad-red-bg); color: var(--ad-red); }
 /* View/Edit always share one line with equal spacing — table cells wrap
    with `overflow-x: auto` on .ad-table-wrap for narrow screens instead of
    stacking the buttons. */
@@ -238,7 +320,7 @@ button, input, select, textarea { font-family: inherit; }
 /* Toolbar */
 .ad-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .ad-toolbar .ad-input { max-width: 260px; }
-.ad-select { padding: 8px 30px 8px 12px; border-radius: var(--ad-r-sm); background: var(--ad-card-2); border: 1px solid var(--ad-border-2); color: var(--ad-text); font-size: 13px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.ad-select { padding-block: 8px; padding-inline: 12px 30px; border-radius: var(--ad-r-sm); background: var(--ad-card-2); border: 1px solid var(--ad-border-2); color: var(--ad-text); font-size: 13px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
 /* The dropdown POPUP list is rendered by the OS/browser with a light
    background regardless of our theme — without this, <option> text
    inherits the dark-theme's near-white color and becomes invisible
@@ -271,14 +353,14 @@ button, input, select, textarea { font-family: inherit; }
 .ad-modal-overlay.is-open { display: flex; }
 .ad-modal { background: var(--ad-card-3); border: 1px solid var(--ad-border-2); border-radius: var(--ad-r-lg); max-width: 600px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 26px; box-shadow: var(--ad-sh-lg); position: relative; animation: adFadeUp 0.22s ease; }
 .ad-modal--wide { max-width: 780px; }
-.ad-modal-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--ad-card-2); border: 1px solid var(--ad-border-2); color: var(--ad-text-70); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.ad-modal-close { position: absolute; top: 14px; inset-inline-end: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--ad-card-2); border: 1px solid var(--ad-border-2); color: var(--ad-text-70); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
 .ad-modal-title { font-family: var(--ad-font-display); font-size: 17px; margin: 0 0 16px; padding-inline-end: 30px; }
 
 /* Timeline (order tracking) */
 .ad-timeline { display: flex; flex-wrap: wrap; gap: 0; margin: 14px 0; }
 .ad-timeline-step { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; min-width: 80px; padding: 4px; }
 .ad-timeline-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--ad-card-2); border: 2px solid var(--ad-border-2); display: flex; align-items: center; justify-content: center; font-size: 11px; }
-.ad-timeline-step.is-done .ad-timeline-dot { background: rgba(74,222,128,0.15); border-color: var(--ad-green); color: var(--ad-green); }
+.ad-timeline-step.is-done .ad-timeline-dot { background: var(--ad-green-bg); border-color: var(--ad-green); color: var(--ad-green); }
 .ad-timeline-label { font-size: 9.5px; color: var(--ad-text-35); text-align: center; text-transform: uppercase; }
 
 /* Toggle switch */
@@ -293,8 +375,33 @@ button, input, select, textarea { font-family: inherit; }
 .ad-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ad-card-3); border: 1px solid var(--ad-teal-border); padding: 12px 22px; border-radius: var(--ad-r-md); font-size: 13px; font-weight: 600; box-shadow: var(--ad-sh-lg); opacity: 0; pointer-events: none; z-index: 500; transition: opacity 0.25s, transform 0.25s; }
 .ad-toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Mobile sidebar toggle */
+/* Mobile sidebar toggle + drawer backdrop */
 .ad-mobile-toggle { display: none; }
+.ad-backdrop { display: none; position: fixed; inset: 0; z-index: 95; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); }
+
+/* ────────────────── SKELETON LOADING (shimmer consistent with the
+   site's .cat-slider--loading pattern) ────────────────── */
+.ad-skel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.ad-skel { padding: 18px; border-radius: var(--ad-r-md); background: var(--ad-card); border: 1px solid var(--ad-border); }
+.ad-skel-line {
+  height: 12px; border-radius: 6px; margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--ad-card-2) 25%, var(--ad-teal-bg) 50%, var(--ad-card-2) 75%);
+  background-size: 200% 100%;
+  animation: adShimmer 1.3s linear infinite;
+}
+.ad-skel-line:last-child { margin-bottom: 0; }
+@keyframes adShimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .ad-skel-line { animation: none; } }
+
+/* ────────────────── FOCUS VISIBILITY ────────────────── */
+.ad-nav-item:focus-visible, .ad-btn:focus-visible, .ad-btn-sm:focus-visible,
+.ad-btn-ghost:focus-visible, .ad-icon-btn:focus-visible, .ad-profile-btn:focus-visible,
+.ad-login-back:focus-visible, .ad-modal-close:focus-visible, .ad-switch:focus-visible {
+  outline: 2px solid var(--ad-teal-2); outline-offset: 2px;
+}
+.ad-input:focus-visible, .ad-select:focus-visible, .ad-search-input:focus-visible {
+  outline: 2px solid var(--ad-teal-2); outline-offset: 1px;
+}
 
 /* ────────────────── READ-ONLY VIEW MODALS ────────────────── */
 .ad-view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; margin-bottom: 6px; }
@@ -362,10 +469,14 @@ button, input, select, textarea { font-family: inherit; }
 /* ────────────────── RESPONSIVE ────────────────── */
 @media (max-width: 980px) {
   .ad-shell { grid-template-columns: 1fr; }
-  .ad-side { position: fixed; left: 0; top: 0; width: 258px; z-index: 100; transform: translateX(-100%); transition: transform 0.25s; }
+  .ad-side { position: fixed; left: 0; top: 0; width: 258px; max-width: 82vw; z-index: 100; transform: translateX(-100%); transition: transform 0.25s; }
   .ad-side.is-open { transform: translateX(0); }
+  .ad-side.is-open ~ .ad-backdrop, .ad-side.is-open + .ad-backdrop { display: block; }
   .ad-mobile-toggle { display: flex; }
   .ad-search-wrap { display: none; }
+  /* RTL: the drawer lives on the right and slides in from the right */
+  html[dir="rtl"] .ad-side { left: auto; right: 0; transform: translateX(100%); }
+  html[dir="rtl"] .ad-side.is-open { transform: translateX(0); }
 }
 @media (max-width: 640px) {
   .ad-content { padding: 18px 14px 50px; }
@@ -381,3 +492,28 @@ button, input, select, textarea { font-family: inherit; }
   .ad-lb-next { right: 8px; }
   .ad-lb-btn { width: 36px; height: 36px; }
 }
+
+/* ────────────────── RTL (Arabic) ──────────────────
+   Most layout auto-flips: the shell is a grid (tracks follow the
+   writing direction) and physical left/right properties above were
+   converted to logical inline properties. Only the leftovers that
+   cannot auto-flip live here. */
+html[dir="rtl"] {
+  --ad-font-display: 'Cairo', 'Tajawal', sans-serif;
+  --ad-font-body: 'Cairo', 'Tajawal', sans-serif;
+}
+html[dir="rtl"] body.admin-body { font-family: 'Cairo', 'Tajawal', sans-serif; letter-spacing: 0; }
+html[dir="rtl"] .ad-label,
+html[dir="rtl"] .ad-nav-section-title,
+html[dir="rtl"] .ad-side-brand-tag,
+html[dir="rtl"] .ad-table th,
+html[dir="rtl"] .ad-view-lbl,
+html[dir="rtl"] .ad-timeline-label,
+html[dir="rtl"] .ad-nav-soon-tag { letter-spacing: 0; }
+/* Active nav indicator bar sits on the inline-start edge */
+html[dir="rtl"] .ad-nav-item.is-active { box-shadow: inset -3px 0 0 var(--ad-teal-2); }
+/* Custom select chevron moves to the left in RTL */
+html[dir="rtl"] .ad-select { background-position: left 10px center; }
+/* Numeric/latin data keeps LTR shaping inside RTL pages */
+html[dir="rtl"] .ad-clock { direction: ltr; }
+html[dir="rtl"] .ad-otp-input { direction: ltr; }

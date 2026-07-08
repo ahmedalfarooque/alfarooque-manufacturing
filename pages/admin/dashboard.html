@@ -1,12 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>(function(){document.documentElement.style.colorScheme='dark';})();</script>
+<script>
+/* Pre-paint theme + language: apply .light / dir="rtl" before CSS loads
+   so there is never a flash. Theme: explicit admin choice first, then the
+   main site's saved theme, then the OS preference (system-followers keep
+   following until they explicitly toggle). */
+(function(){
+  try{
+    var t = localStorage.getItem('af-admin-theme') || localStorage.getItem('theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    document.documentElement.classList.toggle('light', t === 'light');
+    document.documentElement.style.colorScheme = t;
+    var l = localStorage.getItem('language') === 'ar' ? 'ar' : 'en';
+    document.documentElement.lang = l;
+    if (l === 'ar') document.documentElement.dir = 'rtl';
+  }catch(e){ document.documentElement.style.colorScheme = 'dark'; }
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Admin Dashboard — AL FAROOQUE</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/admin/admin.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
@@ -20,63 +38,68 @@
       <img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE" width="30" height="30">
       <div>
         <div class="ad-side-brand-text">AL FAROOQUE</div>
-        <span class="ad-side-brand-tag">Admin Portal</span>
+        <span class="ad-side-brand-tag" data-i18n="brand_tag">Admin Portal</span>
       </div>
     </div>
     <nav class="ad-nav" id="adNav">
-      <div class="ad-nav-section-title">Overview</div>
-      <button class="ad-nav-item" data-page="home"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
-      <button class="ad-nav-item" data-page="notifications"><i data-lucide="bell"></i><span>Notifications</span><span class="ad-nav-badge ad-hidden" id="navNotifBadge">0</span></button>
+      <div class="ad-nav-section-title" data-i18n="sec_overview">Overview</div>
+      <button class="ad-nav-item" data-page="home"><i data-lucide="layout-dashboard"></i><span data-i18n="nav_dashboard">Dashboard</span></button>
+      <button class="ad-nav-item" data-page="notifications"><i data-lucide="bell"></i><span data-i18n="nav_notifications">Notifications</span><span class="ad-nav-badge ad-hidden" id="navNotifBadge">0</span></button>
 
-      <div class="ad-nav-section-title">Sales</div>
-      <button class="ad-nav-item" data-page="orders"><i data-lucide="shopping-cart"></i><span>Orders</span></button>
-      <button class="ad-nav-item" data-page="customers"><i data-lucide="users"></i><span>Customers</span></button>
-      <button class="ad-nav-item" data-page="quotes"><i data-lucide="file-text"></i><span>Quotes</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Messages"><i data-lucide="mail"></i><span>Messages</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Payments"><i data-lucide="credit-card"></i><span>Payments</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Invoices"><i data-lucide="receipt"></i><span>Invoices</span><span class="ad-nav-soon-tag">Soon</span></button>
+      <div class="ad-nav-section-title" data-i18n="sec_sales">Sales</div>
+      <button class="ad-nav-item" data-page="orders"><i data-lucide="shopping-cart"></i><span data-i18n="nav_orders">Orders</span></button>
+      <button class="ad-nav-item" data-page="customers"><i data-lucide="users"></i><span data-i18n="nav_customers">Customers</span></button>
+      <button class="ad-nav-item" data-page="quotes"><i data-lucide="file-text"></i><span data-i18n="nav_quotes">Quotes</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Messages"><i data-lucide="mail"></i><span data-i18n="nav_messages">Messages</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Payments"><i data-lucide="credit-card"></i><span data-i18n="nav_payments">Payments</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Invoices"><i data-lucide="receipt"></i><span data-i18n="nav_invoices">Invoices</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
 
-      <div class="ad-nav-section-title">Catalog</div>
-      <button class="ad-nav-item" data-page="products"><i data-lucide="package"></i><span>Products</span></button>
-      <button class="ad-nav-item" data-page="categories"><i data-lucide="layers"></i><span>Categories</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Inventory"><i data-lucide="warehouse"></i><span>Inventory</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Production"><i data-lucide="factory"></i><span>Production</span><span class="ad-nav-soon-tag">Soon</span></button>
+      <div class="ad-nav-section-title" data-i18n="sec_catalog">Catalog</div>
+      <button class="ad-nav-item" data-page="products"><i data-lucide="package"></i><span data-i18n="nav_products">Products</span></button>
+      <button class="ad-nav-item" data-page="categories"><i data-lucide="layers"></i><span data-i18n="nav_categories">Categories</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Inventory"><i data-lucide="warehouse"></i><span data-i18n="nav_inventory">Inventory</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Production"><i data-lucide="factory"></i><span data-i18n="nav_production">Production</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
 
-      <div class="ad-nav-section-title">Insights</div>
-      <button class="ad-nav-item is-soon" data-soon="Reports"><i data-lucide="file-bar-chart"></i><span>Reports</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Analytics"><i data-lucide="bar-chart-3"></i><span>Analytics</span><span class="ad-nav-soon-tag">Soon</span></button>
+      <div class="ad-nav-section-title" data-i18n="sec_insights">Insights</div>
+      <button class="ad-nav-item is-soon" data-soon="Reports"><i data-lucide="file-bar-chart"></i><span data-i18n="nav_reports">Reports</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Analytics"><i data-lucide="bar-chart-3"></i><span data-i18n="nav_analytics">Analytics</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
 
-      <div class="ad-nav-section-title">System</div>
-      <button class="ad-nav-item is-soon" data-soon="Website Settings"><i data-lucide="globe"></i><span>Website Settings</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Users"><i data-lucide="user-cog"></i><span>Users</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Roles &amp; Permissions"><i data-lucide="shield"></i><span>Roles &amp; Permissions</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item" data-page="audit"><i data-lucide="scroll-text"></i><span>Audit Logs</span></button>
-      <button class="ad-nav-item is-soon" data-soon="Email Templates"><i data-lucide="mail-plus"></i><span>Email Templates</span><span class="ad-nav-soon-tag">Soon</span></button>
-      <button class="ad-nav-item is-soon" data-soon="System Settings"><i data-lucide="settings"></i><span>System Settings</span><span class="ad-nav-soon-tag">Soon</span></button>
+      <div class="ad-nav-section-title" data-i18n="sec_system">System</div>
+      <button class="ad-nav-item is-soon" data-soon="Website Settings"><i data-lucide="globe"></i><span data-i18n="nav_website_settings">Website Settings</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Users"><i data-lucide="user-cog"></i><span data-i18n="nav_users">Users</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Roles &amp; Permissions"><i data-lucide="shield"></i><span data-i18n="nav_roles">Roles &amp; Permissions</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item" data-page="audit"><i data-lucide="scroll-text"></i><span data-i18n="nav_audit">Audit Logs</span></button>
+      <button class="ad-nav-item is-soon" data-soon="Email Templates"><i data-lucide="mail-plus"></i><span data-i18n="nav_email_templates">Email Templates</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
+      <button class="ad-nav-item is-soon" data-soon="System Settings"><i data-lucide="settings"></i><span data-i18n="nav_system_settings">System Settings</span><span class="ad-nav-soon-tag" data-i18n="soon">Soon</span></button>
     </nav>
     <div class="ad-side-foot">
-      <button class="ad-nav-item" data-page="account"><i data-lucide="user"></i><span>My Account</span></button>
-      <button class="ad-nav-item ad-logout-btn" id="logoutBtn"><i data-lucide="log-out"></i><span>Logout</span></button>
+      <button class="ad-nav-item" data-page="account"><i data-lucide="user"></i><span data-i18n="nav_account">My Account</span></button>
+      <button class="ad-nav-item ad-logout-btn" id="logoutBtn"><i data-lucide="log-out"></i><span data-i18n="nav_logout">Logout</span></button>
     </div>
   </aside>
+  <div class="ad-backdrop" id="adBackdrop"></div>
 
   <!-- ═══ MAIN ═══ -->
   <div>
     <header class="ad-topbar">
-      <button class="ad-icon-btn ad-mobile-toggle" id="sideToggle" aria-label="Menu"><i data-lucide="menu"></i></button>
+      <button class="ad-icon-btn ad-mobile-toggle" id="sideToggle" aria-label="Menu" data-i18n-aria="aria_menu"><i data-lucide="menu"></i></button>
       <div class="ad-search-wrap">
         <i data-lucide="search"></i>
-        <input class="ad-search-input" id="globalSearch" type="search" placeholder="Search orders, customers, products…">
+        <input class="ad-search-input" id="globalSearch" type="search" placeholder="Search orders, customers, products…" data-i18n-ph="search_ph">
       </div>
       <div class="ad-topbar-right">
         <span class="ad-clock" id="adClock">--:--:--</span>
-        <button class="ad-icon-btn" id="notifBellBtn" aria-label="Notifications" data-page="notifications">
+        <button class="ad-icon-btn" id="themeToggleBtn" aria-label="Toggle theme" data-i18n-aria="aria_theme">
+          <i data-lucide="sun"></i>
+        </button>
+        <button class="ad-icon-btn" id="notifBellBtn" aria-label="Notifications" data-i18n-aria="aria_notifications" data-page="notifications">
           <i data-lucide="bell"></i>
           <span class="ad-icon-badge ad-hidden" id="bellBadge">0</span>
         </button>
-        <button class="ad-icon-btn" id="quickAddBtn" aria-label="Quick Actions" data-page="products">
+        <button class="ad-icon-btn" id="quickAddBtn" aria-label="Quick Actions" data-i18n-aria="aria_quick_add" data-page="products">
           <i data-lucide="plus"></i>
         </button>
+        <button class="ad-icon-btn ad-lang-btn" id="langToggleBtn" aria-label="Switch language" data-i18n-aria="aria_lang">ع</button>
         <button class="ad-profile-btn" id="profileBtn" data-page="account">
           <span class="ad-profile-avatar" id="profileAvatar">··</span>
           <span class="ad-profile-name" id="profileName">Admin</span>

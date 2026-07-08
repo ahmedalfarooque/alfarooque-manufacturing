@@ -1,18 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>(function(){document.documentElement.style.colorScheme='dark';})();</script>
+<script>
+/* Pre-paint theme + language, flash-free. This page also runs the public
+   site's theme-switcher.js (for the navbar toggle), which reads the site
+   key "theme" and defaults it to light — so here the site key wins, then
+   the admin key, then the OS preference. Seeding "theme" from the OS
+   preference on first visit keeps theme-switcher.js from flipping the
+   page after first paint. */
+(function(){
+  try{
+    var t = localStorage.getItem('theme') || localStorage.getItem('af-admin-theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      localStorage.setItem('theme', t);
+    }
+    document.documentElement.classList.toggle('light', t === 'light');
+    document.documentElement.style.colorScheme = t;
+    var l = localStorage.getItem('language') === 'ar' ? 'ar' : 'en';
+    document.documentElement.lang = l;
+    if (l === 'ar') {
+      document.documentElement.dir = 'rtl';
+      /* rtl.css is Arabic-only (unscoped direction rules) — inject it
+         pre-paint only when Arabic is active. */
+      document.write('<link rel="stylesheet" href="/css/rtl.css" id="rtlSheet">');
+    }
+  }catch(e){ document.documentElement.style.colorScheme = 'dark'; }
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Admin Login — AL FAROOQUE</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <!-- Public-site nav (Home/About/Services/Gallery/Products/Contact, language
      switcher, theme toggle) — loaded ONLY so the navbar can render/function;
      the admin login card below still gets the last word on shared selectors
      since css/admin/admin.css loads after these. -->
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/themes.css">
+<!-- rtl.css contains UNSCOPED `body{direction:rtl}` rules (it's built to be
+     included only by -ar pages), so it must never load statically here —
+     js/admin/login.js injects/removes it when the language is Arabic. -->
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="stylesheet" href="/css/admin/admin.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
@@ -71,25 +100,25 @@
     <!-- STEP 1: email + password -->
     <form id="loginForm">
       <div class="ad-field">
-        <label class="ad-label">Email</label>
+        <label class="ad-label" data-i18n="al_email">Email</label>
         <input class="ad-input" id="email" type="email" autocomplete="username" required>
       </div>
       <div class="ad-field">
-        <label class="ad-label">Password</label>
+        <label class="ad-label" data-i18n="al_password">Password</label>
         <input class="ad-input" id="password" type="password" autocomplete="current-password" required>
       </div>
-      <button class="ad-btn" type="submit" id="loginBtn">Continue</button>
+      <button class="ad-btn" type="submit" id="loginBtn" data-i18n="al_continue">Continue</button>
     </form>
 
     <!-- STEP 2: OTP -->
     <form id="otpForm" class="ad-hidden">
       <div class="ad-field">
-        <label class="ad-label">6-Digit Code</label>
+        <label class="ad-label" data-i18n="al_otp_label">6-Digit Code</label>
         <input class="ad-input ad-otp-input" id="otpCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" required>
       </div>
-      <button class="ad-btn" type="submit" id="verifyBtn">Verify &amp; Sign In</button>
-      <button class="ad-btn-ghost" type="button" id="resendBtn">Resend code</button>
-      <button class="ad-login-back" type="button" id="backBtn">&larr; Back to email &amp; password</button>
+      <button class="ad-btn" type="submit" id="verifyBtn" data-i18n="al_verify">Verify &amp; Sign In</button>
+      <button class="ad-btn-ghost" type="button" id="resendBtn" data-i18n="al_resend">Resend code</button>
+      <button class="ad-login-back" type="button" id="backBtn" data-i18n="al_back">&larr; Back to email &amp; password</button>
     </form>
   </div>
 </div>
