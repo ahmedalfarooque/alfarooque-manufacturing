@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  /* Local Windows quirk: a stale dev server can hold an exclusive lock
+     on .next/trace, aborting every subsequent `next build` with EPERM.
+     NEXT_DIST_DIR lets local builds/starts target a fresh dir without
+     touching the default (Vercel builds ignore it — env var unset). */
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   /* Deployed as its own Vercel project with projects.alfarooque.com as
      its production domain — the app lives at the domain root, so no
      basePath. (It used to be proxied under alfarooque.com/projects;

@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/lib/i18n';
+import { GlassIcon } from '@/components/GlassIcons';
 
 const NAV = [
-  { href: '/dashboard', labelKey: 'nav.dashboard', icon: '▦' },
-  { href: '/projects', labelKey: 'nav.projects', icon: '\u{1F4C1}' },
-  { href: '/purchase-requests', labelKey: 'nav.purchaseRequests', icon: '\u{1F9FE}', adminOnly: true },
-  { href: '/customers', labelKey: 'nav.customers', icon: '\u{1F465}', hideExternal: true },
-  { href: '/users', labelKey: 'nav.users', icon: '\u{1F464}', adminOnly: true },
+  { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
+  { href: '/projects', labelKey: 'nav.projects', icon: 'folder' },
+  { href: '/purchase-requests', labelKey: 'nav.purchaseRequests', icon: 'receipt', adminOnly: true },
+  { href: '/customers', labelKey: 'nav.customers', icon: 'users', hideExternal: true },
+  { href: '/users', labelKey: 'nav.users', icon: 'user', adminOnly: true },
 ];
 
 export default function Shell({ children, active }) {
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang, t, formatDate } = useLanguage();
   const [user, setUser] = useState(null);
   const [dark, setDark] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,7 +70,7 @@ export default function Shell({ children, active }) {
     <div className="min-h-screen flex bg-[#F7F5F1] dark:bg-[#14140F] text-[#1A1A18] dark:text-[#F5F3EE] transition-colors duration-300">
       <aside className={
         'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-white/90 dark:bg-[#1B1B14]/90 backdrop-blur border-e border-[#E5E2DD] dark:border-white/[0.08] text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform ' +
-        (sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
+        (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:translate-x-0')
       }>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/[0.08]">
           <div className="h-9 w-9 rounded-lg bg-brand-600/10 border border-brand-600/30 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold">PT</div>
@@ -95,13 +96,13 @@ export default function Shell({ children, active }) {
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ' +
                 (active === item.href ? 'bg-brand-600 text-white shadow-sm' : 'hover:bg-[#F1EEE7] dark:hover:bg-white/5 text-[#4A4A45] dark:text-[#A8A497]')
               }>
-              <span className="w-4 text-center">{item.icon}</span>{t(item.labelKey)}
+              <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.labelKey)}
             </a>
           ))}
         </nav>
         <div className="p-3">
           <button onClick={logout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[#4A4A45] dark:text-[#A8A497] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">
-            <span className="w-4 text-center">→</span>{t('shell.logout')}
+            <GlassIcon name="logout" size={20} className="shrink-0" />{t('shell.logout')}
           </button>
         </div>
       </aside>
@@ -117,7 +118,7 @@ export default function Shell({ children, active }) {
           <div className="flex items-center gap-3">
             <div className="relative">
               <button onClick={() => setNotifOpen(o => !o)} className="relative h-9 w-9 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-sm transition-colors duration-200 hover:bg-[#F1EEE7] dark:hover:bg-white/5" aria-label={t('shell.notifications')}>
-                {'\u{1F514}'}
+                <GlassIcon name="bell" size={18} />
                 {unread > 0 && <span className="absolute -top-1 -end-1 h-4 min-w-4 px-1 rounded-full bg-[#BC6B4E] text-white text-[10px] leading-4 text-center">{unread > 9 ? '9+' : unread}</span>}
               </button>
               {notifOpen && (
@@ -129,24 +130,24 @@ export default function Shell({ children, active }) {
                       <div className="px-4 py-6 text-center text-sm text-[#8C8A80]">{t('shell.noNotificationsYet')}</div>
                     ) : notifications.map(n => (
                       <button key={n.id} onClick={() => markRead(n.id, n.link)}
-                        className={'w-full text-left px-4 py-3 border-b border-[#E5E2DD]/60 dark:border-white/5 hover:bg-[#F7F5F1] dark:hover:bg-white/5 transition-colors duration-200 ' + (n.is_read ? 'opacity-60' : '')}>
+                        className={'w-full text-start px-4 py-3 border-b border-[#E5E2DD]/60 dark:border-white/5 hover:bg-[#F7F5F1] dark:hover:bg-white/5 transition-colors duration-200 ' + (n.is_read ? 'opacity-60' : '')}>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-sm font-medium truncate">{n.title}</span>
                           {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />}
                         </div>
                         {n.body && <div className="text-xs text-[#6B6B63] truncate">{n.body}</div>}
-                        <div className="text-[11px] text-[#8C8A80] mt-0.5">{new Date(n.created_at).toLocaleString()}</div>
+                        <div className="text-[11px] text-[#8C8A80] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
                       </button>
                     ))}
                   </div>
                 </>
               )}
             </div>
-            <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="h-9 px-2.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-xs font-medium transition-colors duration-200 hover:bg-[#F1EEE7] dark:hover:bg-white/5" aria-label={t('shell.toggleLanguage')}>
-              {lang === 'ar' ? 'EN' : 'عربي'}
+            <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
+              <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
             </button>
-            <button onClick={toggleTheme} className="h-9 w-9 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-sm transition-colors duration-200 hover:bg-[#F1EEE7] dark:hover:bg-white/5" aria-label={t('shell.toggleTheme')}>
-              {dark ? '☀️' : '\u{1F319}'}
+            <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
+              <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
             </button>
           </div>
         </header>

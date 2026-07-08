@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/lib/i18n';
+import { GlassIcon } from '@/components/GlassIcons';
 
 const API = '/api/auth';
 
@@ -39,12 +40,23 @@ export default function LoginPage() {
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [dark, setDark] = useState(false);
   const timerRef = useRef(null);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('mode') === 'admin') setMode('admin');
   }, []);
   useEffect(() => () => clearInterval(timerRef.current), []);
+  useEffect(() => {
+    try { setDark(localStorage.getItem('af-projects-theme') === 'dark'); } catch (_) {}
+  }, []);
+
+  function toggleTheme() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    try { localStorage.setItem('af-projects-theme', next ? 'dark' : 'light'); } catch (_) {}
+  }
 
   function startCooldown(seconds) {
     clearInterval(timerRef.current);
@@ -118,11 +130,15 @@ export default function LoginPage() {
               <div className="text-[#8C8A80] dark:text-slate-400 text-xs">{t('login.tagline')}</div>
             </div>
           </div>
-          <button type="button" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-            className="h-9 px-2.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-xs font-medium text-[#4A4A45] dark:text-slate-300 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200 shrink-0"
-            aria-label={t('shell.toggleLanguage')}>
-            {lang === 'ar' ? 'EN' : 'ع'}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button type="button" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+              className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
+              <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'ع'}</span>
+            </button>
+            <button type="button" onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
+              <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
+            </button>
+          </div>
         </div>
 
         {step === 'credentials' && (

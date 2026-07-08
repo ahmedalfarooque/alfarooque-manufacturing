@@ -39,7 +39,7 @@ export default function Dropdown({ value, onChange, options, placeholder, classN
     <div ref={ref} className={'relative ' + (className || '')}>
       <button type="button" onClick={toggle} disabled={disabled}
         className={
-          'w-full flex items-center justify-between gap-2 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-white/[0.03] px-3 py-2 text-sm text-left ' +
+          'w-full flex items-center justify-between gap-2 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-white/[0.03] px-3 py-2 text-sm text-start ' +
           (disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-brand-500/40 cursor-pointer')
         }>
         <span className={'truncate ' + (selected ? '' : 'text-slate-400')}>{selected ? selected.label : (placeholder || 'Select…')}</span>
@@ -47,13 +47,13 @@ export default function Dropdown({ value, onChange, options, placeholder, classN
       </button>
       {open && (
         <div className={
-          'absolute z-50 left-0 right-0 min-w-max rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0f172a] shadow-lg max-h-64 overflow-y-auto py-1 ' +
+          'absolute z-50 start-0 end-0 min-w-max rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0f172a] shadow-lg max-h-64 overflow-y-auto py-1 ' +
           (openUp ? 'bottom-full mb-1' : 'top-full mt-1')
         }>
           {normalized.map(o => (
             <button key={String(o.value)} type="button" onClick={() => { onChange(o.value); setOpen(false); }}
               className={
-                'w-full text-left px-3 py-2 text-sm transition ' +
+                'w-full text-start px-3 py-2 text-sm transition ' +
                 (String(o.value) === String(value)
                   ? 'bg-brand-500/10 text-brand-500 font-medium'
                   : 'text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10')

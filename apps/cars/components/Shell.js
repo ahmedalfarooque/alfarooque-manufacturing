@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/lib/i18n';
+import { GlassIcon } from '@/components/GlassIcons';
 
 const NAV = [
-  { href: '/dashboard', key: 'nav.dashboard', icon: '▦' },
-  { href: '/vehicles', key: 'nav.vehicles', icon: '\u{1F697}' },
-  { href: '/drivers', key: 'nav.drivers', icon: '\u{1F464}' },
-  { href: '/maintenance-schedule', key: 'nav.maintenanceSchedule', icon: '\u{1F4C6}' },
-  { href: '/maintenance', key: 'nav.maintenance', icon: '\u{1F527}' },
-  { href: '/maintenance-shops', key: 'nav.maintenanceShops', icon: '\u{1F3ED}' },
-  { href: '/alerts', key: 'nav.alerts', icon: '⚠' },
+  { href: '/dashboard', key: 'nav.dashboard', icon: 'dashboard' },
+  { href: '/vehicles', key: 'nav.vehicles', icon: 'truck' },
+  { href: '/drivers', key: 'nav.drivers', icon: 'users' },
+  { href: '/maintenance-schedule', key: 'nav.maintenanceSchedule', icon: 'wrench' },
+  { href: '/maintenance', key: 'nav.maintenance', icon: 'wrench' },
+  { href: '/maintenance-shops', key: 'nav.maintenanceShops', icon: 'wrench' },
+  { href: '/alerts', key: 'nav.alerts', icon: 'bell' },
 ];
 
 export default function Shell({ children, active }) {
@@ -64,8 +65,8 @@ export default function Shell({ children, active }) {
     <div className="min-h-screen flex bg-[#FFFFFF] dark:bg-[#14140F] text-[#1A1A18] dark:text-[#F5F3EE] transition-colors duration-300">
       {/* Sidebar */}
       <aside className={
-        'fixed lg:static z-40 inset-y-0 left-0 w-64 shrink-0 bg-[#F7F5F1] dark:bg-[#1B1B14] border-r border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform ' +
-        (sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
+        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-[#F7F5F1] dark:bg-[#1B1B14] border-e border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform ' +
+        (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:translate-x-0')
       }>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/10">
           <div className="h-9 w-9 rounded-lg bg-[#6B7A4F]/10 border border-[#6B7A4F]/30 flex items-center justify-center text-[#6B7A4F] dark:text-brand-400 font-bold">TF</div>
@@ -91,13 +92,13 @@ export default function Shell({ children, active }) {
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ' +
                 (active === item.href ? 'bg-brand-600 text-white shadow-sm' : 'hover:bg-[#6B7A4F]/8 dark:hover:bg-white/5 text-[#4A4A45] dark:text-[#A8A497]')
               }>
-              <span className="w-4 text-center">{item.icon}</span>{t(item.key)}
+              <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.key)}
             </a>
           ))}
         </nav>
         <div className="p-3">
           <button onClick={logout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[#4A4A45] dark:text-[#A8A497] hover:bg-[#6B7A4F]/8 dark:hover:bg-white/5 transition">
-            <span className="w-4 text-center">→</span>{t('shell.logout')}
+            <GlassIcon name="logout" size={20} className="shrink-0" />{t('shell.logout')}
           </button>
         </div>
       </aside>
@@ -120,7 +121,7 @@ export default function Shell({ children, active }) {
               className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/10 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#6B7A4F]/40 focus:border-[#6B7A4F]/40 transition"
             />
             {results && (results.vehicles.length > 0 || results.drivers.length > 0) && (
-              <div className="absolute top-full mt-1 left-0 right-0 rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-[#1B1B14] shadow-lg max-h-80 overflow-y-auto z-30">
+              <div className="absolute top-full mt-1 start-0 end-0 rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-[#1B1B14] shadow-lg max-h-80 overflow-y-auto z-30">
                 {results.vehicles.length > 0 && (
                   <div>
                     <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[#8C8A80]">{t('shell.searchVehicles')}</div>
@@ -146,12 +147,12 @@ export default function Shell({ children, active }) {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={toggleLanguage} className="h-9 px-2 rounded-lg border border-[#E5E2DD] dark:border-white/10 flex items-center justify-center text-xs font-medium shrink-0 hover:bg-[#6B7A4F]/8 dark:hover:bg-white/5 transition" aria-label={t('shell.toggleLanguage')}>
-              {lang === 'ar' ? 'EN' : 'عربي'}
+          <div className="flex items-center gap-2">
+            <button onClick={toggleLanguage} className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
+              <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
             </button>
-            <button onClick={toggleTheme} className="h-9 w-9 rounded-lg border border-[#E5E2DD] dark:border-white/10 flex items-center justify-center text-sm shrink-0 hover:bg-[#6B7A4F]/8 dark:hover:bg-white/5 transition" aria-label={t('shell.toggleTheme')}>
-              {dark ? '☀️' : '\u{1F319}'}
+            <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
+              <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
             </button>
           </div>
         </header>

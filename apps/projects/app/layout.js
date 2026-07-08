@@ -1,5 +1,6 @@
 import './globals.css';
 import { LanguageProvider } from '@/lib/i18n';
+import GlassIconsLoader from '@/components/GlassIcons';
 
 export const metadata = {
   title: 'ProTrack — AL FAROOQUE Project Management',
@@ -17,6 +18,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="min-h-screen font-sans antialiased">
+        <GlassIconsLoader />
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

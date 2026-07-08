@@ -547,6 +547,22 @@ function applyDomLang(lang) {
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 }
 
+const LOCALE = { en: 'en-US', ar: 'ar-SA' };
+
+function formatDateFor(lang, value, opts) {
+  if (!value) return '';
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(LOCALE[lang] || LOCALE.en, opts);
+}
+
+function formatNumberFor(lang, value, opts) {
+  if (value === null || value === undefined || value === '') return '';
+  const n = Number(value);
+  if (isNaN(n)) return String(value);
+  return n.toLocaleString(LOCALE[lang] || LOCALE.en, opts);
+}
+
 const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
@@ -578,7 +594,10 @@ export function LanguageProvider({ children }) {
     return str;
   }, [lang]);
 
-  const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
+  const formatDate = useCallback((value, opts) => formatDateFor(lang, value, opts), [lang]);
+  const formatNumber = useCallback((value, opts) => formatNumberFor(lang, value, opts), [lang]);
+
+  const value = useMemo(() => ({ lang, setLang, t, formatDate, formatNumber }), [lang, setLang, t, formatDate, formatNumber]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
@@ -587,7 +606,11 @@ export function useLanguage() {
   const ctx = useContext(LanguageContext);
   if (!ctx) {
     // Fallback so components don't crash if used outside the provider (e.g. during tests).
-    return { lang: 'en', setLang: () => {}, t: (key) => translations.en[key] ?? key };
+    return {
+      lang: 'en', setLang: () => {}, t: (key) => translations.en[key] ?? key,
+      formatDate: (v, opts) => formatDateFor('en', v, opts),
+      formatNumber: (v, opts) => formatNumberFor('en', v, opts),
+    };
   }
   return ctx;
 }
