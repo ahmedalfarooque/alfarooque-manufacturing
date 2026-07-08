@@ -245,6 +245,17 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
   const IS_AR = document.documentElement.lang === 'ar';
   const tr = (en, ar) => IS_AR ? ar : en;
 
+  /* Honeypot — JS-injected hidden field; FormData picks it up as
+     `website` and api/quote.js silently drops any submission where a
+     bot has filled it. Real users never see it. */
+  if(!form.querySelector('input[name="website"]')){
+    const hp=document.createElement('input');
+    hp.type='text'; hp.name='website'; hp.autocomplete='off'; hp.tabIndex=-1;
+    hp.setAttribute('aria-hidden','true');
+    hp.style.cssText='position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+    form.appendChild(hp);
+  }
+
   /* Status message element injected just below the form */
   let statusEl = document.getElementById('contact-status');
   if(!statusEl){

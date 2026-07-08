@@ -1387,6 +1387,21 @@ var orderModal = {
     if (submitBtn) submitBtn.addEventListener('click', function() { self.submit(); });
     var omForm = document.getElementById('omForm');
     if (omForm) omForm.addEventListener('submit', function(e) { e.preventDefault(); self.submit(); });
+    /* Honeypot — JS-injected so it never appears in the static HTML that
+       naive form-scraping bots parse; hidden from real users and screen
+       readers either way. Anything typed into it flags the submission
+       as spam (see buildPayload + api/quote.js). */
+    if (omForm && !document.getElementById('omWebsite')) {
+      var hp = document.createElement('input');
+      hp.type = 'text';
+      hp.id = 'omWebsite';
+      hp.name = 'website';
+      hp.autocomplete = 'off';
+      hp.tabIndex = -1;
+      hp.setAttribute('aria-hidden', 'true');
+      hp.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+      omForm.appendChild(hp);
+    }
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && self.el.classList.contains('open')) self.close();
     });
@@ -1480,11 +1495,18 @@ var orderModal = {
       clientOrderId: this.orderIdempotencyKey || genOrderId(),
     };
 
+    /* Honeypot — hidden field injected by injectHoneypot(); humans never
+       see it, so a non-empty value marks the submission as bot spam.
+       Server (api/quote.js) silently drops those. */
+    var hp = document.getElementById('omWebsite');
+    payload.website = hp ? hp.value : '';
+
     if (this.isCartOrder) {
       payload.type  = 'cart';
       payload.items = cart.items.map(function(ci) {
         var p = getProduct(ci.id);
         return {
+          id:        ci.id, /* authoritative — server reprices from the DB by id */
           name:      p ? (IS_AR ? p.nameAr : p.name) : ('#' + ci.id),
           qty:       ci.qty,
           price:     p ? p.price : 0,
@@ -1499,6 +1521,7 @@ var orderModal = {
       var sub = p ? p.price * this.qty : 0;
       var vat = Math.round(sub * 0.15);
       payload.type       = 'order';
+      payload.productId  = this.productId; /* authoritative — server reprices from the DB by id */
       payload.product    = p ? (IS_AR ? p.nameAr : p.name) : ('#' + this.productId);
       payload.quantity   = this.qty;
       payload.subtotal   = sub;

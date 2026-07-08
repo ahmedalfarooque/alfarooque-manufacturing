@@ -109,6 +109,69 @@ async function persistSubmission(type, d, recordId, userId) {
   if (error) console.error('[Submit] Order persist failed:', error.message, '| type:', type, '| items:', items.length);
 }
 
+/* ── Anti-spam: naive in-memory per-IP rate limit ────────────────────
+   Serverless instances are ephemeral, so this only throttles bursts that
+   land on the same warm instance — that's exactly the shape form-spam
+   bots produce (rapid-fire POSTs), and it costs zero dependencies. */
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATE_MAX = 5;
+const rateBuckets = new Map(); // ip -> [timestamps]
+function isRateLimited(ip) {
+  const now = Date.now();
+  const hits = (rateBuckets.get(ip) || []).filter(t => now - t < RATE_WINDOW_MS);
+  hits.push(now);
+  rateBuckets.set(ip, hits);
+  if (rateBuckets.size > 1000) rateBuckets.clear(); // unbounded-growth guard
+  return hits.length > RATE_MAX;
+}
+
+/* ── Server-side price authority ─────────────────────────────────────
+   Never trust client-sent prices/totals: resolve every ordered item
+   against the live products table (by id when the client sends one,
+   by exact EN/AR name for older cached clients) and recompute
+   subtotal/VAT/grand total here. Returns:
+     { items, subtotal, vat, grandTotal }  on success
+     { reject: '<reason>' }                when nothing matches a real
+                                           product (bot/tampered payload)
+     null                                  when the DB isn't configured
+                                           (fail open — email still goes) */
+async function validateAndPriceItems(body) {
+  let getAdminClient;
+  try { ({ getAdminClient } = require('./_supabaseAdmin')); } catch (_) { return null; }
+  let sb;
+  try { sb = getAdminClient(); } catch (_) { return null; }
+
+  const { data: rows, error } = await sb
+    .from('products')
+    .select('id, name, name_ar, price')
+    .eq('is_active', true);
+  if (error || !rows || !rows.length) return null; // fail open, don't block real sales on a DB blip
+
+  const byId = new Map(rows.map(p => [String(p.id), p]));
+  const byName = new Map();
+  for (const p of rows) {
+    if (p.name) byName.set(p.name.trim(), p);
+    if (p.name_ar) byName.set(p.name_ar.trim(), p);
+  }
+
+  const clampQty = q => Math.max(1, Math.min(999, parseInt(q, 10) || 1));
+  const requested = Array.isArray(body.items) && body.items.length
+    ? body.items.map(it => ({ id: it.id, name: (it.name || '').trim(), qty: clampQty(it.qty) }))
+    : [{ id: body.productId, name: (body.product || '').trim(), qty: clampQty(body.quantity) }];
+
+  const items = [];
+  for (const r of requested) {
+    const p = (r.id != null && byId.get(String(r.id))) || byName.get(r.name);
+    if (!p) continue; // silently drop items that aren't real products
+    items.push({ name: p.name, qty: r.qty, price: Number(p.price) || 0 });
+  }
+  if (!items.length) return { reject: 'No item in this order matches a real product.' };
+
+  const subtotal = items.reduce((s, it) => s + it.price * it.qty, 0);
+  const vat = Math.round(subtotal * 0.15);
+  return { items, subtotal, vat, grandTotal: subtotal + vat };
+}
+
 /* ── Absolute site origin, for the "View Order" email button ── */
 function siteOrigin(req) {
   const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
@@ -180,6 +243,20 @@ module.exports = async function handler(req, res) {
     (req.socket && req.socket.remoteAddress) ||
     '(unknown)';
 
+  /* ── Anti-spam gate ─────────────────────────────────────────────
+     Honeypot: `website` is a visually-hidden field real users never see
+     or fill; form-filling bots stuff every field. Respond with a fake
+     success so the bot doesn't learn it was caught — nothing is emailed
+     or persisted. */
+  if ((body.website || '').trim() !== '') {
+    console.warn('[Submit] Honeypot tripped — dropping silently. ip:', ip);
+    return res.status(200).json({ ok: true });
+  }
+  if (isRateLimited(ip)) {
+    console.warn('[Submit] Rate limited:', ip);
+    return res.status(429).json({ error: 'Too many submissions. Please try again later.' });
+  }
+
   /* ── Validation (real, per type) ── */
   const errors = [];
   if (type === 'contact') {
@@ -196,6 +273,33 @@ module.exports = async function handler(req, res) {
   if (errors.length) {
     console.warn('[Submit] Validation failed:', errors, '| type:', type);
     return res.status(400).json({ error: errors.join('. '), fields: errors });
+  }
+
+  /* ── Server-side pricing (order/cart only) ──────────────────────
+     Recompute every total from the live products table; client-sent
+     prices are display-only. Rejects payloads whose items match no real
+     product (bots POSTing junk directly at this endpoint) and any order
+     that still totals zero. */
+  if (type === 'order' || type === 'cart') {
+    const priced = await validateAndPriceItems(body);
+    if (priced && priced.reject) {
+      console.warn('[Submit] Rejected order — items match no real product. ip:', ip, '| name:', fullName);
+      return res.status(400).json({ error: 'Order items are invalid.' });
+    }
+    if (priced) {
+      body.items      = priced.items;
+      body.subtotal   = priced.subtotal;
+      body.vat        = priced.vat;
+      body.grandTotal = priced.grandTotal;
+      if (type === 'order' && priced.items.length === 1) {
+        body.product  = priced.items[0].name;
+        body.quantity = priced.items[0].qty;
+      }
+    }
+    if ((Number(body.grandTotal) || 0) <= 0) {
+      console.warn('[Submit] Rejected zero-total order. ip:', ip, '| name:', fullName);
+      return res.status(400).json({ error: 'Order total is invalid.' });
+    }
   }
 
   /* ── Build subject + email ── */
