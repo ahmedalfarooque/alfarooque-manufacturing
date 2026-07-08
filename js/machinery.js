@@ -348,7 +348,7 @@
       nameAr: 'منشار الشريط',
       category: 'Cutting & Sawing',
       categoryAr: 'القطع والنشر',
-      image: '/assets/images/machines/band-saw.jpg',
+      image: '/assets/images/machines/band-saw.webp',
       overview: 'Heavy-duty band saw for curved cuts, resawing thick timber and producing custom profiles and templates from solid wood and engineered lumber.',
       overviewAr: 'منشار شريطي ثقيل للقطع المنحني وإعادة نشر الخشب السميك وإنتاج ملامح مخصصة من الخشب الصلب والخشب الهندسي.',
       features: [

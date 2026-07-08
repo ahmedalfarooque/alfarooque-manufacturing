@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /pages/admin/
 
-Sitemap: https://mohammed.alfarooque.com/sitemap.xml
+Sitemap: https://www.alfarooque.com/sitemap.xml

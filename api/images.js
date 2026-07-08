@@ -48,12 +48,17 @@ module.exports = async function handler(req, res) {
 
   try {
     const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-    const images = entries
+    const names = entries
       .filter(e =>
         e.isFile() &&
         IMAGE_EXTENSIONS.has(path.extname(e.name).toLowerCase()) &&
         !(set.excludeHero && /hero/i.test(e.name)))
-      .map(e => e.name)
+      .map(e => e.name);
+    /* Prefer a compressed .webp sibling over its heavy png/jpg original
+       (originals are kept on disk but shouldn't be double-listed/served). */
+    const webpBases = new Set(names.filter(n => n.toLowerCase().endsWith('.webp')).map(n => n.slice(0, n.lastIndexOf('.'))));
+    const images = names
+      .filter(n => n.toLowerCase().endsWith('.webp') || !webpBases.has(n.slice(0, n.lastIndexOf('.'))))
       .sort()
       .map(name =>
         '/assets/images/' +

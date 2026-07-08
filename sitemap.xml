@@ -1,14 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ── Main site (www.alfarooque.com) — EN pages with AR alternates ── -->
   <url>
-    <loc>https://mohammed.alfarooque.com/</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://www.alfarooque.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/index-ar"/>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://mohammed.alfarooque.com/mohammed</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://www.alfarooque.com/index-ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/index-ar"/>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/about</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/about"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/about-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/about-ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/about"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/about-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/services</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/services"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/services-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/services-ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/services"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/services-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/gallery</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/gallery"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/gallery-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/gallery-ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/gallery"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/gallery-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/products</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/products"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/products-ar"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/products-ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/products"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/products-ar"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/all-products</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/all-products"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/all-products-ar"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/all-products-ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/all-products"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/all-products-ar"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/contact</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/contact"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/contact-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.alfarooque.com/contact-ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.alfarooque.com/contact"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.alfarooque.com/contact-ar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ── Mohammed digital business card (subdomain) ── -->
+  <url>
+    <loc>https://mohammed.alfarooque.com/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>
