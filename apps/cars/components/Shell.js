@@ -66,7 +66,7 @@ export default function Shell({ children, active }) {
       {/* Sidebar */}
       <aside className={
         'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-[#F7F5F1] dark:bg-[#1B1B14] border-e border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform ' +
-        (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:translate-x-0')
+        (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/10">
           <div className="h-9 w-9 rounded-lg bg-[#6B7A4F]/10 border border-[#6B7A4F]/30 flex items-center justify-center text-[#6B7A4F] dark:text-brand-400 font-bold">TF</div>

@@ -70,7 +70,7 @@ export default function Shell({ children, active }) {
     <div className="min-h-screen flex bg-[#F7F5F1] dark:bg-[#14140F] text-[#1A1A18] dark:text-[#F5F3EE] transition-colors duration-300">
       <aside className={
         'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-white/90 dark:bg-[#1B1B14]/90 backdrop-blur border-e border-[#E5E2DD] dark:border-white/[0.08] text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform ' +
-        (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:translate-x-0')
+        (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/[0.08]">
           <div className="h-9 w-9 rounded-lg bg-brand-600/10 border border-brand-600/30 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold">PT</div>
