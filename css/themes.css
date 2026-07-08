@@ -1040,3 +1040,46 @@ html[dir="rtl"] .lang-btn.ar-btn { border-left: none; border-right: 1px solid va
 
 /* ══ RESPONSIVE ══ */
 @media (max-width: 1200px) { .nav-controls .glass-ctrl .ctrl-label { display: none; } }
+
+/* ══ HERO READABILITY — image-backed heroes are self-contained dark
+   contexts in BOTH themes. Light mode used to lay dark text over a
+   light-washed scrim on top of busy photography (unreadable); instead
+   the scrim stays dark and the text stays light everywhere. ══ */
+:is(html.light, body.light) .svc-hero-bg {
+  background: linear-gradient(160deg, rgba(107,122,79,0.10) 0%, rgba(20,20,15,0.72) 70%);
+}
+:is(html.light, body.light) .ph-overlay {
+  background: linear-gradient(135deg, rgba(10,12,8,0.78) 0%, rgba(10,12,8,0.50) 100%);
+}
+
+.hero-cinematic .hero-headline .t,
+.page-hero .page-hero-title,
+.svc-hero-content h1 {
+  color: #FFFFFF;
+  text-shadow: 0 2px 18px rgba(10,12,8,0.45);
+}
+.hero-cinematic .hero-headline .d { color: rgba(255,255,255,0.60); }
+.hero-cinematic .hero-body,
+.page-hero .page-hero-body,
+.svc-hero-content p {
+  color: rgba(255,255,255,0.88);
+  text-shadow: 0 1px 10px rgba(10,12,8,0.40);
+}
+.hero-cinematic .hero-eyebrow span,
+.page-hero .eyebrow,
+.svc-hero-content .eyebrow { color: #C9D6A8; }
+.hero-cinematic .stat-v,
+.page-hero .stat-v { color: #FFFFFF; }
+.hero-cinematic .stat-v em,
+.page-hero .stat-v em { color: #B9CC8B; }
+.hero-cinematic .stat-l,
+.page-hero .stat-l { color: rgba(255,255,255,0.68); }
+.hero-cinematic .stat-i,
+.page-hero .stat-i { border-color: rgba(255,255,255,0.18); }
+/* Gradient-accent spans inside these titles keep their gradient but get a
+   brighter stop range so they don't dim against the dark scrim. */
+:is(html.light, body.light) .page-hero .page-hero-title span,
+:is(html.light, body.light) .svc-hero-content h1 span {
+  background: linear-gradient(100deg, #B9CC8B, #E4EBD2);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
