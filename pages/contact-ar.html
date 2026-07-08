@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/rtl.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png">
 </head>
@@ -20,7 +22,7 @@
 
 <nav class="nav">
   <a href="/index-ar.html" class="nav-logo"><img src="/assets/images/logo/IAA_LOGO.png" alt="الفاروقي" width="42" height="42"><div class="nav-brand"><span class="nav-brand-name">الفاروقي</span><span class="nav-brand-sub">للتصنيع</span></div></a>
-  <ul class="nav-links"><li><a href="/index-ar.html">الرئيسية</a></li><li><a href="/pages/about-ar.html">من نحن</a></li><li class="has-dropdown"><a href="/pages/services-ar.html">خدماتنا<span class="caret">▼</span></a><ul class="nav-dropdown"><li><a href="/pages/woodworks-ar.html">الأعمال الخشبية</a></li><li><a href="/pages/steelworks-ar.html">الأعمال الحديدية</a></li><li><a href="/pages/aluminium-ar.html">الأعمال الألومنيوم</a></li></ul></li><li><a href="/pages/gallery-ar.html">معرض الأعمال</a></li><li><a href="/products-ar.html">المنتجات</a></li><li><a href="/pages/contact-ar.html" class="active nav-cta">اتصل بنا</a></li></ul>
+  <ul class="nav-links"><li><a href="/index-ar.html">الرئيسية</a></li><li><a href="/pages/about-ar.html">من نحن</a></li><li><a href="/pages/services-ar.html">خدماتنا</a></li><li><a href="/pages/gallery-ar.html">معرض الأعمال</a></li><li><a href="/products-ar.html">المنتجات</a></li><li><a href="/pages/contact-ar.html" class="active nav-cta">اتصل بنا</a></li></ul>
   <div class="nav-actions">
     <button type="button" class="nav-icon-btn nav-search-btn" id="navSearchBtn" aria-label="Search" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
     <a href="/products.html" class="nav-icon-btn nav-wishlist-btn" id="navWishlistBtn" aria-label="Wishlist"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span class="nav-icon-badge" id="navWishlistBadge" hidden>0</span></a>
@@ -36,7 +38,7 @@
     <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Close search">&#x2715;</button>
   </form>
 </div>
-<div class="nav-mobile"><a href="/index-ar.html">الرئيسية</a><a href="/pages/about-ar.html">من نحن</a><a href="/pages/services-ar.html">خدماتنا</a><a href="/pages/woodworks-ar.html" class="nav-mobile-sub">الأعمال الخشبية</a><a href="/pages/steelworks-ar.html" class="nav-mobile-sub">الأعمال الحديدية</a><a href="/pages/aluminium-ar.html" class="nav-mobile-sub">الأعمال الألومنيوم</a><a href="/pages/gallery-ar.html">معرض الأعمال</a><a href="/products-ar.html">المنتجات</a><a href="/pages/contact-ar.html">اتصل بنا</a></div>
+<div class="nav-mobile"><a href="/index-ar.html">الرئيسية</a><a href="/pages/about-ar.html">من نحن</a><a href="/pages/services-ar.html">خدماتنا</a><a href="/pages/gallery-ar.html">معرض الأعمال</a><a href="/products-ar.html">المنتجات</a><a href="/pages/contact-ar.html">اتصل بنا</a></div>
 
 <div class="page-hero" data-slider>
   <div class="ph-slider-bg" aria-hidden="true">
@@ -55,7 +57,7 @@
 <section class="section-pad" style="position:relative;z-index:1;padding-top:0;">
   <div class="container">
     <div class="contact-grid">
-      <div class="contact-info reveal">
+      <div class="contact-info" data-reveal="fade-right">
         <div style="margin-bottom:8px;">
           <div style="font-family:'Tajawal',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px;">المكتب الرئيسي</div>
           <div style="font-size:13px;color:var(--grey-600);">الفاروقي للصناعات</div>
@@ -94,7 +96,7 @@
         </div>
       </div>
 
-      <div class="reveal d2">
+      <div data-reveal="fade-left">
         <div class="contact-form-wrap">
           <div style="font-family:'Tajawal',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px;">طلب عرض سعر</div>
           <div style="font-size:13px;color:var(--grey-600);margin-bottom:28px;">املأ النموذج وسنتواصل معك خلال 24 ساعة.</div>
@@ -162,9 +164,9 @@
   <div>
     <div class="footer-col-h">الأقسام</div>
     <ul class="footer-links">
-      <li><a href="/pages/woodworks-ar.html">الأعمال الخشبية</a></li>
-      <li><a href="/pages/steelworks-ar.html">الأعمال الحديدية</a></li>
-      <li><a href="/pages/aluminium-ar.html">الأعمال الألومنيوم</a></li>
+      <li><a href="/pages/services-ar.html#wood-works">الأعمال الخشبية</a></li>
+      <li><a href="/pages/services-ar.html#steel-works">الأعمال الحديدية</a></li>
+      <li><a href="/pages/services-ar.html#aluminium-works">الأعمال الألومنيوم</a></li>
       <li><a href="/pages/about-ar.html#certifications">الشهادات</a></li>
       <li><a href="/pages/contact-ar.html">طلب عرض سعر</a></li>
     </ul>
@@ -189,6 +191,10 @@
     </div>
   </div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
 
 <script src="/js/language-switcher.js"></script>

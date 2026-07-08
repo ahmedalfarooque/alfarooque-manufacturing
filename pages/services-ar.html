@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <script>/* AL FAROOQUE: light default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="light";localStorage.setItem("theme","light");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="description" content="خدمات الفاروقي للتصنيع — ثلاثة أقسام متخصصة: الأعمال الخشبية والأعمال الحديدية والأعمال الألومنيوم في جدة، المملكة العربية السعودية.">
+<meta name="description" content="خدماتنا وأقسام التصنيع — الفاروقي للتصنيع. الأعمال الخشبية والحديدية والألومنيوم: نجارة دقيقة وهياكل فولاذية وواجهات ألومنيوم من جدة، المملكة العربية السعودية.">
 <meta name="keywords" content="أقسام التصنيع, الأعمال الخشبية, الأعمال الحديدية, الأعمال الألومنيوم, جدة, الفاروقي">
 <meta property="og:title" content="خدماتنا — الفاروقي للتصنيع">
 <meta property="og:description" content="ثلاثة أقسام متخصصة. معيار واحد موحد للدقة والجودة والحرفية.">
@@ -16,6 +16,9 @@
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/rtl.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/services-mega.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="stylesheet" href="/css/machinery.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png">
@@ -28,13 +31,7 @@
   <ul class="nav-links">
     <li><a href="/index-ar.html">الرئيسية</a></li>
     <li><a href="/pages/about-ar.html">من نحن</a></li>
-    <li class="has-dropdown"><a href="/pages/services-ar.html" class="active">خدماتنا<span class="caret">▼</span></a>
-      <ul class="nav-dropdown">
-        <li><a href="/pages/woodworks-ar.html">الأعمال الخشبية</a></li>
-        <li><a href="/pages/steelworks-ar.html">الأعمال الحديدية</a></li>
-        <li><a href="/pages/aluminium-ar.html">الأعمال الألومنيوم</a></li>
-      </ul>
-    </li>
+    <li><a href="/pages/services-ar.html" class="active">خدماتنا</a></li>
     <li><a href="/pages/gallery-ar.html">معرض الأعمال</a></li>
     <li><a href="/products-ar.html">المنتجات</a></li>
     <li><a href="/pages/contact-ar.html" class="nav-cta">اتصل بنا</a></li>
@@ -56,37 +53,61 @@
 </div>
 <div class="nav-mobile">
   <a href="/index-ar.html">الرئيسية</a><a href="/pages/about-ar.html">من نحن</a><a href="/pages/services-ar.html">خدماتنا</a>
-  <a href="/pages/woodworks-ar.html" class="nav-mobile-sub">الأعمال الخشبية</a>
-  <a href="/pages/steelworks-ar.html" class="nav-mobile-sub">الأعمال الحديدية</a>
-  <a href="/pages/aluminium-ar.html" class="nav-mobile-sub">الأعمال الألومنيوم</a>
   <a href="/pages/gallery-ar.html">معرض الأعمال</a><a href="/products-ar.html">المنتجات</a><a href="/pages/contact-ar.html">اتصل بنا</a>
 </div>
 
+<!-- ═══ 1. HERO ═══ -->
 <div class="page-hero" data-slider>
   <div class="ph-slider-bg" aria-hidden="true">
     <div class="ph-slide-bg active" style="background-image:url('/assets/images/Services/Services_Hero Aluminum.png')"></div>
     <div class="ph-slide-bg" style="background-image:url('/assets/images/Services/Services_Hero 2.jpg')"></div>
     <div class="ph-slide-bg" style="background-image:url('/assets/images/Services/Services_Hero Wood.jpg')"></div>
   </div>
+  <div class="ph-mouse-orb" aria-hidden="true" data-mouse-parallax="8"></div>
   <div class="ph-overlay" aria-hidden="true"></div>
   <div class="container">
     <div class="eyebrow reveal ph-hero-el" style="justify-content:center;">ما نصنعه</div>
-    <h1 class="page-hero-title reveal d1 ph-hero-el ph-d2">أقسام <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">التصنيع</span></h1>
+    <h1 class="page-hero-title reveal d1 ph-hero-el ph-d2">أقسام <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">التصنيع</span> لدينا</h1>
     <p class="page-hero-body reveal d2 ph-hero-el ph-d3">ثلاثة أقسام متخصصة. معيار واحد موحد للدقة والجودة والحرفية.</p>
+
+    <div class="svc-hero-stats reveal d3 ph-hero-el ph-d4">
+      <div class="stat-i">
+        <div class="stat-v"><span data-count="25" data-suffix="+">0+</span></div>
+        <div class="stat-l">سنة من التميز</div>
+      </div>
+      <div class="stat-i">
+        <div class="stat-v">3</div>
+        <div class="stat-l">أقسام تصنيع</div>
+      </div>
+      <div class="stat-i">
+        <div class="stat-v"><span data-count="20" data-suffix="+">0+</span></div>
+        <div class="stat-l">آلة في التشغيل</div>
+      </div>
+      <div class="stat-i">
+        <div class="stat-v">V<em>2030</em></div>
+        <div class="stat-l">متوافق مع الرؤية</div>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- ═══ 2. DIVISIONS INTRODUCTION ═══ -->
 <section class="section-pad" style="position:relative;z-index:1;">
   <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">أقسامنا</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">ثلاثة أقسام، <span class="accent">معيار واحد</span></h2>
+    <div class="mega-intro-copy" data-reveal="fade-up">
+      <p>معيار واحد موحّد من الدقة والجودة والحرفية عبر ثلاثة أقسام — الأعمال الخشبية والأعمال الحديدية والأعمال الألومنيوم — يتم تصنيعها في مصانعنا المتخصصة بجدة، المملكة العربية السعودية.</p>
+    </div>
     <div class="svc-grid">
-      <a href="/pages/woodworks-ar.html" class="svc-card sweep reveal d1" data-tilt style="text-decoration:none;">
+      <a href="#wood-works" class="svc-card sweep glass" data-reveal="fade-up" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">١</span>
         <div class="svc-icon">
           <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
         </div>
         <h2 class="svc-title">الأعمال الخشبية</h2>
-        <p class="svc-desc">حلول متكاملة في النجارة المعمارية والأثاث المخصص والتجهيزات الداخلية وأبواب مقاومة للحريق باستخدام أحدث تقنيات التصنيع.</p>
+        <p class="svc-desc">حلول متكاملة في النجارة المعمارية والأثاث المخصص والتجهيزات الداخلية وأبواب مقاومة للحريق باستخدام أحدث تقنيات التصنيع في مصنعنا المخصص.</p>
         <div class="svc-tags">
           <span class="tag">تصنيع CNC</span>
           <span class="tag">نجارة مخصصة</span>
@@ -96,14 +117,14 @@
         <span class="svc-link">اكتشف القسم ←</span>
       </a>
 
-      <a href="/pages/steelworks-ar.html" class="svc-card sweep reveal d2" data-tilt style="text-decoration:none;">
+      <a href="#steel-works" class="svc-card sweep glass" data-reveal="fade-up delay-1" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">٢</span>
         <div class="svc-icon">
           <svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
         </div>
         <h2 class="svc-title">الأعمال الحديدية</h2>
-        <p class="svc-desc">حلول متقدمة في تصنيع الهياكل المعدنية والأبواب المقاومة للحريق والكسوات المعدنية والسلالم والدرابزين للمشاريع التجارية والصناعية.</p>
+        <p class="svc-desc">حلول متقدمة في تصنيع الهياكل المعدنية والأبواب المقاومة للحريق والكسوات المعدنية والسلالم والدرابزين للمشاريع التجارية والصناعية في جميع أنحاء المملكة.</p>
         <div class="svc-tags">
           <span class="tag">هياكل معدنية</span>
           <span class="tag">أبواب مقاومة للحريق</span>
@@ -113,7 +134,7 @@
         <span class="svc-link">اكتشف القسم ←</span>
       </a>
 
-      <a href="/pages/aluminium-ar.html" class="svc-card sweep reveal d3" data-tilt style="text-decoration:none;">
+      <a href="#aluminium-works" class="svc-card sweep glass" data-reveal="fade-up delay-2" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">٣</span>
         <div class="svc-icon">
@@ -122,10 +143,10 @@
         <h2 class="svc-title">الأعمال الألومنيوم</h2>
         <p class="svc-desc">أنظمة واجهات ألومنيوم عالية الأداء وستائر زجاجية وفواصل زجاجية وأبواب ونوافذ وعناصر ألومنيوم معمارية — معتمدة وفق المعايير السعودية.</p>
         <div class="svc-tags">
-          <span class="tag">واجهات زجاجية</span>
+          <span class="tag">أنظمة ستائر</span>
           <span class="tag">معتمد SASO</span>
           <span class="tag">تزجيج</span>
-          <span class="tag">أنظمة ستائر</span>
+          <span class="tag">واجهات</span>
         </div>
         <span class="svc-link">اكتشف القسم ←</span>
       </a>
@@ -133,15 +154,415 @@
   </div>
 </section>
 
-<!-- ═══ آلاتنا ═══ -->
+<!-- ═══ 3. WOOD WORKS ═══ -->
+<section id="wood-works" class="division-section division-band-wood">
+  <div class="svc-hero" data-slider>
+    <div class="svc-hero-img">
+      <div class="ph-slide-bg active" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 1.jpg')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 2.jpg')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 3.jpg')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 4.jpg')"></div>
+    </div>
+    <div class="svc-hero-bg"></div>
+    <div class="svc-hero-num">١</div>
+    <div class="svc-hero-content container">
+      <div class="eyebrow ph-hero-el">القسم الأول</div>
+      <h1 class="ph-hero-el ph-d2" style="font-family:var(--font-display);font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1.1;letter-spacing:0;">الأعمال <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">الخشبية</span></h1>
+      <p class="ph-hero-el ph-d3" style="font-family:var(--font-display);font-size:clamp(15px,2.4vw,20px);font-weight:600;color:var(--grey-400);margin-top:14px;">نجارة دقيقة وتجهيزات داخلية</p>
+    </div>
+  </div>
+  <div class="section-pad" style="border-bottom:1px solid var(--border-1);">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;" class="reveal">
+        <div class="pd-pin-wrap" data-pin>
+          <h3 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:16px;">نجارة دقيقة وتجهيزات داخلية</h3>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);margin-bottom:16px;">ينتج قسم الأعمال الخشبية لدينا نجارة مخصصة وأعمالاً خشبية معمارية وأثاثاً مدمجاً وتجهيزات داخلية كاملة وأبواباً خشبية مقاومة للحريق باستخدام أحدث آلات CNC وعلى يد حرفيين مهرة في مصنعنا المخصص بجدة.</p>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);">كل منتج يُصنَّع وفق معايير SASO ومتطلبات السلامة من الحريق FD60 — بجودة تدوم.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;">
+            <span class="tag">تصنيع CNC</span><span class="tag">نجارة مخصصة</span><span class="tag">تجهيزات داخلية</span><span class="tag">أبواب مقاومة للحريق</span><span class="tag">معتمد SASO</span><span class="tag">FD60</span>
+          </div>
+        </div>
+        <div class="cap-grid">
+          <div class="cap-item reveal d1" data-tilt><span class="cap-dot"></span><span class="cap-text">نجارة مخصصة للمشاريع السكنية والتجارية</span></div>
+          <div class="cap-item reveal d2" data-tilt><span class="cap-dot"></span><span class="cap-text">تجهيزات داخلية شاملة تضمّ الأسقف والتجليد</span></div>
+          <div class="cap-item reveal d3" data-tilt><span class="cap-dot"></span><span class="cap-text">أبواب خشبية مقاومة للحريق FD60 معتمدة من الدفاع المدني</span></div>
+          <div class="cap-item reveal d4" data-tilt><span class="cap-dot"></span><span class="cap-text">أثاث مخصص ودواليب وخزائن مدمجة</span></div>
+          <div class="cap-item reveal d5" data-tilt><span class="cap-dot"></span><span class="cap-text">لوحات وشاشات زخرفية بتقنية CNC</span></div>
+          <div class="cap-item reveal d6" data-tilt><span class="cap-dot"></span><span class="cap-text">أعمال القشرة الخشبية وإنهاء الأسطح الفاخرة</span></div>
+        </div>
+      </div>
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">مراحل التصنيع</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">من الفكرة إلى التسليم في مصنعنا بجدة.</p>
+        <div class="process-grid">
+          <div class="process-step reveal d1"><div class="ps-num">١</div><div class="ps-name">التصميم والهندسة</div><div class="ps-desc">الرسومات التقنية واختيار المواد وضمان الجودة.</div></div>
+          <div class="process-step reveal d2"><div class="ps-num">٢</div><div class="ps-name">القطع بتقنية CNC</div><div class="ps-desc">تصنيع دقيق للألواح والملفات بآلات CNC.</div></div>
+          <div class="process-step reveal d3"><div class="ps-num">٣</div><div class="ps-name">الإنهاء والتجميع</div><div class="ps-desc">صنفرة وطلاء وقشرة وتغليف حواف.</div></div>
+          <div class="process-step reveal d4"><div class="ps-num">٤</div><div class="ps-name">مراقبة الجودة والتسليم</div><div class="ps-desc">فحص جودة كامل وتركيب في الموقع.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">من ورشة الأعمال الخشبية</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">مجموعة مختارة من أعمال النجارة والتجهيزات والأثاث المنجزة.</p>
+        <div class="mega-gallery-grid">
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-02.jpg" alt="أبواب خشبية" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-03.jpg" alt="نجارة" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-04.jpg" alt="أثاث" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-05.jpg" alt="أعمال خشبية" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-06.jpg" alt="وحدة وسائط" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-07.jpg" alt="دولاب" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-09.jpg" alt="ورشة العمل" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-11.jpg" alt="خزائن" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-12.jpg" alt="الاستقبال" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-13.jpg" alt="ديكور داخلي" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:48px;" class="reveal"><a href="/pages/contact.html?division=wood" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر للأعمال الخشبية <span class="arrow">←</span></a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 4. STEEL WORKS — always-dark industrial treatment ═══ -->
+<section id="steel-works" class="division-section steel-dark-section">
+  <div class="steel-sweep-bg" aria-hidden="true"></div>
+  <div class="svc-hero" data-slider style="border-bottom:1px solid rgba(255,255,255,0.09);">
+    <div class="svc-hero-img">
+      <div class="ph-slide-bg active" style="background-image:url('/assets/images/Steel Works/Steel Woks_Hero 1.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Steel Works/Steel Woks_Hero 2.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Steel Works/Steel Woks_Hero 3.png')"></div>
+    </div>
+    <div class="svc-hero-bg" style="background:linear-gradient(160deg,rgba(169,194,124,0.10) 0%,rgba(10,11,10,0.86) 70%);"></div>
+    <div class="svc-hero-num">٢</div>
+    <div class="svc-hero-content container">
+      <div class="eyebrow ph-hero-el">القسم الثاني</div>
+      <h1 class="ph-hero-el ph-d2" style="font-family:var(--font-display);font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1.1;letter-spacing:0;color:#F5F4EF;">الأعمال <span style="background:linear-gradient(100deg,#A9C27C,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">الحديدية</span></h1>
+      <p class="ph-hero-el ph-d3" style="font-family:var(--font-display);font-size:clamp(15px,2.4vw,20px);font-weight:600;color:#B7B6AE;margin-top:14px;">هياكل معدنية وتصنيع متخصص</p>
+    </div>
+  </div>
+  <div class="section-pad" style="position:relative;">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;" class="reveal">
+        <div class="pd-pin-wrap" data-pin>
+          <h3 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:16px;color:#F5F4EF;">هياكل معدنية وتصنيع متخصص</h3>
+          <p style="font-size:15px;line-height:1.90;margin-bottom:16px;">يتخصص قسم الأعمال الحديدية لدينا في تصنيع الهياكل المعدنية وأبواب الفولاذ المقاومة للحريق والكسوات المعدنية والسلالم والدرابزين والمكونات المعدنية المخصصة للمشاريع التجارية والصناعية والسكنية في جميع أنحاء المملكة.</p>
+          <p style="font-size:15px;line-height:1.90;">تحمل جميع منتجات الفولاذ المقاومة للحريق FD60 شهادة الدفاع المدني السعودي وتتوافق مع معايير SASO.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;">
+            <span class="tag">هياكل معدنية</span><span class="tag">مقاوم للحريق FD60</span><span class="tag">كسوات معدنية</span><span class="tag">سلالم</span><span class="tag">درابزين</span><span class="tag">معتمد SASO</span>
+          </div>
+        </div>
+        <div class="cap-grid">
+          <div class="cap-item reveal d1" data-tilt><span class="cap-dot"></span><span class="cap-text">أعمدة وعوارض وتجميعات فولاذية هيكلية مخصصة</span></div>
+          <div class="cap-item reveal d2" data-tilt><span class="cap-dot"></span><span class="cap-text">أبواب فولاذية مقاومة للحريق FD60 وفق مواصفات الدفاع المدني</span></div>
+          <div class="cap-item reveal d3" data-tilt><span class="cap-dot"></span><span class="cap-text">أنظمة كسوة معدنية خارجية وداخلية للواجهات</span></div>
+          <div class="cap-item reveal d4" data-tilt><span class="cap-dot"></span><span class="cap-text">سلالم فولاذية مخصصة وأنظمة درابزين وحواجز حماية</span></div>
+          <div class="cap-item reveal d5" data-tilt><span class="cap-dot"></span><span class="cap-text">قطع بتقنيات البلازما والليزر للدقة القصوى</span></div>
+          <div class="cap-item reveal d6" data-tilt><span class="cap-dot"></span><span class="cap-text">طلاء بودرة وتشطيبات مطلية وفق المواصفات</span></div>
+        </div>
+      </div>
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">مراحل التصنيع</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">تصنيع هندسي القيادة، يُلحَم ويُشطَّب بالكامل داخل مصنعنا.</p>
+        <div class="process-grid">
+          <div class="process-step reveal d1"><div class="ps-num">١</div><div class="ps-name">التصميم الهندسي</div><div class="ps-desc">رسومات المصنع والحسابات الإنشائية والمشتريات.</div></div>
+          <div class="process-step reveal d2"><div class="ps-num">٢</div><div class="ps-name">القطع والتشكيل</div><div class="ps-desc">قطع بلازما/ليزر والثني وتدحريج المعادن.</div></div>
+          <div class="process-step reveal d3"><div class="ps-num">٣</div><div class="ps-name">اللحام والتجميع</div><div class="ps-desc">لحام MIG/TIG بواسطة لحّامين معتمدين.</div></div>
+          <div class="process-step reveal d4"><div class="ps-num">٤</div><div class="ps-name">الطلاء والتركيب</div><div class="ps-desc">سفع الرمل والتمهيد والطلاء والتركيب في الموقع.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">من ورشة الأعمال الحديدية</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">مشاريع فولاذية إنشائية ومعمارية ومُصنَّعة.</p>
+        <div class="mega-gallery-grid" id="steelGalleryGrid" data-division-gallery="steel-works"></div>
+      </div>
+
+      <div style="margin-top:48px;" class="reveal"><a href="/pages/contact.html?division=steel" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر للأعمال الحديدية <span class="arrow">←</span></a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 5. ALUMINIUM WORKS — light glassmorphism ═══ -->
+<section id="aluminium-works" class="division-section division-band-aluminium">
+  <div class="svc-hero" data-slider>
+    <div class="svc-hero-img">
+      <div class="ph-slide-bg active" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 1.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 2.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 3.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 4.png')"></div>
+    </div>
+    <div class="svc-hero-bg"></div>
+    <div class="svc-hero-num">٣</div>
+    <div class="svc-hero-content container">
+      <div class="eyebrow ph-hero-el">القسم الثالث</div>
+      <h1 class="ph-hero-el ph-d2" style="font-family:var(--font-display);font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1.1;letter-spacing:0;">الأعمال <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">الألومنيوم</span></h1>
+      <p class="ph-hero-el ph-d3" style="font-family:var(--font-display);font-size:clamp(15px,2.4vw,20px);font-weight:600;color:var(--grey-400);margin-top:14px;">واجهات وتزجيج وفواصل</p>
+    </div>
+  </div>
+  <div class="section-pad au-glass-wrap" style="border-bottom:1px solid var(--border-1);">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;" class="reveal">
+        <div class="pd-pin-wrap" data-pin>
+          <h3 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:16px;">واجهات وتزجيج وفواصل</h3>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);margin-bottom:16px;">يقدم قسم الأعمال الألومنيوم لدينا أنظمة واجهات ألومنيوم عالية الأداء وستائر زجاجية وتزجيج وفواصل وأبواباً ونوافذ وعناصر ألومنيوم معمارية — معتمدة وفق المعايير السعودية SASO للسوق المحلي.</p>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);">نعمل مع أنظمة بثق ألومنيوم رائدة لتقديم أغلفة معمارية عالية الأداء ذات عزل حراري كامل للمشاريع التجارية والسكنية الفاخرة في جميع أنحاء المملكة.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;">
+            <span class="tag">أنظمة ستائر</span><span class="tag">واجهات</span><span class="tag">معتمد SASO</span><span class="tag">تزجيج</span><span class="tag">فواصل</span><span class="tag">عزل حراري</span>
+          </div>
+        </div>
+        <div class="cap-grid">
+          <div class="cap-item reveal d1" data-tilt><span class="cap-dot"></span><span class="cap-text">أنظمة الستائر الزجاجية الموحّدة والعصوية</span></div>
+          <div class="cap-item reveal d2" data-tilt><span class="cap-dot"></span><span class="cap-text">كسوة ألومنيوم معمارية وأنظمة واجهات ذات تهوية طبيعية</span></div>
+          <div class="cap-item reveal d3" data-tilt><span class="cap-dot"></span><span class="cap-text">أبواب ونوافذ ألومنيوم ذات عزل حراري وشبكات تهوية</span></div>
+          <div class="cap-item reveal d4" data-tilt><span class="cap-dot"></span><span class="cap-text">أنظمة فواصل زجاجية مؤطرة وبدون إطار</span></div>
+          <div class="cap-item reveal d5" data-tilt><span class="cap-dot"></span><span class="cap-text">تزجيج مزدوج وثلاثي لأداء حراري متميز</span></div>
+          <div class="cap-item reveal d6" data-tilt><span class="cap-dot"></span><span class="cap-text">أكسدة أو طلاء بودرة بمواصفات RAL اللونية</span></div>
+        </div>
+      </div>
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">مراحل التصنيع</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">من البثق الدقيق وحتى التزجيج المُركَّب المُحكَم.</p>
+        <div class="process-grid">
+          <div class="process-step reveal d1"><div class="ps-num">١</div><div class="ps-name">تصميم النظام</div><div class="ps-desc">هندسة الواجهات والنمذجة الحرارية وتحليل أحمال الرياح.</div></div>
+          <div class="process-step reveal d2"><div class="ps-num">٢</div><div class="ps-name">البثق والقطع</div><div class="ps-desc">قطع ألومنيوم دقيق وتصنيع CNC.</div></div>
+          <div class="process-step reveal d3"><div class="ps-num">٣</div><div class="ps-name">معالجة السطح</div><div class="ps-desc">أكسدة أو طلاء بودرة وفق مواصفات اللون.</div></div>
+          <div class="process-step reveal d4"><div class="ps-num">٤</div><div class="ps-name">التزجيج والتركيب</div><div class="ps-desc">ختم السيليكون والتركيب في الموقع.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">من ورشة الأعمال الألومنيوم</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">واجهات وتزجيج وعناصر ألومنيوم معمارية في الميدان.</p>
+        <div class="mega-gallery-grid" id="aluminiumGalleryGrid" data-division-gallery="aluminium-works"></div>
+      </div>
+
+      <div style="margin-top:48px;" class="reveal"><a href="/pages/contact.html?division=aluminium" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر للأعمال الألومنيوم <span class="arrow">←</span></a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 6. MANUFACTURING PROCESS — combined timeline ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">من البداية إلى النهاية</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">عملية تصنيع واحدة <span class="accent">ومتكاملة</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:640px;margin:0 auto;text-align:center;">يتبع كل قسم نفس منهجية التصميم ← التصنيع ← التشطيب ← التسليم، من الرسم الفني وحتى التركيب في الموقع.</p>
+
+    <div class="mega-timeline">
+      <div class="mega-timeline-group">
+        <div class="mega-timeline-label" data-reveal="fade-up">الأعمال الخشبية</div>
+        <div class="mega-timeline-steps">
+          <div class="mega-timeline-step reveal d1"><div class="mega-timeline-num">٠١</div><div class="mega-timeline-name">التصميم والهندسة</div><div class="mega-timeline-desc">الرسومات التقنية واختيار المواد وضمان الجودة.</div></div>
+          <div class="mega-timeline-step reveal d2"><div class="mega-timeline-num">٠٢</div><div class="mega-timeline-name">القطع بتقنية CNC</div><div class="mega-timeline-desc">تصنيع دقيق للألواح والملفات بآلات CNC.</div></div>
+          <div class="mega-timeline-step reveal d3"><div class="mega-timeline-num">٠٣</div><div class="mega-timeline-name">الإنهاء والتجميع</div><div class="mega-timeline-desc">صنفرة وطلاء وقشرة وتغليف حواف.</div></div>
+          <div class="mega-timeline-step reveal d4"><div class="mega-timeline-num">٠٤</div><div class="mega-timeline-name">مراقبة الجودة والتسليم</div><div class="mega-timeline-desc">فحص جودة كامل وتركيب في الموقع.</div></div>
+        </div>
+      </div>
+      <div class="mega-timeline-group">
+        <div class="mega-timeline-label" data-reveal="fade-up">الأعمال الحديدية</div>
+        <div class="mega-timeline-steps">
+          <div class="mega-timeline-step reveal d1"><div class="mega-timeline-num">٠٥</div><div class="mega-timeline-name">التصميم الهندسي</div><div class="mega-timeline-desc">رسومات المصنع والحسابات الإنشائية والمشتريات.</div></div>
+          <div class="mega-timeline-step reveal d2"><div class="mega-timeline-num">٠٦</div><div class="mega-timeline-name">القطع والتشكيل</div><div class="mega-timeline-desc">قطع بلازما/ليزر والثني وتدحريج المعادن.</div></div>
+          <div class="mega-timeline-step reveal d3"><div class="mega-timeline-num">٠٧</div><div class="mega-timeline-name">اللحام والتجميع</div><div class="mega-timeline-desc">لحام MIG/TIG بواسطة لحّامين معتمدين.</div></div>
+          <div class="mega-timeline-step reveal d4"><div class="mega-timeline-num">٠٨</div><div class="mega-timeline-name">الطلاء والتركيب</div><div class="mega-timeline-desc">سفع الرمل والتمهيد والطلاء والتركيب في الموقع.</div></div>
+        </div>
+      </div>
+      <div class="mega-timeline-group">
+        <div class="mega-timeline-label" data-reveal="fade-up">الأعمال الألومنيوم</div>
+        <div class="mega-timeline-steps">
+          <div class="mega-timeline-step reveal d1"><div class="mega-timeline-num">٠٩</div><div class="mega-timeline-name">تصميم النظام</div><div class="mega-timeline-desc">هندسة الواجهات والنمذجة الحرارية وتحليل أحمال الرياح.</div></div>
+          <div class="mega-timeline-step reveal d2"><div class="mega-timeline-num">١٠</div><div class="mega-timeline-name">البثق والقطع</div><div class="mega-timeline-desc">قطع ألومنيوم دقيق وتصنيع CNC.</div></div>
+          <div class="mega-timeline-step reveal d3"><div class="mega-timeline-num">١١</div><div class="mega-timeline-name">معالجة السطح</div><div class="mega-timeline-desc">أكسدة أو طلاء بودرة وفق مواصفات اللون.</div></div>
+          <div class="mega-timeline-step reveal d4"><div class="mega-timeline-num">١٢</div><div class="mega-timeline-name">التزجيج والتركيب</div><div class="mega-timeline-desc">ختم السيليكون والتركيب في الموقع.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 7. FACTORY & MACHINERY (unchanged) ═══ -->
 <section class="machinery-section">
   <div class="container">
-    <div class="eyebrow reveal">معداتنا</div>
-    <h2 class="section-title reveal d1">آلاتنا <span class="accent">المتطورة</span></h2>
-    <p class="reveal d2" style="font-size:15px;line-height:2;color:var(--grey-500);max-width:600px;margin-bottom:0;">معدات تصنيع متقدمة في قسم الأعمال الخشبية — راوترات CNC ومناشر دقيقة وآلات تغليف حواف والمزيد، يشغّلها تقنيون مهرة وفق أعلى المعايير.</p>
+    <div class="eyebrow" data-reveal="fade-up">معداتنا</div>
+    <h2 class="section-title" data-reveal="mask">آلاتنا <span class="accent">المتطورة</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--grey-500);max-width:600px;margin-bottom:0;">معدات تصنيع متقدمة في قسم الأعمال الخشبية — راوترات CNC ومناشر دقيقة وآلات تغليف حواف والمزيد، يشغّلها تقنيون مهرة وفق أعلى المعايير.</p>
     <div class="mach-grid" id="mach-grid"></div>
   </div>
 </section>
+
+<!-- ═══ 8. INDUSTRIES WE SERVE ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up">مع من نعمل</div>
+    <h2 class="section-title" data-reveal="mask">القطاعات التي <span class="accent">نخدمها</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:640px;">تزوّد أقسامنا الثلاثة مجموعة واسعة من أنواع المشاريع في جميع أنحاء المملكة العربية السعودية بأعمال النجارة والهياكل الفولاذية وأنظمة الألومنيوم.</p>
+    <div class="industry-grid">
+      <div class="industry-card reveal d1" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg></div>
+        <div class="industry-name">الضيافة</div>
+        <div class="industry-desc">أعمال تجهيز الفنادق والنجارة والواجهات لمشاريع الضيافة في جميع أنحاء المملكة.</div>
+      </div>
+      <div class="industry-card reveal d2" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div>
+        <div class="industry-name">السكني</div>
+        <div class="industry-desc">نجارة مخصصة وأبواب ونوافذ ألومنيوم وعناصر حديدية للفلل والمجمعات السكنية.</div>
+      </div>
+      <div class="industry-card reveal d3" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+        <div class="industry-name">التجاري</div>
+        <div class="industry-desc">ستائر زجاجية وتجهيزات داخلية وهياكل فولاذية للمكاتب والمحال التجارية والمباني متعددة الاستخدامات.</div>
+      </div>
+      <div class="industry-card reveal d4" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M12 2l9 4.5v3c0 5.5-3.8 10.7-9 12-5.2-1.3-9-6.5-9-12v-3z"/></svg></div>
+        <div class="industry-name">الحكومي</div>
+        <div class="industry-desc">أبواب معتمدة مقاومة للحريق وهياكل فولاذية وأنظمة واجهات للمرافق الحكومية.</div>
+      </div>
+      <div class="industry-card reveal d1" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
+        <div class="industry-name">الصناعي</div>
+        <div class="industry-desc">تجميعات فولاذية هيكلية وكسوات وهياكل مستودعات للمنشآت الصناعية واللوجستية.</div>
+      </div>
+      <div class="industry-card reveal d2" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.5 3-6a5 5 0 00-9-3 5 5 0 00-9 3c0 2.5 1.5 4.5 3 6l6 6z"/></svg></div>
+        <div class="industry-name">الرعاية الصحية</div>
+        <div class="industry-desc">أبواب مقاومة للحريق وتشطيبات صحية ومكونات تجهيزات دقيقة للمرافق الطبية.</div>
+      </div>
+      <div class="industry-card reveal d3" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M22 10L12 4 2 10l10 6 10-6z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></div>
+        <div class="industry-name">التعليم</div>
+        <div class="industry-desc">نجارة وفواصل وتشطيبات متينة للمدارس والكليات والمباني الجامعية.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 9. QUALITY & CERTIFICATIONS ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;background:var(--bg-2);">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">الثقة والمعايير</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">الجودة <span class="accent">والشهادات</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:640px;margin:0 auto;text-align:center;">تُصنَّع منتجاتنا وتُدار عملياتنا وفق المعايير والبرامج الوطنية التالية.</p>
+
+    <div class="qual-grid">
+      <div class="qual-card reveal d1" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><path d="M12 2l9 4.5v3c0 5.5-3.8 10.7-9 12-5.2-1.3-9-6.5-9-12v-3z"/></svg></div>
+        <div class="qual-name">SASO</div>
+        <div class="qual-desc">الهيئة السعودية للمواصفات والمقاييس والجودة — منتجات معتمدة للسوق السعودي.</div>
+      </div>
+      <div class="qual-card reveal d2" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+        <div class="qual-name">FD60</div>
+        <div class="qual-desc">تصنيف مقاومة للحريق يشير إلى 60 دقيقة من مقاومة الحريق، مطبّق على أبوابنا الخشبية والحديدية المقاومة للحريق.</div>
+      </div>
+      <div class="qual-card reveal d3" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div>
+        <div class="qual-name">MIM</div>
+        <div class="qual-desc">وزارة الصناعة والثروة المعدنية — ترخيص صناعي لعملياتنا التصنيعية.</div>
+      </div>
+      <div class="qual-card reveal d4" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div class="qual-name">ISO</div>
+        <div class="qual-desc">المنظمة الدولية للمعايير — إدارة جودة متوافقة مع المعايير المعتمدة عالمياً.</div>
+      </div>
+      <div class="qual-card reveal d5" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><path d="M2 12h20M12 2v20M4.5 4.5l15 15M19.5 4.5l-15 15"/></svg></div>
+        <div class="qual-name">رؤية 2030</div>
+        <div class="qual-desc">المساهمة في أهداف رؤية المملكة 2030 الصناعية وتوطين المحتوى المحلي.</div>
+      </div>
+    </div>
+
+    <div class="mega-stats-row">
+      <div class="stat-box"><div class="stat-box-v"><span data-count="25" data-suffix="+">0</span></div><div class="stat-box-l">سنة من التميز</div></div>
+      <div class="stat-box"><div class="stat-box-v">3</div><div class="stat-box-l">أقسام تصنيع</div></div>
+      <div class="stat-box"><div class="stat-box-v"><span data-count="20" data-suffix="+">0</span></div><div class="stat-box-l">آلة في التشغيل</div></div>
+      <div class="stat-box"><div class="stat-box-v">V<em>2030</em></div><div class="stat-box-l">متوافق مع الرؤية</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 10. REQUEST A QUOTE CTA ═══ -->
+<div class="v2030" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="v2030-badge reveal" style="display:inline-flex;">
+      <span style="font-size:16px;">🛠️</span>
+      بانتظار مشروعك
+    </div>
+    <h2 class="section-title reveal d1" style="max-width:700px;margin:0 auto 16px;">احصل على <span class="accent">عرض سعر مخصص</span> لمشروعك</h2>
+    <p class="reveal d2" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:560px;margin:0 auto 32px;">أخبرنا عن مشروعك وسنعود إليك بعرض مخصص يغطي الأعمال الخشبية أو الحديدية أو الألومنيوم.</p>
+    <div class="reveal d3" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="/pages/contact.html" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر <span class="arrow">←</span></a>
+      <a href="/pages/gallery.html" class="btn btn-outline btn-lg">مشاهدة أعمالنا <span class="arrow">↖</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 11. FAQ ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">أسئلة</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">الأسئلة <span class="accent">الشائعة</span></h2>
+    <div class="faq-list">
+      <details class="faq-item reveal d1">
+        <summary>هل تقدمون مقاسات وتشطيبات مخصصة؟</summary>
+        <div class="faq-body">نعم. تُصنَّع منتجات الخشب والحديد والألومنيوم وفق أبعاد ومتطلبات التشطيب الخاصة بمشروعك — ويتم مناقشة ذلك وتأكيده في مرحلة تقديم عرض السعر.</div>
+      </details>
+      <details class="faq-item reveal d2">
+        <summary>ما هي مدة التسليم المعتادة؟</summary>
+        <div class="faq-body">تختلف مدة التسليم حسب نطاق المشروع وتوفر المواد وحجم الطلب، ويتم تأكيدها عند إصدار عرض السعر.</div>
+      </details>
+      <details class="faq-item reveal d3">
+        <summary>هل تقومون بالتوريد والتركيب أم التوريد فقط؟</summary>
+        <div class="faq-body">نقدّم الخيارين — التوريد فقط للمقاولين الذين يديرون التركيب بأنفسهم، أو خدمة التوريد والتركيب الكاملة حيث تتولى فرقنا التسليم والتركيب في الموقع.</div>
+      </details>
+      <details class="faq-item reveal d4">
+        <summary>هل يمكنني طلب عينات قبل الطلب؟</summary>
+        <div class="faq-body">بالنسبة للطلبات الكبيرة، يمكن ترتيب عينات من المواد والتشطيبات — يكفي طلب ذلك عند تقديم طلب عرض السعر.</div>
+      </details>
+      <details class="faq-item reveal d5">
+        <summary>هل تعملون مباشرة مع المقاولين والمطورين؟</summary>
+        <div class="faq-body">نعم، نعمل بانتظام بشكل مباشر مع المقاولين والمطورين والاستشاريين عبر أقسامنا الثلاثة، من المكونات الفردية إلى حزم المشاريع الكاملة.</div>
+      </details>
+      <details class="faq-item reveal d6">
+        <summary>كيف أطلب عرض سعر؟</summary>
+        <div class="faq-body">استخدم زر "طلب عرض سعر" في هذه الصفحة أو قم بزيارة صفحة اتصل بنا — شارك تفاصيل مشروعك وسيتواصل معك أحد أعضاء فريقنا.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 12. CONTACT QUICK-INFO ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;background:var(--bg-2);">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">تواصل معنا</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">لنتحدث عن <span class="accent">مشروعك</span></h2>
+    <div class="mega-contact-grid">
+      <a href="/pages/contact.html" class="mega-contact-chip reveal d1">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div><div class="cinfo-lbl">المكتب الرئيسي</div><div class="cinfo-val">جدة، المملكة العربية السعودية</div></div>
+      </a>
+      <a href="tel:+966563000051" class="mega-contact-chip reveal d2">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.87 9.8a19.79 19.79 0 01-3.07-8.63A2 2 0 012.78 0h3a2 2 0 012 1.72 12 12 0 00.69 2.96 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.12-.91a2 2 0 012.11-.45c.96.33 1.95.56 2.96.69A2 2 0 0122 16.92z"/></svg></div>
+        <div><div class="cinfo-lbl">الهاتف</div><div class="cinfo-val" style="direction:ltr;">+966 56 300 0051</div></div>
+      </a>
+      <a href="mailto:sales@alfarooque.com" class="mega-contact-chip reveal d3">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <div><div class="cinfo-lbl">البريد الإلكتروني</div><div class="cinfo-val" style="direction:ltr;">sales@alfarooque.com</div></div>
+      </a>
+      <a href="https://wa.me/966563000051" class="mega-contact-chip reveal d4">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
+        <div><div class="cinfo-lbl">واتساب</div><div class="cinfo-val" style="direction:ltr;">+966 56 300 0051</div></div>
+      </a>
+    </div>
+    <div class="reveal d5" style="text-align:center;"><a href="/pages/contact.html" class="btn btn-primary btn-lg" data-mag>طلب عرض سعر <span class="arrow">←</span></a></div>
+  </div>
+</section>
+
+<!-- ═══ 13. LIGHTBOX (shared by all mini-galleries above) ═══ -->
+<div class="lightbox" id="lightbox">
+  <img class="lightbox-img" id="lb-img" src="" alt="">
+  <button type="button" class="lightbox-close lb-close" id="lb-close" aria-label="Close">&times;</button>
+</div>
 
 <footer class="footer">
   <div class="footer-brand">
@@ -171,9 +592,9 @@
   <div>
     <div class="footer-col-h">الأقسام</div>
     <ul class="footer-links">
-      <li><a href="/pages/woodworks-ar.html">الأعمال الخشبية</a></li>
-      <li><a href="/pages/steelworks-ar.html">الأعمال الحديدية</a></li>
-      <li><a href="/pages/aluminium-ar.html">الأعمال الألومنيوم</a></li>
+      <li><a href="/pages/services-ar.html#wood-works">الأعمال الخشبية</a></li>
+      <li><a href="/pages/services-ar.html#steel-works">الأعمال الحديدية</a></li>
+      <li><a href="/pages/services-ar.html#aluminium-works">الأعمال الألومنيوم</a></li>
       <li><a href="/pages/about-ar.html#certifications">الشهادات</a></li>
       <li><a href="/pages/contact-ar.html">طلب عرض سعر</a></li>
     </ul>
@@ -198,7 +619,12 @@
     </div>
   </div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
+<script src="/js/division-gallery.js"></script>
 <script src="/js/machinery.js"></script>
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>

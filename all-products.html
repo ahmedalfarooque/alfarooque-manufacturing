@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* AL FAROOQUE: light default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="light";localStorage.setItem("theme","light");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Browse the full AL FAROOQUE Manufacturing catalog — every premium Wood, Steel and Aluminium product. Filter by category, material and price. Factory-direct from Jeddah, Saudi Arabia.">
+<meta name="keywords" content="all products AL FAROOQUE, buy woodwork Saudi Arabia, steel products Jeddah, aluminium windows doors">
+<meta property="og:title" content="All Products — AL FAROOQUE Manufacturing">
+<meta property="og:description" content="Browse the full catalog of premium Wood, Steel & Aluminium products from AL FAROOQUE Manufacturing, Jeddah.">
+<meta property="og:image" content="/assets/images/gallery/gallery-01.jpg">
+<meta property="og:type" content="website">
+<title>All Products — AL FAROOQUE Manufacturing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/products.css">
+<link rel="stylesheet" href="/css/product-filter.css">
+<link rel="stylesheet" href="/css/products-categories.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
+<link rel="stylesheet" href="/css/auth.css">
+<link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
+</head>
+<body class="products-page">
+
+<!-- ── Scroll progress ── -->
+<div id="progress-bar"></div>
+<!-- ── Cursor glow ── -->
+<div id="cursor-glow"></div>
+
+<!-- ═══ PRELOADER ═══ -->
+<div id="preloader">
+  <img src="/assets/images/logo/IAA_LOGO.png" alt="IAA" width="72" class="preloader-logo">
+  <div class="preloader-bar"><div class="preloader-fill"></div></div>
+  <div class="preloader-text">AL FAROOQUE Manufacturing</div>
+</div>
+
+<!-- ═══ BACKGROUND ENV ═══ -->
+<div class="bg-env">
+  <div class="bg-grad"></div>
+  <div class="bg-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="geo g1"></div><div class="geo g2"></div><div class="geo g3"></div>
+  <div class="geo g4"></div><div class="geo g5"></div>
+  <div class="ray r1"></div><div class="ray r2"></div><div class="ray r3"></div>
+  <div class="particles"></div>
+</div>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE Industries" width="42" height="42">
+    <div class="nav-brand">
+      <span class="nav-brand-name">AL FAROOQUE</span>
+      <span class="nav-brand-sub">Manufacturing</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/pages/about.html">About</a></li>
+    <li><a href="/pages/services.html">Services</a></li>
+    <li><a href="/pages/gallery.html">Gallery</a></li>
+    <li><a href="/products.html" class="active">Products</a></li>
+    <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button type="button" class="nav-icon-btn nav-search-btn" id="navSearchBtn" aria-label="Search" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+    <a href="/products.html" class="nav-icon-btn nav-wishlist-btn" id="navWishlistBtn" aria-label="Wishlist"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span class="nav-icon-badge" id="navWishlistBadge" hidden>0</span></a>
+    <button type="button" class="nav-icon-btn nav-cart-btn" id="navCartBtn" aria-label="Cart"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg><span class="nav-icon-badge" id="navCartBadge" hidden>0</span></button>
+    <button type="button" class="nav-icon-btn nav-acct-btn" id="navAcctBtn" data-af-login aria-label="Account"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></button>
+  </div>
+  <button class="nav-burger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-search-panel" id="navSearchPanel" hidden>
+  <form id="navSearchForm" class="nav-search-form" role="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input type="search" id="navSearchInput" class="nav-search-input" placeholder="Search products…" aria-label="Search products" autocomplete="off">
+    <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Close search">&#x2715;</button>
+  </form>
+</div>
+<div class="nav-mobile">
+  <a href="/">Home</a>
+  <a href="/pages/about.html">About</a>
+  <a href="/pages/services.html">Services</a>
+  <a href="/pages/gallery.html">Gallery</a>
+  <a href="/products.html">Products</a>
+  <a href="/pages/contact.html">Contact Us</a>
+</div>
+
+<!-- ═══ COMPACT HERO — CSS-only cross-fade background slider ═══ -->
+<section class="ap-hero" id="apHero">
+  <div class="ap-hero-slides" aria-hidden="true">
+    <div class="ap-hero-slide" style="background-image:url('/assets/images/E-commerse%20Home%20Images/Doors/%D8%B4%D8%B1%D9%83%D8%A9%20%D8%A7%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84%20%D8%A7%D9%84%D9%81%D8%A7%D8%B1%D9%88%D9%82%D9%8A%20%D9%84%D9%84%D8%B5%D9%86%D8%A7%D8%B9%D8%A7%D8%AA%202_Page_11_Image_0003.jpg')"></div>
+    <div class="ap-hero-slide" style="background-image:url('/assets/images/E-commerse%20Home%20Images/Sofa/%D8%B4%D8%B1%D9%83%D8%A9%20%D8%A7%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84%20%D8%A7%D9%84%D9%81%D8%A7%D8%B1%D9%88%D9%82%D9%8A%20%D9%84%D9%84%D8%B5%D9%86%D8%A7%D8%B9%D8%A7%D8%AA%202_Page_09_Image_0004.jpg')"></div>
+    <div class="ap-hero-slide" style="background-image:url('/assets/images/E-commerse%20Home%20Images/Sofa/%D8%B4%D8%B1%D9%83%D8%A9%20%D8%A7%D8%B3%D9%85%D8%A7%D8%B9%D9%8A%D9%84%20%D8%A7%D9%84%D9%81%D8%A7%D8%B1%D9%88%D9%82%D9%8A%20%D9%84%D9%84%D8%B5%D9%86%D8%A7%D8%B9%D8%A7%D8%AA%202_Page_18_Image_0006.jpg')"></div>
+  </div>
+  <div class="ap-hero-scrim" aria-hidden="true"></div>
+  <div class="ap-hero-inner">
+    <div class="eyebrow">Full Catalog</div>
+    <h1 class="ap-hero-title">All <span class="accent">Products</span></h1>
+    <p class="ap-hero-sub">Every product we manufacture — searchable, filterable, and ready to order factory-direct from Jeddah.</p>
+  </div>
+</section>
+
+<!-- ═══ PRODUCTS ═══ -->
+<section class="products-section" id="products">
+  <div class="container">
+
+    <!-- Product Grid — populated by products.js / product-filter.js -->
+    <div class="prod-grid" id="prodGrid"></div>
+
+    <!-- Load More -->
+    <div class="prod-loadmore-wrap" id="prodLoadMoreWrap" style="display:none;">
+      <button class="prod-loadmore" id="prodLoadMore" type="button">Load More Products</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ NEWSLETTER ═══ -->
+<section class="newsletter">
+  <div class="container newsletter-inner">
+    <div class="newsletter-copy" data-reveal="fade-up">
+      <h2 class="newsletter-title">Stay Ahead of <span class="accent">New Releases</span></h2>
+      <p class="newsletter-sub">Subscribe for new product launches, factory promotions, and seasonal offers — no spam, unsubscribe anytime.</p>
+    </div>
+    <form class="newsletter-form" id="newsletterForm">
+      <input type="email" id="newsletterEmail" class="newsletter-input" placeholder="Enter your email address" required autocomplete="email">
+      <button type="submit" class="btn btn-primary newsletter-submit">Subscribe</button>
+    </form>
+  </div>
+</section>
+
+<!-- ═══ CTA BAND ═══ -->
+<section style="position:relative;z-index:1;padding:80px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);">
+  <div class="container">
+    <div style="text-align:center;max-width:640px;margin:0 auto;">
+      <div class="section-label reveal" style="justify-content:center;">Custom Orders</div>
+      <h2 class="section-title reveal d1">Need a Custom <span class="accent">Specification?</span></h2>
+      <p class="section-body reveal d2" style="margin:0 auto 36px;text-align:center;">Our expert team can fabricate bespoke products to your exact dimensions, finishes, and engineering requirements. Contact us for a tailored quotation.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;" class="reveal d3">
+        <a href="/pages/contact.html" class="btn btn-primary" data-mag>Request Custom Quote <span class="arrow">→</span></a>
+        <a href="/pages/services.html" class="btn btn-ghost">Our Services <span class="arrow">↗</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRODUCT MODAL ═══ -->
+<div class="prod-modal" id="prodModal" role="dialog" aria-modal="true" aria-label="Product Details">
+  <div class="prod-modal-bd" id="prodModalBd"></div>
+  <div class="pm-inner">
+    <button class="pm-close" id="pmClose" aria-label="Close">&#215;</button>
+
+    <!-- Gallery Side -->
+    <div class="pm-gallery-side">
+      <div class="pm-main-img">
+        <img id="pmMainImg" src="" alt="Product image" decoding="async" loading="eager">
+      </div>
+      <div class="pm-thumbs" id="pmThumbs"></div>
+    </div>
+
+    <!-- Info Side -->
+    <div class="pm-info-side">
+      <!-- Header -->
+      <div class="pm-header">
+        <div class="pm-cat" id="pmCat"></div>
+        <div class="pm-title" id="pmTitle"></div>
+        <div class="pm-price-row-modal">
+          <div class="pm-price" id="pmPrice"></div>
+          <div class="pm-warranty-badge-modal" id="pmWarrantyBadge"></div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <p class="pm-desc" id="pmDesc"></p>
+
+      <!-- Features -->
+      <div class="pm-section">
+        <div class="pm-section-title">Features</div>
+        <ul class="pm-features" id="pmFeatures"></ul>
+      </div>
+
+      <!-- Specifications -->
+      <div class="pm-section">
+        <div class="pm-section-title">Specifications</div>
+        <div class="pm-specs" id="pmSpecs"></div>
+      </div>
+
+      <!-- Applications -->
+      <div class="pm-section">
+        <div class="pm-section-title">Applications</div>
+        <div class="pm-tags-wrap" id="pmApplications"></div>
+      </div>
+
+      <!-- Finishes & Sizes -->
+      <div class="pm-section pm-two-col-section">
+        <div>
+          <div class="pm-section-title">Available Finishes</div>
+          <div class="pm-tags-wrap" id="pmFinishes"></div>
+        </div>
+        <div>
+          <div class="pm-section-title">Available Sizes</div>
+          <div class="pm-tags-wrap" id="pmSizes"></div>
+        </div>
+      </div>
+
+      <!-- Quantity + Primary Actions -->
+      <div class="pm-qty-row">
+        <span class="pm-qty-label">Quantity</span>
+        <div class="pm-qty-ctrl">
+          <button class="pm-qty-btn" id="pmQtyMinus" aria-label="Decrease">&#8722;</button>
+          <div class="pm-qty-num" id="pmQtyNum">1</div>
+          <button class="pm-qty-btn" id="pmQtyPlus" aria-label="Increase">&#43;</button>
+        </div>
+        <div class="pm-total" id="pmTotal"></div>
+      </div>
+      <div class="pm-actions">
+        <button class="btn-add-cart" id="pmAddCart">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+          Add to Cart
+        </button>
+        <button class="btn-order-now" id="pmOrderNow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Order Now
+        </button>
+      </div>
+
+      <!-- Secondary CTAs -->
+      <div class="pm-cta-row">
+        <a class="pm-btn-wa" id="pmWhatsapp" href="#" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp Inquiry
+        </a>
+        <button class="pm-btn-quote" id="pmQuoteBtn" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Request Quotation
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CART FAB ═══ -->
+<button class="cart-fab" id="cartFab" aria-label="Open shopping cart">
+  <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+  <span class="cart-fab-badge" id="cartFabBadge">0</span>
+</button>
+
+<!-- ═══ CART BACKDROP + DRAWER ═══ -->
+<div class="cart-backdrop" id="cartBackdrop"></div>
+<aside class="cart-drawer" id="cartDrawer" role="dialog" aria-label="Shopping Cart">
+  <div class="cart-dr-header">
+    <div>
+      <div class="cart-dr-title">Shopping Cart</div>
+      <div class="cart-dr-count" id="cartDrCount">0 items</div>
+    </div>
+    <button class="cart-dr-close" id="cartClose" aria-label="Close cart">&#215;</button>
+  </div>
+  <div class="cart-dr-items" id="cartItemsList"></div>
+  <div class="cart-dr-footer">
+    <div class="cart-total-rows">
+      <div class="cart-total-row">
+        <span>Subtotal</span>
+        <span id="cartSubtotal">SAR 0</span>
+      </div>
+      <div class="cart-total-row">
+        <span>VAT (15%)</span>
+        <span id="cartVat">SAR 0</span>
+      </div>
+      <div class="cart-total-row grand">
+        <span>Grand Total</span>
+        <span id="cartGrandTotal">SAR 0</span>
+      </div>
+    </div>
+    <button class="cart-proceed-btn" id="cartProceed" disabled>
+      Proceed to Order →
+    </button>
+  </div>
+</aside>
+
+<!-- ═══ ORDER MODAL ═══ -->
+<div class="order-modal" id="orderModal" role="dialog" aria-modal="true" aria-label="Place Order">
+  <div class="order-modal-bd" id="orderModalBd"></div>
+  <div class="om-inner">
+    <div class="om-hd">
+      <div class="om-hd-text">
+        <div class="om-title">Place Your Order</div>
+        <div class="om-sub">Submit your order and our team will confirm it within 24 hours.</div>
+      </div>
+      <button class="om-close" id="omClose" aria-label="Close">&#215;</button>
+    </div>
+
+    <!-- Product Preview -->
+    <div class="om-product-preview">
+      <img id="omProdImg" src="" alt="Product">
+      <div>
+        <div class="om-pp-name" id="omProdName"></div>
+        <div class="om-pp-price" id="omProdPrice"></div>
+        <div class="om-pp-note" id="omProdNote"></div>
+      </div>
+    </div>
+
+    <!-- Order Form -->
+    <form class="om-form" id="omForm" onsubmit="return false;">
+      <div class="om-row">
+        <div class="om-field">
+          <label class="om-label" for="omName">Full Name *</label>
+          <input class="om-input" type="text" id="omName" name="name" placeholder="Your name" required autocomplete="name">
+        </div>
+        <div class="om-field">
+          <label class="om-label" for="omPhone">Phone *</label>
+          <input class="om-input" type="tel" id="omPhone" name="phone" placeholder="+966 5X XXX XXXX" required autocomplete="tel">
+        </div>
+      </div>
+      <div class="om-field">
+        <label class="om-label" for="omEmail">Email</label>
+        <input class="om-input" type="email" id="omEmail" name="email" placeholder="your@email.com" autocomplete="email">
+      </div>
+
+      <!-- Quantity & Price Breakdown -->
+      <div id="omQtySection">
+        <div class="om-label" style="margin-bottom:8px;">Quantity</div>
+        <div class="om-qty-wrap">
+          <div class="om-qty-ctrl">
+            <button class="om-qty-btn" id="omQtyMinus" type="button">&#8722;</button>
+            <div class="om-qty-val" id="omQtyVal">1</div>
+            <button class="om-qty-btn" id="omQtyPlus" type="button">&#43;</button>
+          </div>
+        </div>
+        <div class="om-price-breakdown">
+          <div class="om-breakdown-row">
+            <span>Subtotal</span><span id="omSubtotalVal">SAR 0</span>
+          </div>
+          <div class="om-breakdown-row">
+            <span>VAT (15%)</span><span id="omVatVal">SAR 0</span>
+          </div>
+          <div class="om-total-line">
+            <span>Grand Total</span><span id="omGrandVal">SAR 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="om-field">
+        <label class="om-label" for="omMsg">Message (optional)</label>
+        <textarea class="om-textarea" id="omMsg" name="message" placeholder="Special requirements, dimensions, finish preferences..."></textarea>
+      </div>
+
+      <div class="om-status" id="omStatus" role="status" aria-live="polite"></div>
+
+      <div class="om-actions">
+        <button class="om-submit-btn" id="omSubmit" type="submit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          Submit Order
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-brand">
+    <div class="footer-logo-row">
+      <img src="/assets/images/logo/IAA_LOGO.png" alt="AL FAROOQUE Industries" width="42" height="42">
+      <span class="footer-name">AL FAROOQUE Manufacturing</span>
+    </div>
+    <p class="footer-tag">Precision manufacturing across Wood Works, Steel Works, and Aluminium Works — serving Saudi Arabia and the region. Part of AL FAROOQUE Industries.</p>
+    <div class="footer-social">
+      <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+      <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
+      <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+      <a href="https://wa.me/966563000051" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+    </div>
+  </div>
+  <div>
+    <div class="footer-col-h">Navigation</div>
+    <ul class="footer-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/pages/about.html">About Us</a></li>
+      <li><a href="/pages/services.html">Services</a></li>
+      <li><a href="/pages/gallery.html">Gallery</a></li>
+      <li><a href="/products.html">Products</a></li>
+      <li><a href="/pages/contact.html">Contact</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-h">Divisions</div>
+    <ul class="footer-links">
+      <li><a href="/pages/services.html#wood-works">Wood Works</a></li>
+      <li><a href="/pages/services.html#steel-works">Steel Works</a></li>
+      <li><a href="/pages/services.html#aluminium-works">Aluminium Works</a></li>
+      <li><a href="/pages/about.html#certifications">Certifications</a></li>
+      <li><a href="/pages/contact.html">Request a Quote</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-h">Contact</div>
+    <ul class="footer-links">
+      <li><a href="/pages/contact.html">Head Office – Jeddah</a></li>
+      <li><a href="mailto:sales@alfarooque.com">sales@alfarooque.com</a></li>
+      <li><a href="tel:+966563000051">+966 56 300 0051</a></li>
+      <li><a href="https://wa.me/966563000051">WhatsApp</a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© <span id="current-year"></span> AL FAROOQUE Manufacturing — AL FAROOQUE Industries. All rights reserved. Jeddah, Saudi Arabia.</span>
+    <div class="footer-badges">
+      <span class="footer-badge">SASO</span>
+      <span class="footer-badge">FD60</span>
+      <span class="footer-badge">MIM</span>
+      <span class="footer-badge">ISO</span>
+      <span class="footer-badge">Vision 2030</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/language-switcher.js"></script>
+<script src="/js/theme-switcher.js"></script>
+<script src="/js/nav-actions.js"></script>
+<script src="/js/products.js"></script>
+<script src="/js/product-filter.js"></script>
+<!-- ── Authentication (Supabase) ── -->
+<script src="/js/auth/config.js"></script>
+<script type="module" src="/js/auth/auth-ui.js"></script>
+</body>
+</html>

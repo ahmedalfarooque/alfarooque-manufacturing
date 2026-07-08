@@ -24,23 +24,8 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
   });
 })();
 
-/* ═══ SCROLL PROGRESS ═══ */
-(function(){
-  const bar = document.getElementById('progress-bar');
-  if(!bar) return;
-  let ticking=false;
-  window.addEventListener('scroll',()=>{
-    if(ticking) return; ticking=true;
-    requestAnimationFrame(()=>{
-      ticking=false;
-      const h = document.documentElement;
-      const pct = h.scrollHeight - h.clientHeight > 0
-        ? (h.scrollTop / (h.scrollHeight - h.clientHeight))
-        : 0;
-      bar.style.transform = 'scaleX(' + pct + ')';
-    });
-  },{passive:true});
-})();
+/* ═══ SCROLL PROGRESS ═══ moved into js/scroll-experience.js — driven
+   by the Lenis scroll dispatcher there instead of a native listener. */
 
 /* ═══ CURSOR GLOW ═══ */
 (function(){
@@ -65,16 +50,15 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
   document.addEventListener('mouseenter',()=>{cg.style.opacity='1';});
 })();
 
-/* ═══ NAVIGATION ═══ */
+/* ═══ NAVIGATION ═══ Scroll-linked bits (`.nav.scrolled` toggle,
+   active-link highlight) moved into js/scroll-experience.js's
+   consolidated Lenis scroll dispatcher — only click-driven mobile-menu
+   behavior stays here. */
 (function(){
   const nav    = $('.nav');
   const burger = $('.nav-burger');
   const mob    = $('.nav-mobile');
   if(!nav) return;
-
-  window.addEventListener('scroll',()=>{
-    nav.classList.toggle('scrolled',window.scrollY>50);
-  },{passive:true});
 
   if(burger&&mob){
     burger.addEventListener('click',()=>{
@@ -90,44 +74,10 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
       }
     });
   }
-
-  // Active link highlight — batch reads in rAF
-  const sections = $$('section[id]');
-  const navAs = $$('.nav-links a, .nav-mobile a');
-  if(sections.length && navAs.length){
-    let offsets=[];
-    const measure=()=>{
-      offsets=sections.map(s=>({id:s.id,top:s.offsetTop,bottom:s.offsetTop+s.offsetHeight}));
-    };
-    measure();
-    window.addEventListener('resize',measure,{passive:true});
-    window.addEventListener('load',measure);
-    let ticking=false;
-    window.addEventListener('scroll',()=>{
-      if(ticking) return; ticking=true;
-      requestAnimationFrame(()=>{
-        ticking=false;
-        const y = window.scrollY+100;
-        for(const o of offsets){
-          if(o.top<=y && o.bottom>y){
-            navAs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+o.id));
-            break;
-          }
-        }
-      });
-    },{passive:true});
-  }
 })();
 
-/* ═══ SCROLL REVEAL ═══ */
-(function(){
-  const io = new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
-    });
-  },{threshold:0.10,rootMargin:'0px 0px -40px 0px'});
-  $$('.reveal').forEach(el=>io.observe(el));
-})();
+/* ═══ SCROLL REVEAL ═══ moved into js/scroll-experience.js (now
+   ScrollTrigger-driven, same `.reveal`/`.in` class contract). */
 
 /* ═══ ANIMATED COUNTERS ═══ */
 (function(){
@@ -235,23 +185,8 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
   },{passive:true});
 })();
 
-/* ═══ HERO PARALLAX (division pages) ═══ */
-(function(){
-  const imgs = $$('.svc-hero-img');
-  if(!imgs.length || window.innerWidth<768) return;
-  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
-  let ticking=false;
-  const update=()=>{
-    ticking=false;
-    const y=window.scrollY;
-    imgs.forEach(im=>{ im.style.transform='translateY('+(y*0.18).toFixed(1)+'px)'; });
-  };
-  window.addEventListener('scroll',()=>{
-    if(ticking) return; ticking=true;
-    requestAnimationFrame(update);
-  },{passive:true});
-  update();
-})();
+/* ═══ HERO PARALLAX (division pages) ═══ moved into
+   js/scroll-experience.js's consolidated Lenis scroll dispatcher. */
 
 /* ═══ GALLERY — Filter + Lightbox ═══ */
 (function(){
@@ -408,14 +343,9 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
   while(clone.firstChild) track.appendChild(clone.firstChild);
 })();
 
-/* ═══ SMOOTH ANCHOR SCROLL ═══ */
-document.addEventListener('click',e=>{
-  const a=e.target.closest('a[href^="#"]');
-  if(!a) return;
-  const id=a.getAttribute('href').slice(1);
-  const target=document.getElementById(id);
-  if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
-});
+/* ═══ SMOOTH ANCHOR SCROLL ═══ moved into js/scroll-experience.js —
+   uses lenis.scrollTo() there instead of native scrollIntoView, which
+   would otherwise fight Lenis's own RAF-driven smoothing loop. */
 
 /* ═══ HERO SLIDER ═══ */
 (function(){

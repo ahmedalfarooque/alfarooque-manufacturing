@@ -19,6 +19,9 @@
 <link rel="stylesheet" href="/css/themes.css">
 <link rel="stylesheet" href="/css/products.css">
 <link rel="stylesheet" href="/css/product-filter.css">
+<link rel="stylesheet" href="/css/products-categories.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
@@ -61,13 +64,7 @@
   <ul class="nav-links">
     <li><a href="/index-ar.html">الرئيسية</a></li>
     <li><a href="/pages/about-ar.html">من نحن</a></li>
-    <li class="has-dropdown"><a href="/pages/services-ar.html">خدماتنا<span class="caret">▼</span></a>
-      <ul class="nav-dropdown">
-        <li><a href="/pages/woodworks-ar.html">أعمال الخشب</a></li>
-        <li><a href="/pages/steelworks-ar.html">أعمال الحديد</a></li>
-        <li><a href="/pages/aluminium-ar.html">أعمال الألومنيوم</a></li>
-      </ul>
-    </li>
+    <li><a href="/pages/services-ar.html">خدماتنا</a></li>
     <li><a href="/pages/gallery-ar.html">المعرض</a></li>
     <li><a href="/products-ar.html" class="active">المنتجات</a></li>
     <li><a href="/pages/contact-ar.html" class="nav-cta">تواصل معنا</a></li>
@@ -93,9 +90,6 @@
   <a href="/index-ar.html">الرئيسية</a>
   <a href="/pages/about-ar.html">من نحن</a>
   <a href="/pages/services-ar.html">خدماتنا</a>
-  <a href="/pages/woodworks-ar.html" class="nav-mobile-sub">أعمال الخشب</a>
-  <a href="/pages/steelworks-ar.html" class="nav-mobile-sub">أعمال الحديد</a>
-  <a href="/pages/aluminium-ar.html" class="nav-mobile-sub">أعمال الألومنيوم</a>
   <a href="/pages/gallery-ar.html">المعرض</a>
   <a href="/products-ar.html">المنتجات</a>
   <a href="/pages/contact-ar.html">تواصل معنا</a>
@@ -108,11 +102,11 @@
     <!-- Section header / hero -->
     <div class="prod-section-header ps-hero">
       <div class="ps-hero-text">
-        <div class="eyebrow">منتجاتنا</div>
-        <h1 class="ps-page-title">مُصنَّع ليبهر <span class="accent">عيونكم</span></h1>
-        <p class="ps-page-sub">اطلب منتجات خشبية وحديدية وألومنيوم مُصنَّعة بدقة عالية مباشرةً من مصنعنا في جدة. أحجام وتشطيبات ومواصفات مخصصة متاحة.</p>
+        <div class="eyebrow" data-reveal="fade-up">منتجاتنا</div>
+        <h1 class="ps-page-title" data-reveal="mask">مُصنَّع ليبهر <span class="accent">عيونكم</span></h1>
+        <p class="ps-page-sub" data-reveal="fade-up">اطلب منتجات خشبية وحديدية وألومنيوم مُصنَّعة بدقة عالية مباشرةً من مصنعنا في جدة. أحجام وتشطيبات ومواصفات مخصصة متاحة.</p>
         <div class="ps-hero-cta reveal d3">
-          <a href="#prodGrid" class="btn btn-primary" data-mag>تسوّق المجموعة <span class="arrow">←</span></a>
+          <a href="/all-products-ar.html" class="btn btn-primary" data-mag>تسوّق المجموعة <span class="arrow">←</span></a>
           <a href="/pages/contact-ar.html" class="btn btn-ghost">اطلب مواصفات مخصصة</a>
         </div>
       </div>
@@ -134,38 +128,135 @@
         <h2 class="new-arrival-title">أحدث <span class="accent">المنتجات</span></h2>
       </div>
       <div class="new-arrival-track" id="newArrivalTrack"></div>
-    </div>
-
-    <!-- Product Grid — populated by products.js -->
-    <div class="prod-grid" id="prodGrid"></div>
-
-    <!-- Load More -->
-    <div class="prod-loadmore-wrap" id="prodLoadMoreWrap" style="display:none;">
-      <button class="prod-loadmore" id="prodLoadMore" type="button">عرض المزيد من المنتجات</button>
+      <div class="new-arrival-viewall" style="text-align:center;margin-top:32px;" data-reveal="fade-up">
+        <a href="/all-products-ar.html" class="btn btn-ghost" data-mag>عرض جميع المنتجات <span class="arrow">←</span></a>
+      </div>
     </div>
 
   </div>
 </section>
 
-<!-- ═══ FEATURED COLLECTION BANNER ═══ -->
-<section class="featured-banner">
-  <div class="container featured-banner-inner">
-    <div class="featured-banner-media">
-      <img src="/assets/images/Home/Home_02.jpg" alt="حرفية الفاروقي" loading="lazy">
+<!-- ═══ CATEGORY SHOWCASE — الأبواب · الطاولات · الأسرة · الخزائن · الكنب ═══ -->
+<section class="cat-showcase-section" id="categoryShowcase">
+  <div class="container">
+
+    <!-- الأبواب -->
+    <div class="cat-showcase" data-align="left">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-doors"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">FD60</span><span class="cat-stat-lbl">مقاوم للحريق</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">SASO</span><span class="cat-stat-lbl">معتمد</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">مجموعة الأبواب</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">مجموعة الأبواب <span class="accent">الفاخرة</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">أبواب خارجية من خشب الساج الصلب، وأنظمة داخلية مقاومة للحريق، وتفاصيل CNC عالية الدقة — كل باب يُصنَّع في مصنعنا بجدة وفق معايير FD60 وSASO، ليتحمل الاستخدام اليومي لعقود.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products-ar.html?category=doors" class="btn btn-primary" data-mag>عرض جميع الأبواب <span class="arrow">←</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-doors"></div>
     </div>
-    <div class="featured-banner-body">
-      <div class="section-label">مجموعة مميزة</div>
-      <h2 class="section-title">أبواب مصنوعة <span class="accent">لتدوم</span></h2>
-      <p class="section-body">من أبواب الساج الخارجية الفاخرة إلى أنظمة الأبواب الداخلية المقاومة للحريق — اكتشف مجموعتنا الأكثر طلباً، المصنّعة وفق أعلى المعايير السعودية والدولية.</p>
-      <a href="/products-ar.html?category=doors" class="btn btn-primary" data-mag>تسوّق مجموعة الأبواب <span class="arrow">←</span></a>
+
+    <!-- الطاولات -->
+    <div class="cat-showcase" data-align="right">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-tables"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">تشطيب</span><span class="cat-stat-lbl">يدوي فاخر</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">مقاسات</span><span class="cat-stat-lbl">حسب الطلب</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">مجموعة الطاولات</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">طاولات <span class="accent">فاخرة</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">طاولات طعام وطاولات جانبية من الخشب الصلب تُشطَّب يدوياً في ورشتنا — وصلات نجارة دقيقة، وقشرة خشبية فاخرة، وتفاصيل CNC لقطعة تكون محور الغرفة.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products-ar.html?category=tables" class="btn btn-primary" data-mag>عرض جميع الطاولات <span class="arrow">←</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-tables"></div>
     </div>
+
+    <!-- الأسرة والإكسسوارات -->
+    <div class="cat-showcase" data-align="left">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-beds"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">ضمان</span><span class="cat-stat-lbl">لمدة سنة</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">جدة</span><span class="cat-stat-lbl">صنع في السعودية</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">الأسرة والإكسسوارات</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">مجموعة غرف النوم <span class="accent">الفاخرة</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">هياكل أسرّة خشبية وإكسسوارات متناسقة، مُشطَّبة بنفس تقنيات القشرة والنجارة المستخدمة في قسم الأعمال الخشبية لدينا — مصنوعة لراحة تدوم.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products-ar.html?category=beds" class="btn btn-primary" data-mag>عرض جميع الأسرة والإكسسوارات <span class="arrow">←</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-beds"></div>
+    </div>
+
+    <!-- الخزائن ودواليب الملابس -->
+    <div class="cat-showcase" data-align="right">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-wardrobes-cupboards"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">CNC</span><span class="cat-stat-lbl">دقة التصنيع</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">تفصيل</span><span class="cat-stat-lbl">حسب مساحتك</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">الخزائن ودواليب الملابس</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">خزائن <span class="accent">أنيقة</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">خزائن ودواليب مفصّلة حسب المقاس، مقطوعة بتقنية CNC ومُشطَّبة حسب الطلب — حلول تخزين ذكية وأنيقة يبنيها فريق النجارة لدينا داخل مساحتك.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products-ar.html?category=wardrobes-cupboards" class="btn btn-primary" data-mag>عرض جميع الخزائن ودواليب الملابس <span class="arrow">←</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-wardrobes-cupboards"></div>
+    </div>
+
+    <!-- الكنب -->
+    <div class="cat-showcase" data-align="left">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-sofa"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">هيكل</span><span class="cat-stat-lbl">خشب صلب</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">تنجيد</span><span class="cat-stat-lbl">فاخر</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">مجموعة الكنب</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">كنب <span class="accent">عصري</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">مقاعد منجّدة مبنية على هياكل من الخشب الصلب، بأقمشة وحشوات فاخرة مختارة للراحة والمتانة طويلة الأمد في المساحات السكنية والتجارية على حد سواء.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products-ar.html?category=sofa" class="btn btn-primary" data-mag>عرض جميع الكنب <span class="arrow">←</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-sofa"></div>
+    </div>
+
   </div>
 </section>
 
 <!-- ═══ NEWSLETTER ═══ -->
 <section class="newsletter">
   <div class="container newsletter-inner">
-    <div class="newsletter-copy">
+    <div class="newsletter-copy" data-reveal="fade-up">
       <h2 class="newsletter-title">كن أول من يعلم <span class="accent">بالمنتجات الجديدة</span></h2>
       <p class="newsletter-sub">اشترك للحصول على إصدارات المنتجات الجديدة وعروض المصنع والعروض الموسمية — بدون رسائل مزعجة، ويمكنك إلغاء الاشتراك في أي وقت.</p>
     </div>
@@ -432,9 +523,9 @@
   <div>
     <div class="footer-col-h">الأقسام</div>
     <ul class="footer-links">
-      <li><a href="/pages/woodworks-ar.html">الأعمال الخشبية</a></li>
-      <li><a href="/pages/steelworks-ar.html">الأعمال الحديدية</a></li>
-      <li><a href="/pages/aluminium-ar.html">الأعمال الألومنيوم</a></li>
+      <li><a href="/pages/services-ar.html#wood-works">الأعمال الخشبية</a></li>
+      <li><a href="/pages/services-ar.html#steel-works">الأعمال الحديدية</a></li>
+      <li><a href="/pages/services-ar.html#aluminium-works">الأعمال الألومنيوم</a></li>
       <li><a href="/pages/about-ar.html#certifications">الشهادات</a></li>
       <li><a href="/pages/contact-ar.html">طلب عرض سعر</a></li>
     </ul>
@@ -460,11 +551,16 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>
 <script src="/js/nav-actions.js"></script>
 <script src="/js/products.js"></script>
+<script src="/js/products-categories.js"></script>
 <script src="/js/product-filter.js"></script>
 <script src="/js/products-hero.js"></script>
 <!-- ── Authentication (Supabase) ── -->

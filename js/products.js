@@ -773,7 +773,10 @@ function renderProducts() {
 }
 
 /* ── New Arrivals strip — newest/"New"-badged products from the
-   live catalog, reusing the same card builder + click handling. ── */
+   live catalog, reusing the same card builder + click handling.
+   Capped at exactly 3 cards so the strip stays a tight teaser (the
+   "View All Products" button below it is the path to the rest). ── */
+var NEW_ARRIVAL_LIMIT = 3;
 function renderNewArrival() {
   var wrap  = document.getElementById('newArrival');
   var track = document.getElementById('newArrivalTrack');
@@ -782,8 +785,8 @@ function renderNewArrival() {
   var items = PRODUCTS.filter(function(p) {
     return p.badge && p.badge.toLowerCase() === 'new';
   });
-  if (items.length < 3) items = PRODUCTS.slice(0, 6);
-  items = items.slice(0, 8);
+  if (items.length < NEW_ARRIVAL_LIMIT) items = PRODUCTS.slice(0, NEW_ARRIVAL_LIMIT);
+  items = items.slice(0, NEW_ARRIVAL_LIMIT);
   if (!items.length) return;
 
   track.innerHTML = '';
@@ -956,6 +959,7 @@ var prodModal = {
     this.populateFast(p);
     this.el.classList.add('open');
     document.body.style.overflow = 'hidden';
+    if (window.__lenis) window.__lenis.stop();
 
     /* Phase 2 — fill the heavy sections (specs table, tags, thumbnails) after the first
        painted frame so they never block the interaction response. */
@@ -971,6 +975,7 @@ var prodModal = {
     if (!this.el) return;
     this.el.classList.remove('open');
     document.body.style.overflow = '';
+    if (window.__lenis) window.__lenis.start();
   },
 
   /* Phase 1: above-the-fold content — name, price, image. Runs before first paint. */
@@ -1264,12 +1269,14 @@ var cart = {
     if (this.drawerEl)   this.drawerEl.classList.add('open');
     if (this.backdropEl) this.backdropEl.classList.add('open');
     document.body.style.overflow = 'hidden';
+    if (window.__lenis) window.__lenis.stop();
   },
 
   closeDrawer: function() {
     if (this.drawerEl)   this.drawerEl.classList.remove('open');
     if (this.backdropEl) this.backdropEl.classList.remove('open');
     document.body.style.overflow = '';
+    if (window.__lenis) window.__lenis.start();
   },
 
   updateBadge: function(bump) {
@@ -1405,6 +1412,7 @@ var orderModal = {
     this.updateTotal();
     this.el.classList.add('open');
     document.body.style.overflow = 'hidden';
+    if (window.__lenis) window.__lenis.stop();
   },
 
   openCart: function() {
@@ -1423,12 +1431,14 @@ var orderModal = {
     this.updateTotal();
     this.el.classList.add('open');
     document.body.style.overflow = 'hidden';
+    if (window.__lenis) window.__lenis.stop();
   },
 
   close: function() {
     if (!this.el) return;
     this.el.classList.remove('open');
     document.body.style.overflow = '';
+    if (window.__lenis) window.__lenis.start();
   },
 
   updateTotal: function() {
@@ -1633,7 +1643,12 @@ function patchLangSwitcher() {
       localStorage.setItem('language', target);
       document.body.style.opacity = '0';
       document.body.style.transition = 'opacity 0.2s ease';
-      var dest = target === 'ar' ? 'products-ar.html' : 'products.html';
+      /* Derive counterpart from the current path so this works on
+         products.html, all-products.html and their -ar twins alike
+         (handles both /x.html and Vercel clean /x URLs). */
+      var base = location.pathname.replace(/\.html$/i, '').replace(/-ar$/i, '');
+      if (base === '' || base === '/' || base === '/index') base = '/products';
+      var dest = base + (target === 'ar' ? '-ar' : '') + '.html' + location.search;
       setTimeout(function() { window.location.href = dest; }, 200);
     }, true);
   });
@@ -1709,14 +1724,17 @@ var imgGallery = {
     this.go(startIdx !== undefined ? startIdx : 0);
     this.el.classList.add('open');
     document.body.style.overflow = 'hidden';
+    if (window.__lenis) window.__lenis.stop();
   },
 
   close: function() {
     if (!this.el) return;
     this.el.classList.remove('open');
     document.body.style.overflow = '';
+    if (window.__lenis) window.__lenis.start();
     if (this._savedScrollY !== undefined) {
-      window.scrollTo(0, this._savedScrollY);
+      if (window.__lenis) window.__lenis.scrollTo(this._savedScrollY, { immediate: true });
+      else window.scrollTo(0, this._savedScrollY);
       this._savedScrollY = undefined;
     }
   },

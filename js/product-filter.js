@@ -504,6 +504,7 @@ function pfOpenSheet() {
   document.body.style.position = 'fixed';
   document.body.style.top      = '-' + _pfScrollY + 'px';
   document.body.style.width    = '100%';
+  if (window.__lenis) window.__lenis.stop();
 }
 
 /* ── Sheet: close ─────────────────────────────────────────── */
@@ -516,7 +517,9 @@ function pfCloseSheet() {
   document.body.style.position = '';
   document.body.style.top      = '';
   document.body.style.width    = '';
-  window.scrollTo(0, _pfScrollY);
+  if (window.__lenis) window.__lenis.scrollTo(_pfScrollY, { immediate: true });
+  else window.scrollTo(0, _pfScrollY);
+  if (window.__lenis) window.__lenis.start();
 }
 
 /* ── Sync sheet inputs from current pfState ───────────────── */

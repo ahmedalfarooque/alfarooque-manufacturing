@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png">
 </head>
@@ -17,7 +19,7 @@
 <div class="bg-env"><div class="bg-grad"></div><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div><div class="geo g1"></div><div class="geo g2"></div><div class="ray r1"></div><div class="particles"></div></div>
 <nav class="nav">
   <a href="/" class="nav-logo"><img src="/assets/images/logo/IAA_LOGO.png" alt="IAA" width="42" height="42"><div class="nav-brand"><span class="nav-brand-name">AL FAROOQUE</span><span class="nav-brand-sub">Manufacturing</span></div></a>
-  <ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/pages/about.html" class="active">About</a></li><li class="has-dropdown"><a href="/pages/services.html">Services<span class="caret">▼</span></a><ul class="nav-dropdown"><li><a href="/pages/woodworks.html">Wood Works</a></li><li><a href="/pages/steelworks.html">Steel Works</a></li><li><a href="/pages/aluminium.html">Aluminium Works</a></li></ul></li><li><a href="/pages/gallery.html">Gallery</a></li><li><a href="/products.html">Products</a></li><li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li></ul>
+  <ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/pages/about.html" class="active">About</a></li><li><a href="/pages/services.html">Services</a></li><li><a href="/pages/gallery.html">Gallery</a></li><li><a href="/products.html">Products</a></li><li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li></ul>
   <div class="nav-actions">
     <button type="button" class="nav-icon-btn nav-search-btn" id="navSearchBtn" aria-label="Search" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
     <a href="/products.html" class="nav-icon-btn nav-wishlist-btn" id="navWishlistBtn" aria-label="Wishlist"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span class="nav-icon-badge" id="navWishlistBadge" hidden>0</span></a>
@@ -33,7 +35,7 @@
     <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Close search">&#x2715;</button>
   </form>
 </div>
-<div class="nav-mobile"><a href="/">Home</a><a href="/pages/about.html">About</a><a href="/pages/services.html">Services</a><a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a><a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a><a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a><a href="/pages/gallery.html">Gallery</a><a href="/products.html">Products</a><a href="/pages/contact.html">Contact Us</a></div>
+<div class="nav-mobile"><a href="/">Home</a><a href="/pages/about.html">About</a><a href="/pages/services.html">Services</a><a href="/pages/gallery.html">Gallery</a><a href="/products.html">Products</a><a href="/pages/contact.html">Contact Us</a></div>
 
 <div class="page-hero" data-slider>
   <div class="ph-slider-bg" aria-hidden="true">
@@ -53,20 +55,20 @@
   <div class="container">
     <div class="about-grid">
       <div>
-        <div class="eyebrow reveal">Who We Are</div>
-        <h2 class="section-title reveal d1">AL FAROOQUE<br><span class="accent">Industries</span></h2>
+        <div class="eyebrow" data-reveal="fade-up">Who We Are</div>
+        <h2 class="section-title" data-reveal="mask">AL FAROOQUE<br><span class="accent">Industries</span></h2>
         <p class="about-body reveal d2">AL FAROOQUE Manufacturing is the manufacturing arm of AL FAROOQUE Industries, operating a Head Office and a dedicated Wood Works Factory in Jeddah. We serve clients across the Kingdom and the region with three core divisions: Wood Works, Steel Works, and Aluminium Works.</p>
         <p class="about-body reveal d2">Our operations are certified by leading Saudi authorities — including SASO, the Ministry of Industry (MIM), and Saudi Civil Defence (FD60) — ensuring every product meets the highest quality and safety benchmarks.</p>
         <p class="about-body reveal d3">Fully aligned with Saudi Vision 2030, we invest in advanced manufacturing technology, skilled Saudi talent, and sustainable production methods that support the Kingdom's industrial growth.</p>
-        <div class="about-pillars reveal d3">
-          <div class="pillar"><div class="pillar-ico">🎯</div><div class="pillar-name">Our Vision</div><div class="pillar-txt">To be the premier manufacturing partner in Saudi Arabia — delivering precision, quality and innovation that exceeds global standards.</div></div>
-          <div class="pillar"><div class="pillar-ico">⚙️</div><div class="pillar-name">Our Mission</div><div class="pillar-txt">To manufacture exceptional products that transform spaces and stand the test of time through craftsmanship, technology and people.</div></div>
-          <div class="pillar"><div class="pillar-ico">💎</div><div class="pillar-name">Quality First</div><div class="pillar-txt">Every piece that leaves our factory passes rigorous quality control aligned with international and Saudi standards.</div></div>
-          <div class="pillar"><div class="pillar-ico">🇸🇦</div><div class="pillar-name">Vision 2030</div><div class="pillar-txt">Supporting Saudi industrialisation, local content and sustainable manufacturing as proud Vision 2030 contributors.</div></div>
+        <div class="about-pillars">
+          <div class="pillar" data-reveal="fade-up"><div class="pillar-ico">🎯</div><div class="pillar-name">Our Vision</div><div class="pillar-txt">To be the premier manufacturing partner in Saudi Arabia — delivering precision, quality and innovation that exceeds global standards.</div></div>
+          <div class="pillar" data-reveal="fade-up"><div class="pillar-ico">⚙️</div><div class="pillar-name">Our Mission</div><div class="pillar-txt">To manufacture exceptional products that transform spaces and stand the test of time through craftsmanship, technology and people.</div></div>
+          <div class="pillar" data-reveal="fade-up"><div class="pillar-ico">💎</div><div class="pillar-name">Quality First</div><div class="pillar-txt">Every piece that leaves our factory passes rigorous quality control aligned with international and Saudi standards.</div></div>
+          <div class="pillar" data-reveal="fade-up"><div class="pillar-ico">🇸🇦</div><div class="pillar-name">Vision 2030</div><div class="pillar-txt">Supporting Saudi industrialisation, local content and sustainable manufacturing as proud Vision 2030 contributors.</div></div>
         </div>
       </div>
-      <div class="about-visual reveal d2">
-        <img src="/assets/images/About/About_01.jpg" alt="AL FAROOQUE Manufacturing" style="width:100%;height:100%;object-fit:cover;">
+      <div class="about-visual" data-reveal="blur">
+        <img src="/assets/images/About/About_01.jpg" alt="AL FAROOQUE Manufacturing" style="width:100%;height:100%;object-fit:cover;" data-scale-scroll>
         <div class="about-visual-overlay">
           <div class="ov-stat"><div class="ov-v"><span data-count="25" data-suffix="+">0+</span></div><div class="ov-l">Years Operating</div></div>
           <div class="ov-stat"><div class="ov-v">3</div><div class="ov-l">Divisions</div></div>
@@ -80,8 +82,8 @@
 
 <section id="certifications" class="section-pad" style="position:relative;z-index:1;background:rgba(255,255,255,0.015);border-top:1px solid var(--border-1);">
   <div class="container">
-    <div class="eyebrow reveal">Compliance & Standards</div>
-    <h2 class="section-title reveal d1">Our <span class="accent">Certifications</span></h2>
+    <div class="eyebrow" data-reveal="fade-up">Compliance & Standards</div>
+    <h2 class="section-title" data-reveal="mask">Our <span class="accent">Certifications</span></h2>
     <div class="cert-grid">
       <div class="cert-card reveal d1"><div class="cert-live"><span class="live-dot"></span></div><div class="cert-logo-wrap"><img src="/assets/images/Certifications/CR_Logo.png" alt="Commercial Registration" width="120" height="42"></div><div class="cert-name">Commercial Registration</div><div class="cert-auth">Ministry of Commerce · Saudi Arabia</div><a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/Commercel Registration.jpg" data-cert-alt="Commercial Registration Certificate">View Certificate →</a></div>
       <div class="cert-card reveal d2"><div class="cert-live"><span class="live-dot"></span></div><div class="cert-logo-wrap"><img src="/assets/images/Certifications/Zakat and VAT-Logo.jpg" alt="VAT Registration – ZATCA" width="120" height="42"></div><div class="cert-name">VAT Registration</div><div class="cert-auth">ZATCA · Saudi Arabia</div><a href="#" class="cert-view" data-cert-image="/assets/images/Certifications/VAT CERTIFICATE.jpg" data-cert-alt="VAT Registration Certificate">View Certificate →</a></div>
@@ -122,9 +124,9 @@
   <div>
     <div class="footer-col-h">Divisions</div>
     <ul class="footer-links">
-      <li><a href="/pages/woodworks.html">Wood Works</a></li>
-      <li><a href="/pages/steelworks.html">Steel Works</a></li>
-      <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
+      <li><a href="/pages/services.html#wood-works">Wood Works</a></li>
+      <li><a href="/pages/services.html#steel-works">Steel Works</a></li>
+      <li><a href="/pages/services.html#aluminium-works">Aluminium Works</a></li>
       <li><a href="/pages/about.html#certifications">Certifications</a></li>
       <li><a href="/pages/contact.html">Request a Quote</a></li>
     </ul>
@@ -149,6 +151,10 @@
     </div>
   </div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
 
 <script src="/js/language-switcher.js"></script>

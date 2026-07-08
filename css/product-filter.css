@@ -6,6 +6,13 @@
    ════════════════════════════════════════════════════════════ */
 
 /* ── Products page: nav becomes a tall single header ──────── */
+/* main.css sets body{overflow-x:hidden}, which turns <body> into a
+   scroll container — position:sticky children then stick to <body>'s
+   own (never-moving) scrollport instead of the viewport, so the nav
+   scrolled away with the page. `clip` still cuts off horizontal
+   overflow but does NOT create a scroll container, letting the nav
+   stick to the real viewport scroll. Scoped to the products pages. */
+body.products-page { overflow-x: clip; }
 body.products-page .nav {
   position: sticky;
   top: 0;

@@ -41,6 +41,7 @@ const ROUTES = {
   '/gallery':       'pages/gallery.html',
   '/contact':       'pages/contact.html',
   '/products':      'products.html',
+  '/all-products':  'all-products.html',
   '/mohammed':      'mohammed.html',
   '/admin':         'pages/admin/login.html',
   '/woodworks':     'pages/woodworks.html',
@@ -49,6 +50,7 @@ const ROUTES = {
   /* Arabic — filename convention (x-ar.html), no /ar/ prefix */
   '/index-ar.html':     'index-ar.html',
   '/products-ar.html':  'products-ar.html',
+  '/all-products-ar.html': 'all-products-ar.html',
 };
 
 /* ── MIME types ── */
@@ -296,7 +298,13 @@ async function startManagedApp(app) {
   }
   console.log('  [' + app.name + '] Starting dev server on port ' + app.port + '…');
   try {
-    app.child = spawn('npm', ['run', 'dev'], { cwd: app.dir, stdio: 'inherit', shell: true });
+    // Explicit PORT env var — without this, `next dev` ignores app.port entirely
+    // and defaults to 3000, colliding with the main static site (see the header
+    // comment above: this whole file assumes 3000 is exclusively the main site's).
+    app.child = spawn('npm', ['run', 'dev'], {
+      cwd: app.dir, stdio: 'inherit', shell: true,
+      env: Object.assign({}, process.env, { PORT: String(app.port) }),
+    });
   } catch (err) {
     console.error('  [' + app.name + '] Failed to spawn: ' + err.message);
     return;

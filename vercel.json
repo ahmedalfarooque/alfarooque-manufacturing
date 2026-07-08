@@ -2,6 +2,10 @@
   "framework": null,
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/category-images.js": { "includeFiles": "assets/images/E-commerse Home Images/**" },
+    "api/division-images.js": { "includeFiles": "assets/images/*Works/**" }
+  },
   "rewrites": [
     { "source": "/about",         "destination": "/pages/about" },
     { "source": "/services",      "destination": "/pages/services" },

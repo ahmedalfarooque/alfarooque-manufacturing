@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/themes.css">
 <link rel="stylesheet" href="/css/products.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
@@ -55,13 +57,7 @@
   <ul class="nav-links">
     <li><a href="/">Home</a></li>
     <li><a href="/pages/about.html">About</a></li>
-    <li class="has-dropdown"><a href="/pages/services.html">Services<span class="caret">▼</span></a>
-      <ul class="nav-dropdown">
-        <li><a href="/pages/woodworks.html">Wood Works</a></li>
-        <li><a href="/pages/steelworks.html">Steel Works</a></li>
-        <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
-      </ul>
-    </li>
+    <li><a href="/pages/services.html">Services</a></li>
     <li><a href="/pages/gallery.html">Gallery</a></li>
     <li><a href="/products.html" class="active">Products</a></li>
     <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
@@ -87,9 +83,6 @@
   <a href="/">Home</a>
   <a href="/pages/about.html">About</a>
   <a href="/pages/services.html">Services</a>
-  <a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a>
-  <a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a>
-  <a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
   <a href="/pages/gallery.html">Gallery</a>
   <a href="/products.html">Products</a>
   <a href="/pages/contact.html">Contact Us</a>
@@ -125,13 +118,16 @@
       <div class="prod-modal-bd" id="prodModalBd"></div>
       <button class="pm-close" id="pmClose" aria-label="Close">&#215;</button>
       <div class="pm-inner">
-        <div class="pm-gallery-side">
-          <div class="pm-main-img">
-            <img id="pmMainImg" src="" alt="Product image" decoding="async" loading="eager">
+        <div class="pd-pin-wrap" data-pin>
+          <div class="pm-gallery-side">
+            <div class="pm-main-img">
+              <img id="pmMainImg" src="" alt="Product image" decoding="async" loading="eager">
+            </div>
+            <div class="pm-thumbs" id="pmThumbs"></div>
           </div>
-          <div class="pm-thumbs" id="pmThumbs"></div>
         </div>
 
+        <div class="pd-scroll-col">
         <div class="pm-info-side">
           <div class="pm-header">
             <div class="pm-cat" id="pmCat"></div>
@@ -204,6 +200,7 @@
               Request Quotation
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -372,9 +369,9 @@
   <div>
     <div class="footer-col-h">Divisions</div>
     <ul class="footer-links">
-      <li><a href="/pages/woodworks.html">Wood Works</a></li>
-      <li><a href="/pages/steelworks.html">Steel Works</a></li>
-      <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
+      <li><a href="/pages/services.html#wood-works">Wood Works</a></li>
+      <li><a href="/pages/services.html#steel-works">Steel Works</a></li>
+      <li><a href="/pages/services.html#aluminium-works">Aluminium Works</a></li>
       <li><a href="/pages/about.html#certifications">Certifications</a></li>
       <li><a href="/pages/contact.html">Request a Quote</a></li>
     </ul>
@@ -400,6 +397,10 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>
@@ -407,6 +408,22 @@
 <script>window.__isProductDetailPage = true;</script>
 <script src="/js/products.js"></script>
 <script src="/js/product-detail.js"></script>
+<script>
+/* The sticky product-gallery pin (`.pd-pin-wrap`, see js/scroll-experience.js)
+   is created before product-detail.js finishes populating the page, so its
+   pin height is measured against empty/collapsed content. Once the product
+   has actually rendered, ask ScrollTrigger to re-measure everything. */
+(function () {
+  if (!window.__productsReady) return;
+  window.__productsReady.then(function () {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (window.ScrollExperience) window.ScrollExperience.refresh();
+      });
+    });
+  });
+})();
+</script>
 <!-- ── Authentication (Supabase) ── -->
 <script src="/js/auth/config.js"></script>
 <script type="module" src="/js/auth/auth-ui.js"></script>

@@ -3,7 +3,7 @@
 <head>
 <script>/* AL FAROOQUE: light default, flash-free */(function(){var t=localStorage.getItem("theme");if(!t){t="light";localStorage.setItem("theme","light");}if(t==="light"){document.documentElement.classList.add("light");document.body&&document.body.classList.add("light");}})();</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="description" content="Our manufacturing divisions — AL FAROOQUE Manufacturing. Three specialised divisions: Wood Works, Steel Works and Aluminium Works, in Jeddah, Saudi Arabia.">
+<meta name="description" content="Our manufacturing divisions — AL FAROOQUE Manufacturing. Wood Works, Steel Works and Aluminium Works: precision joinery, structural steel and aluminium facades from Jeddah, Saudi Arabia.">
 <meta name="keywords" content="manufacturing divisions, wood works, steel works, aluminium works, Jeddah, AL FAROOQUE">
 <meta property="og:title" content="Services — AL FAROOQUE Manufacturing">
 <meta property="og:description" content="Three specialised divisions. One unified standard of precision, quality and craftsmanship.">
@@ -15,6 +15,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/services-mega.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="stylesheet" href="/css/machinery.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png">
@@ -27,13 +30,7 @@
   <ul class="nav-links">
     <li><a href="/">Home</a></li>
     <li><a href="/pages/about.html">About</a></li>
-    <li class="has-dropdown"><a href="/pages/services.html" class="active">Services<span class="caret">▼</span></a>
-      <ul class="nav-dropdown">
-        <li><a href="/pages/woodworks.html">Wood Works</a></li>
-        <li><a href="/pages/steelworks.html">Steel Works</a></li>
-        <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
-      </ul>
-    </li>
+    <li><a href="/pages/services.html" class="active">Services</a></li>
     <li><a href="/pages/gallery.html">Gallery</a></li>
     <li><a href="/products.html">Products</a></li>
     <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
@@ -55,30 +52,54 @@
 </div>
 <div class="nav-mobile">
   <a href="/">Home</a><a href="/pages/about.html">About</a><a href="/pages/services.html">Services</a>
-  <a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a>
-  <a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a>
-  <a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
   <a href="/pages/gallery.html">Gallery</a><a href="/products.html">Products</a><a href="/pages/contact.html">Contact Us</a>
 </div>
 
+<!-- ═══ 1. HERO ═══ -->
 <div class="page-hero" data-slider>
   <div class="ph-slider-bg" aria-hidden="true">
     <div class="ph-slide-bg active" style="background-image:url('/assets/images/Services/Services_Hero Aluminum.png')"></div>
     <div class="ph-slide-bg" style="background-image:url('/assets/images/Services/Services_Hero 2.jpg')"></div>
     <div class="ph-slide-bg" style="background-image:url('/assets/images/Services/Services_Hero Wood.jpg')"></div>
   </div>
+  <div class="ph-mouse-orb" aria-hidden="true" data-mouse-parallax="8"></div>
   <div class="ph-overlay" aria-hidden="true"></div>
   <div class="container">
     <div class="eyebrow reveal ph-hero-el" style="justify-content:center;">What We Make</div>
     <h1 class="page-hero-title reveal d1 ph-hero-el ph-d2">Our <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Manufacturing</span> Divisions</h1>
     <p class="page-hero-body reveal d2 ph-hero-el ph-d3">Three specialised divisions. One unified standard of precision, quality and craftsmanship.</p>
+
+    <div class="svc-hero-stats reveal d3 ph-hero-el ph-d4">
+      <div class="stat-i">
+        <div class="stat-v"><span data-count="25" data-suffix="+">0+</span></div>
+        <div class="stat-l">Years of Excellence</div>
+      </div>
+      <div class="stat-i">
+        <div class="stat-v">3</div>
+        <div class="stat-l">Manufacturing Divisions</div>
+      </div>
+      <div class="stat-i">
+        <div class="stat-v"><span data-count="20" data-suffix="+">0+</span></div>
+        <div class="stat-l">Machines in Operation</div>
+      </div>
+      <div class="stat-i">
+        <div class="stat-v">V<em>2030</em></div>
+        <div class="stat-l">Vision Aligned</div>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- ═══ 2. DIVISIONS INTRODUCTION ═══ -->
 <section class="section-pad" style="position:relative;z-index:1;">
   <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">Our Divisions</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">Three Divisions, <span class="accent">One Standard</span></h2>
+    <div class="mega-intro-copy" data-reveal="fade-up">
+      <p>One unified standard of precision, quality and craftsmanship across three divisions — Wood Works, Steel Works and Aluminium Works — manufactured from our dedicated factories in Jeddah, Saudi Arabia.</p>
+    </div>
     <div class="svc-grid">
-      <a href="/pages/woodworks.html" class="svc-card sweep reveal d1" data-tilt style="text-decoration:none;">
+      <a href="#wood-works" class="svc-card sweep glass" data-reveal="fade-up" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">01</span>
         <div class="svc-icon">
@@ -95,7 +116,7 @@
         <span class="svc-link">Explore Division →</span>
       </a>
 
-      <a href="/pages/steelworks.html" class="svc-card sweep reveal d2" data-tilt style="text-decoration:none;">
+      <a href="#steel-works" class="svc-card sweep glass" data-reveal="fade-up delay-1" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">02</span>
         <div class="svc-icon">
@@ -112,7 +133,7 @@
         <span class="svc-link">Explore Division →</span>
       </a>
 
-      <a href="/pages/aluminium.html" class="svc-card sweep reveal d3" data-tilt style="text-decoration:none;">
+      <a href="#aluminium-works" class="svc-card sweep glass" data-reveal="fade-up delay-2" data-tilt style="text-decoration:none;">
         <div class="svc-glow"></div>
         <span class="svc-num">03</span>
         <div class="svc-icon">
@@ -132,15 +153,415 @@
   </div>
 </section>
 
-<!-- ═══ OUR MACHINERY ═══ -->
+<!-- ═══ 3. WOOD WORKS ═══ -->
+<section id="wood-works" class="division-section division-band-wood">
+  <div class="svc-hero" data-slider>
+    <div class="svc-hero-img">
+      <div class="ph-slide-bg active" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 1.jpg')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 2.jpg')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 3.jpg')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Wood Works/Wood Woks_Hero 4.jpg')"></div>
+    </div>
+    <div class="svc-hero-bg"></div>
+    <div class="svc-hero-num">01</div>
+    <div class="svc-hero-content container">
+      <div class="eyebrow ph-hero-el">Division 01</div>
+      <h1 class="ph-hero-el ph-d2" style="font-family:var(--font-display);font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1;letter-spacing:-0.03em;">Wood <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Works</span></h1>
+      <p class="ph-hero-el ph-d3" style="font-family:var(--font-display);font-size:clamp(15px,2.4vw,20px);font-weight:600;color:var(--grey-400);margin-top:14px;">Precision Joinery &amp; Fit-out</p>
+    </div>
+  </div>
+  <div class="section-pad" style="border-bottom:1px solid var(--border-1);">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;" class="reveal">
+        <div class="pd-pin-wrap" data-pin>
+          <h3 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:16px;">Precision Joinery &amp; Fit-out</h3>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);margin-bottom:16px;">Our Wood Works division produces custom joinery, architectural woodwork, fitted furniture, interior fit-out and fire-rated wooden doors using advanced CNC machinery and skilled craftsmen at our dedicated Jeddah factory.</p>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);">Every product is manufactured to SASO and FD60 fire safety standards — delivering quality that endures.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;">
+            <span class="tag">CNC Machining</span><span class="tag">Custom Joinery</span><span class="tag">Interior Fit-out</span><span class="tag">Fire-rated Doors</span><span class="tag">SASO Certified</span><span class="tag">FD60</span>
+          </div>
+        </div>
+        <div class="cap-grid">
+          <div class="cap-item reveal d1" data-tilt><span class="cap-dot"></span><span class="cap-text">Custom joinery and millwork for residential and commercial projects</span></div>
+          <div class="cap-item reveal d2" data-tilt><span class="cap-dot"></span><span class="cap-text">Full interior fit-out packages including ceilings and panelling</span></div>
+          <div class="cap-item reveal d3" data-tilt><span class="cap-dot"></span><span class="cap-text">FD60-certified wooden fire doors to Civil Defence spec</span></div>
+          <div class="cap-item reveal d4" data-tilt><span class="cap-dot"></span><span class="cap-text">Custom furniture, wardrobes and built-in cabinetry</span></div>
+          <div class="cap-item reveal d5" data-tilt><span class="cap-dot"></span><span class="cap-text">CNC-routed decorative panels and screens</span></div>
+          <div class="cap-item reveal d6" data-tilt><span class="cap-dot"></span><span class="cap-text">Veneer work and premium surface finishing</span></div>
+        </div>
+      </div>
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">Manufacturing Process</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">From concept to delivery in our Jeddah factory.</p>
+        <div class="process-grid">
+          <div class="process-step reveal d1"><div class="ps-num">01</div><div class="ps-name">Design &amp; Engineering</div><div class="ps-desc">Technical drawings, material selection and QA sign-off.</div></div>
+          <div class="process-step reveal d2"><div class="ps-num">02</div><div class="ps-name">CNC Cutting</div><div class="ps-desc">Precision CNC machining of panels and profiles.</div></div>
+          <div class="process-step reveal d3"><div class="ps-num">03</div><div class="ps-name">Finishing &amp; Assembly</div><div class="ps-desc">Sanding, painting, veneering and edge banding.</div></div>
+          <div class="process-step reveal d4"><div class="ps-num">04</div><div class="ps-name">QC &amp; Delivery</div><div class="ps-desc">Full quality inspection and site installation.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">From the Wood Works Floor</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">A selection of completed joinery, fit-out and furniture work.</p>
+        <div class="mega-gallery-grid">
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-02.jpg" alt="Wooden Doors" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-03.jpg" alt="Joinery" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-04.jpg" alt="Furniture" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-05.jpg" alt="Woodwork" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-06.jpg" alt="Media Unit" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-07.jpg" alt="Wardrobe" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-09.jpg" alt="Workshop" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-11.jpg" alt="Cabinets" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-12.jpg" alt="Reception" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+          <div class="gal-item" data-reveal="zoom" data-cat="wood"><img src="/assets/images/Gallery/gallery works/gallery-13.jpg" alt="Interior" loading="lazy" decoding="async"><div class="gal-overlay"></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:48px;" class="reveal"><a href="/pages/contact.html?division=wood" class="btn btn-primary btn-lg" data-mag>Get a Wood Works Quote <span class="arrow">→</span></a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 4. STEEL WORKS — always-dark industrial treatment ═══ -->
+<section id="steel-works" class="division-section steel-dark-section">
+  <div class="steel-sweep-bg" aria-hidden="true"></div>
+  <div class="svc-hero" data-slider style="border-bottom:1px solid rgba(255,255,255,0.09);">
+    <div class="svc-hero-img">
+      <div class="ph-slide-bg active" style="background-image:url('/assets/images/Steel Works/Steel Woks_Hero 1.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Steel Works/Steel Woks_Hero 2.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Steel Works/Steel Woks_Hero 3.png')"></div>
+    </div>
+    <div class="svc-hero-bg" style="background:linear-gradient(160deg,rgba(169,194,124,0.10) 0%,rgba(10,11,10,0.86) 70%);"></div>
+    <div class="svc-hero-num">02</div>
+    <div class="svc-hero-content container">
+      <div class="eyebrow ph-hero-el">Division 02</div>
+      <h1 class="ph-hero-el ph-d2" style="font-family:var(--font-display);font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1;letter-spacing:-0.03em;color:#F5F4EF;">Steel <span style="background:linear-gradient(100deg,#A9C27C,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Works</span></h1>
+      <p class="ph-hero-el ph-d3" style="font-family:var(--font-display);font-size:clamp(15px,2.4vw,20px);font-weight:600;color:#B7B6AE;margin-top:14px;">Structural Steel &amp; Fabrication</p>
+    </div>
+  </div>
+  <div class="section-pad" style="position:relative;">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;" class="reveal">
+        <div class="pd-pin-wrap" data-pin>
+          <h3 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:16px;color:#F5F4EF;">Structural Steel &amp; Fabrication</h3>
+          <p style="font-size:15px;line-height:1.90;margin-bottom:16px;">Our Steel Works division specialises in structural steel fabrication, fire-rated steel doors, metal cladding, staircases, handrails and bespoke steel components for commercial, industrial and residential projects across the Kingdom.</p>
+          <p style="font-size:15px;line-height:1.90;">All FD60 fire-rated steel products carry Saudi Civil Defence certification and comply with SASO standards.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;">
+            <span class="tag">Structural Steel</span><span class="tag">FD60 Fire Rated</span><span class="tag">Metal Cladding</span><span class="tag">Staircases</span><span class="tag">Handrails</span><span class="tag">SASO</span>
+          </div>
+        </div>
+        <div class="cap-grid">
+          <div class="cap-item reveal d1" data-tilt><span class="cap-dot"></span><span class="cap-text">Columns, beams and custom structural steel assemblies</span></div>
+          <div class="cap-item reveal d2" data-tilt><span class="cap-dot"></span><span class="cap-text">FD60 steel fire doors to Saudi Civil Defence specification</span></div>
+          <div class="cap-item reveal d3" data-tilt><span class="cap-dot"></span><span class="cap-text">External and internal metal cladding systems</span></div>
+          <div class="cap-item reveal d4" data-tilt><span class="cap-dot"></span><span class="cap-text">Custom steel staircases, balustrades and handrails</span></div>
+          <div class="cap-item reveal d5" data-tilt><span class="cap-dot"></span><span class="cap-text">Plasma and laser cutting for precision components</span></div>
+          <div class="cap-item reveal d6" data-tilt><span class="cap-dot"></span><span class="cap-text">Powder-coated and painted finishes to spec</span></div>
+        </div>
+      </div>
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">Manufacturing Process</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">Engineering-led fabrication, welded and finished in-house.</p>
+        <div class="process-grid">
+          <div class="process-step reveal d1"><div class="ps-num">01</div><div class="ps-name">Engineering Design</div><div class="ps-desc">Shop drawings, structural calculations, procurement.</div></div>
+          <div class="process-step reveal d2"><div class="ps-num">02</div><div class="ps-name">Cutting &amp; Forming</div><div class="ps-desc">Plasma/laser cutting, bending and roll forming.</div></div>
+          <div class="process-step reveal d3"><div class="ps-num">03</div><div class="ps-name">Welding &amp; Assembly</div><div class="ps-desc">MIG/TIG welding by certified welders.</div></div>
+          <div class="process-step reveal d4"><div class="ps-num">04</div><div class="ps-name">Coating &amp; Install</div><div class="ps-desc">Shot blasting, priming, painting and installation.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">From the Steel Works Floor</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">Structural, architectural and fabricated steel projects.</p>
+        <div class="mega-gallery-grid" id="steelGalleryGrid" data-division-gallery="steel-works"></div>
+      </div>
+
+      <div style="margin-top:48px;" class="reveal"><a href="/pages/contact.html?division=steel" class="btn btn-primary btn-lg" data-mag>Get a Steel Works Quote <span class="arrow">→</span></a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 5. ALUMINIUM WORKS — light glassmorphism ═══ -->
+<section id="aluminium-works" class="division-section division-band-aluminium">
+  <div class="svc-hero" data-slider>
+    <div class="svc-hero-img">
+      <div class="ph-slide-bg active" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 1.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 2.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 3.png')"></div>
+      <div class="ph-slide-bg" style="background-image:url('/assets/images/Aluminium Works/Aluminium Woks_Hero 4.png')"></div>
+    </div>
+    <div class="svc-hero-bg"></div>
+    <div class="svc-hero-num">03</div>
+    <div class="svc-hero-content container">
+      <div class="eyebrow ph-hero-el">Division 03</div>
+      <h1 class="ph-hero-el ph-d2" style="font-family:var(--font-display);font-size:clamp(52px,7vw,100px);font-weight:800;line-height:1;letter-spacing:-0.03em;">Aluminium <span style="background:linear-gradient(100deg,#93A374,#D3DBC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Works</span></h1>
+      <p class="ph-hero-el ph-d3" style="font-family:var(--font-display);font-size:clamp(15px,2.4vw,20px);font-weight:600;color:var(--grey-400);margin-top:14px;">Facades, Glazing &amp; Partitions</p>
+    </div>
+  </div>
+  <div class="section-pad au-glass-wrap" style="border-bottom:1px solid var(--border-1);">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;" class="reveal">
+        <div class="pd-pin-wrap" data-pin>
+          <h3 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:16px;">Facades, Glazing &amp; Partitions</h3>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);margin-bottom:16px;">Our Aluminium Works division delivers high-performance aluminium facade systems, curtain wall, glazing, partitions, doors, windows and architectural aluminium components — SASO certified for the Saudi market.</p>
+          <p style="font-size:15px;line-height:1.90;color:var(--grey-500);">We work with leading aluminium extrusion systems to deliver thermally broken, high-performance envelopes for commercial and luxury residential projects across the Kingdom.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;">
+            <span class="tag">Curtain Wall</span><span class="tag">Facades</span><span class="tag">SASO Certified</span><span class="tag">Glazing</span><span class="tag">Partitions</span><span class="tag">Thermally Broken</span>
+          </div>
+        </div>
+        <div class="cap-grid">
+          <div class="cap-item reveal d1" data-tilt><span class="cap-dot"></span><span class="cap-text">Unitised and stick-built curtain wall systems</span></div>
+          <div class="cap-item reveal d2" data-tilt><span class="cap-dot"></span><span class="cap-text">Architectural aluminium cladding and rainscreen facades</span></div>
+          <div class="cap-item reveal d3" data-tilt><span class="cap-dot"></span><span class="cap-text">Thermally broken aluminium doors, windows and louvres</span></div>
+          <div class="cap-item reveal d4" data-tilt><span class="cap-dot"></span><span class="cap-text">Frameless and framed glass partition systems</span></div>
+          <div class="cap-item reveal d5" data-tilt><span class="cap-dot"></span><span class="cap-text">Double and triple glazing for thermal performance</span></div>
+          <div class="cap-item reveal d6" data-tilt><span class="cap-dot"></span><span class="cap-text">Anodised or powder-coated to RAL specification</span></div>
+        </div>
+      </div>
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">Manufacturing Process</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">Precision extrusion through to sealed, installed glazing.</p>
+        <div class="process-grid">
+          <div class="process-step reveal d1"><div class="ps-num">01</div><div class="ps-name">System Design</div><div class="ps-desc">Facade engineering, thermal analysis, wind loads.</div></div>
+          <div class="process-step reveal d2"><div class="ps-num">02</div><div class="ps-name">Extrusion &amp; Cutting</div><div class="ps-desc">Precision aluminium cutting and CNC machining.</div></div>
+          <div class="process-step reveal d3"><div class="ps-num">03</div><div class="ps-name">Surface Treatment</div><div class="ps-desc">Anodising or powder coating to RAL spec.</div></div>
+          <div class="process-step reveal d4"><div class="ps-num">04</div><div class="ps-name">Glazing &amp; Install</div><div class="ps-desc">Silicone sealing and site installation.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px;">
+        <h3 class="division-subhead reveal" data-reveal="fade-up">From the Aluminium Works Floor</h3>
+        <p class="division-subtext reveal" data-reveal="fade-up">Facades, glazing and architectural aluminium in the field.</p>
+        <div class="mega-gallery-grid" id="aluminiumGalleryGrid" data-division-gallery="aluminium-works"></div>
+      </div>
+
+      <div style="margin-top:48px;" class="reveal"><a href="/pages/contact.html?division=aluminium" class="btn btn-primary btn-lg" data-mag>Get an Aluminium Works Quote <span class="arrow">→</span></a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 6. MANUFACTURING PROCESS — combined timeline ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">End to End</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">One Connected <span class="accent">Manufacturing Process</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:640px;margin:0 auto;text-align:center;">Every division follows the same design → fabrication → finishing → delivery discipline, from technical drawing to site installation.</p>
+
+    <div class="mega-timeline">
+      <div class="mega-timeline-group">
+        <div class="mega-timeline-label" data-reveal="fade-up">Wood Works</div>
+        <div class="mega-timeline-steps">
+          <div class="mega-timeline-step reveal d1"><div class="mega-timeline-num">01</div><div class="mega-timeline-name">Design &amp; Engineering</div><div class="mega-timeline-desc">Technical drawings, material selection and QA sign-off.</div></div>
+          <div class="mega-timeline-step reveal d2"><div class="mega-timeline-num">02</div><div class="mega-timeline-name">CNC Cutting</div><div class="mega-timeline-desc">Precision CNC machining of panels and profiles.</div></div>
+          <div class="mega-timeline-step reveal d3"><div class="mega-timeline-num">03</div><div class="mega-timeline-name">Finishing &amp; Assembly</div><div class="mega-timeline-desc">Sanding, painting, veneering and edge banding.</div></div>
+          <div class="mega-timeline-step reveal d4"><div class="mega-timeline-num">04</div><div class="mega-timeline-name">QC &amp; Delivery</div><div class="mega-timeline-desc">Full quality inspection and site installation.</div></div>
+        </div>
+      </div>
+      <div class="mega-timeline-group">
+        <div class="mega-timeline-label" data-reveal="fade-up">Steel Works</div>
+        <div class="mega-timeline-steps">
+          <div class="mega-timeline-step reveal d1"><div class="mega-timeline-num">05</div><div class="mega-timeline-name">Engineering Design</div><div class="mega-timeline-desc">Shop drawings, structural calculations, procurement.</div></div>
+          <div class="mega-timeline-step reveal d2"><div class="mega-timeline-num">06</div><div class="mega-timeline-name">Cutting &amp; Forming</div><div class="mega-timeline-desc">Plasma/laser cutting, bending and roll forming.</div></div>
+          <div class="mega-timeline-step reveal d3"><div class="mega-timeline-num">07</div><div class="mega-timeline-name">Welding &amp; Assembly</div><div class="mega-timeline-desc">MIG/TIG welding by certified welders.</div></div>
+          <div class="mega-timeline-step reveal d4"><div class="mega-timeline-num">08</div><div class="mega-timeline-name">Coating &amp; Install</div><div class="mega-timeline-desc">Shot blasting, priming, painting and installation.</div></div>
+        </div>
+      </div>
+      <div class="mega-timeline-group">
+        <div class="mega-timeline-label" data-reveal="fade-up">Aluminium Works</div>
+        <div class="mega-timeline-steps">
+          <div class="mega-timeline-step reveal d1"><div class="mega-timeline-num">09</div><div class="mega-timeline-name">System Design</div><div class="mega-timeline-desc">Facade engineering, thermal analysis, wind loads.</div></div>
+          <div class="mega-timeline-step reveal d2"><div class="mega-timeline-num">10</div><div class="mega-timeline-name">Extrusion &amp; Cutting</div><div class="mega-timeline-desc">Precision aluminium cutting and CNC machining.</div></div>
+          <div class="mega-timeline-step reveal d3"><div class="mega-timeline-num">11</div><div class="mega-timeline-name">Surface Treatment</div><div class="mega-timeline-desc">Anodising or powder coating to RAL spec.</div></div>
+          <div class="mega-timeline-step reveal d4"><div class="mega-timeline-num">12</div><div class="mega-timeline-name">Glazing &amp; Install</div><div class="mega-timeline-desc">Silicone sealing and site installation.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 7. FACTORY & MACHINERY (unchanged) ═══ -->
 <section class="machinery-section">
   <div class="container">
-    <div class="eyebrow reveal">Our Equipment</div>
-    <h2 class="section-title reveal d1">Our <span class="accent">Machinery</span></h2>
-    <p class="reveal d2" style="font-size:15px;line-height:1.85;color:var(--grey-500);max-width:600px;margin-bottom:0;">Advanced manufacturing equipment across our Wood Works division — CNC routers, precision saws, edge banders and more, operated by skilled technicians to the highest standards.</p>
+    <div class="eyebrow" data-reveal="fade-up">Our Equipment</div>
+    <h2 class="section-title" data-reveal="mask">Our <span class="accent">Machinery</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--grey-500);max-width:600px;margin-bottom:0;">Advanced manufacturing equipment across our Wood Works division — CNC routers, precision saws, edge banders and more, operated by skilled technicians to the highest standards.</p>
     <div class="mach-grid" id="mach-grid"></div>
   </div>
 </section>
+
+<!-- ═══ 8. INDUSTRIES WE SERVE ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up">Who We Work With</div>
+    <h2 class="section-title" data-reveal="mask">Industries We <span class="accent">Serve</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:640px;">Our three divisions supply joinery, structural steel and aluminium systems into a wide range of project types across Saudi Arabia.</p>
+    <div class="industry-grid">
+      <div class="industry-card reveal d1" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg></div>
+        <div class="industry-name">Hospitality</div>
+        <div class="industry-desc">Hotel fit-out, joinery and facade work for hospitality projects across the Kingdom.</div>
+      </div>
+      <div class="industry-card reveal d2" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div>
+        <div class="industry-name">Residential</div>
+        <div class="industry-desc">Custom joinery, aluminium doors and windows, and steel features for villas and residential developments.</div>
+      </div>
+      <div class="industry-card reveal d3" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+        <div class="industry-name">Commercial</div>
+        <div class="industry-desc">Curtain wall, interior fit-out and structural steel for offices, retail and mixed-use buildings.</div>
+      </div>
+      <div class="industry-card reveal d4" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M12 2l9 4.5v3c0 5.5-3.8 10.7-9 12-5.2-1.3-9-6.5-9-12v-3z"/></svg></div>
+        <div class="industry-name">Government</div>
+        <div class="industry-desc">Certified fire-rated doors, structural steel and facade systems for public sector facilities.</div>
+      </div>
+      <div class="industry-card reveal d1" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
+        <div class="industry-name">Industrial</div>
+        <div class="industry-desc">Structural steel assemblies, cladding and warehouse framing for industrial and logistics facilities.</div>
+      </div>
+      <div class="industry-card reveal d2" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.5 3-6a5 5 0 00-9-3 5 5 0 00-9 3c0 2.5 1.5 4.5 3 6l6 6z"/></svg></div>
+        <div class="industry-name">Healthcare</div>
+        <div class="industry-desc">Fire-rated doors, hygienic finishes and precision fit-out components for medical facilities.</div>
+      </div>
+      <div class="industry-card reveal d3" data-tilt>
+        <div class="industry-ico"><svg viewBox="0 0 24 24"><path d="M22 10L12 4 2 10l10 6 10-6z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></div>
+        <div class="industry-name">Education</div>
+        <div class="industry-desc">Joinery, partitions and durable finishes for schools, colleges and university buildings.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 9. QUALITY & CERTIFICATIONS ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;background:var(--bg-2);">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">Trust &amp; Standards</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">Quality &amp; <span class="accent">Certifications</span></h2>
+    <p data-reveal="fade-up" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:640px;margin:0 auto;text-align:center;">Our products and processes are manufactured in line with the following standards and national programmes.</p>
+
+    <div class="qual-grid">
+      <div class="qual-card reveal d1" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><path d="M12 2l9 4.5v3c0 5.5-3.8 10.7-9 12-5.2-1.3-9-6.5-9-12v-3z"/></svg></div>
+        <div class="qual-name">SASO</div>
+        <div class="qual-desc">Saudi Standards, Metrology and Quality Organization — certified products for the Saudi market.</div>
+      </div>
+      <div class="qual-card reveal d2" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+        <div class="qual-name">FD60</div>
+        <div class="qual-desc">Fire door rating denoting 60 minutes of fire resistance, applied to our wooden and steel fire doors.</div>
+      </div>
+      <div class="qual-card reveal d3" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div>
+        <div class="qual-name">MIM</div>
+        <div class="qual-desc">Ministry of Industry and Mineral Resources — industrial licensing for our manufacturing operations.</div>
+      </div>
+      <div class="qual-card reveal d4" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div class="qual-name">ISO</div>
+        <div class="qual-desc">International Organization for Standardization — quality management aligned with recognised standards.</div>
+      </div>
+      <div class="qual-card reveal d5" data-tilt>
+        <div class="qual-ico"><svg viewBox="0 0 24 24"><path d="M2 12h20M12 2v20M4.5 4.5l15 15M19.5 4.5l-15 15"/></svg></div>
+        <div class="qual-name">Vision 2030</div>
+        <div class="qual-desc">Contributing to Saudi Arabia's Vision 2030 industrial and localisation goals.</div>
+      </div>
+    </div>
+
+    <div class="mega-stats-row">
+      <div class="stat-box"><div class="stat-box-v"><span data-count="25" data-suffix="+">0</span></div><div class="stat-box-l">Years of Excellence</div></div>
+      <div class="stat-box"><div class="stat-box-v">3</div><div class="stat-box-l">Manufacturing Divisions</div></div>
+      <div class="stat-box"><div class="stat-box-v"><span data-count="20" data-suffix="+">0</span></div><div class="stat-box-l">Machines in Operation</div></div>
+      <div class="stat-box"><div class="stat-box-v">V<em>2030</em></div><div class="stat-box-l">Vision Aligned</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 10. REQUEST A QUOTE CTA ═══ -->
+<div class="v2030" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="v2030-badge reveal" style="display:inline-flex;">
+      <span style="font-size:16px;">🛠️</span>
+      Ready When You Are
+    </div>
+    <h2 class="section-title reveal d1" style="max-width:700px;margin:0 auto 16px;">Get a <span class="accent">Custom Quote</span> for Your Project</h2>
+    <p class="reveal d2" style="font-size:15px;line-height:1.85;color:var(--tx-3);max-width:560px;margin:0 auto 32px;">Tell us about your project and we'll come back with a tailored proposal across Wood, Steel or Aluminium works.</p>
+    <div class="reveal d3" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="/pages/contact.html" class="btn btn-primary btn-lg" data-mag>Request a Quote <span class="arrow">→</span></a>
+      <a href="/pages/gallery.html" class="btn btn-outline btn-lg">View Our Work <span class="arrow">↗</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 11. FAQ ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">Questions</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">Frequently Asked <span class="accent">Questions</span></h2>
+    <div class="faq-list">
+      <details class="faq-item reveal d1">
+        <summary>Do you offer custom sizes and finishes?</summary>
+        <div class="faq-body">Yes. Wood, steel and aluminium products are manufactured to your project's specific dimensions and finish requirements — this is discussed and confirmed at the quotation stage.</div>
+      </details>
+      <details class="faq-item reveal d2">
+        <summary>What is your typical lead time?</summary>
+        <div class="faq-body">Lead times vary by project scope, material availability and order volume, and are confirmed when we issue your quotation.</div>
+      </details>
+      <details class="faq-item reveal d3">
+        <summary>Do you deliver and install, or supply only?</summary>
+        <div class="faq-body">We offer both — supply-only for contractors managing their own installation, or full supply-and-install service where our teams handle delivery and site fitting.</div>
+      </details>
+      <details class="faq-item reveal d4">
+        <summary>Can I request samples before ordering?</summary>
+        <div class="faq-body">For larger orders, material and finish samples can be arranged — just raise this when you request your quote.</div>
+      </details>
+      <details class="faq-item reveal d5">
+        <summary>Do you work directly with contractors and developers?</summary>
+        <div class="faq-body">Yes, we regularly work directly with contractors, developers and consultants across all three divisions, from single components to full project packages.</div>
+      </details>
+      <details class="faq-item reveal d6">
+        <summary>How do I request a quote?</summary>
+        <div class="faq-body">Use the "Request a Quote" button on this page or visit our Contact page — share your project details and a member of our team will follow up.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 12. CONTACT QUICK-INFO ═══ -->
+<section class="section-pad" style="position:relative;z-index:1;background:var(--bg-2);">
+  <div class="container">
+    <div class="eyebrow" data-reveal="fade-up" style="justify-content:center;">Get in Touch</div>
+    <h2 class="section-title" data-reveal="mask" style="text-align:center;">Let's Talk About <span class="accent">Your Project</span></h2>
+    <div class="mega-contact-grid">
+      <a href="/pages/contact.html" class="mega-contact-chip reveal d1">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div><div class="cinfo-lbl">Head Office</div><div class="cinfo-val">Jeddah, Saudi Arabia</div></div>
+      </a>
+      <a href="tel:+966563000051" class="mega-contact-chip reveal d2">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.87 9.8a19.79 19.79 0 01-3.07-8.63A2 2 0 012.78 0h3a2 2 0 012 1.72 12 12 0 00.69 2.96 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.12-.91a2 2 0 012.11-.45c.96.33 1.95.56 2.96.69A2 2 0 0122 16.92z"/></svg></div>
+        <div><div class="cinfo-lbl">Phone</div><div class="cinfo-val">+966 56 300 0051</div></div>
+      </a>
+      <a href="mailto:sales@alfarooque.com" class="mega-contact-chip reveal d3">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <div><div class="cinfo-lbl">Email</div><div class="cinfo-val">sales@alfarooque.com</div></div>
+      </a>
+      <a href="https://wa.me/966563000051" class="mega-contact-chip reveal d4">
+        <div class="cinfo-ico"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
+        <div><div class="cinfo-lbl">WhatsApp</div><div class="cinfo-val">+966 56 300 0051</div></div>
+      </a>
+    </div>
+    <div class="reveal d5" style="text-align:center;"><a href="/pages/contact.html" class="btn btn-primary btn-lg" data-mag>Request a Quote <span class="arrow">→</span></a></div>
+  </div>
+</section>
+
+<!-- ═══ 13. LIGHTBOX (shared by all mini-galleries above) ═══ -->
+<div class="lightbox" id="lightbox">
+  <img class="lightbox-img" id="lb-img" src="" alt="">
+  <button type="button" class="lightbox-close lb-close" id="lb-close" aria-label="Close">&times;</button>
+</div>
 
 <footer class="footer">
   <div class="footer-brand">
@@ -170,9 +591,9 @@
   <div>
     <div class="footer-col-h">Divisions</div>
     <ul class="footer-links">
-      <li><a href="/pages/woodworks.html">Wood Works</a></li>
-      <li><a href="/pages/steelworks.html">Steel Works</a></li>
-      <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
+      <li><a href="/pages/services.html#wood-works">Wood Works</a></li>
+      <li><a href="/pages/services.html#steel-works">Steel Works</a></li>
+      <li><a href="/pages/services.html#aluminium-works">Aluminium Works</a></li>
       <li><a href="/pages/about.html#certifications">Certifications</a></li>
       <li><a href="/pages/contact.html">Request a Quote</a></li>
     </ul>
@@ -197,7 +618,12 @@
     </div>
   </div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
+<script src="/js/division-gallery.js"></script>
 <script src="/js/machinery.js"></script>
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>

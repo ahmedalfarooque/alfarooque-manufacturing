@@ -75,7 +75,9 @@ body {
   font-family: var(--font-body);
   background: #FFFFFF;
   color: var(--grey-900);
-  overflow-x: hidden;
+  /* `clip`, not `hidden` — `hidden` would make <body> a scroll container
+     and break position:sticky descendants (see main.css body rule). */
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
 img { display: block; max-width: 100%; }

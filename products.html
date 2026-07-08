@@ -18,6 +18,9 @@
 <link rel="stylesheet" href="/css/themes.css">
 <link rel="stylesheet" href="/css/products.css">
 <link rel="stylesheet" href="/css/product-filter.css">
+<link rel="stylesheet" href="/css/products-categories.css">
+<link rel="stylesheet" href="/css/scroll-experience.css">
+<noscript><style>[data-reveal],.reveal{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;}</style></noscript>
 <link rel="stylesheet" href="/css/auth.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
@@ -60,13 +63,7 @@
   <ul class="nav-links">
     <li><a href="/">Home</a></li>
     <li><a href="/pages/about.html">About</a></li>
-    <li class="has-dropdown"><a href="/pages/services.html">Services<span class="caret">▼</span></a>
-      <ul class="nav-dropdown">
-        <li><a href="/pages/woodworks.html">Wood Works</a></li>
-        <li><a href="/pages/steelworks.html">Steel Works</a></li>
-        <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
-      </ul>
-    </li>
+    <li><a href="/pages/services.html">Services</a></li>
     <li><a href="/pages/gallery.html">Gallery</a></li>
     <li><a href="/products.html" class="active">Products</a></li>
     <li><a href="/pages/contact.html" class="nav-cta">Contact Us</a></li>
@@ -92,9 +89,6 @@
   <a href="/">Home</a>
   <a href="/pages/about.html">About</a>
   <a href="/pages/services.html">Services</a>
-  <a href="/pages/woodworks.html" class="nav-mobile-sub">Wood Works</a>
-  <a href="/pages/steelworks.html" class="nav-mobile-sub">Steel Works</a>
-  <a href="/pages/aluminium.html" class="nav-mobile-sub">Aluminium Works</a>
   <a href="/pages/gallery.html">Gallery</a>
   <a href="/products.html">Products</a>
   <a href="/pages/contact.html">Contact Us</a>
@@ -107,11 +101,11 @@
     <!-- Section header / hero -->
     <div class="prod-section-header ps-hero">
       <div class="ps-hero-text">
-        <div class="eyebrow">Our Products</div>
-        <h1 class="ps-page-title">Engineered to <span class="accent">Impress</span></h1>
-        <p class="ps-page-sub">Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.</p>
+        <div class="eyebrow" data-reveal="fade-up">Our Products</div>
+        <h1 class="ps-page-title" data-reveal="mask">Engineered to <span class="accent">Impress</span></h1>
+        <p class="ps-page-sub" data-reveal="fade-up">Order precision-crafted Wood, Steel, and Aluminium products directly from our factory in Jeddah. Custom sizes, finishes, and specifications available.</p>
         <div class="ps-hero-cta reveal d3">
-          <a href="#prodGrid" class="btn btn-primary" data-mag>Shop Collection <span class="arrow">→</span></a>
+          <a href="/all-products.html" class="btn btn-primary" data-mag>Shop Collection <span class="arrow">→</span></a>
           <a href="/pages/contact.html" class="btn btn-ghost">Request Custom Quote</a>
         </div>
       </div>
@@ -133,38 +127,135 @@
         <h2 class="new-arrival-title">Latest <span class="accent">Arrivals</span></h2>
       </div>
       <div class="new-arrival-track" id="newArrivalTrack"></div>
-    </div>
-
-    <!-- Product Grid — populated by products.js -->
-    <div class="prod-grid" id="prodGrid"></div>
-
-    <!-- Load More -->
-    <div class="prod-loadmore-wrap" id="prodLoadMoreWrap" style="display:none;">
-      <button class="prod-loadmore" id="prodLoadMore" type="button">Load More Products</button>
+      <div class="new-arrival-viewall" style="text-align:center;margin-top:32px;" data-reveal="fade-up">
+        <a href="/all-products.html" class="btn btn-ghost" data-mag>View All Products <span class="arrow">→</span></a>
+      </div>
     </div>
 
   </div>
 </section>
 
-<!-- ═══ FEATURED COLLECTION BANNER ═══ -->
-<section class="featured-banner">
-  <div class="container featured-banner-inner">
-    <div class="featured-banner-media">
-      <img src="/assets/images/Home/Home_02.jpg" alt="AL FAROOQUE craftsmanship" loading="lazy">
+<!-- ═══ CATEGORY SHOWCASE — Doors · Tables · Beds · Wardrobes · Sofa ═══ -->
+<section class="cat-showcase-section" id="categoryShowcase">
+  <div class="container">
+
+    <!-- Doors -->
+    <div class="cat-showcase" data-align="left">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-doors"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">FD60</span><span class="cat-stat-lbl">Fire Rated</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">SASO</span><span class="cat-stat-lbl">Certified</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">Doors Collection</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">Premium Door <span class="accent">Collection</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">Solid teak exteriors, fire-rated interior systems and CNC-precision detailing — every door is manufactured in our Jeddah factory to FD60 and SASO standards, built to endure daily use for decades.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products.html?category=doors" class="btn btn-primary" data-mag>View All Doors <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-doors"></div>
     </div>
-    <div class="featured-banner-body">
-      <div class="section-label">Featured Collection</div>
-      <h2 class="section-title">Doors, Crafted <span class="accent">to Endure</span></h2>
-      <p class="section-body">From solid teak exterior doors to fire-rated interior systems — explore our most-ordered collection, built to the highest Saudi and international standards.</p>
-      <a href="/products.html?category=doors" class="btn btn-primary" data-mag>Shop Doors Collection <span class="arrow">→</span></a>
+
+    <!-- Tables -->
+    <div class="cat-showcase" data-align="right">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-tables"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">Hand</span><span class="cat-stat-lbl">Finished</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">Custom</span><span class="cat-stat-lbl">Sizes</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">Tables Collection</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">Luxury Tables <span class="accent">Collection</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">Solid wood dining and occasional tables finished by hand in our workshop — precision joinery, premium veneers and CNC-cut detailing for a piece that anchors the room.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products.html?category=tables" class="btn btn-primary" data-mag>View All Tables <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-tables"></div>
     </div>
+
+    <!-- Beds & Accessories -->
+    <div class="cat-showcase" data-align="left">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-beds"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">1-Year</span><span class="cat-stat-lbl">Warranty</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">Jeddah</span><span class="cat-stat-lbl">Made in KSA</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">Beds &amp; Accessories</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">Luxury Bedroom <span class="accent">Collection</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">Solid wood bed frames and matching accessories, finished with the same veneer and joinery techniques used across our Wood Works division — built for comfort that lasts.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products.html?category=beds" class="btn btn-primary" data-mag>View All Beds &amp; Accessories <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-beds"></div>
+    </div>
+
+    <!-- Wardrobes & Cupboards -->
+    <div class="cat-showcase" data-align="right">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-wardrobes-cupboards"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">CNC</span><span class="cat-stat-lbl">Precision Routed</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">Custom</span><span class="cat-stat-lbl">Fitted</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">Wardrobes &amp; Cupboards</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">Elegant <span class="accent">Wardrobes</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">Custom-fitted wardrobes and cupboards, CNC-routed and finished to order — smart, elegant storage solutions built into your space by our joinery team.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products.html?category=wardrobes-cupboards" class="btn btn-primary" data-mag>View All Wardrobes &amp; Cupboards <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-wardrobes-cupboards"></div>
+    </div>
+
+    <!-- Sofa -->
+    <div class="cat-showcase" data-align="left">
+      <div class="cat-showcase-header">
+        <div class="cat-showcase-media" data-parallax data-parallax-speed="-0.16">
+          <div class="cat-showcase-glow orb" aria-hidden="true"></div>
+          <div class="cat-slider" id="catSlider-sofa"></div>
+          <div class="cat-stat cat-stat-a"><span class="cat-stat-val">Hardwood</span><span class="cat-stat-lbl">Frame</span></div>
+          <div class="cat-stat cat-stat-b"><span class="cat-stat-val">Premium</span><span class="cat-stat-lbl">Upholstery</span></div>
+        </div>
+        <div class="cat-showcase-copy">
+          <div class="cat-copy-orb" aria-hidden="true"></div>
+          <div class="eyebrow" data-reveal="fade-up">Sofa Collection</div>
+          <h2 class="cat-showcase-title" data-reveal="mask">Modern <span class="accent">Sofas</span></h2>
+          <p class="cat-showcase-sub" data-reveal="fade-up">Upholstered seating built on solid hardwood frames, with premium fabric and cushioning selected for comfort and long-term durability in both residential and commercial spaces.</p>
+          <div class="cat-showcase-cta" data-reveal="fade-up">
+            <a href="/all-products.html?category=sofa" class="btn btn-primary" data-mag>View All Sofas <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="cat-showcase-products" id="catProducts-sofa"></div>
+    </div>
+
   </div>
 </section>
 
 <!-- ═══ NEWSLETTER ═══ -->
 <section class="newsletter">
   <div class="container newsletter-inner">
-    <div class="newsletter-copy">
+    <div class="newsletter-copy" data-reveal="fade-up">
       <h2 class="newsletter-title">Stay Ahead of <span class="accent">New Releases</span></h2>
       <p class="newsletter-sub">Subscribe for new product launches, factory promotions, and seasonal offers — no spam, unsubscribe anytime.</p>
     </div>
@@ -431,9 +522,9 @@
   <div>
     <div class="footer-col-h">Divisions</div>
     <ul class="footer-links">
-      <li><a href="/pages/woodworks.html">Wood Works</a></li>
-      <li><a href="/pages/steelworks.html">Steel Works</a></li>
-      <li><a href="/pages/aluminium.html">Aluminium Works</a></li>
+      <li><a href="/pages/services.html#wood-works">Wood Works</a></li>
+      <li><a href="/pages/services.html#steel-works">Steel Works</a></li>
+      <li><a href="/pages/services.html#aluminium-works">Aluminium Works</a></li>
       <li><a href="/pages/about.html#certifications">Certifications</a></li>
       <li><a href="/pages/contact.html">Request a Quote</a></li>
     </ul>
@@ -459,11 +550,16 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>
 <script src="/js/nav-actions.js"></script>
 <script src="/js/products.js"></script>
+<script src="/js/products-categories.js"></script>
 <script src="/js/product-filter.js"></script>
 <script src="/js/products-hero.js"></script>
 <!-- ── Authentication (Supabase) ── -->

@@ -66,7 +66,9 @@
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       var q = (input && input.value || '').trim();
-      var url = '/products.html' + (q ? '?search=' + encodeURIComponent(q) : '');
+      /* Full searchable catalog now lives on the All Products page */
+      var searchPage = document.documentElement.lang === 'ar' ? '/all-products-ar.html' : '/all-products.html';
+      var url = searchPage + (q ? '?search=' + encodeURIComponent(q) : '');
       location.href = url;
     });
   }

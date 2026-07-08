@@ -1,0 +1,297 @@
+/* ═══════════════════════════════════════════════════════════════
+   SERVICES MEGA PAGE — supplemental styles
+   Only rules NOT already covered by main.css / components.css /
+   themes.css / scroll-experience.css. Uses design-token variables
+   (--bg, --bg-2, --tx, --tx-3, --pr, --bd, --sh-md, --sh-lg, --r-*)
+   so light/dark theme both work automatically, except the Steel
+   Works section which is intentionally always-dark (see below).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────
+   1. HERO — mouse-parallax depth layer + stats bar spacing
+   ───────────────────────────────────────────────────────────── */
+.ph-mouse-orb{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(circle at 30% 30%, rgba(140,160,91,0.20) 0%, transparent 55%),
+             radial-gradient(circle at 75% 65%, rgba(140,160,91,0.14) 0%, transparent 50%);
+  will-change:transform;
+}
+.svc-hero-stats{
+  display:flex; flex-wrap:wrap; gap:40px;
+  margin-top:40px; padding-top:32px;
+  border-top:1px solid rgba(255,255,255,0.16);
+  justify-content:center;
+}
+.svc-hero-stats .stat-i{ border:none; padding:0; }
+
+/* ─────────────────────────────────────────────────────────────
+   2. DIVISIONS INTRO framing
+   ───────────────────────────────────────────────────────────── */
+.mega-intro-copy{ max-width:640px; margin:0 auto 48px; text-align:center; }
+.mega-intro-copy p{ font-size:15px; line-height:1.85; color:var(--tx-3); }
+
+/* ─────────────────────────────────────────────────────────────
+   3. DIVISION SECTIONS — shared scaffolding
+   ───────────────────────────────────────────────────────────── */
+.division-section{ position:relative; z-index:1; scroll-margin-top:var(--nav-h,84px); }
+.division-band-wood{ background:var(--bg-2); }
+.division-band-aluminium{ background:var(--bg); }
+
+.mega-gallery-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:16px;
+  margin-top:28px;
+}
+.mega-gallery-grid .gal-item{ aspect-ratio:4/3; }
+.mega-gallery-grid .gal-item img{ width:100%; height:100%; object-fit:cover; }
+
+.division-subhead{ font-family:var(--font-display); font-size:20px; font-weight:700; margin-bottom:6px; }
+.division-subtext{ font-size:13px; color:var(--tx-4); margin-bottom:0; }
+
+/* ─────────────────────────────────────────────────────────────
+   4. STEEL WORKS — deliberately always-dark, literal colors
+   (mirrors the footer's "always dark by design" approach in
+   main.css, independent of the site's light/dark toggle)
+   ───────────────────────────────────────────────────────────── */
+.steel-dark-section{
+  position:relative; z-index:1; overflow:hidden;
+  background:#101211;
+  color:#F2F1EC;
+}
+.steel-dark-section .division-subhead,
+.steel-dark-section h1, .steel-dark-section h3{ color:#F5F4EF; }
+.steel-dark-section p{ color:#B7B6AE; }
+.steel-dark-section .division-subtext{ color:#8C8B84; }
+.steel-dark-section .eyebrow{ color:#A9C27C; }
+.steel-dark-section .eyebrow::before{ background:#A9C27C; }
+.steel-dark-section .cap-item{
+  background:rgba(255,255,255,0.035);
+  border:1px solid rgba(255,255,255,0.09);
+}
+.steel-dark-section .cap-item:hover{
+  border-color:rgba(169,194,124,0.45);
+  background:rgba(169,194,124,0.08);
+}
+.steel-dark-section .cap-text{ color:#CFCEC6; }
+.steel-dark-section .tag{
+  border-color:rgba(169,194,124,0.35);
+  background:rgba(169,194,124,0.10);
+  color:#B9D48C;
+}
+.steel-dark-section .process-step{ background:none; }
+.steel-dark-section .ps-name{ color:#F2F1EC; }
+.steel-dark-section .ps-desc{ color:#9C9B93; }
+.steel-dark-section .ps-num{
+  color:#A9C27C; border-color:rgba(255,255,255,0.14);
+}
+.steel-dark-section .process-step::before{ background:rgba(255,255,255,0.12); }
+.steel-dark-section, .steel-dark-section .section-pad{ border-color:rgba(255,255,255,0.09) !important; }
+
+/* Abstract industrial sweep — GPU transform + opacity only */
+.steel-sweep-bg{
+  position:absolute; inset:-20% -20%; z-index:0; pointer-events:none;
+  background-image:
+    radial-gradient(rgba(169,194,124,0.10) 1px, transparent 1px),
+    linear-gradient(115deg, transparent 40%, rgba(169,194,124,0.07) 50%, transparent 60%);
+  background-size:34px 34px, 200% 200%;
+  animation:steelDrift 22s linear infinite;
+}
+@keyframes steelDrift{
+  0%{ background-position:0 0, 0% 0%; }
+  100%{ background-position:340px 340px, 100% 100%; }
+}
+@media (prefers-reduced-motion: reduce){
+  .steel-sweep-bg{ animation:none; }
+}
+.steel-dark-section .svc-hero-content, .steel-dark-section > .container{ position:relative; z-index:1; }
+
+/* ─────────────────────────────────────────────────────────────
+   5. ALUMINIUM WORKS — light glassmorphism
+   ───────────────────────────────────────────────────────────── */
+.au-glass-card{
+  background:var(--bg-card-2);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--bd-2);
+  box-shadow:var(--sh-lg);
+  border-radius:var(--r-lg);
+}
+.au-glass-wrap .cap-item{
+  background:var(--bg-card-2);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--bd-2);
+}
+.au-glass-wrap .pd-pin-wrap{
+  padding:28px; border-radius:var(--r-lg);
+  background:var(--bg-card-2);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--bd-2);
+  box-shadow:var(--sh-md);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. COMBINED MANUFACTURING TIMELINE
+   ───────────────────────────────────────────────────────────── */
+.mega-timeline{ position:relative; margin-top:40px; }
+.mega-timeline-group{ margin-bottom:44px; }
+.mega-timeline-group:last-child{ margin-bottom:0; }
+.mega-timeline-label{
+  font-family:var(--font-display); font-size:13px; font-weight:700;
+  letter-spacing:0.14em; text-transform:uppercase; color:var(--pr-2);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;
+}
+.mega-timeline-label::after{ content:''; flex:1; height:1px; background:var(--bd); }
+.mega-timeline-steps{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+  position:relative;
+}
+.mega-timeline-steps::before{
+  content:''; position:absolute; top:22px; left:6%; right:6%; height:2px;
+  background:var(--bd); z-index:0;
+}
+.mega-timeline-step{
+  position:relative; z-index:1; padding:0 14px; text-align:center;
+}
+.mega-timeline-num{
+  width:44px; height:44px; margin:0 auto 14px; border-radius:50%;
+  background:var(--bg-card); border:1px solid var(--bd-teal);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--pr-2);
+}
+.mega-timeline-name{ font-size:14px; font-weight:600; color:var(--tx); margin-bottom:6px; }
+.mega-timeline-desc{ font-size:12px; color:var(--tx-4); line-height:1.6; }
+
+/* ─────────────────────────────────────────────────────────────
+   7. INDUSTRIES WE SERVE
+   ───────────────────────────────────────────────────────────── */
+.industry-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:32px;
+}
+.industry-card{
+  background:var(--bg-card); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:24px 20px;
+  transition:transform 0.3s var(--ease,ease), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.industry-card:hover{
+  transform:translateY(-6px); border-color:var(--bd-teal); box-shadow:var(--sh-md);
+}
+.industry-ico{
+  width:44px; height:44px; border-radius:12px;
+  background:var(--bg-teal); border:1px solid var(--bd-teal);
+  display:flex; align-items:center; justify-content:center; margin-bottom:16px;
+}
+.industry-ico svg{ width:22px; height:22px; stroke:var(--pr-2); fill:none; stroke-width:1.8; }
+.industry-name{ font-size:15px; font-weight:700; color:var(--tx); margin-bottom:6px; }
+.industry-desc{ font-size:12.5px; line-height:1.6; color:var(--tx-4); }
+
+/* ─────────────────────────────────────────────────────────────
+   8. QUALITY & CERTIFICATIONS
+   ───────────────────────────────────────────────────────────── */
+.qual-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:32px; }
+.qual-card{
+  background:var(--bg-card); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:24px 20px; text-align:center;
+  transition:transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.qual-card:hover{ transform:translateY(-6px); border-color:var(--bd-teal); box-shadow:var(--sh-md); }
+.qual-ico{
+  width:46px; height:46px; margin:0 auto 14px; border-radius:13px;
+  background:var(--bg-teal); border:1px solid var(--bd-teal);
+  display:flex; align-items:center; justify-content:center;
+}
+.qual-ico svg{ width:22px; height:22px; stroke:var(--pr-2); fill:none; stroke-width:1.8; }
+.qual-name{ font-size:14px; font-weight:700; color:var(--tx); margin-bottom:8px; }
+.qual-desc{ font-size:12px; line-height:1.6; color:var(--tx-4); }
+
+.mega-stats-row{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+  background:var(--bd); margin-top:56px; border-radius:var(--r-lg); overflow:hidden;
+}
+.mega-stats-row .stat-box{ background:var(--bg); }
+
+/* ─────────────────────────────────────────────────────────────
+   9. FAQ ACCORDION (native <details>)
+   ───────────────────────────────────────────────────────────── */
+.faq-list{ max-width:780px; margin:32px auto 0; display:flex; flex-direction:column; gap:12px; }
+.faq-item{
+  background:var(--bg-card); border:1px solid var(--bd);
+  border-radius:var(--r-md); overflow:hidden;
+}
+.faq-item summary{
+  list-style:none; cursor:pointer; padding:20px 24px;
+  font-size:15px; font-weight:600; color:var(--tx);
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.faq-item summary::-webkit-details-marker{ display:none; }
+.faq-item summary::after{
+  content:'+'; font-size:20px; font-weight:400; color:var(--pr-2);
+  flex-shrink:0; transition:transform 0.3s ease;
+}
+.faq-item[open] summary::after{ transform:rotate(45deg); }
+.faq-item summary:focus-visible{ outline:2px solid var(--pr-2); outline-offset:-2px; }
+.faq-body{
+  padding:0 24px 20px; font-size:14px; line-height:1.8; color:var(--tx-3);
+}
+.faq-item[open] .faq-body{ animation:faqOpen 0.28s ease; }
+@keyframes faqOpen{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
+@media (prefers-reduced-motion: reduce){
+  .faq-item[open] .faq-body{ animation:none; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   10. CONTACT QUICK-INFO BRIDGE
+   ───────────────────────────────────────────────────────────── */
+.mega-contact-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:32px 0 40px;
+}
+.mega-contact-chip{
+  display:flex; align-items:center; gap:14px;
+  background:var(--bg-card); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:18px 20px;
+  text-decoration:none; transition:border-color 0.3s ease, transform 0.3s ease;
+}
+.mega-contact-chip:hover{ border-color:var(--bd-teal); transform:translateY(-4px); }
+
+/* ─────────────────────────────────────────────────────────────
+   11. RESPONSIVE
+   ───────────────────────────────────────────────────────────── */
+@media (max-width:1200px){
+  .qual-grid{ grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:992px){
+  .industry-grid{ grid-template-columns:repeat(2,1fr); }
+  .mega-timeline-steps{ grid-template-columns:1fr; gap:28px; }
+  .mega-timeline-steps::before{ top:0; left:22px; right:auto; width:2px; height:100%; }
+  .mega-timeline-step{ text-align:left; padding-left:56px; }
+  .mega-timeline-num{ position:absolute; left:0; top:0; margin:0; }
+  .mega-stats-row{ grid-template-columns:repeat(2,1fr); }
+  .mega-contact-grid{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:900px){
+  .au-glass-wrap[style],
+  .division-section [style*="grid-template-columns:1fr 1fr"]{ grid-template-columns:1fr !important; }
+}
+@media (max-width:700px){
+  .qual-grid{ grid-template-columns:1fr 1fr; }
+  .mega-gallery-grid{ grid-template-columns:repeat(2,1fr); }
+  .svc-hero-stats{ gap:24px; }
+}
+@media (max-width:520px){
+  .qual-grid{ grid-template-columns:1fr; }
+  .mega-contact-grid{ grid-template-columns:1fr; }
+  .mega-stats-row{ grid-template-columns:1fr; }
+}
+
+/* ── Division mini-gallery (async-loaded, own reveal — see js/division-gallery.js) ── */
+.division-gal-item--pending{
+  opacity:0;
+  transform:scale(0.86);
+  transition:opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.division-gal-item--pending.is-in{
+  opacity:1;
+  transform:scale(1);
+}
+@media (prefers-reduced-motion: reduce){
+  .division-gal-item--pending{ opacity:1; transform:none; transition:none; }
+}

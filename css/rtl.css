@@ -345,3 +345,10 @@ html[dir="rtl"] .process-step::before { right: auto; left: 50%; }
   html[dir="rtl"] .process-step .ps-desc { grid-column: 1; }
   html[dir="rtl"] .process-step::before { left: auto; right: 25px; }
 }
+
+/* ── Services mega page (services-mega.css) — RTL overrides ── */
+@media (max-width: 992px) {
+  html[dir="rtl"] .mega-timeline-step { text-align: right; padding-left: 0; padding-right: 56px; }
+  html[dir="rtl"] .mega-timeline-num { left: auto; right: 0; }
+  html[dir="rtl"] .mega-timeline-steps::before { left: auto; right: 22px; }
+}

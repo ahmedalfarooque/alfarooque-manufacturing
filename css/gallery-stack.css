@@ -1,0 +1,124 @@
+/* ═════════════════════════════════════════════════════════════════
+   AL FAROOQUE — Stacked / Centered Gallery
+   gallery-stack.css
+   Replaces the old 3D rotating ring carousel (.gallery3d-*).
+   All animated states use ONLY transform / opacity / filter so every
+   transition stays GPU-accelerated — never left/top/margin.
+   ═════════════════════════════════════════════════════════════════ */
+
+.gstack-wrap{
+  position:relative;width:100%;
+  padding:12px 0 36px;
+  display:flex;flex-direction:column;align-items:center;gap:20px;
+}
+
+.gstack-stage{
+  position:relative;width:100%;
+  height:clamp(230px,30vw,420px);
+  overflow:hidden; /* safety net — no card may ever force page overflow */
+}
+
+.gstack-track{
+  position:relative;width:100%;height:100%;
+}
+
+.gstack-card{
+  position:absolute;
+  top:50%;left:50%;
+  width:clamp(190px,24vw,300px);
+  aspect-ratio:1.46/1;
+  border-radius:var(--r-lg,18px);
+  overflow:hidden;
+  cursor:pointer;
+  background:var(--bg-2);
+  border:1px solid var(--bd);
+
+  /* base position (constant, never animated) + animated offset/scale */
+  --tx:0%;
+  --sc:1;
+  --op:1;
+  --bl:0px;
+  transform:translate3d(calc(-50% + var(--tx)),-50%,0) scale(var(--sc));
+  opacity:var(--op);
+  filter:blur(var(--bl));
+  will-change:transform,opacity,filter;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+
+  transition:
+    transform .5s cubic-bezier(.22,.9,.32,1),
+    opacity .5s ease,
+    filter .5s ease,
+    box-shadow .4s ease,
+    border-color .4s ease;
+}
+
+.gstack-card img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  pointer-events:none;user-select:none;-webkit-user-drag:none;
+  transition:transform .5s ease,filter .5s ease;
+}
+
+/* ── Position states (delta from active card) ── */
+.gstack-card[data-pos="active"]{
+  --tx:0%; --sc:1; --op:1; --bl:0px;
+  z-index:50;
+  border-color:var(--bd-teal,var(--pr));
+  box-shadow:var(--sh-lg),0 0 0 1px rgba(140,160,91,0.18);
+}
+.gstack-card[data-pos="active"] img{ transform:scale(1.02); }
+
+.gstack-card[data-pos="r1"]{ --tx:78%;  --sc:.90; --op:.85; --bl:1px;   z-index:40; }
+.gstack-card[data-pos="l1"]{ --tx:-78%; --sc:.90; --op:.85; --bl:1px;   z-index:40; }
+.gstack-card[data-pos="r2"]{ --tx:148%; --sc:.82; --op:.55; --bl:2.5px; z-index:30; }
+.gstack-card[data-pos="l2"]{ --tx:-148%;--sc:.82; --op:.55; --bl:2.5px; z-index:30; }
+.gstack-card[data-pos="r3"]{ --tx:208%; --sc:.75; --op:.28; --bl:4px;   z-index:20; }
+.gstack-card[data-pos="l3"]{ --tx:-208%;--sc:.75; --op:.28; --bl:4px;   z-index:20; }
+
+.gstack-card[data-pos="hidden"]{
+  display:none;
+}
+
+/* ── Light-reflection sheen overlay on the active card ── */
+.gstack-card::after{
+  content:'';
+  position:absolute;inset:0;
+  pointer-events:none;
+  opacity:0;
+  background:linear-gradient(115deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 68%,rgba(255,255,255,0.08) 100%);
+  transition:opacity .4s ease;
+}
+.gstack-card[data-pos="active"]::after{ opacity:1; }
+
+.gstack-card:focus-visible{
+  outline:2px solid var(--pr);outline-offset:4px;
+}
+
+.gstack-hint{
+  font-size:10px;color:var(--tx-3);
+  letter-spacing:0.14em;text-transform:uppercase;
+  text-align:center;margin:0;
+  pointer-events:none;user-select:none;
+}
+
+/* ── Tablet: fewer visible rings ── */
+@media(max-width:1023px){
+  .gstack-card[data-pos="l3"],
+  .gstack-card[data-pos="r3"]{ display:none; }
+}
+
+/* ── Mobile: one centered card, swipe only ── */
+@media(max-width:767px){
+  .gstack-stage{ height:clamp(220px,68vw,320px); }
+  .gstack-card{ width:clamp(230px,78vw,340px); }
+  .gstack-card:not([data-pos="active"]){ display:none; }
+  .gstack-hint{ display:none; }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .gstack-card{
+    transition:opacity .15s linear;
+  }
+  .gstack-card,
+  .gstack-card img{ transition-duration:.01ms !important; }
+}

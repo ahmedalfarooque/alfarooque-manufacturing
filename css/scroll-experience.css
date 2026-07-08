@@ -1,0 +1,131 @@
+/* ═══════════════════════════════════════════════════════════════
+   AL FAROOQUE MANUFACTURING — PREMIUM SCROLL EXPERIENCE STYLES
+   New, additive classes only. Never redefines a token from
+   design-system.css/main.css — consumes their existing --teal-*/
+   --grey-*/--border-1/--ease/--r-*/--shadow-* custom properties so the
+   look stays consistent, without touching the shared files themselves
+   (this file is not linked from account/admin pages, so there is no
+   spillover regardless).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── `[data-reveal]` initial hidden states — GSAP animates FROM these.
+   True no-JS clients get the `<noscript>` override placed alongside
+   this stylesheet's `<link>` on every page, so content is never
+   permanently invisible without JavaScript. ── */
+[data-reveal="fade-up"]    { opacity: 0; transform: translateY(46px); }
+[data-reveal="fade-left"]  { opacity: 0; transform: translateX(70px); }
+[data-reveal="fade-right"] { opacity: 0; transform: translateX(-70px); }
+html[dir="rtl"] [data-reveal="fade-left"]  { transform: translateX(-70px); }
+html[dir="rtl"] [data-reveal="fade-right"] { transform: translateX(70px); }
+[data-reveal="zoom"]       { opacity: 0; transform: scale(0.86); }
+[data-reveal="blur"]       { opacity: 0; filter: blur(16px); }
+[data-reveal="mask"]       { clip-path: inset(0 0 100% 0); }
+
+/* ── Word-stagger headline reveal (`[data-split-reveal]`) ── */
+[data-split-reveal] { overflow: hidden; }
+.sr-word { display: inline-block; overflow: hidden; vertical-align: top; }
+.sr-word-in { display: inline-block; will-change: transform; }
+
+/* ═══════════════════════ HERO CINEMATIC ═══════════════════════ */
+.hero-cinematic { position: relative; overflow: hidden; }
+.hero-cinematic__layer { position: absolute; inset: 0; will-change: transform; }
+.hero-cinematic__layer--bg   { z-index: 0; }
+.hero-cinematic__layer--mid  { z-index: 1; }
+.hero-cinematic__layer--fore { z-index: 2; pointer-events: none; }
+.hero-cinematic__eyebrow,
+.hero-cinematic__headline,
+.hero-cinematic__body,
+.hero-cinematic__actions { position: relative; z-index: 3; }
+
+/* Floating decorative chips get a touch of depth/shadow so the mouse-
+   parallax reads as physically layered, not just sliding text. */
+.float-chip[data-mouse-parallax] { will-change: transform; }
+.hero-orbit[data-mouse-parallax] { will-change: transform; }
+
+/* ═══════════════════════ SECTION RHYTHM ═══════════════════════ */
+.section-pad--xl { padding-top: 140px; padding-bottom: 140px; }
+@media (max-width: 1024px) { .section-pad--xl { padding-top: 90px; padding-bottom: 90px; } }
+
+.section-title--editorial {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(38px, 5.2vw, 72px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+/* ═══════════════════════ EDITORIAL / MAGAZINE GRID ═══════════════════════
+   Used by the Gallery "Collections" restyle — large overlapping tiles,
+   generous whitespace, big section-divider typography. Grid item spans
+   are deliberately uneven (magazine layout), not a uniform card grid. */
+.editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 24px;
+}
+.editorial-grid__item {
+  position: relative;
+  border-radius: var(--r-lg, 22px);
+  overflow: hidden;
+  background: var(--bg-card, #22221A);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--t2, 0.3s) var(--ease, ease);
+}
+.editorial-grid__item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.9s var(--ease, ease); }
+.editorial-grid__item:hover img { transform: scale(1.06); }
+.editorial-grid__item:hover { box-shadow: var(--shadow-lg); }
+.editorial-grid__item--feature { grid-column: span 4; aspect-ratio: 16/11; }
+.editorial-grid__item--tall    { grid-column: span 2; grid-row: span 2; aspect-ratio: 3/4; }
+.editorial-grid__item--wide    { grid-column: span 3; aspect-ratio: 4/3; }
+.editorial-grid__item--small   { grid-column: span 3; aspect-ratio: 4/3; }
+.editorial-grid__divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  margin: 20px 0 4px;
+}
+.editorial-grid__divider .num { font-family: var(--font-display); font-size: 13px; color: var(--teal-400); letter-spacing: 0.18em; }
+.editorial-grid__divider .line { flex: 1; height: 1px; background: var(--border-1); }
+
+@media (max-width: 1024px) {
+  .editorial-grid { grid-template-columns: repeat(2, 1fr); }
+  .editorial-grid__item--feature,
+  .editorial-grid__item--tall,
+  .editorial-grid__item--wide,
+  .editorial-grid__item--small { grid-column: span 2; grid-row: span 1; aspect-ratio: 4/3; }
+}
+
+/* ═══════════════════════ HORIZONTAL SCROLL RAIL ═══════════════════════ */
+.hscroll-viewport { overflow: hidden; }
+.hscroll-track { display: flex; gap: 28px; width: max-content; }
+@media (max-width: 991px) {
+  /* Below the desktop breakpoint the JS never pins/animates this —
+     let it be a normal native horizontally-scrollable strip instead. */
+  .hscroll-viewport { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .hscroll-track { transform: none !important; }
+}
+
+/* ═══════════════════════ STICKY PRODUCT GALLERY ═══════════════════════ */
+.pd-pin-wrap { align-self: start; }
+.pd-scroll-col { min-height: 100%; }
+@media (max-width: 991px) {
+  /* Pin is desktop-only (see JS) — stack normally on smaller screens. */
+  .pd-pin-wrap { position: static !important; }
+}
+
+/* ═══════════════════════ PREMIUM PRODUCT CARDS ═══════════════════════
+   Pure CSS additions layered onto the existing .prod-card/.prod-card-img
+   markup already rendered by products.js — no JS/DOM shape changes. */
+.prod-card { transition: transform var(--t2, 0.3s) var(--ease, ease), box-shadow var(--t2, 0.3s) var(--ease, ease); }
+.prod-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.prod-card-img { overflow: hidden; }
+.prod-card-img img { transition: transform 0.7s var(--ease, ease); }
+.prod-card:hover .prod-card-img img { transform: scale(1.08); }
+
+/* ═══════════════════════ REDUCED MOTION ═══════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; filter: none !important; clip-path: none !important; }
+  .prod-card:hover,
+  .editorial-grid__item:hover img { transform: none !important; }
+}
