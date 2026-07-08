@@ -54,30 +54,28 @@ export default function DashboardPage() {
       {/* Total Project Value card intentionally removed — project value
           is only ever shown on a project's own View page, and only
           when it's actually set (see the brief: never show $0/SAR 0). */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <StatCard icon={'\u{1F4C1}'} tone="brand" label={t('dashboard.totalProjects')} value={stats.totalProjects} sub={t('dashboard.allProjects')} href="/projects" />
-        <StatCard icon="▶" tone="blue" label={t('dashboard.runningProjects')} value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Running" />
-        <StatCard icon="✔" tone="emerald" label={t('dashboard.completedProjects')} value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Completed" />
-        <StatCard icon={'\u{1F4C5}'} tone="amber" label={t('dashboard.upcomingProjects')} value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Upcoming" />
-        <StatCard icon="⏸" tone="red" label={t('dashboard.onHoldProjects')} value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href={'/projects?status=' + encodeURIComponent('On Hold')} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="folder" tone="brand" label={t('dashboard.totalProjects')} value={stats.totalProjects} sub={t('dashboard.allProjects')} href="/projects" />
+        <StatCard icon="flag" tone="blue" label={t('dashboard.runningProjects')} value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Running" />
+        <StatCard icon="target" tone="emerald" label={t('dashboard.completedProjects')} value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Completed" />
+        <StatCard icon="clock" tone="amber" label={t('dashboard.upcomingProjects')} value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Upcoming" />
+        <StatCard icon="x" tone="red" label={t('dashboard.onHoldProjects')} value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href={'/projects?status=' + encodeURIComponent('On Hold')} />
+        <StatCard icon="users" tone="brand" label={t('dashboard.teamMembers')} value={users.length} sub={t('dashboard.internalExternalUsers')} href="/users" />
+        <StatCard icon="clock" tone="amber" label={t('dashboard.prPending')} value={stats.purchaseRequests.pending} sub={t('dashboard.awaitingReview')} href="/purchase-requests?status=Pending" />
+        <StatCard icon="shield" tone="blue" label={t('dashboard.prApproved')} value={stats.purchaseRequests.approved} sub={t('dashboard.approvedRequests')} href="/purchase-requests?status=Approved" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <StatCard icon={'\u{1F465}'} tone="brand" label={t('dashboard.teamMembers')} value={users.length} sub={t('dashboard.internalExternalUsers')} href="/users" />
-        <StatCard icon={'\u{1F9FE}'} tone="amber" label={t('dashboard.prPending')} value={stats.purchaseRequests.pending} sub={t('dashboard.awaitingReview')} href="/purchase-requests?status=Pending" />
-        <StatCard icon="✔" tone="blue" label={t('dashboard.prApproved')} value={stats.purchaseRequests.approved} sub={t('dashboard.approvedRequests')} href="/purchase-requests?status=Approved" />
-        <StatCard icon="⚠" tone="red" label={t('dashboard.prUrgent')} value={stats.purchaseRequests.urgent} sub={t('dashboard.urgentCriticalPending')} href="/purchase-requests?status=Pending" />
-        <StatCard icon={'\u{1F4CB}'} tone="brand" label={t('dashboard.prAllRequests')} value={stats.purchaseRequests.recent.length ? stats.purchaseRequests.pending + stats.purchaseRequests.approved : 0} sub={t('dashboard.viewAll')} href="/purchase-requests" />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard icon={'\u{1F4C6}'} tone="emerald" label={t('dashboard.updatesToday')} value={stats.dailyUpdates.today} sub={t('dashboard.submittedToday')} href="/projects" />
-        <StatCard icon={'\u{1F4C5}'} tone="slate" label={t('dashboard.updatesYesterday')} value={stats.dailyUpdates.yesterday} sub={t('dashboard.submittedYesterday')} href="/projects" />
-        <StatCard icon={'\u{1F4C8}'} tone="blue" label={t('dashboard.thisWeek')} value={stats.dailyUpdates.thisWeek} sub={t('dashboard.last7Days')} href="/projects" />
-        <StatCard icon={'\u{1F6A8}'} tone="red" label={t('dashboard.missingUpdates')} value={stats.dailyUpdates.missing} sub={t('dashboard.assignedNoUpdate')} href="/projects" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="bell" tone="red" label={t('dashboard.prUrgent')} value={stats.purchaseRequests.urgent} sub={t('dashboard.urgentCriticalPending')} href="/purchase-requests?status=Pending" />
+        <StatCard icon="receipt" tone="brand" label={t('dashboard.prAllRequests')} value={stats.purchaseRequests.recent.length ? stats.purchaseRequests.pending + stats.purchaseRequests.approved : 0} sub={t('dashboard.viewAll')} href="/purchase-requests" />
+        <StatCard icon="chart" tone="emerald" label={t('dashboard.updatesToday')} value={stats.dailyUpdates.today} sub={t('dashboard.submittedToday')} href="/projects" />
+        <StatCard icon="clock" tone="slate" label={t('dashboard.updatesYesterday')} value={stats.dailyUpdates.yesterday} sub={t('dashboard.submittedYesterday')} href="/projects" />
+        <StatCard icon="chart" tone="blue" label={t('dashboard.thisWeek')} value={stats.dailyUpdates.thisWeek} sub={t('dashboard.last7Days')} href="/projects" />
+        <StatCard icon="bell" tone="red" label={t('dashboard.missingUpdates')} value={stats.dailyUpdates.missing} sub={t('dashboard.assignedNoUpdate')} href="/projects" />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dashboard.projectStatus')}</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -90,7 +88,7 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dashboard.projectsStartedMonthly')}</h3>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={stats.projectsStartedMonthly}>
@@ -103,7 +101,7 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dashboard.projectValueMonthly')}</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={stats.projectValueMonthly}>
@@ -116,7 +114,7 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col items-center justify-center">
+        <div className="glass-card glass-card--pad flex flex-col items-center justify-center">
           <h3 className="font-medium text-sm mb-3 self-start">{t('dashboard.completionProgress')}</h3>
           <ResponsiveContainer width="100%" height={160}>
             <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: 'done', value: stats.completionPct, fill: '#6B7A4F' }]} startAngle={90} endAngle={-270}>
@@ -135,7 +133,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dashboard.latestPurchaseRequests')}</h3>
           {stats.purchaseRequests.recent.length === 0 ? (
             <div className="text-sm text-[#8C8A80] py-6 text-center">{t('dashboard.noPurchaseRequestsYet')}</div>
@@ -177,7 +175,7 @@ function RecentNotificationsCard({ t, formatDate }) {
   }
 
   return (
-    <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="glass-card glass-card--pad">
       <h3 className="font-medium text-sm mb-3">{t('dashboard.recentNotifications')}</h3>
       {notifications.length === 0 ? (
         <div className="text-sm text-[#8C8A80] py-6 text-center">{t('shell.noNotificationsYet')}</div>
@@ -203,24 +201,24 @@ function RecentNotificationsCard({ t, formatDate }) {
 }
 
 function ExternalDashboard({ stats, error }) {
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
   if (!stats) return <Shell active="/dashboard"><div className="text-[#8C8A80]">{t('dashboard.loading')}</div></Shell>;
 
   return (
     <Shell active="/dashboard">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <StatCard icon={'\u{1F4C1}'} tone="brand" label={t('dashboard.myProjects')} value={stats.totalProjects} href="/projects" />
-        <StatCard icon="▶" tone="blue" label={t('dashboard.running')} value={stats.running} href="/projects" />
-        <StatCard icon="✔" tone="emerald" label={t('dashboard.completed')} value={stats.completed} href="/projects" />
-        <StatCard icon={'\u{1F9FE}'} tone="amber" label={t('dashboard.purchaseRequests')} value={stats.purchaseRequests.pending} sub={t('dashboard.awaitingDecision')} href="/projects" />
-        <StatCard icon={'\u{1F4C6}'} tone="slate" label={t('dashboard.dailyUpdates')} value={stats.dailyUpdates.thisWeek} sub={t('dashboard.thisWeek')} href="/projects" />
-        <StatCard icon={'\u{1F514}'} tone="red" label={t('dashboard.notifications')} value={stats.notifications.unread} sub={t('dashboard.unread')} />
+        <StatCard icon="folder" tone="brand" label={t('dashboard.myProjects')} value={stats.totalProjects} href="/projects" />
+        <StatCard icon="flag" tone="blue" label={t('dashboard.running')} value={stats.running} href="/projects" />
+        <StatCard icon="target" tone="emerald" label={t('dashboard.completed')} value={stats.completed} href="/projects" />
+        <StatCard icon="clock" tone="amber" label={t('dashboard.purchaseRequests')} value={stats.purchaseRequests.pending} sub={t('dashboard.awaitingDecision')} href="/projects" />
+        <StatCard icon="chart" tone="slate" label={t('dashboard.dailyUpdates')} value={stats.dailyUpdates.thisWeek} sub={t('dashboard.thisWeek')} href="/projects" />
+        <StatCard icon="bell" tone="red" label={t('dashboard.notifications')} value={stats.notifications.unread} sub={t('dashboard.unread')} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-6">
         {stats.projects.map(p => (
-          <a key={p.id} href={'/projects/' + p.id} className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-brand-600/40 transition">
+          <a key={p.id} href={'/projects/' + p.id} className="glass-card glass-card--pad hover:border-brand-600/40 transition">
             <div className="flex items-center justify-between mb-1">
               <span className="font-medium truncate">{p.project_name}</span>
               <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span>
@@ -235,7 +233,7 @@ function ExternalDashboard({ stats, error }) {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dashboard.myRecentPurchaseRequests')}</h3>
           {stats.purchaseRequests.recent.length === 0 ? <div className="text-sm text-[#8C8A80] py-6 text-center">{t('dashboard.noneYet')}</div> : (
             <ul className="space-y-1">
@@ -253,7 +251,7 @@ function ExternalDashboard({ stats, error }) {
             </ul>
           )}
         </div>
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dashboard.myRecentDailyUpdates')}</h3>
           {stats.dailyUpdates.recent.length === 0 ? <div className="text-sm text-[#8C8A80] py-6 text-center">{t('dashboard.noneYet')}</div> : (
             <ul className="space-y-1">
@@ -274,7 +272,7 @@ function ExternalDashboard({ stats, error }) {
       </div>
 
       <div className="mt-4">
-        <RecentNotificationsCard t={t} />
+        <RecentNotificationsCard t={t} formatDate={formatDate} />
       </div>
     </Shell>
   );
@@ -282,7 +280,7 @@ function ExternalDashboard({ stats, error }) {
 
 function ProjectListCard({ title, projects, dateKey, dateLabel, noneLabel }) {
   return (
-    <div className="rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.07)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="glass-card glass-card--pad">
       <h3 className="font-medium text-sm mb-3">{title}</h3>
       {projects.length === 0 ? (
         <div className="text-sm text-[#8C8A80] py-6 text-center">{noneLabel || 'None yet.'}</div>
@@ -291,7 +289,7 @@ function ProjectListCard({ title, projects, dateKey, dateLabel, noneLabel }) {
           {projects.map(p => (
             <li key={p.id}>
               <button type="button" onClick={() => { window.location.href = '/projects/' + p.id; }}
-                className="w-full text-left text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                className="w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
                 <div className="flex items-center justify-between">
                   <span className="font-medium truncate">{p.project_name}</span>
                   <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span>

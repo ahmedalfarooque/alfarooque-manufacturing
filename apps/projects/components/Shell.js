@@ -69,7 +69,7 @@ export default function Shell({ children, active }) {
   return (
     <div className="min-h-screen flex bg-[#F7F5F1] dark:bg-[#14140F] text-[#1A1A18] dark:text-[#F5F3EE] transition-colors duration-300">
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-white/90 dark:bg-[#1B1B14]/90 backdrop-blur border-e border-[#E5E2DD] dark:border-white/[0.08] text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform ' +
+        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-white/80 dark:bg-[#1B1B14]/75 backdrop-blur-2xl backdrop-saturate-150 border-e border-[#E5E2DD] dark:border-white/[0.08] text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform shadow-[4px_0_24px_rgba(26,26,24,0.04)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/[0.08]">
@@ -110,7 +110,7 @@ export default function Shell({ children, active }) {
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/[0.08] bg-white/90 dark:bg-[#1B1B14]/90 backdrop-blur shadow-sm sticky top-0 z-20">
+        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/[0.08] bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-xl" onClick={() => setSidebarOpen(true)}>☰</button>
             <h1 className="font-semibold text-lg capitalize">{(() => { const navItem = NAV.find(i => i.href === active); return navItem ? t(navItem.labelKey) : active.replace('/', ''); })()}</h1>
@@ -124,7 +124,7 @@ export default function Shell({ children, active }) {
               {notifOpen && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
-                  <div className="absolute end-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-[#1B1B14] shadow-lg z-40">
+                  <div className="glass-card absolute end-0 mt-2 w-80 max-h-96 overflow-y-auto z-40">
                     <div className="px-4 py-3 border-b border-[#E5E2DD] dark:border-white/[0.08] font-medium text-sm">{t('shell.notifications')}</div>
                     {notifications.length === 0 ? (
                       <div className="px-4 py-6 text-center text-sm text-[#8C8A80]">{t('shell.noNotificationsYet')}</div>

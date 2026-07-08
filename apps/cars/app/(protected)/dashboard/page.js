@@ -2,6 +2,7 @@
 
 import Shell from '@/components/Shell';
 import StatCard from '@/components/StatCard';
+import { GlassIcon } from '@/components/GlassIcons';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
@@ -40,46 +41,46 @@ export default function DashboardPage() {
 
   return (
     <Shell active="/dashboard">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <StatCard icon="🚗" tone="brand" label={t('dash.totalVehicles')} value={stats.totalVehicles} sub={t('dash.allVehicles')} href="/vehicles" />
-        <StatCard icon="▶" tone="emerald" label={t('dash.running')} value={stats.running} sub={`${pct(stats.running, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Running" />
-        <StatCard icon="⏸" tone="amber" label={t('dash.idle')} value={stats.idle} sub={`${pct(stats.idle, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Idle" />
-        <StatCard icon="⏹" tone="red" label={t('dash.stopped')} value={stats.stopped} sub={`${pct(stats.stopped, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Stopped" />
-        <StatCard icon={'\u{1F464}'} tone="blue" label={t('dash.totalDrivers')} value={stats.totalDrivers} sub={t('dash.activeDrivers')} />
-        <StatCard icon={'\u{1F4CD}'} tone="slate" label={t('dash.totalDistance')} value={fmt(stats.totalDistance) + ' km'} sub={t('dash.thisPeriod')} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="truck" tone="brand" label={t('dash.totalVehicles')} value={stats.totalVehicles} sub={t('dash.allVehicles')} href="/vehicles" />
+        <StatCard icon="flag" tone="emerald" label={t('dash.running')} value={stats.running} sub={`${pct(stats.running, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Running" />
+        <StatCard icon="clock" tone="amber" label={t('dash.idle')} value={stats.idle} sub={`${pct(stats.idle, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Idle" />
+        <StatCard icon="x" tone="red" label={t('dash.stopped')} value={stats.stopped} sub={`${pct(stats.stopped, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Stopped" />
+        <StatCard icon="users" tone="blue" label={t('dash.totalDrivers')} value={stats.totalDrivers} sub={t('dash.activeDrivers')} />
+        <StatCard icon="pin" tone="slate" label={t('dash.totalDistance')} value={fmt(stats.totalDistance) + ' km'} sub={t('dash.thisPeriod')} />
+        <StatCard icon="chart" tone="brand" label={t('dash.totalTrips')} value={stats.totalTrips} sub={t('dash.loggedTrips')} />
+        <StatCard icon="gear" tone="blue" label={t('dash.avgSpeed')} value={stats.avgSpeed != null ? stats.avgSpeed + ' km/h' : '—'} sub={stats.avgSpeed != null ? t('dash.fromLoggedTrips') : t('dash.noTripsLoggedYet')} />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <StatCard icon={'\u{1F4CA}'} tone="brand" label={t('dash.totalTrips')} value={stats.totalTrips} sub={t('dash.loggedTrips')} />
-        <StatCard icon={'\u{1F4A8}'} tone="blue" label={t('dash.avgSpeed')} value={stats.avgSpeed != null ? stats.avgSpeed + ' km/h' : '—'} sub={stats.avgSpeed != null ? t('dash.fromLoggedTrips') : t('dash.noTripsLoggedYet')} />
-        <StatCard icon="⛽" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' L'} sub={t('dash.thisPeriod')} />
-        <StatCard icon={'\u{1F4B0}'} tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} />
-        <StatCard icon={'\u{1F527}'} tone="amber" label={t('dash.maintenanceDue')} value={stats.maintenanceDueCount} sub={t('dash.vehicles')} href="/maintenance-schedule" />
-        <StatCard icon="⚠" tone="red" label={t('dash.activeAlerts')} value={stats.activeAlerts} sub={t('dash.unread')} href="/alerts" />
-        <StatCard icon={'\u{1F6E2}'} tone="slate" label={t('dash.maintenanceCost')} value={'SAR ' + fmt(stats.maintenanceCost)} sub={t('dash.loggedServices')} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="bag" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' L'} sub={t('dash.thisPeriod')} />
+        <StatCard icon="gem" tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} />
+        <StatCard icon="wrench" tone="amber" label={t('dash.maintenanceDue')} value={stats.maintenanceDueCount} sub={t('dash.vehicles')} href="/maintenance-schedule" />
+        <StatCard icon="bell" tone="red" label={t('dash.activeAlerts')} value={stats.activeAlerts} sub={t('dash.unread')} href="/alerts" />
+        <StatCard icon="receipt" tone="slate" label={t('dash.maintenanceCost')} value={'SAR ' + fmt(stats.maintenanceCost)} sub={t('dash.loggedServices')} />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <StatCard icon={'\u{1F6E1}'} tone={critical('license') ? 'red' : 'emerald'} label={t('dash.licenseExpiring')} value={critical('license')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon={'\u{1F4C7}'} tone={critical('iqama') ? 'red' : 'emerald'} label={t('dash.iqamaExpiring')} value={critical('iqama')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon={'\u{1F6C2}'} tone={critical('passport') ? 'red' : 'emerald'} label={t('dash.passportExpiring')} value={critical('passport')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon={'\u{2764}'} tone={critical('medical') ? 'red' : 'emerald'} label={t('dash.medicalExpiring')} value={critical('medical')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon={'\u{1F4C4}'} tone={critical('insurance') ? 'red' : 'emerald'} label={t('dash.insuranceExpiring')} value={critical('insurance')} sub={t('dash.within30Days')} href="/vehicles" />
-        <StatCard icon={'\u{1F4DD}'} tone={critical('registration') ? 'red' : 'emerald'} label={t('dash.registrationExpiring')} value={critical('registration')} sub={t('dash.within30Days')} href="/vehicles" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="shield" tone={critical('license') ? 'red' : 'emerald'} label={t('dash.licenseExpiring')} value={critical('license')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="folder" tone={critical('iqama') ? 'red' : 'emerald'} label={t('dash.iqamaExpiring')} value={critical('iqama')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="box" tone={critical('passport') ? 'red' : 'emerald'} label={t('dash.passportExpiring')} value={critical('passport')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="heart" tone={critical('medical') ? 'red' : 'emerald'} label={t('dash.medicalExpiring')} value={critical('medical')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="shield" tone={critical('insurance') ? 'red' : 'emerald'} label={t('dash.insuranceExpiring')} value={critical('insurance')} sub={t('dash.within30Days')} href="/vehicles" />
+        <StatCard icon="receipt" tone={critical('registration') ? 'red' : 'emerald'} label={t('dash.registrationExpiring')} value={critical('registration')} sub={t('dash.within30Days')} href="/vehicles" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-        <StatCard icon={'\u{1F6E0}'} tone="brand" label={t('dash.maintenanceRecords')} value={stats.totalMaintenanceRecords} sub={t('dash.allTime')} href="/maintenance" />
-        <StatCard icon={'\u{1F4B0}'} tone="slate" label={t('dash.totalMaintCost')} value={'SAR ' + fmt(stats.totalMaintenanceRecordsCost)} sub={t('dash.allRecords')} href="/maintenance" />
-        <StatCard icon={'\u{1F4C5}'} tone="blue" label={t('dash.thisMonth')} value={'SAR ' + fmt(stats.thisMonthMaintenanceCost)} sub={t('dash.maintenanceCostLabel')} />
-        <StatCard icon={'\u{1F4C8}'} tone="blue" label={t('dash.thisYear')} value={'SAR ' + fmt(stats.thisYearMaintenanceCost)} sub={t('dash.maintenanceCostLabel')} />
-        <StatCard icon={'\u{23F3}'} tone="amber" label={t('dash.upcomingServices')} value={stats.upcomingServices} sub={t('dash.schedule')} href="/maintenance-schedule" />
-        <StatCard icon={'\u{26A0}'} tone="red" label={t('dash.overdueServices')} value={stats.overdueServices} sub={t('dash.schedule')} href="/maintenance-schedule" />
-        <StatCard icon={'\u{1F3ED}'} tone="amber" label={t('dash.inWorkshop')} value={stats.vehiclesInWorkshop} sub={t('dash.today')} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="wrench" tone="brand" label={t('dash.maintenanceRecords')} value={stats.totalMaintenanceRecords} sub={t('dash.allTime')} href="/maintenance" />
+        <StatCard icon="receipt" tone="slate" label={t('dash.totalMaintCost')} value={'SAR ' + fmt(stats.totalMaintenanceRecordsCost)} sub={t('dash.allRecords')} href="/maintenance" />
+        <StatCard icon="clock" tone="blue" label={t('dash.thisMonth')} value={'SAR ' + fmt(stats.thisMonthMaintenanceCost)} sub={t('dash.maintenanceCostLabel')} />
+        <StatCard icon="chart" tone="blue" label={t('dash.thisYear')} value={'SAR ' + fmt(stats.thisYearMaintenanceCost)} sub={t('dash.maintenanceCostLabel')} />
+        <StatCard icon="clock" tone="amber" label={t('dash.upcomingServices')} value={stats.upcomingServices} sub={t('dash.schedule')} href="/maintenance-schedule" />
+        <StatCard icon="target" tone="red" label={t('dash.overdueServices')} value={stats.overdueServices} sub={t('dash.schedule')} href="/maintenance-schedule" />
+        <StatCard icon="gear" tone="amber" label={t('dash.inWorkshop')} value={stats.vehiclesInWorkshop} sub={t('dash.today')} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.vehiclesStatus')}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
@@ -92,7 +93,7 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.realTimeVehicleStatus')}</h3>
           {statusHistoryData.length < 2 ? (
             <EmptyNote text={t('dash.buildingHistory')} />
@@ -111,7 +112,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.top5Distance')}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={distanceData} layout="vertical" margin={{ left: 20 }}>
@@ -126,7 +127,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.driverStatus')}</h3>
           {driverPieData.length === 0 ? <EmptyNote text={t('dash.noDriversYet')} /> : (
             <ResponsiveContainer width="100%" height={220}>
@@ -141,7 +142,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.fleetByType')}</h3>
           {typeData.length === 0 ? <EmptyNote text={t('dash.noVehiclesYet')} /> : (
             <ResponsiveContainer width="100%" height={220}>
@@ -156,7 +157,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.expirySummary')}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={expiryChartData} layout="vertical" margin={{ left: 10 }}>
@@ -174,7 +175,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mb-6">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.monthlyMaintCost')}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={monthlyCostData}>
@@ -186,7 +187,7 @@ export default function DashboardPage() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.maintByCategory')}</h3>
           {categoryPieData.length === 0 ? <EmptyNote text={t('dash.noMaintRecordsYet')} /> : (
             <ResponsiveContainer width="100%" height={220}>
@@ -203,7 +204,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.top5Shops')}</h3>
           {(!stats.topShops || stats.topShops.length === 0) ? <EmptyNote text={t('dash.noShopRecordsYet')} /> : (
             <ul className="space-y-2 text-sm">
@@ -216,7 +217,7 @@ export default function DashboardPage() {
             </ul>
           )}
         </div>
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200 lg:col-span-2">
+        <div className="glass-card glass-card--pad lg:col-span-2">
           <h3 className="font-medium text-sm mb-3">{t('dash.maintCostByVehicle')}</h3>
           {(!stats.costByVehicle || stats.costByVehicle.length === 0) ? <EmptyNote text={t('dash.noMaintRecordsYet')} /> : (
             <ResponsiveContainer width="100%" height={200}>
@@ -232,7 +233,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200 mb-6">
+      <div className="glass-card glass-card--pad mb-6">
         <h3 className="font-medium text-sm mb-3">{t('dash.recentMaintActivity')}</h3>
         {(!stats.recentMaintenanceActivity || stats.recentMaintenanceActivity.length === 0) ? <EmptyNote text={t('dash.noMaintRecordsYet')} /> : (
           <ul className="divide-y divide-black/5 dark:divide-white/5">
@@ -251,7 +252,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200 mb-6">
+      <div className="glass-card glass-card--pad mb-6">
         <h3 className="font-medium text-sm mb-3">{t('dash.notificationCenter')}</h3>
         {stats.notifications.length === 0 ? <EmptyNote text={t('dash.allGood')} /> : (
           <ul className="divide-y divide-black/5 dark:divide-white/5">
@@ -272,11 +273,11 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.recentTrips')}</h3>
           {stats.recentTrips.length === 0 ? <EmptyNote text={t('dash.noTripsLoggedYet')} /> : (
             <table className="w-full text-sm">
-              <thead className="text-left text-slate-400 text-xs">
+              <thead className="text-start text-slate-400 text-xs">
                 <tr><th className="py-1.5">{t('dash.vehicle')}</th><th>{t('dash.driver')}</th><th>{t('dash.fromTo')}</th><th>{t('dash.distance')}</th></tr>
               </thead>
               <tbody>
@@ -293,13 +294,13 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-white/[0.05] p-4 shadow-[0_2px_6px_rgba(26,26,24,0.05),0_12px_28px_rgba(26,26,24,0.03)] dark:shadow-none hover:-translate-y-0.5 transition-transform duration-200">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.recentAlerts')}</h3>
           {stats.recentAlerts.length === 0 ? <EmptyNote text={t('dash.noAlertsYet')} /> : (
             <ul className="space-y-2">
               {stats.recentAlerts.map(a => (
-                <li key={a.id} className="flex items-start gap-2 text-sm">
-                  <span className="text-red-500 mt-0.5">⚠</span>
+                <li key={a.id} className="flex items-center gap-3 text-sm">
+                  <GlassIcon name="bell" size={22} bare className="shrink-0" />
                   <div>
                     <div className="font-medium">{a.title}</div>
                     <div className="text-xs text-slate-500">{a.body}</div>

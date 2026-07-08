@@ -10,8 +10,12 @@
 
 import { useEffect } from 'react';
 
-const KEY = 'af-glass-icons-v2';
+const KEY = 'af-glass-icons-v3';
 const URL = '/glass-icons.svg';
+
+/* Icons whose glass "plate" (frosted tile background) uses a differently-
+   tinted variant than the default. Everything else uses #giPlate. */
+const PLATE_BY_NAME = { wood: 'giPlateW', steel: 'giPlateS', alu: 'giPlateA' };
 
 function inject(svgText) {
   if (document.getElementById('giSpriteRoot')) {
@@ -44,13 +48,15 @@ export default function GlassIconsLoader() {
   return null;
 }
 
-export function GlassIcon({ name, size, className }) {
+export function GlassIcon({ name, size, className, bare }) {
   return (
     <svg
       className={'gicon' + (className ? ' ' + className : '')}
       style={size ? { width: size, height: size } : undefined}
+      viewBox="0 0 96 96"
       aria-hidden="true"
     >
+      {!bare && <use href={'#' + (PLATE_BY_NAME[name] || 'giPlate')} />}
       <use href={'#gi-' + name} />
     </svg>
   );

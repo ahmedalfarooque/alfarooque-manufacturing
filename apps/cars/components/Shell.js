@@ -65,7 +65,7 @@ export default function Shell({ children, active }) {
     <div className="min-h-screen flex bg-[#FFFFFF] dark:bg-[#14140F] text-[#1A1A18] dark:text-[#F5F3EE] transition-colors duration-300">
       {/* Sidebar */}
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-[#F7F5F1] dark:bg-[#1B1B14] border-e border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform ' +
+        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-[#F7F5F1]/85 dark:bg-[#1B1B14]/75 backdrop-blur-2xl backdrop-saturate-150 border-e border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform shadow-[4px_0_24px_rgba(26,26,24,0.04)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/10">
@@ -107,7 +107,7 @@ export default function Shell({ children, active }) {
 
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/10 bg-white/90 dark:bg-[#1B1B14]/80 backdrop-blur sticky top-0 z-20 shadow-sm">
+        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/10 bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-xl" onClick={() => setSidebarOpen(true)}>☰</button>
             <h1 className="font-semibold text-lg hidden sm:block">{t(NAV.find(n => n.href === active)?.key) || active.replace('/', '')}</h1>
@@ -121,7 +121,7 @@ export default function Shell({ children, active }) {
               className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/10 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#6B7A4F]/40 focus:border-[#6B7A4F]/40 transition"
             />
             {results && (results.vehicles.length > 0 || results.drivers.length > 0) && (
-              <div className="absolute top-full mt-1 start-0 end-0 rounded-xl border border-[#E5E2DD] dark:border-white/10 bg-white dark:bg-[#1B1B14] shadow-lg max-h-80 overflow-y-auto z-30">
+              <div className="glass-card absolute top-full mt-1 start-0 end-0 max-h-80 overflow-y-auto z-30">
                 {results.vehicles.length > 0 && (
                   <div>
                     <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[#8C8A80]">{t('shell.searchVehicles')}</div>
