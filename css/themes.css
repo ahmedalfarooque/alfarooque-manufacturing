@@ -258,8 +258,8 @@ body                    { background-color: var(--bg); color: var(--tx); }
 /* ══ SERVICE CARDS ══ */
 .svc-card       { background: var(--bg-card); border-color: var(--bd); }
 .svc-card:hover { border-color: var(--bd-teal); box-shadow: var(--sh-lg), var(--gw-sm); }
-.svc-icon       { background: var(--bg-teal); border-color: var(--bd-teal); }
-.svc-card:hover .svc-icon { background: var(--bg-teal-2); border-color: var(--bd-teal-2); box-shadow: var(--gw-xs); }
+.svc-icon       { background: transparent; border-color: var(--bd-teal); }
+.svc-card:hover .svc-icon { background: var(--bg-teal); border-color: var(--bd-teal-2); box-shadow: var(--gw-xs); }
 .svc-icon svg   { stroke: var(--pr-2); }
 .svc-title      { color: var(--tx); }
 .svc-desc       { color: var(--tx-4); }

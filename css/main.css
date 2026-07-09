@@ -762,13 +762,14 @@ html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
 .svc-card:hover .svc-glow{opacity:1;}
 .svc-num{position:absolute;top:22px;right:22px;font-family:var(--font-display);font-size:56px;font-weight:700;color:rgba(255,255,255,0.025);line-height:1;}
 .svc-icon{
-  width:56px;height:56px;border-radius:16px;
-  background:var(--glass-teal);border:1px solid var(--border-teal);
+  width:80px;height:80px;border-radius:20px;
+  background:transparent;border:1px solid var(--border-teal);
+  backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);
   display:flex;align-items:center;justify-content:center;margin-bottom:26px;
   transition:background var(--t2),border-color var(--t2),box-shadow var(--t2);
 }
-.svc-card:hover .svc-icon{background:var(--glass-teal-mid);border-color:var(--border-teal-bright);box-shadow:var(--glow-xs);}
-.svc-icon svg{width:26px;height:26px;stroke:var(--teal-400);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.svc-card:hover .svc-icon{background:var(--glass-teal);border-color:var(--border-teal-bright);box-shadow:var(--glow-xs);}
+.svc-icon svg{width:60px;height:60px;}
 .svc-title{font-family:var(--font-display);font-size:24px;font-weight:700;color:#fff;margin-bottom:13px;}
 .svc-desc{font-size:14px;line-height:1.80;color:var(--grey-600);margin-bottom:22px;}
 .svc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:26px;}
