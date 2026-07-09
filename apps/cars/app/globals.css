@@ -242,18 +242,45 @@ html.dark .glass-card:hover {
   padding: 20px;
 }
 
-/* ═══ Stat-card micro-animations — sparkline draw-in + caption typewriter.
-   One-shot on mount only (no `infinite`, nothing re-triggers on a 15s data
-   refresh since the card doesn't remount) — kept quiet on purpose so a
-   dashboard people check all day doesn't stay "busy". ═══ */
-.spark-svg { overflow: visible; }
-.spark-path {
+/* ═══ Stat-card micro-animations — trend line / progress ring / mini bar
+   chart draw-in + caption typewriter. One-shot on mount only (no
+   `infinite`, nothing re-triggers on a 15s data refresh since the card
+   doesn't remount unless the underlying value actually changes) — kept
+   quiet on purpose so a dashboard people check all day doesn't stay
+   "busy". ═══ */
+.trendline-svg { overflow: visible; display: block; }
+.trendline-area {
+  opacity: 0;
+  animation: tl-area-fade 0.9s ease-out forwards;
+  animation-delay: 0.15s;
+}
+.trendline-path {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  opacity: 0.8;
-  animation: spark-draw 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
+  animation: tl-draw 1s cubic-bezier(0.4,0,0.2,1) forwards;
 }
-@keyframes spark-draw { to { stroke-dashoffset: 0; } }
+.trendline-dot {
+  opacity: 0;
+  transform-origin: center;
+  animation: tl-dot-pop 0.4s ease-out forwards;
+  animation-delay: 0.95s;
+}
+@keyframes tl-draw { to { stroke-dashoffset: 0; } }
+@keyframes tl-area-fade { to { opacity: 1; } }
+@keyframes tl-dot-pop { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
+
+.pring-fill {
+  animation: pring-sweep 1s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.pring-label { font-size: 15px; font-weight: 700; }
+@keyframes pring-sweep { to { stroke-dashoffset: var(--pring-target); } }
+
+.mbar-bar {
+  height: 0%;
+  opacity: 0.88;
+  animation: mbar-grow 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes mbar-grow { to { height: var(--mbar-h); } }
 
 .tw-caption {
   display: inline-block;
@@ -267,6 +294,10 @@ html.dark .glass-card:hover {
 @keyframes tw-reveal { to { width: 100%; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .spark-path { animation: none; stroke-dashoffset: 0; }
+  .trendline-path { animation: none; stroke-dashoffset: 0; }
+  .trendline-area { animation: none; opacity: 1; }
+  .trendline-dot { animation: none; opacity: 1; transform: scale(1); }
+  .pring-fill { animation: none; stroke-dashoffset: var(--pring-target); }
+  .mbar-bar { animation: none; height: var(--mbar-h); }
   .tw-caption { animation: none; width: auto; }
 }

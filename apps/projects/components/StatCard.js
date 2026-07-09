@@ -1,5 +1,7 @@
 import { GlassIcon } from './GlassIcons';
-import Sparkline from './Sparkline';
+import TrendLine from './TrendLine';
+import ProgressRing from './ProgressRing';
+import MiniBarChart from './MiniBarChart';
 
 const TONE_COLOR = {
   slate: '#8C8A80',
@@ -10,9 +12,10 @@ const TONE_COLOR = {
   blue: '#3B82F6',
 };
 
-export default function StatCard({ icon, label, value, sub, tone, href, trend, typewriter }) {
+export default function StatCard({ icon, label, value, sub, tone, href, trend, trendKey = 'value', trendLabelKey = 'label', ringPct, bars, typewriter }) {
   const color = TONE_COLOR[tone] || TONE_COLOR.slate;
   const Tag = href ? 'a' : 'div';
+  const chartKey = trend ? JSON.stringify(trend) : bars ? bars.values.join(',') : String(ringPct);
   return (
     <Tag {...(href ? { href } : {})} className={'glass-card glass-card--pad flex flex-col gap-3' + (href ? ' cursor-pointer' : '')}>
       <span className="relative inline-flex items-center justify-center h-16 w-16 shrink-0 rounded-2xl border border-black/10 dark:border-white/10 backdrop-blur-md" aria-hidden="true">
@@ -29,8 +32,18 @@ export default function StatCard({ icon, label, value, sub, tone, href, trend, t
         )}
       </div>
       {trend && trend.length >= 2 && (
-        <div className="mt-1">
-          <Sparkline key={trend.join(',')} data={trend} color={color} />
+        <div key={chartKey} className="mt-1.5">
+          <TrendLine data={trend} dataKey={trendKey} labelKey={trendLabelKey} color={color} />
+        </div>
+      )}
+      {ringPct != null && !trend && (
+        <div key={chartKey} className="mt-1 text-[#1A1A18] dark:text-[#F5F3EE]">
+          <ProgressRing pct={ringPct} color={color} />
+        </div>
+      )}
+      {bars && !trend && ringPct == null && (
+        <div key={chartKey} className="mt-1.5">
+          <MiniBarChart values={bars.values} colors={bars.colors} />
         </div>
       )}
     </Tag>
