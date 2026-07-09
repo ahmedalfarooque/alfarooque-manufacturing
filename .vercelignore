@@ -9,3 +9,10 @@ skills-lock.json
 node_modules/
 Machine Images/
 *.zip
+
+# The two Next.js apps (apps/cars, apps/projects) are separate Vercel
+# projects deployed independently — their build artifacts/deps must never
+# be swept into the main static site's deploy.
+apps/**/node_modules/
+apps/**/.next/
+apps/**/.next-verify/
