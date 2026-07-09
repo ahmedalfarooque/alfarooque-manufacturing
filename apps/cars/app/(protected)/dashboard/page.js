@@ -37,27 +37,32 @@ export default function DashboardPage() {
   };
   const monthlyCostData = (stats.monthlyMaintenanceCost || []).map(m => ({ month: m.month.slice(5), cost: m.cost }));
   const categoryPieData = stats.categoryBreakdown || [];
+  // Sparkline trends — only for stats already backed by a real time-series
+  // array elsewhere on this page; never fabricated for point-in-time counts.
+  const runningTrend = stats.statusHistory.map(s => s.running);
+  const stoppedTrend = stats.statusHistory.map(s => s.stopped);
+  const maintCostTrend = (stats.monthlyMaintenanceCost || []).map(m => m.cost);
   const CATEGORY_COLORS = ['#6B7A4F', '#0ea5e9', '#BC6B4E', '#ef4444', '#8b5cf6', '#7FA65C', '#f97316', '#64748b', '#ec4899'];
 
   return (
     <Shell active="/dashboard">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="truck" tone="brand" label={t('dash.totalVehicles')} value={stats.totalVehicles} sub={t('dash.allVehicles')} href="/vehicles" />
-        <StatCard icon="flag" tone="emerald" label={t('dash.running')} value={stats.running} sub={`${pct(stats.running, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Running" />
+        <StatCard icon="truck" tone="brand" label={t('dash.totalVehicles')} value={stats.totalVehicles} sub={t('dash.allVehicles')} href="/vehicles" typewriter />
+        <StatCard icon="flag" tone="emerald" label={t('dash.running')} value={stats.running} sub={`${pct(stats.running, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Running" trend={runningTrend} />
         <StatCard icon="clock" tone="amber" label={t('dash.idle')} value={stats.idle} sub={`${pct(stats.idle, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Idle" />
-        <StatCard icon="x" tone="red" label={t('dash.stopped')} value={stats.stopped} sub={`${pct(stats.stopped, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Stopped" />
-        <StatCard icon="users" tone="blue" label={t('dash.totalDrivers')} value={stats.totalDrivers} sub={t('dash.activeDrivers')} />
+        <StatCard icon="x" tone="red" label={t('dash.stopped')} value={stats.stopped} sub={`${pct(stats.stopped, stats.totalVehicles)}% ${t('dash.ofTotal')}`} href="/vehicles?status=Stopped" trend={stoppedTrend} />
+        <StatCard icon="users" tone="blue" label={t('dash.totalDrivers')} value={stats.totalDrivers} sub={t('dash.activeDrivers')} typewriter />
         <StatCard icon="pin" tone="slate" label={t('dash.totalDistance')} value={fmt(stats.totalDistance) + ' km'} sub={t('dash.thisPeriod')} />
-        <StatCard icon="chart" tone="brand" label={t('dash.totalTrips')} value={stats.totalTrips} sub={t('dash.loggedTrips')} />
+        <StatCard icon="chart" tone="brand" label={t('dash.totalTrips')} value={stats.totalTrips} sub={t('dash.loggedTrips')} typewriter />
         <StatCard icon="gear" tone="blue" label={t('dash.avgSpeed')} value={stats.avgSpeed != null ? stats.avgSpeed + ' km/h' : '—'} sub={stats.avgSpeed != null ? t('dash.fromLoggedTrips') : t('dash.noTripsLoggedYet')} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon="bag" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' L'} sub={t('dash.thisPeriod')} />
-        <StatCard icon="gem" tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} />
+        <StatCard icon="gem" tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} typewriter />
         <StatCard icon="wrench" tone="amber" label={t('dash.maintenanceDue')} value={stats.maintenanceDueCount} sub={t('dash.vehicles')} href="/maintenance-schedule" />
         <StatCard icon="bell" tone="red" label={t('dash.activeAlerts')} value={stats.activeAlerts} sub={t('dash.unread')} href="/alerts" />
-        <StatCard icon="receipt" tone="slate" label={t('dash.maintenanceCost')} value={'SAR ' + fmt(stats.maintenanceCost)} sub={t('dash.loggedServices')} />
+        <StatCard icon="receipt" tone="slate" label={t('dash.maintenanceCost')} value={'SAR ' + fmt(stats.maintenanceCost)} sub={t('dash.loggedServices')} trend={maintCostTrend} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">

@@ -241,3 +241,32 @@ html.dark .glass-card:hover {
 .glass-card--pad {
   padding: 20px;
 }
+
+/* ═══ Stat-card micro-animations — sparkline draw-in + caption typewriter.
+   One-shot on mount only (no `infinite`, nothing re-triggers on a 15s data
+   refresh since the card doesn't remount) — kept quiet on purpose so a
+   dashboard people check all day doesn't stay "busy". ═══ */
+.spark-svg { overflow: visible; }
+.spark-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.8;
+  animation: spark-draw 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes spark-draw { to { stroke-dashoffset: 0; } }
+
+.tw-caption {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  max-width: 100%;
+  width: 0;
+  animation: tw-reveal 0.6s steps(24, end) forwards;
+}
+@keyframes tw-reveal { to { width: 100%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spark-path { animation: none; stroke-dashoffset: 0; }
+  .tw-caption { animation: none; width: auto; }
+}

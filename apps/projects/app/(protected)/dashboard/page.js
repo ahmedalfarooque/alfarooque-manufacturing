@@ -48,6 +48,9 @@ export default function DashboardPage() {
   if (!stats) return <Shell active="/dashboard"><div className="text-[#8C8A80]">{t('dashboard.loading')}</div></Shell>;
 
   const pieData = Object.entries(stats.statusBreakdown).map(([name, value]) => ({ name, value }));
+  // Sparkline trend — only for stats already backed by a real time-series
+  // array elsewhere on this page; never fabricated for point-in-time counts.
+  const projectsStartedTrend = (stats.projectsStartedMonthly || []).map(m => m.count);
 
   return (
     <Shell active="/dashboard">
@@ -55,20 +58,20 @@ export default function DashboardPage() {
           is only ever shown on a project's own View page, and only
           when it's actually set (see the brief: never show $0/SAR 0). */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="folder" tone="brand" label={t('dashboard.totalProjects')} value={stats.totalProjects} sub={t('dashboard.allProjects')} href="/projects" />
+        <StatCard icon="folder" tone="brand" label={t('dashboard.totalProjects')} value={stats.totalProjects} sub={t('dashboard.allProjects')} href="/projects" trend={projectsStartedTrend} />
         <StatCard icon="flag" tone="blue" label={t('dashboard.runningProjects')} value={stats.running} sub={`${pct(stats.running, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Running" />
         <StatCard icon="target" tone="emerald" label={t('dashboard.completedProjects')} value={stats.completedCount} sub={`${pct(stats.completedCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Completed" />
         <StatCard icon="clock" tone="amber" label={t('dashboard.upcomingProjects')} value={stats.upcomingCount} sub={`${pct(stats.upcomingCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href="/projects?status=Upcoming" />
         <StatCard icon="x" tone="red" label={t('dashboard.onHoldProjects')} value={stats.onHoldCount} sub={`${pct(stats.onHoldCount, stats.totalProjects)}% ${t('dashboard.ofTotal')}`} href={'/projects?status=' + encodeURIComponent('On Hold')} />
-        <StatCard icon="users" tone="brand" label={t('dashboard.teamMembers')} value={users.length} sub={t('dashboard.internalExternalUsers')} href="/users" />
-        <StatCard icon="clock" tone="amber" label={t('dashboard.prPending')} value={stats.purchaseRequests.pending} sub={t('dashboard.awaitingReview')} href="/purchase-requests?status=Pending" />
+        <StatCard icon="users" tone="brand" label={t('dashboard.teamMembers')} value={users.length} sub={t('dashboard.internalExternalUsers')} href="/users" typewriter />
+        <StatCard icon="clock" tone="amber" label={t('dashboard.prPending')} value={stats.purchaseRequests.pending} sub={t('dashboard.awaitingReview')} href="/purchase-requests?status=Pending" typewriter />
         <StatCard icon="shield" tone="blue" label={t('dashboard.prApproved')} value={stats.purchaseRequests.approved} sub={t('dashboard.approvedRequests')} href="/purchase-requests?status=Approved" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon="bell" tone="red" label={t('dashboard.prUrgent')} value={stats.purchaseRequests.urgent} sub={t('dashboard.urgentCriticalPending')} href="/purchase-requests?status=Pending" />
         <StatCard icon="receipt" tone="brand" label={t('dashboard.prAllRequests')} value={stats.purchaseRequests.recent.length ? stats.purchaseRequests.pending + stats.purchaseRequests.approved : 0} sub={t('dashboard.viewAll')} href="/purchase-requests" />
-        <StatCard icon="chart" tone="emerald" label={t('dashboard.updatesToday')} value={stats.dailyUpdates.today} sub={t('dashboard.submittedToday')} href="/projects" />
+        <StatCard icon="chart" tone="emerald" label={t('dashboard.updatesToday')} value={stats.dailyUpdates.today} sub={t('dashboard.submittedToday')} href="/projects" typewriter />
         <StatCard icon="clock" tone="slate" label={t('dashboard.updatesYesterday')} value={stats.dailyUpdates.yesterday} sub={t('dashboard.submittedYesterday')} href="/projects" />
         <StatCard icon="chart" tone="blue" label={t('dashboard.thisWeek')} value={stats.dailyUpdates.thisWeek} sub={t('dashboard.last7Days')} href="/projects" />
         <StatCard icon="bell" tone="red" label={t('dashboard.missingUpdates')} value={stats.dailyUpdates.missing} sub={t('dashboard.assignedNoUpdate')} href="/projects" />
