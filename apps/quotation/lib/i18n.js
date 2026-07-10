@@ -405,6 +405,7 @@ export const translations = {
     'u.piece': 'Piece', 'u.nos': 'Nos', 'u.m': 'm', 'u.m2': 'm²', 'u.m3': 'm³',
     'u.litre': 'Litre', 'u.kg': 'kg', 'u.sheet': 'Sheet', 'u.roll': 'Roll',
     'u.set': 'Set', 'u.box': 'Box', 'u.dozen': 'Dozen', 'u.carton': 'Carton',
+    'u.gallon': 'Gallon', 'u.meter': 'Meter', 'u.pack': 'Pack',
     'u.lm': 'Linear m', 'u.sqm': 'm²', 'u.hour': 'Hour', 'u.day': 'Day',
   },
 
@@ -803,6 +804,7 @@ export const translations = {
     'u.piece': 'قطعة', 'u.nos': 'عدد', 'u.m': 'متر', 'u.m2': 'م²', 'u.m3': 'م³',
     'u.litre': 'لتر', 'u.kg': 'كجم', 'u.sheet': 'لوح', 'u.roll': 'رول',
     'u.set': 'طقم', 'u.box': 'علبة', 'u.dozen': 'درزن', 'u.carton': 'كرتون',
+    'u.gallon': 'جالون', 'u.meter': 'متر', 'u.pack': 'عبوة',
     'u.lm': 'متر طولي', 'u.sqm': 'م²', 'u.hour': 'ساعة', 'u.day': 'يوم',
   },
 };
