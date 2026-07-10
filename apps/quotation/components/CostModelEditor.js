@@ -10,6 +10,7 @@
 import { useMemo } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { costLineTotal, productCostSummary } from '@/lib/costing';
+import { formatMaterialDims } from '@/lib/dims';
 import ItemPicker from '@/components/ItemPicker';
 import { Button, Input, Select } from '@/components/ui';
 
@@ -22,11 +23,11 @@ function labourRateFor(extra, unit) {
   return Number(r.daily) || 0;
 }
 
-export function lineFromMaster(section, r) {
+export function lineFromMaster(section, r, t) {
   if (section === 'material' || section === 'hardware') {
     return {
       section, source_id: r.id, name: r.name,
-      spec_text: [r.thickness, r.size_text].filter(Boolean).join(' × '),
+      spec_text: t ? formatMaterialDims(r, t) : '',
       unit: r.unit, qty: 1, unit_cost: Number(r.latest_price) || 0,
       waste_pct: Number(r.default_waste_pct) || 0, extra: {},
     };
@@ -75,7 +76,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
     setLines(prev => prev.filter((_, j) => j !== i));
   }
   function addLine(section, master) {
-    setLines(prev => [...prev, master ? lineFromMaster(section, master) : lineFromMaster('other')]);
+    setLines(prev => [...prev, master ? lineFromMaster(section, master, t) : lineFromMaster('other')]);
   }
 
   function money(n) { return formatNumber(n, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }

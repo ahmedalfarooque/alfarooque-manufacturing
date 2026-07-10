@@ -97,6 +97,7 @@ export const translations = {
     'f.kind': 'Type',
     'f.thickness': 'Thickness',
     'f.size': 'Size',
+    'f.dimensions': 'Dimensions',
     'f.unit': 'Unit',
     'f.brand': 'Brand',
     'f.latestPrice': 'Latest Price',
@@ -130,6 +131,7 @@ export const translations = {
 
     // Enums
     'unit.hour': 'Hour', 'unit.day': 'Day', 'unit.month': 'Month',
+    'dimunit.mm': 'mm', 'dimunit.cm': 'cm', 'dimunit.meter': 'm',
     'ctype.hotel': 'Hotel', 'ctype.contractor': 'Contractor', 'ctype.individual': 'Individual',
     'ctype.engineer': 'Engineer', 'ctype.government': 'Government', 'ctype.other': 'Other',
     'kind.material': 'Materials', 'kind.hardware': 'Hardware',
@@ -493,6 +495,7 @@ export const translations = {
     'f.kind': 'النوع',
     'f.thickness': 'السماكة',
     'f.size': 'المقاس',
+    'f.dimensions': 'الأبعاد',
     'f.unit': 'الوحدة',
     'f.brand': 'الماركة',
     'f.latestPrice': 'آخر سعر',
@@ -526,6 +529,7 @@ export const translations = {
 
     // Enums
     'unit.hour': 'ساعة', 'unit.day': 'يوم', 'unit.month': 'شهر',
+    'dimunit.mm': 'مم', 'dimunit.cm': 'سم', 'dimunit.meter': 'م',
     'ctype.hotel': 'فندق', 'ctype.contractor': 'مقاول / شركة', 'ctype.individual': 'فرد',
     'ctype.engineer': 'مهندس / استشاري', 'ctype.government': 'جهة حكومية', 'ctype.other': 'أخرى',
     'kind.material': 'مواد', 'kind.hardware': 'إكسسوارات وعدد',

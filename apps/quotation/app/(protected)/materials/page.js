@@ -3,25 +3,46 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage, codeLabel } from '@/lib/i18n';
+import { formatMaterialDims, DIM_UNITS } from '@/lib/dims';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Button, Input, Textarea, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
 import ImportButton from '@/components/ImportButton';
 
-const FIELD_DEFS = [
+const FIELD_DEFS_TOP = [
   ['code', 'f.code', 'text'],
   ['barcode', 'f.barcode', 'text'],
   ['name_en', 'f.nameEn', 'text'],
   ['name_ar', 'f.nameAr', 'text', false, 'rtl'],
   ['kind', 'f.kind', 'kind'],
   ['category_id', 'f.category', 'category'],
-  ['thickness', 'f.thickness', 'text'],
-  ['size_text', 'f.size', 'text'],
   ['unit', 'f.unit', 'text'],
   ['brand', 'f.brand', 'text'],
+];
+const FIELD_DEFS_BOTTOM = [
   ['latest_price', 'f.latestPrice', 'number'],
   ['default_waste_pct', 'f.wastePct', 'number'],
   ['notes', 'f.notes', 'textarea'],
 ];
+const FIELD_DEFS = [...FIELD_DEFS_TOP, ...FIELD_DEFS_BOTTOM];
+
+const DIM_FIELDS = ['height', 'width', 'length', 'thickness'];
+
+/* Optional value+unit pair — nothing here is required, matching the
+   "only what you know" spec for material dimensions. */
+function DimField({ dimKey, form, setForm, t }) {
+  return (
+    <Field label={t('dim.' + dimKey)}>
+      <div className="flex gap-2">
+        <Input type="number" step="0.01" className="flex-1" min="0"
+          value={form[dimKey + '_value'] ?? ''}
+          onChange={e => setForm(s => ({ ...s, [dimKey + '_value']: e.target.value }))} />
+        <Select className="w-[92px] shrink-0" value={form[dimKey + '_unit'] ?? 'mm'}
+          onChange={e => setForm(s => ({ ...s, [dimKey + '_unit']: e.target.value }))}
+          options={DIM_UNITS.map(u => ({ value: u, label: t('dimunit.' + u) }))} />
+      </div>
+    </Field>
+  );
+}
 
 export default function MaterialsPage() {
   const { t, tr, trL, lang, formatNumber, formatDate } = useLanguage();
@@ -91,7 +112,12 @@ export default function MaterialsPage() {
 
   function open(row) {
     const init = { kind: kind || 'material', unit: 'piece', default_waste_pct: 0 };
+    DIM_FIELDS.forEach(k => { init[k + '_unit'] = 'mm'; });
     FIELD_DEFS.forEach(([k]) => { if (row) init[k] = row[k] ?? ''; });
+    if (row) DIM_FIELDS.forEach(k => {
+      init[k + '_value'] = row[k + '_value'] ?? '';
+      init[k + '_unit'] = row[k + '_unit'] || 'mm';
+    });
     setForm(init); setErr(null); setModal({ row });
   }
 
@@ -187,21 +213,20 @@ export default function MaterialsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead><tr>
-              <Th>{t('f.code')}</Th><Th>{t('f.name')}</Th><Th>{t('f.thickness')}</Th><Th>{t('f.size')}</Th>
+              <Th>{t('f.code')}</Th><Th>{t('f.name')}</Th><Th>{t('f.dimensions')}</Th>
               <Th>{t('f.unit')}</Th><Th>{t('f.category')}</Th><Th>{t('f.latestPrice')}</Th><Th>{t('f.wastePct')}</Th>
               <Th className="text-end">{t('common.actions')}</Th>
             </tr></thead>
             <tbody>
               {rows === null ? (
-                <tr><Td colSpan={9} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                <tr><Td colSpan={8} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={9}><EmptyState text={t('common.noRecords')} /></td></tr>
+                <tr><td colSpan={8}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(row => (
                 <tr key={row.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
                   <Td className="whitespace-nowrap" dir="ltr">{row.code || '—'}</Td>
                   <Td>{trL(row, 'name')}</Td>
-                  <Td>{row.thickness || '—'}</Td>
-                  <Td>{row.size_text || '—'}</Td>
+                  <Td dir="ltr" className="text-start">{formatMaterialDims(row, t) || '—'}</Td>
                   <Td>{codeLabel(t, 'u', row.unit)}</Td>
                   <Td>{catName(row.category_id)}</Td>
                   <Td className="whitespace-nowrap font-medium">{formatNumber(row.latest_price, { minimumFractionDigits: 2 })}</Td>
@@ -223,7 +248,7 @@ export default function MaterialsPage() {
       {modal && (
         <Modal title={t(modal.row ? 'common.edit' : 'common.add') + ' — ' + t('nav.materials')} onClose={() => setModal(null)} wide>
           <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {FIELD_DEFS.map(([key, labelKey, kindType, required, dir]) => (
+            {FIELD_DEFS_TOP.map(([key, labelKey, kindType, required, dir]) => (
               <Field key={key} label={t(labelKey)} required={required} className={kindType === 'textarea' ? 'md:col-span-3' : ''}>
                 {kindType === 'kind' ? (
                   <Select value={form.kind ?? 'material'} onChange={e => setForm(s => ({ ...s, kind: e.target.value }))}
@@ -233,6 +258,20 @@ export default function MaterialsPage() {
                     options={[{ value: '', label: '—' },
                       ...categories.filter(c => c.kind === (form.kind || 'material')).map(c => ({ value: c.id, label: tr(c.name) }))]} />
                 ) : kindType === 'textarea' ? (
+                  <Textarea value={form[key] ?? ''} onChange={e => setForm(s => ({ ...s, [key]: e.target.value }))} />
+                ) : (
+                  <Input type={kindType === 'number' ? 'number' : 'text'} step="0.01" required={required} dir={dir}
+                    value={form[key] ?? ''} onChange={e => setForm(s => ({ ...s, [key]: e.target.value }))} />
+                )}
+              </Field>
+            ))}
+            <DimField dimKey="height" form={form} setForm={setForm} t={t} />
+            <DimField dimKey="width" form={form} setForm={setForm} t={t} />
+            <DimField dimKey="length" form={form} setForm={setForm} t={t} />
+            <DimField dimKey="thickness" form={form} setForm={setForm} t={t} />
+            {FIELD_DEFS_BOTTOM.map(([key, labelKey, kindType, required, dir]) => (
+              <Field key={key} label={t(labelKey)} required={required} className={kindType === 'textarea' ? 'md:col-span-3' : ''}>
+                {kindType === 'textarea' ? (
                   <Textarea value={form[key] ?? ''} onChange={e => setForm(s => ({ ...s, [key]: e.target.value }))} />
                 ) : (
                   <Input type={kindType === 'number' ? 'number' : 'text'} step="0.01" required={required} dir={dir}
@@ -335,7 +374,7 @@ export default function MaterialsPage() {
                   }).catch(() => null);
                   const d = res && res.ok ? await res.json() : null;
                   setBulkBusy(false); setBulkOpen(false);
-                  setImportResult(d ? t('materials.bulkApplied', { n: d.applied }) : '⚠ Failed');
+                  setImportResult(d ? t('materials.bulkApplied', { n: d.applied }) : '⚠ ' + t('common.genericError'));
                   load();
                 }}>{t('materials.bulkApply', { n: bulkPreview.matched })}</Button>
               )}

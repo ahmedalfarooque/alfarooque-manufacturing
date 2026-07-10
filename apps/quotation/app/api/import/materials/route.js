@@ -10,6 +10,7 @@ const { json, requireSession, requireWrite } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 const { parseUpload, col, toNum } = require('@/lib/sheets');
 const { translate } = require('@/lib/translate');
+const { parseDimField } = require('@/lib/dims');
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -44,8 +45,6 @@ export async function POST(req) {
 
       kind: kindIn === 'hardware' ? 'hardware' : 'material',
       material_type: col(r, ['type', 'material type']) || null,
-      thickness: col(r, ['thickness']) || null,
-      size_text: col(r, ['size']) || null,
       unit: col(r, ['unit']) || 'piece',
       brand: col(r, ['brand']) || null,
       default_waste_pct: toNum(col(r, ['waste %', 'waste'])) || 0,
@@ -54,6 +53,11 @@ export async function POST(req) {
       updated_by: session.sub,
     };
     if (price != null) row.latest_price = price;
+
+    for (const dim of ['height', 'width', 'length', 'thickness']) {
+      const parsed = parseDimField(col(r, [dim]), col(r, [dim + ' unit']));
+      if (parsed.value != null) { row[dim + '_value'] = parsed.value; row[dim + '_unit'] = parsed.unit; }
+    }
 
     const codeIn = col(r, ['code']).trim().toUpperCase();
     const match = (codeIn && byCode.get(codeIn)) || byName.get(nameIn.trim()) || null;

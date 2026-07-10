@@ -51,6 +51,7 @@ const ORDER = [
   'quotation-schema-v2.sql',
   'quotation-schema-v5-fix.sql',   // consolidated v3 + v4 + cache reload (idempotent)
   'quotation-schema-v6-bilingual.sql', // stored bilingual columns + perf indexes
+  'quotation-schema-v7-material-dims.sql', // structured height/width/length/thickness (value+unit)
 ];
 
 async function main() {

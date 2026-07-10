@@ -4,7 +4,9 @@ const { makeListHandler, makeCreateHandler } = require('@/lib/crud');
 
 const FIELDS = ['code', 'barcode', 'name', 'name_en', 'name_ar', 'category_id', 'kind', 'material_type',
   'thickness', 'size_text', 'unit', 'brand', 'default_supplier_id', 'latest_price',
-  'default_waste_pct', 'min_price', 'max_price', 'is_certified', 'cert_notes', 'notes', 'status'];
+  'default_waste_pct', 'min_price', 'max_price', 'is_certified', 'cert_notes', 'notes', 'status',
+  'height_value', 'height_unit', 'width_value', 'width_unit', 'length_value', 'length_unit',
+  'thickness_value', 'thickness_unit'];
 
 export const GET = makeListHandler({
   table: 'qt_materials',

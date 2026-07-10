@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/lib/i18n';
+import { formatMaterialDims } from '@/lib/dims';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Input } from '@/components/ui';
 
@@ -58,7 +59,7 @@ export default function ItemPicker({ section, onPick }) {
 
   function meta(r) {
     if (section === 'material' || section === 'hardware') {
-      return [r.thickness, r.size_text, r.unit, formatNumber(r.latest_price, { minimumFractionDigits: 2 }) + ' ' + t('common.currencyUnit'), formatNumber(r.default_waste_pct) + '%']
+      return [formatMaterialDims(r, t), r.unit, formatNumber(r.latest_price, { minimumFractionDigits: 2 }) + ' ' + t('common.currencyUnit'), formatNumber(r.default_waste_pct) + '%']
         .filter(Boolean).join(' · ');
     }
     if (section === 'labour') {
