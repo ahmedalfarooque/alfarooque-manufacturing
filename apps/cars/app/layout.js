@@ -5,6 +5,7 @@ import GlassIconsLoader from '@/components/GlassIcons';
 export const metadata = {
   title: 'TrackFleet — AL FAROOQUE Cars Tracking',
   description: 'Fleet and maintenance tracking for the AL FAROOQUE vehicle fleet',
+  icons: { icon: '/logo.png' },
 };
 
 export default function RootLayout({ children }) {

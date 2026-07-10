@@ -69,7 +69,7 @@ export default function Shell({ children, active }) {
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/10">
-          <div className="h-9 w-9 rounded-lg bg-[#6B7A4F]/10 border border-[#6B7A4F]/30 flex items-center justify-center text-[#6B7A4F] dark:text-brand-400 font-bold">TF</div>
+          <img src="/logo.png" alt="AL FAROOQUE" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <div className="text-[#1A1A18] dark:text-[#F5F3EE] font-semibold text-sm leading-tight">TrackFleet</div>
             <div className="text-[11px] text-[#8C8A80]">{t('shell.tagline')}</div>

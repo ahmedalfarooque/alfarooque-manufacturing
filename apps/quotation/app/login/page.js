@@ -124,7 +124,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-2xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] shadow-[0_2px_6px_rgba(26,26,24,0.05),0_20px_50px_rgba(26,26,24,0.10)] dark:shadow-none p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg">PT</div>
+            <img src="/logo.png" alt="AL FAROOQUE" className="h-11 w-11 object-contain shrink-0" />
             <div>
               <div className="text-[#1A1A18] dark:text-white font-semibold text-lg leading-tight">{t('shell.appName')}</div>
               <div className="text-[#8C8A80] dark:text-slate-400 text-xs">{t('login.tagline')}</div>

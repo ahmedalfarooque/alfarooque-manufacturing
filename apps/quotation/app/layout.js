@@ -5,6 +5,7 @@ import GlassIconsLoader from '@/components/GlassIcons';
 export const metadata = {
   title: 'QuotePro — AL FAROOQUE Quotation & Costing',
   description: 'Quotation and cost estimation system for AL FAROOQUE Manufacturing',
+  icons: { icon: '/logo.png' },
 };
 
 export default function RootLayout({ children }) {

@@ -5,6 +5,7 @@ import GlassIconsLoader from '@/components/GlassIcons';
 export const metadata = {
   title: 'ProTrack — AL FAROOQUE Project Management',
   description: 'Project and customer tracking for AL FAROOQUE Manufacturing',
+  icons: { icon: '/logo.png' },
 };
 
 export default function RootLayout({ children }) {
