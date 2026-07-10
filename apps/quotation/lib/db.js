@@ -6,6 +6,11 @@
    (cars, car_maintenance, car_maintenance_log, car_alerts, car_trips,
    platform_users/otp_codes/sessions) — see supabase/apps-schema.sql. */
 
+/* Node <22 has no global WebSocket; @supabase/supabase-js's realtime
+   client throws at construction time without one, even though this app
+   never uses realtime subscriptions. Polyfill with `ws`. */
+if (typeof globalThis.WebSocket === 'undefined') globalThis.WebSocket = require('ws');
+
 const { createClient } = require('@supabase/supabase-js');
 
 let _client = null;

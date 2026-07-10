@@ -27,6 +27,7 @@ const path = require('path');
   } catch (_) {}
 })();
 
+if (typeof globalThis.WebSocket === 'undefined') globalThis.WebSocket = require('ws');
 const { createClient } = require('@supabase/supabase-js');
 const { translate, hasArabic } = require('../lib/translate');
 const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {

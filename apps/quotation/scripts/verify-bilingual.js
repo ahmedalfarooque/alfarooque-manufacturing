@@ -10,6 +10,7 @@ for (const line of fs.readFileSync(path.join(__dirname, '..', '.env.local'), 'ut
   const i = t.indexOf('=');
   if (i > 0 && !(t.slice(0, i).trim() in process.env)) process.env[t.slice(0, i).trim()] = t.slice(i + 1).trim();
 }
+if (typeof globalThis.WebSocket === 'undefined') globalThis.WebSocket = require('ws');
 const { createClient } = require('@supabase/supabase-js');
 const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
