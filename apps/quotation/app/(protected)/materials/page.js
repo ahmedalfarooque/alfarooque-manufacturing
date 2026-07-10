@@ -32,11 +32,11 @@ const DIM_FIELDS = ['height', 'width', 'length', 'thickness'];
 function DimField({ dimKey, form, setForm, t }) {
   return (
     <Field label={t('dim.' + dimKey)}>
-      <div className="flex gap-2">
-        <Input type="number" step="0.01" className="flex-1" min="0"
+      <div className="flex items-center gap-2">
+        <Input type="number" step="0.01" min="0" className="flex-1" style={{ minWidth: 0 }}
           value={form[dimKey + '_value'] ?? ''}
           onChange={e => setForm(s => ({ ...s, [dimKey + '_value']: e.target.value }))} />
-        <Select className="w-[92px] shrink-0" value={form[dimKey + '_unit'] ?? 'mm'}
+        <Select className="shrink-0" style={{ width: 92, flexShrink: 0 }} value={form[dimKey + '_unit'] ?? 'mm'}
           onChange={e => setForm(s => ({ ...s, [dimKey + '_unit']: e.target.value }))}
           options={DIM_UNITS.map(u => ({ value: u, label: t('dimunit.' + u) }))} />
       </div>
