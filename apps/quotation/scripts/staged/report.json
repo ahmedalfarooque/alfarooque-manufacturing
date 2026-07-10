@@ -1,0 +1,11 @@
+{
+ "files_parsed": [
+  "Inventory Products (2649 materials, 714 sellable)",
+  "Customers (262)",
+  "Suppliers (165)",
+  "Machines (22)",
+  "Standard Price List (7 products so far)"
+ ],
+ "files_skipped": [],
+ "errors": []
+}

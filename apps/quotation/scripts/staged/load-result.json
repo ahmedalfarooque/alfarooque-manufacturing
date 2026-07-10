@@ -1,0 +1,11 @@
+{
+ "materials": 1590,
+ "products": 721,
+ "customers": 262,
+ "suppliers": 151,
+ "machines": 22,
+ "skipped_duplicates": 1073,
+ "price_points": 334,
+ "formulas": 163,
+ "errors": []
+}

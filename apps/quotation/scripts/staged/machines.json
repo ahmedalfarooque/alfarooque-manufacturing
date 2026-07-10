@@ -1,0 +1,134 @@
+[
+ {
+  "name": "Automatic Edge Bander",
+  "code": "M-01",
+  "category": null,
+  "notes": "Model: SCM STEFANI KD T-ERS | Origin: ITALY"
+ },
+ {
+  "name": "Automatic Throughfeed Moulder Machine",
+  "code": "M-02",
+  "category": null,
+  "notes": "Model: SCM SUPERSET NT | Origin: ITALY"
+ },
+ {
+  "name": "Automatic Wide Belt Sander",
+  "code": "M-03",
+  "category": null,
+  "notes": "Model: SCM DMC SD 60 | Origin: ITALY"
+ },
+ {
+  "name": "Automatic Single-Blade Beam Saw Machine",
+  "code": "M-04",
+  "category": null,
+  "notes": "Model: SCM GABBIANI S 95 | Origin: ITALY"
+ },
+ {
+  "name": "Sliding Table Saw Cutting Machine",
+  "code": "M-05",
+  "category": null,
+  "notes": "Model: SCM MINIMAX SI 400ES | Origin: ITALY"
+ },
+ {
+  "name": "Sliding Panel Saw Cutting Machine",
+  "code": "M-06",
+  "category": null,
+  "notes": "Model: SCM SI 40 Nova | Origin: ITALY"
+ },
+ {
+  "name": "Thickness Planer Machine",
+  "code": "M-07",
+  "category": null,
+  "notes": "Model: SCM S 63 | Origin: ITALY"
+ },
+ {
+  "name": "Semi Automatic Boring Machine",
+  "code": "M-08",
+  "category": null,
+  "notes": "Model: SCM STARTECH 27 | Origin: ITALY"
+ },
+ {
+  "name": "Spindle Moulding Machine",
+  "code": "M-09",
+  "category": null,
+  "notes": "Model: SCM T 130 | Origin: ITALY"
+ },
+ {
+  "name": "Band Sawing Machine",
+  "code": "M-10",
+  "category": null,
+  "notes": "Model: Centauro CO-SC 800 | Origin: ITALY"
+ },
+ {
+  "name": "Surface Planer Machine",
+  "code": "M-11",
+  "category": null,
+  "notes": "Model: CASADEI PF 52 | Origin: ITALY"
+ },
+ {
+  "name": "Hot Hydraulic Press Machine (2017)",
+  "code": "M-12",
+  "category": null,
+  "notes": "Model: ORMA NPC 6/95 | Origin: ITALY"
+ },
+ {
+  "name": "Hot Hydraulic Press Machine (2023)",
+  "code": "M-13",
+  "category": null,
+  "notes": "Model: ORMA NPC 6/95 | Origin: ITALY"
+ },
+ {
+  "name": "Horizontal Single Spindle Mortising Machine",
+  "code": "M-14",
+  "category": null,
+  "notes": "Model: MS 302 | Origin: CHINA"
+ },
+ {
+  "name": "Drill Press Machine",
+  "code": "M-15",
+  "category": null,
+  "notes": "Model: BACO ZJQ5125 | Origin: CHINA"
+ },
+ {
+  "name": "Chain Mortisers Machine",
+  "code": "M-16",
+  "category": null,
+  "notes": "Model: Centauro CVS 60 | Origin: CHINA"
+ },
+ {
+  "name": "Curve Round Rod Stick Milling Machine",
+  "code": "M-17",
+  "category": null,
+  "notes": "Model: ZD16-60 | Origin: CHINA"
+ },
+ {
+  "name": "Router Cutting Machine",
+  "code": "M-18",
+  "category": null,
+  "notes": "Model: Simlex CLASSIC 13 25 HGR | Origin: EGYPT"
+ },
+ {
+  "name": "Veneer Pack Guillotine shears",
+  "code": "M-19",
+  "category": null,
+  "notes": "Model: CASATI CIM31 | Origin: ITALY"
+ },
+ {
+  "name": "Glue Thread Splicing Machine",
+  "code": "M-20",
+  "category": null,
+  "notes": "Model: CASATI Z1000 | Origin: ITALY"
+ },
+ {
+  "name": "Blades Sharpening Machine",
+  "code": "M-21",
+  "category": null,
+  "notes": "Model: CMA AF/65 | Origin: ITALY"
+ },
+ {
+  "name": "Forklift",
+  "code": "M-22",
+  "category": null,
+  "notes": "Model: CDD-B25 | Origin: CHINA"
+ }
+]

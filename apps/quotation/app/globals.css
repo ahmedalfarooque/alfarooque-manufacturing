@@ -1,0 +1,303 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
+
+html.dark { color-scheme: dark; }
+
+/* ═══ Shared design tokens (mirrors css/themes.css on the main site) ═══
+   These apps are LIGHT by default with `html.dark` opting into dark —
+   the inverse of the main site's dark-default/html.light convention —
+   so light values sit at :root and dark values live under html.dark. */
+:root {
+  --bg:      #FFFFFF;
+  --bg-2:    #F7F5F1;
+  --bg-card: #FFFFFF;
+  --bd:      #E5E2DD;
+  --bd-2:    #D8D4CC;
+  --tx:      #1A1A18;
+  --tx-2:    #4A4A45;
+  --tx-3:    #6B6B63;
+  --tx-4:    #8C8A80;
+  --pr:      #6B7A4F;
+  --pr-2:    #7D8F5C;
+  --nav-bg:  rgba(255,255,255,0.78);
+  --sh-sm:   0 1px 2px rgba(26,26,24,0.04), 0 4px 12px rgba(26,26,24,0.05);
+  --sh-md:   0 2px 6px rgba(26,26,24,0.05), 0 12px 28px rgba(26,26,24,0.07);
+  --sh-lg:   0 4px 10px rgba(26,26,24,0.06), 0 24px 54px rgba(26,26,24,0.09);
+}
+html.dark {
+  --bg:      #14140F;
+  --bg-2:    #1B1B14;
+  --bg-card: rgba(255,255,255,0.05);
+  --bd:      rgba(255,255,255,0.08);
+  --bd-2:    rgba(255,255,255,0.14);
+  --tx:      #F5F3EE;
+  --tx-2:    #D6D2C4;
+  --tx-3:    #A8A497;
+  --tx-4:    #79766B;
+  --pr:      #8CA05B;
+  --pr-2:    #A3B873;
+  --nav-bg:  rgba(20,20,15,0.55);
+  --sh-sm:   0 2px 12px rgba(0,0,0,0.40);
+  --sh-md:   0 8px 32px rgba(0,0,0,0.50);
+  --sh-lg:   0 20px 60px rgba(0,0,0,0.60);
+}
+
+/* ── Arabic RTL fonts (Cairo body / Tajawal display) ── */
+html[dir="rtl"] {
+  font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
+}
+html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 {
+  font-family: 'Tajawal', 'Noto Sans Arabic', sans-serif;
+}
+
+/* ── Decorative background: gives backdrop-filter blur something to
+   blur — over a flat solid color, blur is invisible, which is why the
+   glass cards below were reading as plain flat panels. ── */
+body {
+  background:
+    radial-gradient(ellipse 60% 40% at 8% 0%, rgba(140,160,91,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 35% at 95% 100%, rgba(140,160,91,0.08) 0%, transparent 55%),
+    #14140F;
+  background-attachment: fixed;
+  color: #F5F3EE;
+  transition: background-color .3s ease, color .3s ease;
+}
+html:not(.dark) body {
+  background:
+    radial-gradient(ellipse 60% 40% at 8% 0%, rgba(107,122,79,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 35% at 95% 100%, rgba(107,122,79,0.05) 0%, transparent 55%),
+    #FFFFFF;
+  background-attachment: fixed;
+  color: #1A1A18;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(107,122,79,.45); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(107,122,79,.65); }
+
+/* ═══ Glass icon system (sprite injected by components/GlassIcons.js) ═══
+   Tints ride on CSS vars the sprite's gradients read; they live on the
+   injected #giSpriteRoot (var lookups resolve there, not per-consumer).
+   These apps are LIGHT by default with `html.dark` opting into dark —
+   the inverse of the main site — so light values sit at the root and
+   dark values under html.dark. */
+#giSpriteRoot svg {
+  --gi-t:  #6B7A4F; --gi-t2: #46512F; --gi-hl: #FFFFFF;
+  --gw-t:  #96713D; --gw-t2: #5C431F;   /* wood  */
+  --gs-t:  #5B7288; --gs-t2: #35485A;   /* steel */
+  --ga-t:  #5E92A5; --ga-t2: #3A606F;   /* aluminium */
+}
+html.dark #giSpriteRoot svg {
+  --gi-t:  #A3B873; --gi-t2: #566440;
+  --gw-t:  #B08D57; --gw-t2: #6E5230;
+  --gs-t:  #7E93A8; --gs-t2: #46586B;
+  --ga-t:  #8FB6C4; --ga-t2: #4E7381;
+}
+
+.gicon {
+  width: 34px;
+  height: 34px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.gicon--sm { width: 26px; height: 26px; }
+.gicon--md { width: 34px; height: 34px; }
+.gicon--lg { width: 56px; height: 56px; }
+.gicon--badge { width: 18px; height: 18px; }
+
+/* Fade in once the sprite exists (avoids a beat of empty <use> boxes). */
+.gicon { opacity: 0; transition: opacity 0.25s ease; }
+.gi-ready .gicon { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .gicon { transition: none; }
+}
+
+/* ═══ Glass toggle pills (theme + language) — ported from the main
+   site's css/themes.css .glass-ctrl / .lang-switcher, adapted to this
+   app's light-default/html.dark convention. ═══ */
+.glass-ctrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 40px;
+  border: 1px solid var(--bd-2);
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  color: var(--tx-3);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(26,26,24,0.09);
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease,
+    box-shadow 0.3s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+html.dark .glass-ctrl {
+  box-shadow: 0 4px 20px rgba(26,26,24,0.22);
+}
+.glass-ctrl:hover {
+  background: rgba(107,122,79,0.09);
+  border-color: rgba(107,122,79,0.30);
+  color: var(--tx);
+  transform: translateY(-2px);
+}
+html.dark .glass-ctrl:hover {
+  background: rgba(140,160,91,0.16);
+  border-color: rgba(140,160,91,0.34);
+}
+.glass-ctrl .gicon { opacity: 1; }
+.glass-ctrl .ctrl-icon {
+  font-size: 14px;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.glass-ctrl:hover .ctrl-icon { transform: rotate(20deg) scale(1.15); }
+
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--bd-2);
+  border-radius: 40px;
+  overflow: hidden;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  flex-shrink: 0;
+}
+.lang-btn {
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--tx-4);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  line-height: 1;
+}
+.lang-btn:hover { color: var(--tx); background: var(--bg-card); }
+.lang-btn.active { color: var(--pr-2); background: rgba(107,122,79,0.09); }
+html.dark .lang-btn.active { background: rgba(140,160,91,0.16); }
+.lang-btn.ar-btn {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 12px;
+  border-left: 1px solid var(--bd);
+}
+html[dir="rtl"] .lang-btn.ar-btn { border-left: none; border-right: 1px solid var(--bd); }
+
+@media (max-width: 768px) {
+  .glass-ctrl {
+    width: 44px; height: 44px;
+    padding: 0; border-radius: 50%;
+    font-size: 18px; gap: 0;
+  }
+  .glass-ctrl .ctrl-label { display: none; }
+}
+
+/* ═══ Premium glass card — shared surface for dashboard stat cards,
+   charts, list panels, tables and the notification dropdown. Two
+   distinct recipes (not one theme inverted): light gets a bright
+   layered-white frost, dark gets a deeper frosted tint with a subtle
+   brand-olive glow on hover, both reusing the token layer above. ═══ */
+.glass-card {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid var(--bd-2);
+  background: linear-gradient(148deg, rgba(255,255,255,0.92) 0%, rgba(247,245,241,0.78) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(196,210,228,0.5), 0 2px 6px rgba(26,26,24,0.05), 0 14px 32px rgba(26,26,24,0.08);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.glass-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(107,122,79,0.28);
+  box-shadow: 0 0 0 1px rgba(107,122,79,0.14), 0 4px 10px rgba(26,26,24,0.06), 0 18px 40px rgba(26,26,24,0.09), 0 0 26px rgba(107,122,79,0.08);
+}
+html.dark .glass-card {
+  background: linear-gradient(148deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.04), 0 10px 28px rgba(0,0,0,0.40);
+}
+html.dark .glass-card:hover {
+  border-color: rgba(140,160,91,0.38);
+  box-shadow: 0 0 0 1px rgba(140,160,91,0.20), 0 12px 32px rgba(0,0,0,0.45), 0 0 32px rgba(140,160,91,0.16);
+}
+.glass-card--pad {
+  padding: 20px;
+}
+
+/* ═══ Stat-card micro-animations — trend line / progress ring / mini bar
+   chart draw-in + caption typewriter. One-shot on mount only (no
+   `infinite`, nothing re-triggers on a 15s data refresh since the card
+   doesn't remount unless the underlying value actually changes) — kept
+   quiet on purpose so a dashboard people check all day doesn't stay
+   "busy". ═══ */
+.trendline-svg { overflow: visible; display: block; }
+.trendline-area {
+  opacity: 0;
+  animation: tl-area-fade 0.9s ease-out forwards;
+  animation-delay: 0.15s;
+}
+.trendline-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: tl-draw 1s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.trendline-dot {
+  opacity: 0;
+  transform-origin: center;
+  animation: tl-dot-pop 0.4s ease-out forwards;
+  animation-delay: 0.95s;
+}
+@keyframes tl-draw { to { stroke-dashoffset: 0; } }
+@keyframes tl-area-fade { to { opacity: 1; } }
+@keyframes tl-dot-pop { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
+
+.pring-fill {
+  animation: pring-sweep 1s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.pring-label { font-size: 15px; font-weight: 700; }
+@keyframes pring-sweep { to { stroke-dashoffset: var(--pring-target); } }
+
+.mbar-bar {
+  height: 0%;
+  opacity: 0.88;
+  animation: mbar-grow 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes mbar-grow { to { height: var(--mbar-h); } }
+
+.tw-caption {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  max-width: 100%;
+  width: 0;
+  animation: tw-reveal 0.6s steps(24, end) forwards;
+}
+@keyframes tw-reveal { to { width: 100%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .trendline-path { animation: none; stroke-dashoffset: 0; }
+  .trendline-area { animation: none; opacity: 1; }
+  .trendline-dot { animation: none; opacity: 1; transform: scale(1); }
+  .pring-fill { animation: none; stroke-dashoffset: var(--pring-target); }
+  .mbar-bar { animation: none; height: var(--mbar-h); }
+  .tw-caption { animation: none; width: auto; }
+}
