@@ -863,12 +863,12 @@ async function loadOrdersTable() {
 
 /* Soft delete only — the order row and all its data stay in the DB,
    just flagged out of every active query (server enforces this too,
-   see api/admin/orders/delete.js), and it becomes recoverable for 30
-   days from the Deleted Orders page. */
+   see api/admin/orders.js's softDeleteOrder()), and it becomes
+   recoverable for 30 days from the Deleted Orders page. */
 async function deleteOrderAction(id) {
   if (!confirm(t('confirm_delete_order'))) return;
   try {
-    await api('/api/admin/orders/delete', { method: 'POST', body: { id } });
+    await api('/api/admin/orders', { method: 'POST', body: { action: 'delete', id } });
     toast(t('order_deleted_toast'));
     loadOrdersTable();
   } catch (err) { toast(err.message); }
@@ -942,7 +942,8 @@ async function loadDeletedOrdersTable() {
   if (deletedOrdersBy) q.set('deletedBy', deletedOrdersBy);
   if (deletedOrdersFrom) q.set('dateFrom', deletedOrdersFrom);
   if (deletedOrdersTo) q.set('dateTo', deletedOrdersTo);
-  const data = await api('/api/admin/orders/deleted?' + q.toString());
+  q.set('deleted', '1');
+  const data = await api('/api/admin/orders?' + q.toString());
   SOFT_DELETE_ENABLED = data.softDeleteEnabled !== false;
   if (!SOFT_DELETE_ENABLED) {
     wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">🔒</div>' + esc(t('soft_delete_not_enabled')) + '</div>';
@@ -976,7 +977,7 @@ async function loadDeletedOrdersTable() {
 
 async function recoverOrderAction(id) {
   try {
-    await api('/api/admin/orders/recover', { method: 'POST', body: { id } });
+    await api('/api/admin/orders', { method: 'POST', body: { action: 'recover', id } });
     toast(t('order_recovered_toast'));
     loadDeletedOrdersTable();
   } catch (err) { toast(err.message); }
@@ -989,7 +990,7 @@ async function recoverOrderAction(id) {
 async function permanentlyDeleteOrderAction(id) {
   if (!confirm(t('confirm_permanent_delete_order'))) return;
   try {
-    await api('/api/admin/orders/permanent?id=' + id, { method: 'DELETE' });
+    await api('/api/admin/orders', { method: 'POST', body: { action: 'permanent-delete', id } });
     toast(t('order_permanently_deleted_toast'));
     loadDeletedOrdersTable();
   } catch (err) { toast(err.message); }
@@ -1502,11 +1503,11 @@ async function loadQuotesTable() {
 }
 
 /* Soft delete only — mirrors deleteOrderAction() exactly (see
-   api/admin/quotes/delete.js). */
+   api/admin/quotes.js's softDeleteQuote()). */
 async function deleteQuoteAction(id) {
   if (!confirm(t('confirm_delete_quote'))) return;
   try {
-    await api('/api/admin/quotes/delete', { method: 'POST', body: { id } });
+    await api('/api/admin/quotes', { method: 'POST', body: { action: 'delete', id } });
     toast(t('quote_deleted_toast'));
     loadQuotesTable();
   } catch (err) { toast(err.message); }
@@ -1624,7 +1625,7 @@ async function sendQuoteReply(quoteId) {
     const attachments = await Promise.all(REPLY_ATTACHMENTS.map(async f => ({
       name: f.name, mime: f.type || 'application/octet-stream', dataBase64: await fileToBase64(f),
     })));
-    await api('/api/admin/quotes/reply', { method: 'POST', body: { id: quoteId, subject, message, attachments } });
+    await api('/api/admin/quotes', { method: 'POST', body: { action: 'reply', id: quoteId, subject, message, attachments } });
     toast(t('email_sent_success'));
     openQuoteDetail(quoteId);
   } catch (err) {
@@ -1638,7 +1639,7 @@ async function loadQuoteReplyHistory(quoteId) {
   const el = $('#qReplyHistory');
   if (!el) return;
   try {
-    const data = await api('/api/admin/quotes/replies?quoteId=' + quoteId);
+    const data = await api('/api/admin/quotes?replies=1&quoteId=' + quoteId);
     if (!data.replies.length) { el.innerHTML = '<p class="ad-empty">' + esc(t('no_replies_yet')) + '</p>'; return; }
     el.innerHTML = data.replies.map(r => {
       const statusKey = r.status === 'failed' ? 'reply_status_failed' : 'reply_status_sent';
@@ -1693,8 +1694,8 @@ async function renderDeletedQuotes() {
 async function loadDeletedQuotesTable() {
   const wrap = $('#deletedQuotesTableWrap');
   wrap.innerHTML = '<div class="ad-loading"><div class="ad-spinner"></div></div>';
-  const q = new URLSearchParams({ page: deletedQuotesPage, pageSize: 15, search: deletedQuotesSearch, recovery: deletedQuotesRecovery, status: deletedQuotesStatus });
-  const data = await api('/api/admin/quotes/deleted?' + q.toString());
+  const q = new URLSearchParams({ page: deletedQuotesPage, pageSize: 15, search: deletedQuotesSearch, recovery: deletedQuotesRecovery, status: deletedQuotesStatus, deleted: '1' });
+  const data = await api('/api/admin/quotes?' + q.toString());
   SOFT_DELETE_QUOTES_ENABLED = data.softDeleteEnabled !== false;
   if (!SOFT_DELETE_QUOTES_ENABLED) {
     wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">🔒</div>' + esc(t('soft_delete_quotes_not_enabled')) + '</div>';
@@ -1723,7 +1724,7 @@ async function loadDeletedQuotesTable() {
 
 async function recoverQuoteAction(id) {
   try {
-    await api('/api/admin/quotes/recover', { method: 'POST', body: { id } });
+    await api('/api/admin/quotes', { method: 'POST', body: { action: 'recover', id } });
     toast(t('quote_recovered_toast'));
     loadDeletedQuotesTable();
   } catch (err) { toast(err.message); }
@@ -1732,7 +1733,7 @@ async function recoverQuoteAction(id) {
 async function permanentlyDeleteQuoteAction(id) {
   if (!confirm(t('confirm_permanent_delete_quote'))) return;
   try {
-    await api('/api/admin/quotes/permanent?id=' + id, { method: 'DELETE' });
+    await api('/api/admin/quotes', { method: 'POST', body: { action: 'permanent-delete', id } });
     toast(t('quote_permanently_deleted_toast'));
     loadDeletedQuotesTable();
   } catch (err) { toast(err.message); }
