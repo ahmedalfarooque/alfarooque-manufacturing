@@ -93,6 +93,10 @@ async function sendEmail(opts) {
     replyTo: opts.replyTo || undefined,
     subject: opts.subject,
     html:    opts.html,
+    /* [{filename, contentBase64, mime}] — optional, both providers
+       accept base64 content directly so no Buffer conversion is needed
+       until the provider-specific request is built. */
+    attachments: Array.isArray(opts.attachments) ? opts.attachments : undefined,
   };
 
   const send = () => (status.provider === 'resend' ? sendViaResend(payload) : sendViaSmtp(payload));
@@ -131,9 +135,22 @@ async function withRetries(fn, isRetryable) {
 /* ── Resend (HTTP) ── */
 async function sendViaResend(p) {
   let res, data;
+  const hasAttachments = !!(p.attachments && p.attachments.length);
+  /* A plain-text send finishes in well under a second; a few MB of
+     base64 attachment payload can genuinely take longer than the
+     original flat 8s timeout on a slow connection — that previously
+     meant a large-attachment send could abort as "NETWORK" on every
+     retry and never actually reach Resend at all. */
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), hasAttachments ? 25000 : 8000);
   try {
+    const attachments = hasAttachments
+      ? p.attachments.map(a => ({ filename: a.filename, content: a.contentBase64, content_type: a.mime || undefined }))
+      : undefined;
+    if (hasAttachments) {
+      console.log('[email] Sending via Resend with ' + attachments.length + ' attachment(s): ' +
+        attachments.map(a => a.filename + ' (' + a.content_type + ', ' + Math.round((a.content || '').length * 0.75 / 1024) + 'KB)').join(', '));
+    }
     res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -142,10 +159,12 @@ async function sendViaResend(p) {
       },
       body: JSON.stringify({
         from: p.from, to: [p.to], reply_to: p.replyTo, subject: p.subject, html: p.html,
+        attachments,
       }),
       signal: controller.signal,
     });
     data = await res.json().catch(() => ({}));
+    if (hasAttachments) console.log('[email] Resend response: ' + JSON.stringify(data));
   } catch (e) {
     const err = new Error('Could not reach Resend: ' + e.message);
     err.code = 'NETWORK';
@@ -190,6 +209,9 @@ async function sendViaSmtp(p) {
   try {
     info = await transporter.sendMail({
       from: p.from, to: p.to, replyTo: p.replyTo, subject: p.subject, html: p.html,
+      attachments: p.attachments && p.attachments.length
+        ? p.attachments.map(a => ({ filename: a.filename, content: a.contentBase64, encoding: 'base64', contentType: a.mime || undefined }))
+        : undefined,
     });
   } catch (e) {
     const err = new Error('SMTP send failed: ' + e.message);

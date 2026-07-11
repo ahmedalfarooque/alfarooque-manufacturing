@@ -1,13 +1,28 @@
 'use strict';
 
-/* /api/admin/orders
+/* /api/admin/orders — ACTIVE orders (is_deleted = false when the
+   soft-delete migration has been applied; every order otherwise).
    GET   ?id=<uuid>              → single order
-   GET   ?page=&pageSize=&status=&search=  → paginated list
+   GET   ?page=&pageSize=&status=&search=&today=  → paginated list
    PATCH ?id=<uuid>  { status?, payment_status?, current_stage?,
                         estimated_completion?, estimated_delivery?,
                         tracking_pct?, admin_notes?, items?, discount?,
                         shipping_cost?, tracking_number?, courier?,
                         delivery_address? }
+
+   Deleted-orders listing, soft delete, recover, and permanent delete
+   each live in their own dedicated endpoint (see api/admin/orders/*.js)
+   — this file never branches on an "action" or a "deleted" flag, so
+   there's exactly one query shape to reason about here: active orders.
+
+   Schema detection: hasSoftDelete(sb) (api/_ordersCore.js) checks once
+   per warm instance whether supabase/schema-orders-soft-delete.sql has
+   actually been run. If it hasn't, every query below simply skips the
+   is_deleted filter — this file works identically against a pre- or
+   post-migration database, no code change needed either way. Every
+   response also carries `softDeleteEnabled` so the client can hide the
+   Delete button until the feature is actually usable.
+
    Every write lands directly in public.orders — the same table the
    customer dashboard reads live, so status/tracking changes are visible
    to the customer the next time their dashboard loads or re-syncs.
@@ -17,52 +32,25 @@
 const { getAdminClient } = require('../_supabaseAdmin');
 const { requireAdminSession, readJsonBody, logAudit } = require('../_adminAuth');
 const { enrichOrderItems } = require('../_orderEnrich');
-
-const ALLOWED_STATUSES = [
-  'pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed',
-  'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected',
-];
-const ALLOWED_PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'];
-
-/* Attach the real name/email for orders placed by a signed-in customer
-   (guest orders already carry guest_name/guest_email on the row itself). */
-async function attachCustomerInfo(sb, orders) {
-  const ids = Array.from(new Set(orders.filter(o => o.user_id).map(o => o.user_id)));
-  if (!ids.length) return orders;
-
-  const [{ data: profiles }, { data: usersPage }] = await Promise.all([
-    sb.from('profiles').select('id, first_name, last_name, full_name').in('id', ids),
-    sb.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-  ]);
-  const profileMap = {};
-  (profiles || []).forEach(p => { profileMap[p.id] = p; });
-  const emailMap = {};
-  (usersPage && usersPage.users || []).forEach(u => { emailMap[u.id] = u.email; });
-
-  return orders.map(o => {
-    if (!o.user_id) return o;
-    const p = profileMap[o.user_id] || {};
-    return Object.assign({}, o, {
-      customer_name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || emailMap[o.user_id] || 'Registered customer',
-      customer_email: emailMap[o.user_id] || '',
-    });
-  });
-}
+const { ALLOWED_STATUSES, ALLOWED_PAYMENT_STATUSES, attachCustomerInfo, sendOrdersError, hasSoftDelete } = require('../_ordersCore');
 
 module.exports = async function handler(req, res) {
   const admin = await requireAdminSession(req, res);
   if (!admin) return;
   const sb = getAdminClient();
   const query = req.query || Object.fromEntries(new URL(req.url, 'http://x').searchParams);
+  const softDeleteEnabled = await hasSoftDelete(sb);
 
   if (req.method === 'GET') {
     if (query.id) {
-      const { data, error } = await sb.from('orders').select('*').eq('id', query.id).maybeSingle();
-      if (error) return res.status(500).json({ error: error.message });
+      let q = sb.from('orders').select('*').eq('id', query.id);
+      if (softDeleteEnabled) q = q.eq('is_deleted', false);
+      const { data, error } = await q.maybeSingle();
+      if (error) return sendOrdersError(res, error);
       if (!data) return res.status(404).json({ error: 'Order not found.' });
       const [withInfo] = await attachCustomerInfo(sb, [data]);
       const [enriched] = await enrichOrderItems(sb, [withInfo]);
-      return res.status(200).json({ order: enriched });
+      return res.status(200).json({ order: enriched, softDeleteEnabled });
     }
 
     const page = Math.max(1, parseInt(query.page, 10) || 1);
@@ -75,6 +63,7 @@ module.exports = async function handler(req, res) {
     let q = sb.from('orders')
       .select('id, order_no, status, payment_status, grand_total, created_at, guest_name, guest_email, user_id, items', { count: 'exact' })
       .order('created_at', { ascending: false });
+    if (softDeleteEnabled) q = q.eq('is_deleted', false);
     if (query.status && query.status !== 'all') q = q.eq('status', query.status);
     if (query.today === '1') {
       const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
@@ -85,9 +74,9 @@ module.exports = async function handler(req, res) {
       q = q.or('order_no.ilike.%' + s + '%,guest_name.ilike.%' + s + '%,guest_email.ilike.%' + s + '%');
     }
     const { data, error, count } = await q.range(from, to);
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) return sendOrdersError(res, error);
     const withInfo = await attachCustomerInfo(sb, data || []);
-    return res.status(200).json({ orders: withInfo, total: count || 0, page, pageSize });
+    return res.status(200).json({ orders: withInfo, total: count || 0, page, pageSize, softDeleteEnabled });
   }
 
   if (req.method === 'PATCH') {
@@ -95,7 +84,10 @@ module.exports = async function handler(req, res) {
     if (!id) return res.status(400).json({ error: 'Missing order id.' });
     const body = await readJsonBody(req);
 
-    const { data: existing } = await sb.from('orders').select('*').eq('id', id).maybeSingle();
+    let existingQ = sb.from('orders').select('*').eq('id', id);
+    if (softDeleteEnabled) existingQ = existingQ.eq('is_deleted', false);
+    const { data: existing, error: fetchError } = await existingQ.maybeSingle();
+    if (fetchError) return sendOrdersError(res, fetchError);
     if (!existing) return res.status(404).json({ error: 'Order not found.' });
 
     const patch = {};
@@ -148,7 +140,7 @@ module.exports = async function handler(req, res) {
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Nothing to update.' });
 
     const { data, error } = await sb.from('orders').update(patch).eq('id', id).select().single();
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) return sendOrdersError(res, error);
 
     await logAudit(sb, {
       adminId: admin.id, adminEmail: admin.email, action: 'order.update',

@@ -4,6 +4,7 @@
 
 const { getAdminClient } = require('../_supabaseAdmin');
 const { requireAdminSession } = require('../_adminAuth');
+const { sendOrdersError, hasSoftDelete } = require('../_ordersCore');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -12,15 +13,23 @@ module.exports = async function handler(req, res) {
 
   const sb = getAdminClient();
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const softDeleteEnabled = await hasSoftDelete(sb);
+
+  let ordersQuery = sb.from('orders').select('id, order_no, status, grand_total, created_at, guest_name, user_id').order('created_at', { ascending: false }).limit(500);
+  if (softDeleteEnabled) ordersQuery = ordersQuery.eq('is_deleted', false);
 
   const [ordersRes, quotesRes, productsRes, lowStockRes, customerCountRes, recentProfilesRes] = await Promise.all([
-    sb.from('orders').select('id, order_no, status, grand_total, created_at, guest_name, user_id').order('created_at', { ascending: false }).limit(500),
+    ordersQuery,
     sb.from('quotes').select('id, status, created_at').order('created_at', { ascending: false }).limit(500),
     sb.from('products').select('id', { count: 'exact', head: true }),
     sb.from('products').select('id, name, stock, low_stock_threshold').order('stock', { ascending: true }).limit(200),
     sb.from('profiles').select('id', { count: 'exact', head: true }),
     sb.from('profiles').select('id, first_name, last_name, full_name, created_at').order('created_at', { ascending: false }).limit(5),
   ]);
+  /* Any remaining error here is a genuine, non-migration problem — the
+     softDeleteEnabled branch above already avoided querying a column
+     that might not exist. */
+  if (ordersRes.error) return sendOrdersError(res, ordersRes.error);
 
   const orders = ordersRes.data || [];
   const quotes = quotesRes.data || [];
@@ -78,5 +87,6 @@ module.exports = async function handler(req, res) {
       customer: o.guest_name || (o.user_id ? (recentNameMap[o.user_id] || 'Registered customer') : 'Guest'),
     })),
     recentCustomers,
+    softDeleteEnabled,
   });
 };

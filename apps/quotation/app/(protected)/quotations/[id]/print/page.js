@@ -4,11 +4,12 @@
    floating toolbar (hidden when printing).
    - "Download PDF" builds a true multi-page A4 PDF programmatically
      (lib/pdf/buildQuotePdf.js) and saves it immediately — no print
-     dialog, no preview tab. English-only: jsPDF can't shape Arabic
-     glyphs correctly, so an Arabic-language quotation falls back to
-     the browser print dialog instead of a broken-looking PDF.
-   - "Print" keeps the existing browser print preview, which renders
-     Arabic + RTL perfectly via the real HTML/CSS document. */
+     dialog, no preview tab. Works identically for English and Arabic:
+     Arabic strings are shaped via the browser's own Canvas 2D text
+     engine and embedded as images into the same jsPDF geometry (see
+     lib/pdf/arabicText.js) rather than jsPDF's native text(), which
+     can't shape Arabic glyphs — so both languages share one layout.
+   - "Print" keeps the existing browser print preview. */
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -76,7 +77,6 @@ export default function PrintPage() {
   }, [data, lang]);
 
   async function downloadPdf() {
-    if (lang === 'ar') { window.print(); return; }
     setDownloading(true);
     try {
       await downloadQuotePdf({
@@ -86,6 +86,7 @@ export default function PrintPage() {
         customer: data.row.customer,
         terms,
         qrDataUrl,
+        lang,
       });
     } catch (_) {
       window.print();

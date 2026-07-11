@@ -1,37 +1,46 @@
 'use strict';
 
-/* /api/admin/quotes
+/* /api/admin/quotes — ACTIVE quotes (is_deleted = false once the
+   soft-delete migration has been applied; every quote otherwise).
    GET   ?id=<uuid>                     → single quote
    GET   ?page=&pageSize=&status=       → paginated list
    PATCH ?id=<uuid>  { status?, admin_notes? }
-   POST  { action:'convert-to-order', id } → creates an order from the quote */
+   POST  { action:'convert-to-order', id } → creates an order from the quote
+
+   Deleted-quotes listing, soft delete, recover, and permanent delete
+   each live in their own dedicated endpoint (see api/admin/quotes/*.js),
+   mirroring the Orders soft-delete architecture exactly — see
+   api/_quotesCore.js and api/admin/orders.js for the pattern this follows. */
 
 const { getAdminClient } = require('../_supabaseAdmin');
 const { requireAdminSession, readJsonBody, logAudit } = require('../_adminAuth');
-
-const ALLOWED = ['new', 'contacted', 'quoted', 'converted', 'closed'];
+const { ALLOWED_STATUSES, sendQuotesError, hasSoftDelete } = require('../_quotesCore');
 
 module.exports = async function handler(req, res) {
   const admin = await requireAdminSession(req, res);
   if (!admin) return;
   const sb = getAdminClient();
   const query = req.query || Object.fromEntries(new URL(req.url, 'http://x').searchParams);
+  const softDeleteEnabled = await hasSoftDelete(sb);
 
   if (req.method === 'GET') {
     if (query.id) {
-      const { data, error } = await sb.from('quotes').select('*').eq('id', query.id).maybeSingle();
-      if (error) return res.status(500).json({ error: error.message });
+      let q = sb.from('quotes').select('*').eq('id', query.id);
+      if (softDeleteEnabled) q = q.eq('is_deleted', false);
+      const { data, error } = await q.maybeSingle();
+      if (error) return sendQuotesError(res, error);
       if (!data) return res.status(404).json({ error: 'Quote not found.' });
-      return res.status(200).json({ quote: data });
+      return res.status(200).json({ quote: data, softDeleteEnabled });
     }
     const page = Math.max(1, parseInt(query.page, 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize, 10) || 20));
     const from = (page - 1) * pageSize, to = from + pageSize - 1;
     let q = sb.from('quotes').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+    if (softDeleteEnabled) q = q.eq('is_deleted', false);
     if (query.status && query.status !== 'all') q = q.eq('status', query.status);
     const { data, error, count } = await q.range(from, to);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ quotes: data || [], total: count || 0, page, pageSize });
+    if (error) return sendQuotesError(res, error);
+    return res.status(200).json({ quotes: data || [], total: count || 0, page, pageSize, softDeleteEnabled });
   }
 
   if (req.method === 'PATCH') {
@@ -40,13 +49,15 @@ module.exports = async function handler(req, res) {
     const body = await readJsonBody(req);
     const patch = {};
     if (body.status !== undefined) {
-      if (!ALLOWED.includes(body.status)) return res.status(400).json({ error: 'Invalid status.' });
+      if (!ALLOWED_STATUSES.includes(body.status)) return res.status(400).json({ error: 'Invalid status.' });
       patch.status = body.status;
     }
     if (body.admin_notes !== undefined) patch.admin_notes = String(body.admin_notes || '').slice(0, 2000);
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Nothing to update.' });
-    const { data, error } = await sb.from('quotes').update(patch).eq('id', id).select().single();
-    if (error) return res.status(500).json({ error: error.message });
+    let q = sb.from('quotes').update(patch).eq('id', id);
+    if (softDeleteEnabled) q = q.eq('is_deleted', false);
+    const { data, error } = await q.select().single();
+    if (error) return sendQuotesError(res, error);
     await logAudit(sb, { adminId: admin.id, adminEmail: admin.email, action: 'quote.update', entityType: 'quote', entityId: id, details: patch, req });
     return res.status(200).json({ quote: data });
   }
@@ -55,7 +66,10 @@ module.exports = async function handler(req, res) {
     const body = await readJsonBody(req);
     if (body.action !== 'convert-to-order') return res.status(400).json({ error: 'Unknown action.' });
     const id = body.id;
-    const { data: quote } = await sb.from('quotes').select('*').eq('id', id).maybeSingle();
+    let existingQ = sb.from('quotes').select('*').eq('id', id);
+    if (softDeleteEnabled) existingQ = existingQ.eq('is_deleted', false);
+    const { data: quote, error: fetchError } = await existingQ.maybeSingle();
+    if (fetchError) return sendQuotesError(res, fetchError);
     if (!quote) return res.status(404).json({ error: 'Quote not found.' });
     if (quote.order_id) return res.status(400).json({ error: 'This quote was already converted.' });
 

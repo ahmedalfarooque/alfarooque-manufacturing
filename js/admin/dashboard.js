@@ -67,6 +67,20 @@ const I18N = {
     order_updated: 'Order updated — synced to the customer dashboard.',
     spec_category: 'Category', spec_sku: 'SKU', spec_material: 'Material', spec_size: 'Size', spec_color: 'Color',
     spec_finish: 'Finish', spec_quantity: 'Quantity',
+    /* deleted orders */
+    nav_orders_deleted: 'Deleted Orders', orders_deleted_title: 'Deleted Orders',
+    confirm_delete_order: 'Delete Order — Are you sure you want to delete this order? The order can be recovered within 30 days.',
+    order_deleted_toast: 'Order deleted — it can be recovered within 30 days.',
+    confirm_permanent_delete_order: 'This action cannot be undone. Delete permanently?',
+    order_recovered_toast: 'Order recovered.', order_permanently_deleted_toast: 'Order permanently deleted.',
+    recover: 'Recover', delete_permanently: 'Delete Permanently',
+    th_deleted_by: 'Deleted By', th_deleted_date: 'Deleted Date', th_days_remaining: 'Days Remaining',
+    no_deleted_orders_found: 'No deleted orders found.', deleted_by_ph: 'All admins',
+    soft_delete_not_enabled: 'This feature will be available after Soft Delete is enabled.',
+    all_recovery: 'All recovery windows', recovery_green: 'Green (>14 days)', recovery_orange: 'Orange (4–14 days)', recovery_red: 'Red (≤3 days)',
+    days_left: n => n + ' Day' + (n === 1 ? '' : 's') + ' Left', expires_today: 'Expires Today',
+    super_admin_only: 'Only a Super Admin can permanently delete an order.',
+    date_from: 'From', date_to: 'To',
     /* customers */
     customers_title: 'Customers', cust_search_ph: 'Search name, company, email…',
     th_orders: 'Orders', th_joined: 'Joined', th_order_details: 'Order Details',
@@ -98,6 +112,21 @@ const I18N = {
     quotes_title: 'Quotes', all: 'All', th_contact: 'Contact', th_product_service: 'Product/Service',
     no_quotes: 'No quotes yet.', quote_from: 'Quote from ', convert_to_order: 'Convert to Order',
     saved: 'Saved.', converted: 'Converted to order.',
+    /* deleted quotes */
+    nav_quotes_deleted: 'Deleted Quotes', quotes_deleted_title: 'Deleted Quotes',
+    confirm_delete_quote: 'Delete Quote — Are you sure you want to delete this quote? It can be recovered within 30 days.',
+    quote_deleted_toast: 'Quote deleted — it can be recovered within 30 days.',
+    confirm_permanent_delete_quote: 'This action cannot be undone. Delete permanently?',
+    quote_recovered_toast: 'Quote recovered.', quote_permanently_deleted_toast: 'Quote permanently deleted.',
+    no_deleted_quotes_found: 'No deleted quotes found.',
+    soft_delete_quotes_not_enabled: 'This feature will be available after Soft Delete is enabled.',
+    /* reply to customer */
+    reply_to_customer: 'Reply to Customer', to_field: 'To', subject_field: 'Subject',
+    attachments_field: 'Attachments', choose_files: 'Choose Files', no_attachments: 'No files attached.',
+    close: 'Close', sending_ellipsis: 'Sending…', email_sent_success: 'Email Sent Successfully',
+    communication_history: 'Communication History', no_replies_yet: 'No replies sent yet.',
+    reply_status_sent: 'Delivered', reply_status_failed: 'Failed',
+    subject_message_required: 'Subject and message are required.',
     /* notifications */
     notifications_title: 'Notifications', mark_all_read: 'Mark all as read', no_notifications: 'No notifications.',
     mark_read: 'Mark read',
@@ -162,6 +191,19 @@ const I18N = {
     order_updated: 'تم تحديث الطلب — تمت مزامنته مع لوحة العميل.',
     spec_category: 'التصنيف', spec_sku: 'رمز المنتج', spec_material: 'الخامة', spec_size: 'المقاس', spec_color: 'اللون',
     spec_finish: 'التشطيب', spec_quantity: 'الكمية',
+    nav_orders_deleted: 'الطلبات المحذوفة', orders_deleted_title: 'الطلبات المحذوفة',
+    confirm_delete_order: 'حذف الطلب — هل أنت متأكد من حذف هذا الطلب؟ يمكن استرجاعه خلال 30 يوماً.',
+    order_deleted_toast: 'تم حذف الطلب — يمكن استرجاعه خلال 30 يوماً.',
+    confirm_permanent_delete_order: 'لا يمكن التراجع عن هذا الإجراء. هل تريد الحذف النهائي؟',
+    order_recovered_toast: 'تم استرجاع الطلب.', order_permanently_deleted_toast: 'تم حذف الطلب نهائياً.',
+    recover: 'استرجاع', delete_permanently: 'حذف نهائي',
+    th_deleted_by: 'حذف بواسطة', th_deleted_date: 'تاريخ الحذف', th_days_remaining: 'الأيام المتبقية',
+    no_deleted_orders_found: 'لا توجد طلبات محذوفة.', deleted_by_ph: 'كل المسؤولين',
+    soft_delete_not_enabled: 'ستتوفر هذه الميزة بعد تفعيل الحذف الناعم.',
+    all_recovery: 'كل فترات الاسترجاع', recovery_green: 'أخضر (أكثر من 14 يوماً)', recovery_orange: 'برتقالي (4–14 يوماً)', recovery_red: 'أحمر (3 أيام أو أقل)',
+    days_left: n => n + ' يوم متبقٍ', expires_today: 'ينتهي اليوم',
+    super_admin_only: 'فقط المسؤول الأعلى يمكنه الحذف النهائي للطلب.',
+    date_from: 'من', date_to: 'إلى',
     customers_title: 'العملاء', cust_search_ph: 'ابحث بالاسم أو الشركة أو البريد…',
     th_orders: 'الطلبات', th_joined: 'تاريخ التسجيل', th_order_details: 'تفاصيل الطلبات',
     orders_count: n => n === 1 ? 'طلب واحد' : n === 2 ? 'طلبان' : (n + ' طلبات'),
@@ -189,6 +231,19 @@ const I18N = {
     quotes_title: 'عروض الأسعار', all: 'الكل', th_contact: 'جهة الاتصال', th_product_service: 'المنتج/الخدمة',
     no_quotes: 'لا توجد عروض أسعار بعد.', quote_from: 'عرض سعر من ', convert_to_order: 'تحويل إلى طلب',
     saved: 'تم الحفظ.', converted: 'تم التحويل إلى طلب.',
+    nav_quotes_deleted: 'عروض الأسعار المحذوفة', quotes_deleted_title: 'عروض الأسعار المحذوفة',
+    confirm_delete_quote: 'حذف عرض السعر — هل أنت متأكد؟ يمكن استرجاعه خلال 30 يوماً.',
+    quote_deleted_toast: 'تم حذف عرض السعر — يمكن استرجاعه خلال 30 يوماً.',
+    confirm_permanent_delete_quote: 'لا يمكن التراجع عن هذا الإجراء. هل تريد الحذف النهائي؟',
+    quote_recovered_toast: 'تم استرجاع عرض السعر.', quote_permanently_deleted_toast: 'تم حذف عرض السعر نهائياً.',
+    no_deleted_quotes_found: 'لا توجد عروض أسعار محذوفة.',
+    soft_delete_quotes_not_enabled: 'ستتوفر هذه الميزة بعد تفعيل الحذف الناعم.',
+    reply_to_customer: 'الرد على العميل', to_field: 'إلى', subject_field: 'الموضوع',
+    attachments_field: 'المرفقات', choose_files: 'اختيار ملفات', no_attachments: 'لا توجد ملفات مرفقة.',
+    close: 'إغلاق', sending_ellipsis: 'جارٍ الإرسال…', email_sent_success: 'تم إرسال البريد بنجاح',
+    communication_history: 'سجل المراسلات', no_replies_yet: 'لا توجد ردود مرسلة بعد.',
+    reply_status_sent: 'تم التسليم', reply_status_failed: 'فشل',
+    subject_message_required: 'الموضوع والرسالة مطلوبان.',
     notifications_title: 'الإشعارات', mark_all_read: 'تحديد الكل كمقروء', no_notifications: 'لا توجد إشعارات.',
     mark_read: 'تحديد كمقروء',
     audit_title: 'سجلات التدقيق', th_when: 'الوقت', th_admin: 'المشرف', th_action: 'الإجراء', th_entity: 'العنصر', th_ip: 'عنوان IP',
@@ -609,7 +664,7 @@ async function pollNotifBadge() {
   } catch (e) {}
 }
 
-const ROUTES = ['home', 'orders', 'customers', 'products', 'categories', 'quotes', 'notifications', 'audit', 'account'];
+const ROUTES = ['home', 'orders', 'orders-deleted', 'customers', 'products', 'categories', 'quotes', 'quotes-deleted', 'notifications', 'audit', 'account'];
 let homeRefreshTimer = null;
 
 /* A route can carry filters as a query string appended to the hash
@@ -632,8 +687,8 @@ function goTo(rawPage) {
   content.innerHTML = skeletonHTML();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   const renderers = {
-    home: renderHome, orders: renderOrders, customers: renderCustomers, products: renderProducts,
-    categories: renderCategories, quotes: renderQuotes, notifications: renderNotifications,
+    home: renderHome, orders: renderOrders, 'orders-deleted': renderDeletedOrders, customers: renderCustomers, products: renderProducts,
+    categories: renderCategories, quotes: renderQuotes, 'quotes-deleted': renderDeletedQuotes, notifications: renderNotifications,
     audit: renderAudit, account: renderAccount,
   };
   renderers[page](filters).catch(err => {
@@ -737,6 +792,11 @@ function rowLine(a, b, c, status, link) {
    ════════════════════════════════════════════════════════════════ */
 const ORDER_STATUSES = ['pending','confirmed','processing','manufacturing','quality_check','packed','ready','shipped','out_for_delivery','delivered','completed','cancelled','returned','rejected'];
 let ordersPage = 1, ordersStatus = 'all', ordersSearch = '', ordersToday = false;
+/* Set from the `softDeleteEnabled` flag every /api/admin/orders* response
+   carries — true until the first real check says otherwise, so the
+   Delete button only disappears once we actually know the migration
+   hasn't run (never assumed up front). */
+let SOFT_DELETE_ENABLED = true;
 
 async function renderOrders(filters) {
   filters = filters || {};
@@ -774,6 +834,7 @@ async function loadOrdersTable() {
   const q = new URLSearchParams({ page: ordersPage, pageSize: 15, status: ordersStatus, search: ordersSearch });
   if (ordersToday) q.set('today', '1');
   const data = await api('/api/admin/orders?' + q.toString());
+  SOFT_DELETE_ENABLED = data.softDeleteEnabled !== false;
   if (!data.orders.length) { wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">📦</div>' + esc(t('no_orders_found')) + '</div>'; return; }
   wrap.innerHTML =
     '<div class="ad-table-wrap"><table class="ad-table"><thead><tr><th>' + esc(t('th_order_no')) + '</th><th>' + esc(t('th_customer')) + '</th><th>' + esc(t('email')) + '</th><th>' + esc(t('th_items')) + '</th><th>' + esc(t('th_total')) + '</th><th>' + esc(t('status')) + '</th><th>' + esc(t('th_payment')) + '</th><th>' + esc(t('date')) + '</th><th>' + esc(t('actions')) + '</th></tr></thead><tbody>' +
@@ -791,11 +852,26 @@ async function loadOrdersTable() {
       '<td class="ad-actions-row">' +
         '<button class="ad-btn-sm ad-btn-sm--primary" data-view="' + o.id + '">' + esc(t('view')) + '</button>' +
         '<button class="ad-btn-sm" data-edit-order="' + o.id + '">' + esc(t('edit')) + '</button>' +
+        (SOFT_DELETE_ENABLED ? '<button class="ad-btn-sm ad-btn-sm--danger" data-delete-order="' + o.id + '">' + esc(t('del')) + '</button>' : '') +
       '</td></tr>';
     }).join('') + '</tbody></table></div>' +
     pagination(ordersPage, data.total, 15, p => { ordersPage = p; loadOrdersTable(); });
   $$('[data-view]', wrap).forEach(b => b.addEventListener('click', () => openOrderView(b.getAttribute('data-view'))));
   $$('[data-edit-order]', wrap).forEach(b => b.addEventListener('click', () => openOrderDetail(b.getAttribute('data-edit-order'))));
+  $$('[data-delete-order]', wrap).forEach(b => b.addEventListener('click', () => deleteOrderAction(b.getAttribute('data-delete-order'))));
+}
+
+/* Soft delete only — the order row and all its data stay in the DB,
+   just flagged out of every active query (server enforces this too,
+   see api/admin/orders/delete.js), and it becomes recoverable for 30
+   days from the Deleted Orders page. */
+async function deleteOrderAction(id) {
+  if (!confirm(t('confirm_delete_order'))) return;
+  try {
+    await api('/api/admin/orders/delete', { method: 'POST', body: { id } });
+    toast(t('order_deleted_toast'));
+    loadOrdersTable();
+  } catch (err) { toast(err.message); }
 }
 
 function pagination(page, total, pageSize, onChange) {
@@ -812,6 +888,111 @@ function pagination(page, total, pageSize, onChange) {
     '<span>' + esc(t('page_of')(page, totalPages, total)) + '</span>' +
     '<button class="ad-btn-sm" id="' + id + '-next"' + (page >= totalPages ? ' disabled' : '') + '>' + esc(t('next')) + '</button>' +
   '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DELETED ORDERS — Recover / Permanently Delete (Super Admin only)
+   ════════════════════════════════════════════════════════════════ */
+let deletedOrdersPage = 1, deletedOrdersSearch = '', deletedOrdersBy = '', deletedOrdersRecovery = 'all',
+  deletedOrdersFrom = '', deletedOrdersTo = '', deletedOrdersStatus = 'all';
+
+async function renderDeletedOrders() {
+  deletedOrdersPage = 1; deletedOrdersSearch = ''; deletedOrdersBy = ''; deletedOrdersRecovery = 'all';
+  deletedOrdersFrom = ''; deletedOrdersTo = ''; deletedOrdersStatus = 'all';
+
+  $('#adContent').innerHTML =
+    '<div class="ad-page"><div class="ad-page-head"><h1 class="ad-page-title">' + esc(t('orders_deleted_title')) + '</h1></div>' +
+    '<div class="ad-toolbar">' +
+      '<input class="ad-input" id="delOrderSearchInput" type="search" placeholder="' + esc(t('order_search_ph')) + '">' +
+      '<select class="ad-select" id="delOrderStatusFilter"><option value="all">' + esc(t('all_statuses')) + '</option>' +
+        ORDER_STATUSES.map(s => '<option value="' + s + '">' + label(s) + '</option>').join('') +
+      '</select>' +
+      '<select class="ad-select" id="delOrderRecoveryFilter">' +
+        '<option value="all">' + esc(t('all_recovery')) + '</option>' +
+        '<option value="green">' + esc(t('recovery_green')) + '</option>' +
+        '<option value="orange">' + esc(t('recovery_orange')) + '</option>' +
+        '<option value="red">' + esc(t('recovery_red')) + '</option>' +
+      '</select>' +
+      '<label class="ad-inline-label">' + esc(t('date_from')) + ' <input class="ad-input" id="delOrderFrom" type="date"></label>' +
+      '<label class="ad-inline-label">' + esc(t('date_to')) + ' <input class="ad-input" id="delOrderTo" type="date"></label>' +
+    '</div>' +
+    '<div id="deletedOrdersTableWrap"></div></div>';
+
+  $('#delOrderSearchInput').addEventListener('input', debounce(e => { deletedOrdersSearch = e.target.value; deletedOrdersPage = 1; loadDeletedOrdersTable(); }, 350));
+  $('#delOrderStatusFilter').addEventListener('change', e => { deletedOrdersStatus = e.target.value; deletedOrdersPage = 1; loadDeletedOrdersTable(); });
+  $('#delOrderRecoveryFilter').addEventListener('change', e => { deletedOrdersRecovery = e.target.value; deletedOrdersPage = 1; loadDeletedOrdersTable(); });
+  $('#delOrderFrom').addEventListener('change', e => { deletedOrdersFrom = e.target.value; deletedOrdersPage = 1; loadDeletedOrdersTable(); });
+  $('#delOrderTo').addEventListener('change', e => { deletedOrdersTo = e.target.value; deletedOrdersPage = 1; loadDeletedOrdersTable(); });
+  await loadDeletedOrdersTable();
+}
+
+/* Green / Orange / Red countdown badge — thresholds match the server's
+   own bucketing in api/admin/orders/deleted.js's recovery filter so the
+   badge colour and the filter dropdown always agree on the same order. */
+function recoveryBadge(daysRemaining) {
+  const cls = daysRemaining > 14 ? 'completed' : daysRemaining > 3 ? 'pending' : 'cancelled';
+  const text = daysRemaining <= 0 ? t('expires_today') : t('days_left')(daysRemaining);
+  return '<span class="ad-badge ad-badge--' + cls + '">' + esc(text) + '</span>';
+}
+
+async function loadDeletedOrdersTable() {
+  const wrap = $('#deletedOrdersTableWrap');
+  wrap.innerHTML = '<div class="ad-loading"><div class="ad-spinner"></div></div>';
+  const q = new URLSearchParams({ page: deletedOrdersPage, pageSize: 15, search: deletedOrdersSearch, recovery: deletedOrdersRecovery, status: deletedOrdersStatus });
+  if (deletedOrdersBy) q.set('deletedBy', deletedOrdersBy);
+  if (deletedOrdersFrom) q.set('dateFrom', deletedOrdersFrom);
+  if (deletedOrdersTo) q.set('dateTo', deletedOrdersTo);
+  const data = await api('/api/admin/orders/deleted?' + q.toString());
+  SOFT_DELETE_ENABLED = data.softDeleteEnabled !== false;
+  if (!SOFT_DELETE_ENABLED) {
+    wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">🔒</div>' + esc(t('soft_delete_not_enabled')) + '</div>';
+    return;
+  }
+  if (!data.orders.length) { wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">🗑️</div>' + esc(t('no_deleted_orders_found')) + '</div>'; return; }
+
+  const isSuperAdmin = CURRENT_ADMIN && CURRENT_ADMIN.role === 'admin';
+  wrap.innerHTML =
+    '<div class="ad-table-wrap"><table class="ad-table"><thead><tr><th>' + esc(t('th_order_no')) + '</th><th>' + esc(t('th_customer')) + '</th><th>' + esc(t('email')) + '</th><th>' + esc(t('th_total')) + '</th><th>' + esc(t('status')) + '</th><th>' + esc(t('th_deleted_by')) + '</th><th>' + esc(t('th_deleted_date')) + '</th><th>' + esc(t('th_days_remaining')) + '</th><th>' + esc(t('actions')) + '</th></tr></thead><tbody>' +
+    data.orders.map(o => {
+      const name = o.guest_name || o.customer_name || (o.user_id ? t('registered_customer') : t('guest'));
+      const email = o.guest_email || o.customer_email || '—';
+      return '<tr><td>' + esc(o.order_no || o.id.slice(0, 8)) + '</td>' +
+      '<td>' + esc(name) + '</td>' +
+      '<td>' + esc(email) + '</td>' +
+      '<td>' + money(o.grand_total) + '</td>' +
+      '<td><span class="ad-badge ad-badge--' + esc(o.status) + '">' + label(o.status) + '</span></td>' +
+      '<td>' + esc(o.deleted_by_name || '—') + '</td>' +
+      '<td>' + new Date(o.deleted_at).toLocaleDateString() + '</td>' +
+      '<td>' + recoveryBadge(o.days_remaining) + '</td>' +
+      '<td class="ad-actions-row">' +
+        '<button class="ad-btn-sm ad-btn-sm--primary" data-recover="' + o.id + '">' + esc(t('recover')) + '</button>' +
+        (isSuperAdmin ? '<button class="ad-btn-sm ad-btn-sm--danger" data-perm-delete="' + o.id + '">' + esc(t('delete_permanently')) + '</button>' : '') +
+      '</td></tr>';
+    }).join('') + '</tbody></table></div>' +
+    pagination(deletedOrdersPage, data.total, 15, p => { deletedOrdersPage = p; loadDeletedOrdersTable(); });
+  $$('[data-recover]', wrap).forEach(b => b.addEventListener('click', () => recoverOrderAction(b.getAttribute('data-recover'))));
+  $$('[data-perm-delete]', wrap).forEach(b => b.addEventListener('click', () => permanentlyDeleteOrderAction(b.getAttribute('data-perm-delete'))));
+}
+
+async function recoverOrderAction(id) {
+  try {
+    await api('/api/admin/orders/recover', { method: 'POST', body: { id } });
+    toast(t('order_recovered_toast'));
+    loadDeletedOrdersTable();
+  } catch (err) { toast(err.message); }
+}
+
+/* Restricted to Super Admin (admin_users.role === 'admin') — the button
+   itself is already hidden for anyone else (see isSuperAdmin above),
+   but the server re-checks the same rule so this can't be bypassed by
+   calling the API directly. */
+async function permanentlyDeleteOrderAction(id) {
+  if (!confirm(t('confirm_permanent_delete_order'))) return;
+  try {
+    await api('/api/admin/orders/permanent?id=' + id, { method: 'DELETE' });
+    toast(t('order_permanently_deleted_toast'));
+    loadDeletedOrdersTable();
+  } catch (err) { toast(err.message); }
 }
 
 /* Read-only order preview — everything below comes from the order row
@@ -1288,6 +1469,7 @@ function openCategoryEditor(c) {
    QUOTES
    ════════════════════════════════════════════════════════════════ */
 let quotesPage = 1, quotesStatus = 'all';
+let SOFT_DELETE_QUOTES_ENABLED = true;
 async function renderQuotes() {
   $('#adContent').innerHTML =
     '<div class="ad-page"><div class="ad-page-head"><h1 class="ad-page-title">' + esc(t('quotes_title')) + '</h1></div>' +
@@ -1302,6 +1484,7 @@ async function loadQuotesTable() {
   wrap.innerHTML = '<div class="ad-loading"><div class="ad-spinner"></div></div>';
   const q = new URLSearchParams({ page: quotesPage, pageSize: 15, status: quotesStatus });
   const data = await api('/api/admin/quotes?' + q.toString());
+  SOFT_DELETE_QUOTES_ENABLED = data.softDeleteEnabled !== false;
   if (!data.quotes.length) { wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">📝</div>' + esc(t('no_quotes')) + '</div>'; return; }
   wrap.innerHTML =
     '<div class="ad-table-wrap"><table class="ad-table"><thead><tr><th>' + esc(t('name')) + '</th><th>' + esc(t('th_contact')) + '</th><th>' + esc(t('th_product_service')) + '</th><th>' + esc(t('status')) + '</th><th>' + esc(t('date')) + '</th><th>' + esc(t('actions')) + '</th></tr></thead><tbody>' +
@@ -1309,11 +1492,26 @@ async function loadQuotesTable() {
       '<tr><td>' + esc(q.name || '—') + '</td><td>' + esc(q.email || q.phone || '—') + '</td><td>' + esc(q.product || '—') + '</td>' +
       '<td><span class="ad-badge ad-badge--' + esc(q.status) + '">' + label(q.status) + '</span></td>' +
       '<td>' + new Date(q.created_at).toLocaleDateString() + '</td>' +
-      '<td class="ad-actions-row"><button class="ad-btn-sm" data-view="' + q.id + '">' + esc(t('view')) + '</button></td></tr>'
+      '<td class="ad-actions-row"><button class="ad-btn-sm" data-view="' + q.id + '">' + esc(t('view')) + '</button>' +
+        (SOFT_DELETE_QUOTES_ENABLED ? '<button class="ad-btn-sm ad-btn-sm--danger" data-delete-quote="' + q.id + '">' + esc(t('del')) + '</button>' : '') +
+      '</td></tr>'
     )).join('') + '</tbody></table></div>' +
     pagination(quotesPage, data.total, 15, p => { quotesPage = p; loadQuotesTable(); });
   $$('[data-view]', wrap).forEach(b => b.addEventListener('click', () => openQuoteDetail(b.getAttribute('data-view'))));
+  $$('[data-delete-quote]', wrap).forEach(b => b.addEventListener('click', () => deleteQuoteAction(b.getAttribute('data-delete-quote'))));
 }
+
+/* Soft delete only — mirrors deleteOrderAction() exactly (see
+   api/admin/quotes/delete.js). */
+async function deleteQuoteAction(id) {
+  if (!confirm(t('confirm_delete_quote'))) return;
+  try {
+    await api('/api/admin/quotes/delete', { method: 'POST', body: { id } });
+    toast(t('quote_deleted_toast'));
+    loadQuotesTable();
+  } catch (err) { toast(err.message); }
+}
+
 async function openQuoteDetail(id) {
   const data = await api('/api/admin/quotes?id=' + id);
   const q = data.quote;
@@ -1330,7 +1528,11 @@ async function openQuoteDetail(id) {
     '<div class="ad-form-actions">' +
       '<button class="ad-btn-sm ad-btn-sm--primary" id="qSaveBtn">' + esc(t('save')) + '</button>' +
       (q.order_id ? '' : '<button class="ad-btn-sm" id="qConvertBtn">' + esc(t('convert_to_order')) + '</button>') +
-    '</div>'
+      (q.email ? '<button class="ad-btn-sm" id="qReplyBtn">' + esc(t('reply_to_customer')) + '</button>' : '') +
+      '<button class="ad-btn-sm" id="qCloseBtn">' + esc(t('close')) + '</button>' +
+    '</div>' +
+    '<div class="ad-card-title" style="margin-top:18px">' + esc(t('communication_history')) + '</div>' +
+    '<div id="qReplyHistory"><div class="ad-loading"><div class="ad-spinner"></div></div></div>'
   );
   $('#qSaveBtn').addEventListener('click', async () => {
     try { await api('/api/admin/quotes?id=' + q.id, { method: 'PATCH', body: { status: $('#qStatus').value, admin_notes: $('#qNotes').value } }); toast(t('saved')); closeModal(); loadQuotesTable(); }
@@ -1341,6 +1543,199 @@ async function openQuoteDetail(id) {
     try { await api('/api/admin/quotes', { method: 'POST', body: { action: 'convert-to-order', id: q.id } }); toast(t('converted')); closeModal(); loadQuotesTable(); }
     catch (err) { toast(err.message); }
   });
+  const replyBtn = $('#qReplyBtn');
+  if (replyBtn) replyBtn.addEventListener('click', () => openQuoteReply(q));
+  $('#qCloseBtn').addEventListener('click', closeModal);
+  loadQuoteReplyHistory(q.id);
+}
+
+/* ── Reply to Customer (Feature 5-10) ──────────────────────────────
+   Reuses the same #adModal as every other module (openModal replaces
+   its body) — Cancel/Close/X all return without sending anything;
+   nothing is written until Send succeeds. */
+let REPLY_ATTACHMENTS = [];
+
+function openQuoteReply(q) {
+  REPLY_ATTACHMENTS = [];
+  openModal(
+    '<h3 class="ad-modal-title">' + esc(t('reply_to_customer')) + '</h3>' +
+    '<div class="ad-field"><label class="ad-label">' + esc(t('to_field')) + '</label>' +
+      '<input class="ad-input" id="qrTo" value="' + esc(q.email) + '" disabled></div>' +
+    '<div class="ad-field"><label class="ad-label">' + esc(t('subject_field')) + '</label>' +
+      '<input class="ad-input" id="qrSubject" value="' + esc('Re: your quote request' + (q.product ? ' — ' + q.product : '')) + '"></div>' +
+    '<div class="ad-field"><label class="ad-label">' + esc(t('message')) + '</label>' +
+      '<textarea class="ad-input ad-textarea" id="qrMessage" style="min-height:140px"></textarea></div>' +
+    '<div class="ad-field"><label class="ad-label">' + esc(t('attachments_field')) + '</label>' +
+      '<input type="file" id="qrFiles" multiple>' +
+      '<div id="qrFileList" style="margin-top:8px"></div>' +
+    '</div>' +
+    '<div class="ad-form-actions">' +
+      '<button class="ad-btn-sm ad-btn-sm--primary" id="qrSendBtn">' + esc(t('send')) + '</button>' +
+      '<button class="ad-btn-sm" id="qrCancelBtn">' + esc(t('cancel')) + '</button>' +
+    '</div>'
+  );
+  renderReplyFileList();
+  $('#qrFiles').addEventListener('change', e => { addReplyFiles(Array.from(e.target.files || [])); e.target.value = ''; });
+  $('#qrCancelBtn').addEventListener('click', () => openQuoteDetail(q.id));
+  $('#qrSendBtn').addEventListener('click', () => sendQuoteReply(q.id));
+}
+
+const REPLY_MAX_FILE_BYTES = 5 * 1024 * 1024;
+function addReplyFiles(files) {
+  for (const f of files) {
+    if (f.size > REPLY_MAX_FILE_BYTES) { toast(f.name + ' is too large (max 5MB).'); continue; }
+    REPLY_ATTACHMENTS.push(f);
+  }
+  renderReplyFileList();
+}
+function removeReplyFile(idx) {
+  REPLY_ATTACHMENTS.splice(idx, 1);
+  renderReplyFileList();
+}
+function renderReplyFileList() {
+  const el = $('#qrFileList');
+  if (!el) return;
+  if (!REPLY_ATTACHMENTS.length) { el.innerHTML = '<p class="ad-empty" style="padding:8px 0">' + esc(t('no_attachments')) + '</p>'; return; }
+  el.innerHTML = REPLY_ATTACHMENTS.map((f, i) =>
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--ad-border);font-size:13px">' +
+      '<span>' + esc(f.name) + ' <span style="color:var(--ad-text-50)">(' + Math.round(f.size / 1024) + ' KB)</span></span>' +
+      '<button class="ad-btn-sm ad-btn-sm--danger" data-remove-att="' + i + '">&times;</button>' +
+    '</div>'
+  ).join('');
+  $$('[data-remove-att]', el).forEach(b => b.addEventListener('click', () => removeReplyFile(Number(b.getAttribute('data-remove-att')))));
+}
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]+,/, ''));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function sendQuoteReply(quoteId) {
+  const subject = $('#qrSubject').value.trim();
+  const message = $('#qrMessage').value.trim();
+  if (!subject || !message) return toast(t('subject_message_required'));
+  const sendBtn = $('#qrSendBtn');
+  sendBtn.disabled = true;
+  sendBtn.textContent = t('sending_ellipsis');
+  try {
+    const attachments = await Promise.all(REPLY_ATTACHMENTS.map(async f => ({
+      name: f.name, mime: f.type || 'application/octet-stream', dataBase64: await fileToBase64(f),
+    })));
+    await api('/api/admin/quotes/reply', { method: 'POST', body: { id: quoteId, subject, message, attachments } });
+    toast(t('email_sent_success'));
+    openQuoteDetail(quoteId);
+  } catch (err) {
+    toast(err.message);
+    sendBtn.disabled = false;
+    sendBtn.textContent = t('send');
+  }
+}
+
+async function loadQuoteReplyHistory(quoteId) {
+  const el = $('#qReplyHistory');
+  if (!el) return;
+  try {
+    const data = await api('/api/admin/quotes/replies?quoteId=' + quoteId);
+    if (!data.replies.length) { el.innerHTML = '<p class="ad-empty">' + esc(t('no_replies_yet')) + '</p>'; return; }
+    el.innerHTML = data.replies.map(r => {
+      const statusKey = r.status === 'failed' ? 'reply_status_failed' : 'reply_status_sent';
+      const statusCls = r.status === 'failed' ? 'cancelled' : 'completed';
+      const attNames = (r.attachments || []).map(a => a.name).join(', ');
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--ad-border);font-size:13px">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px">' +
+          '<strong>' + esc(r.subject) + '</strong>' +
+          '<span class="ad-badge ad-badge--' + statusCls + '">' + esc(t(statusKey)) + '</span>' +
+        '</div>' +
+        '<div style="color:var(--ad-text-50);font-size:12px;margin:2px 0">' + esc(r.admin_name || '') + ' — ' + new Date(r.created_at).toLocaleString() + '</div>' +
+        '<div>' + esc(r.message.length > 200 ? r.message.slice(0, 200) + '…' : r.message) + '</div>' +
+        (attNames ? '<div style="color:var(--ad-text-50);font-size:12px;margin-top:4px">📎 ' + esc(attNames) + '</div>' : '') +
+      '</div>';
+    }).join('');
+  } catch (err) {
+    el.innerHTML = '<p class="ad-empty">' + esc(err.message) + '</p>';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DELETED QUOTES — Recover / Permanently Delete (Super Admin only)
+   Mirrors renderDeletedOrders/loadDeletedOrdersTable exactly.
+   ════════════════════════════════════════════════════════════════ */
+let deletedQuotesPage = 1, deletedQuotesSearch = '', deletedQuotesRecovery = 'all', deletedQuotesStatus = 'all';
+
+async function renderDeletedQuotes() {
+  deletedQuotesPage = 1; deletedQuotesSearch = ''; deletedQuotesRecovery = 'all'; deletedQuotesStatus = 'all';
+
+  $('#adContent').innerHTML =
+    '<div class="ad-page"><div class="ad-page-head"><h1 class="ad-page-title">' + esc(t('quotes_deleted_title')) + '</h1></div>' +
+    '<div class="ad-toolbar">' +
+      '<input class="ad-input" id="delQuoteSearchInput" type="search" placeholder="' + esc(t('order_search_ph')) + '">' +
+      '<select class="ad-select" id="delQuoteStatusFilter"><option value="all">' + esc(t('all')) + '</option>' +
+        ['new','contacted','quoted','converted','closed'].map(s => '<option value="' + s + '">' + label(s) + '</option>').join('') +
+      '</select>' +
+      '<select class="ad-select" id="delQuoteRecoveryFilter">' +
+        '<option value="all">' + esc(t('all_recovery')) + '</option>' +
+        '<option value="green">' + esc(t('recovery_green')) + '</option>' +
+        '<option value="orange">' + esc(t('recovery_orange')) + '</option>' +
+        '<option value="red">' + esc(t('recovery_red')) + '</option>' +
+      '</select>' +
+    '</div>' +
+    '<div id="deletedQuotesTableWrap"></div></div>';
+
+  $('#delQuoteSearchInput').addEventListener('input', debounce(e => { deletedQuotesSearch = e.target.value; deletedQuotesPage = 1; loadDeletedQuotesTable(); }, 350));
+  $('#delQuoteStatusFilter').addEventListener('change', e => { deletedQuotesStatus = e.target.value; deletedQuotesPage = 1; loadDeletedQuotesTable(); });
+  $('#delQuoteRecoveryFilter').addEventListener('change', e => { deletedQuotesRecovery = e.target.value; deletedQuotesPage = 1; loadDeletedQuotesTable(); });
+  await loadDeletedQuotesTable();
+}
+
+async function loadDeletedQuotesTable() {
+  const wrap = $('#deletedQuotesTableWrap');
+  wrap.innerHTML = '<div class="ad-loading"><div class="ad-spinner"></div></div>';
+  const q = new URLSearchParams({ page: deletedQuotesPage, pageSize: 15, search: deletedQuotesSearch, recovery: deletedQuotesRecovery, status: deletedQuotesStatus });
+  const data = await api('/api/admin/quotes/deleted?' + q.toString());
+  SOFT_DELETE_QUOTES_ENABLED = data.softDeleteEnabled !== false;
+  if (!SOFT_DELETE_QUOTES_ENABLED) {
+    wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">🔒</div>' + esc(t('soft_delete_quotes_not_enabled')) + '</div>';
+    return;
+  }
+  if (!data.quotes.length) { wrap.innerHTML = '<div class="ad-empty"><div class="ad-empty-icon">🗑️</div>' + esc(t('no_deleted_quotes_found')) + '</div>'; return; }
+
+  const isSuperAdmin = CURRENT_ADMIN && CURRENT_ADMIN.role === 'admin';
+  wrap.innerHTML =
+    '<div class="ad-table-wrap"><table class="ad-table"><thead><tr><th>' + esc(t('name')) + '</th><th>' + esc(t('th_contact')) + '</th><th>' + esc(t('th_product_service')) + '</th><th>' + esc(t('status')) + '</th><th>' + esc(t('th_deleted_by')) + '</th><th>' + esc(t('th_deleted_date')) + '</th><th>' + esc(t('th_days_remaining')) + '</th><th>' + esc(t('actions')) + '</th></tr></thead><tbody>' +
+    data.quotes.map(q => (
+      '<tr><td>' + esc(q.name || '—') + '</td><td>' + esc(q.email || q.phone || '—') + '</td><td>' + esc(q.product || '—') + '</td>' +
+      '<td><span class="ad-badge ad-badge--' + esc(q.status) + '">' + label(q.status) + '</span></td>' +
+      '<td>' + esc(q.deleted_by_name || '—') + '</td>' +
+      '<td>' + new Date(q.deleted_at).toLocaleDateString() + '</td>' +
+      '<td>' + recoveryBadge(q.days_remaining) + '</td>' +
+      '<td class="ad-actions-row">' +
+        '<button class="ad-btn-sm ad-btn-sm--primary" data-recover-quote="' + q.id + '">' + esc(t('recover')) + '</button>' +
+        (isSuperAdmin ? '<button class="ad-btn-sm ad-btn-sm--danger" data-perm-delete-quote="' + q.id + '">' + esc(t('delete_permanently')) + '</button>' : '') +
+      '</td></tr>'
+    )).join('') + '</tbody></table></div>' +
+    pagination(deletedQuotesPage, data.total, 15, p => { deletedQuotesPage = p; loadDeletedQuotesTable(); });
+  $$('[data-recover-quote]', wrap).forEach(b => b.addEventListener('click', () => recoverQuoteAction(b.getAttribute('data-recover-quote'))));
+  $$('[data-perm-delete-quote]', wrap).forEach(b => b.addEventListener('click', () => permanentlyDeleteQuoteAction(b.getAttribute('data-perm-delete-quote'))));
+}
+
+async function recoverQuoteAction(id) {
+  try {
+    await api('/api/admin/quotes/recover', { method: 'POST', body: { id } });
+    toast(t('quote_recovered_toast'));
+    loadDeletedQuotesTable();
+  } catch (err) { toast(err.message); }
+}
+
+async function permanentlyDeleteQuoteAction(id) {
+  if (!confirm(t('confirm_permanent_delete_quote'))) return;
+  try {
+    await api('/api/admin/quotes/permanent?id=' + id, { method: 'DELETE' });
+    toast(t('quote_permanently_deleted_toast'));
+    loadDeletedQuotesTable();
+  } catch (err) { toast(err.message); }
 }
 
 /* ════════════════════════════════════════════════════════════════

@@ -9,7 +9,7 @@ const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 const net  = require('net');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 
 /* ── Load .env.local (zero-dependency — runs before anything else) ── */
 (function loadEnvLocal() {
@@ -126,9 +126,17 @@ function loadApiHandler(urlPath) {
 }
 
 function dispatchApi(handler, req, res, urlPath) {
-  let raw = '';
-  req.on('data', chunk => { raw += chunk; });
+  /* Collect raw Buffer chunks and decode ONCE at the end — string-
+     concatenating chunks as they arrive (`raw += chunk`) implicitly
+     calls Buffer.toString('utf8') per chunk, which can split a
+     multi-byte UTF-8 character across a chunk boundary and corrupt it
+     (e.g. a non-ASCII attachment filename in a large multi-MB request
+     body, which is exactly the shape of a reply-with-attachments
+     payload). Buffer.concat first avoids that entirely. */
+  const chunks = [];
+  req.on('data', chunk => { chunks.push(chunk); });
   req.on('end', async () => {
+    const raw = Buffer.concat(chunks).toString('utf8');
     let parsed = {};
     try { parsed = raw ? JSON.parse(raw) : {}; } catch (_) {}
     req.body = parsed;
@@ -242,44 +250,92 @@ server.on('upgrade', (req, clientSocket, head) => {
   clientSocket.on('error', () => upstreamSocket.destroy());
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log('\n  AL FAROOQUE Manufacturing — dev server');
-  console.log('  http://localhost:' + PORT + '\n');
-  console.log('  Routes registered: ' + Object.keys(ROUTES).length);
-  console.log('  Static assets served from: ' + ROOT + '\n');
+/* ── Unified startup banner + readiness tracking ──────────────────────
+   `npm run dev` from the repo root is the ONLY command a developer needs
+   — this one process brings up the main site plus every managed app
+   below. Each app prints its own "✓ … Ready" line as its dev server
+   actually finishes compiling (not just "process spawned"), and the
+   final "Development environment ready." line only appears once all of
+   them have reported in. */
+const READY_LABELS = ['Main Website', 'Cars App', 'Projects App', 'Quotation App'];
+const readyState = {};
+function markReady(label) {
+  if (readyState[label]) return;
+  readyState[label] = true;
+  console.log('  ✓ ' + label + ' Ready');
+  if (READY_LABELS.every(l => readyState[l])) console.log('\n  Development environment ready.\n');
+}
 
-  /* ── Email service startup check ── */
-  var cfg = emailService.getStatus();
-  if (cfg.configured) {
-    console.log('  [email] ✓ Configured — provider: ' + cfg.provider +
-                ' | from: ' + cfg.from + ' | to: ' + cfg.to + '\n');
-  } else {
-    console.warn('  ┌──────────────────────────────────────────────────────────┐');
-    console.warn('  │  ⚠  EMAIL NOT CONFIGURED — forms will return HTTP 500.     │');
-    console.warn('  │  ' + cfg.reason);
-    console.warn('  │  Set RESEND_API_KEY, or SMTP_HOST/SMTP_USER/SMTP_PASS,     │');
-    console.warn('  │  in .env.local. See .env.example for details.              │');
-    console.warn('  └──────────────────────────────────────────────────────────┘\n');
+function printBanner() {
+  console.log('\n  ------------------------------------------------------------');
+  console.log('  AL FAROOQUE Development Environment\n');
+  console.log('  Main Website        http://localhost:' + PORT);
+  console.log('  Cars App            http://localhost:3010');
+  console.log('  Projects App        http://localhost:3020');
+  console.log('  Quotation App       http://localhost:3030\n');
+  console.log('  Starting development servers...\n');
+}
+
+(async function startAll() {
+  printBanner();
+
+  /* Main site's own port needs the same stale-instance cleanup as every
+     managed app below — a leftover server.js from a previous run must
+     not block this one from binding 3000. */
+  const preflight = await freePortIfStale(PORT, 'Main Website');
+  if (!preflight.ok) {
+    console.error('  Main Website failed to start.');
+    console.error('  Reason: ' + preflight.reason);
+    console.error('  Free port ' + PORT + ' manually, then try again.\n');
+    process.exit(1);
   }
+
+  server.listen(PORT, '127.0.0.1', () => {
+    console.log('  [main-site] Static site + API listening on http://localhost:' + PORT);
+    console.log('  Routes registered: ' + Object.keys(ROUTES).length);
+    console.log('  Static assets served from: ' + ROOT + '\n');
+
+    /* ── Email service startup check ── */
+    var cfg = emailService.getStatus();
+    if (cfg.configured) {
+      console.log('  [email] ✓ Configured — provider: ' + cfg.provider +
+                  ' | from: ' + cfg.from + ' | to: ' + cfg.to + '\n');
+    } else {
+      console.warn('  ┌──────────────────────────────────────────────────────────┐');
+      console.warn('  │  ⚠  EMAIL NOT CONFIGURED — forms will return HTTP 500.     │');
+      console.warn('  │  ' + cfg.reason);
+      console.warn('  │  Set RESEND_API_KEY, or SMTP_HOST/SMTP_USER/SMTP_PASS,     │');
+      console.warn('  │  in .env.local. See .env.example for details.              │');
+      console.warn('  └──────────────────────────────────────────────────────────┘\n');
+    }
+
+    markReady('Main Website');
+  });
 
   for (const app of MANAGED_APPS) {
-    startManagedApp(app).catch(err => console.error('  [' + app.name + '] Unexpected error starting: ' + err.message));
+    startManagedApp(app).catch(err => {
+      console.error('  ' + app.label + ' failed to start.');
+      console.error('  Reason: ' + err.message);
+      console.error('  The other applications will continue running.\n');
+    });
   }
-});
+})();
 
-/* ── Auto-start apps/cars and apps/projects alongside the main site ──
-   Both apps should always be up whenever this server runs, instead of
-   remembering to launch each separately — the /cars and /projects local
-   proxies (see PROXY_TARGETS above) are useless without them anyway.
+/* ── Auto-start apps/cars, apps/projects and apps/quotation alongside
+   the main site ── All three should always be up whenever this server
+   runs, instead of remembering to launch each separately (the /cars and
+   /projects local proxies above are useless without them anyway).
    Spawns `npm run dev` inside each app dir, restarts it if it crashes
    (capped per app, so a real bug doesn't spin forever), and shuts it
-   down when this process exits. Skips spawning an app whose port is
-   already occupied (e.g. started manually, or via the preview tool's
-   own launch config) rather than fighting over the port. */
+   down cleanly when this process exits. If an app's port is already
+   occupied by a leftover Node process from a previous run, that stale
+   process is stopped first so this run always starts clean — a process
+   holding the port that ISN'T Node is left alone (see freePortIfStale). */
 const MAX_RESTARTS = 5;
 const MANAGED_APPS = [
-  { name: 'cars-app', dir: path.join(ROOT, 'apps', 'cars'), port: 3010 },
-  { name: 'projects-app', dir: path.join(ROOT, 'apps', 'projects'), port: 3020 },
+  { name: 'cars-app', label: 'Cars App', dir: path.join(ROOT, 'apps', 'cars'), port: 3010 },
+  { name: 'projects-app', label: 'Projects App', dir: path.join(ROOT, 'apps', 'projects'), port: 3020 },
+  { name: 'quotation-app', label: 'Quotation App', dir: path.join(ROOT, 'apps', 'quotation'), port: 3030 },
 ].map(app => ({ ...app, child: null, restarts: 0, shuttingDown: false }));
 
 function isPortInUse(port) {
@@ -290,25 +346,99 @@ function isPortInUse(port) {
   });
 }
 
+/* Windows-only: find the PID currently LISTENING on `port` via netstat.
+   Returns null if none found or on any parse/exec failure (non-Windows,
+   netstat unavailable, etc.) — every caller treats null as "don't know,
+   leave it alone" rather than guessing. */
+function findPidOnPort(port) {
+  if (process.platform !== 'win32') return null;
+  try {
+    const out = execSync('netstat -ano -p tcp', { encoding: 'utf8' });
+    for (const line of out.split(/\r?\n/)) {
+      const m = line.trim().match(/^TCP\s+\S*:(\d+)\s+\S+\s+LISTENING\s+(\d+)/i);
+      if (m && Number(m[1]) === port) return Number(m[2]);
+    }
+  } catch (_) {}
+  return null;
+}
+function isNodeProcess(pid) {
+  try {
+    const out = execSync('tasklist /FI "PID eq ' + pid + '" /FO CSV /NH', { encoding: 'utf8' });
+    return /node\.exe/i.test(out);
+  } catch (_) { return false; }
+}
+/* Kills an entire process tree (Node's child.kill() alone can leave
+   grandchild processes — e.g. Next.js's webpack workers — orphaned on
+   Windows), falling back to a plain kill() off-Windows. */
+function killProcessTree(pid) {
+  try {
+    if (process.platform === 'win32') execSync('taskkill /F /T /PID ' + pid, { stdio: 'ignore' });
+    else process.kill(pid);
+  } catch (_) {}
+}
+
+/* Pre-flight port check shared by the main site and every managed app:
+   if the port is free, nothing to do. If it's held by a Node process
+   (almost certainly a previous run of this exact dev environment),
+   stop only that process and wait for the port to actually free up. If
+   it's held by something else, leave it alone and report why starting
+   failed — this app's failure never touches unrelated processes or the
+   other three apps. */
+async function freePortIfStale(port, label) {
+  if (!(await isPortInUse(port))) return { ok: true };
+  const pid = findPidOnPort(port);
+  if (pid && isNodeProcess(pid)) {
+    console.log('  ' + label + ': port ' + port + ' held by a previous instance (PID ' + pid + ') — stopping it…');
+    killProcessTree(pid);
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 200));
+      if (!(await isPortInUse(port))) return { ok: true };
+    }
+    return { ok: false, reason: 'Port ' + port + ' is still in use after stopping the previous instance.' };
+  }
+  return {
+    ok: false,
+    reason: pid
+      ? 'Port ' + port + ' is in use by a non-Node process (PID ' + pid + ') — not stopping it automatically.'
+      : 'Port ' + port + ' is in use by another process that could not be identified.',
+  };
+}
+
+/* Recognizes each dev server's own "compiled and listening" output so
+   the "✓ … Ready" banner line reflects reality, not just "the process
+   was spawned" (which happens well before Next.js is actually serving
+   requests). Matches every phrasing Next.js has used across versions. */
+const READY_PATTERNS = [/✓\s*ready/i, /ready - started server/i, /-\s*local:\s*http/i];
+function looksReady(text) {
+  return READY_PATTERNS.some(re => re.test(text));
+}
+
 async function startManagedApp(app) {
   if (!fs.existsSync(app.dir)) return;
-  if (await isPortInUse(app.port)) {
-    console.log('  [' + app.name + '] Already running on port ' + app.port + ' — leaving it as-is.\n');
-    return;
-  }
+  const pre = await freePortIfStale(app.port, app.label);
+  if (!pre.ok) throw new Error(pre.reason);
+
   console.log('  [' + app.name + '] Starting dev server on port ' + app.port + '…');
   try {
     // Explicit PORT env var — without this, `next dev` ignores app.port entirely
     // and defaults to 3000, colliding with the main static site (see the header
     // comment above: this whole file assumes 3000 is exclusively the main site's).
+    // stdio is piped (not 'inherit') so this process can watch for the
+    // "ready" line to fire the ✓ banner — output is still forwarded to
+    // this terminal exactly as before, just relayed rather than direct.
     app.child = spawn('npm', ['run', 'dev'], {
-      cwd: app.dir, stdio: 'inherit', shell: true,
+      cwd: app.dir, stdio: ['ignore', 'pipe', 'pipe'], shell: true,
       env: Object.assign({}, process.env, { PORT: String(app.port) }),
     });
   } catch (err) {
-    console.error('  [' + app.name + '] Failed to spawn: ' + err.message);
-    return;
+    throw new Error('Failed to spawn: ' + err.message);
   }
+  const relay = stream => chunk => {
+    process.stdout.write(chunk);
+    if (looksReady(String(chunk))) markReady(app.label);
+  };
+  app.child.stdout.on('data', relay('stdout'));
+  app.child.stderr.on('data', relay('stderr'));
   app.child.on('error', (err) => {
     console.error('  [' + app.name + '] Failed to start: ' + err.message);
     app.child = null;
@@ -322,14 +452,19 @@ async function startManagedApp(app) {
     }
     app.restarts++;
     console.warn('  [' + app.name + '] Exited unexpectedly (code ' + code + ') — restarting (' + app.restarts + '/' + MAX_RESTARTS + ')…');
-    setTimeout(() => startManagedApp(app), 1000);
+    setTimeout(() => startManagedApp(app).catch(err => console.error('  ' + app.label + ' failed to restart: ' + err.message)), 1000);
   });
 }
 
+/* Kills the FULL tree for each managed app (see killProcessTree above) —
+   `child.kill()` alone only signals the immediate `npm`/shell process;
+   on Windows the actual `next dev` (and its webpack worker processes)
+   are grandchildren that would otherwise survive as orphans after this
+   terminal closes. */
 function stopManagedApps() {
   for (const app of MANAGED_APPS) {
     app.shuttingDown = true;
-    if (app.child) app.child.kill();
+    if (app.child && app.child.pid) killProcessTree(app.child.pid);
   }
 }
 process.on('exit', stopManagedApps);

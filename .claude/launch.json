@@ -24,14 +24,14 @@
       "name": "projects-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "apps/projects", "run", "dev"],
-      "port": 3021,
+      "port": 3020,
       "autoPort": true
     },
     {
       "name": "quotation-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "apps/quotation", "run", "dev"],
-      "port": 3020,
+      "port": 3030,
       "autoPort": true
     }
   ]

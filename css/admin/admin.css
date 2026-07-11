@@ -320,6 +320,8 @@ button, input, select, textarea { font-family: inherit; }
 /* Toolbar */
 .ad-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .ad-toolbar .ad-input { max-width: 260px; }
+.ad-inline-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ad-text-70); }
+.ad-inline-label .ad-input { max-width: 150px; }
 .ad-select { padding-block: 8px; padding-inline: 12px 30px; border-radius: var(--ad-r-sm); background: var(--ad-card-2); border: 1px solid var(--ad-border-2); color: var(--ad-text); font-size: 13px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
 /* The dropdown POPUP list is rendered by the OS/browser with a light
    background regardless of our theme — without this, <option> text

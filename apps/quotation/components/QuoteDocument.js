@@ -49,6 +49,28 @@ const BANK_DETAILS = {
 
 import { translate, hasArabic } from '@/lib/translate';
 
+/* translate() is a word-by-word, order-reversing NAME translator (correct
+   for short noun phrases like "Premium MDF Door"). Applying it to
+   multi-sentence prose (Terms & Conditions, Payment/Delivery Terms,
+   Notes) scrambles it into nonsense. For those long-form fields we only
+   ever substitute a handful of KNOWN, hand-translated sentences (the
+   shared default templates); anything else is shown in its original
+   script rather than run through the word-reversal heuristic. */
+const PROSE_PAIRS = [
+  [
+    'Prices are valid for 7 days from the quotation date. Delivery period to be confirmed on order. Prices include VAT where stated.',
+    'الأسعار سارية لمدة 7 أيام من تاريخ العرض. يتم تأكيد مدة التسليم عند الطلب. الأسعار تشمل الضريبة حيثما ذُكر.',
+  ],
+];
+function locProse(v, isAr) {
+  const s = v === null || v === undefined ? '' : String(v);
+  if (!s.trim()) return s;
+  if (isAr === hasArabic(s)) return s;
+  const norm = s.trim().replace(/\s+/g, ' ');
+  const hit = PROSE_PAIRS.find(([en, ar]) => (isAr ? en : ar).replace(/\s+/g, ' ') === norm);
+  return hit ? (isAr ? hit[1] : hit[0]) : s;
+}
+
 export function money(n) {
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -117,12 +139,19 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           actual QR image lives in .qdoc-body (see below) so it can be
           page-1-only, but is sized/aligned to land exactly in this
           reserved slot, reading as one continuous header row. */}
+      {/* direction:'ltr' on the header/QR containers freezes their
+          column/flex order regardless of document language — otherwise
+          the browser mirrors grid columns and flex justify-content for
+          RTL, which moved the QR to the wrong side and off its reserved
+          slot in Arabic. Each inner block re-applies dir={dir} so its
+          own TEXT still reads correctly; only the outer POSITIONS stay
+          identical between languages, per spec. */}
       <div className="qdoc-header" style={{
-        position: 'relative', zIndex: 1, display: 'grid',
+        position: 'relative', zIndex: 1, display: 'grid', direction: 'ltr',
         gridTemplateColumns: qrDataUrl ? '1fr auto 138px' : '1fr auto',
         alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #6B7A4F', paddingBottom: 14,
       }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div dir={dir} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <img src="/logo.png" alt="" style={{ height: 48, width: 'auto', flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: 19, fontWeight: 700, color: '#46512F' }}>{eName}</div>
@@ -134,9 +163,9 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             </div>
           </div>
         </div>
-        <div style={{ textAlign: isAr ? 'left' : 'right' }}>
+        <div dir={dir} style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 1 }}>{t.quotation}</div>
-          <table style={{ fontSize: 12, marginTop: 6, [isAr ? 'marginRight' : 'marginLeft']: 'auto' }}>
+          <table style={{ fontSize: 12, marginTop: 6, marginLeft: 'auto' }}>
             <tbody>
               <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.number}</td><td style={{ fontWeight: 600 }} dir="ltr">{doc.quote_number}</td></tr>
               <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.date}</td><td dir="ltr">{dateStr(doc.quote_date)}</td></tr>
@@ -157,7 +186,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           while the customer box below still starts right after its
           real box — no overlap, on screen or print. */}
       {qrDataUrl && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -104, marginBottom: 8, position: 'relative', zIndex: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', direction: 'ltr', marginTop: -104, marginBottom: 8, position: 'relative', zIndex: 2 }}>
           <div style={{
             textAlign: 'center', background: '#fff', padding: 8, borderRadius: 8,
             border: '1px solid #dcd9d2', boxShadow: '0 1px 4px rgba(26,26,24,0.08)',
@@ -210,8 +239,8 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           the final page since nothing follows it but this section) */}
       <div style={{ display: 'flex', gap: 16, marginTop: 14, alignItems: 'flex-start', breakInside: 'avoid' }}>
         <div style={{ flex: 1, fontSize: 11.5, color: '#55534c' }}>
-          {doc.delivery_terms && <div><b>{t.deliveryTerms}:</b> {loc(doc.delivery_terms)}</div>}
-          {doc.customer_notes && <div style={{ marginTop: 6 }}><b>{t.notes}:</b> {loc(doc.customer_notes)}</div>}
+          {doc.delivery_terms && <div><b>{t.deliveryTerms}:</b> {locProse(doc.delivery_terms, isAr)}</div>}
+          {doc.customer_notes && <div style={{ marginTop: 6 }}><b>{t.notes}:</b> {locProse(doc.customer_notes, isAr)}</div>}
         </div>
         <table style={{ width: 280, borderCollapse: 'collapse', fontSize: 12 }}>
           <tbody>
@@ -232,7 +261,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
       {doc.payment_terms && String(doc.payment_terms).trim() && (
         <div style={{ marginTop: 16, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
           <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 3 }}>{t.paymentTerms}</div>
-          <div style={{ whiteSpace: 'pre-wrap' }}>{loc(doc.payment_terms)}</div>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{locProse(doc.payment_terms, isAr)}</div>
         </div>
       )}
 
@@ -251,7 +280,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
       {(doc.terms_body_override || terms) && (
         <div style={{ marginTop: 16, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
           <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 3 }}>{t.terms}</div>
-          <div style={{ whiteSpace: 'pre-wrap' }}>{loc(doc.terms_body_override || terms.body)}</div>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{locProse(doc.terms_body_override || terms.body, isAr)}</div>
         </div>
       )}
 

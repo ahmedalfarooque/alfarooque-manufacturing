@@ -317,11 +317,14 @@ const AFAuth = {
     } catch(e) { return { data: null, error: e }; }
   },
 
-  /* ── Orders (read-only history) ── */
+  /* ── Orders (read-only history) — soft-deleted orders (admin "Delete"
+     action) are excluded here so they vanish from My Orders / Order
+     History / invoices / the account dashboard; a later Recover makes
+     them reappear automatically since this is a live query, not a cache. ── */
   getOrders: async function () {
     if (!CONFIGURED || !_cachedUser) return { data: [], error: null };
     const sb = await getClient();
-    return sb.from('orders').select('*').eq('user_id', _cachedUser.id).order('created_at', { ascending: false });
+    return sb.from('orders').select('*').eq('user_id', _cachedUser.id).eq('is_deleted', false).order('created_at', { ascending: false });
   },
 
   /* ── Customer-initiated cancel / delete — restricted to the caller's
