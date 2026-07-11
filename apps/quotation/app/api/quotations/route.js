@@ -57,6 +57,10 @@ export async function POST(req) {
     valid_until: validUntil,
     vat_rate: Number(entity.default_vat_rate) || Number(defaults.vat_rate) || 15,
     terms_template_id: terms ? terms.id : null,
+    /* New quotations start in whichever language the app's UI is
+       currently set to (spec: "current application language"), not a
+       hardcoded default — the client sends its active toggle state. */
+    output_lang: body.output_lang === 'ar' ? 'ar' : 'en',
     created_by: session.sub, updated_by: session.sub,
   };
   const { data, error } = await sb.from('qt_quotations').insert(row).select('id').single();

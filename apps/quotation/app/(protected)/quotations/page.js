@@ -82,7 +82,7 @@ export default function QuotationsPage() {
     try {
       const res = await fetch('/api/quotations', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-        body: JSON.stringify({ entity_id: entityId, customer_id: customerId || null }),
+        body: JSON.stringify({ entity_id: entityId, customer_id: customerId || null, output_lang: lang }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || t('common.genericError'));
