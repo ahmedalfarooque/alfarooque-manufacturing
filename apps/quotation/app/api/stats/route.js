@@ -25,7 +25,10 @@ export async function GET(req) {
   const in3days = new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString().slice(0, 10);
   const today = now.toISOString().slice(0, 10);
 
-  const [total, draft, pending, sent, accepted, expiring, customers, materials] = await Promise.all([
+  /* Every widget below is independent — one parallel burst instead of
+     counts-then-monthly-then-recent in sequence. */
+  const yearAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString().slice(0, 10);
+  const [total, draft, pending, sent, accepted, expiring, customers, materials, monthlyRes, recentRes] = await Promise.all([
     count(sb, 'qt_quotations'),
     count(sb, 'qt_quotations', q => q.eq('status', 'draft')),
     count(sb, 'qt_quotations', q => q.eq('status', 'pending_approval')),
@@ -34,18 +37,23 @@ export async function GET(req) {
     count(sb, 'qt_quotations', q => q.in('status', ['approved', 'sent']).gte('valid_until', today).lte('valid_until', in3days)),
     count(sb, 'customers'),
     count(sb, 'qt_materials'),
+    sb.from('qt_quotations')
+      .select('grand_total, status, quote_date, created_at')
+      .is('deleted_at', null)
+      .gte('quote_date', yearAgo)
+      .not('status', 'in', '(cancelled,superseded)')
+      .then(r => r, () => ({ data: [] })),
+    sb.from('qt_quotations')
+      .select('id, quote_number, status, grand_total, blended_margin_pct, customer:customers(company_name)')
+      .is('deleted_at', null).order('created_at', { ascending: false }).limit(8)
+      .then(r => r, () => ({ data: [] })),
   ]);
 
   let quotedMonth = 0;
   const monthly = [];
   let recent = [];
   try {
-    const yearAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString().slice(0, 10);
-    const { data } = await sb.from('qt_quotations')
-      .select('grand_total, status, quote_date, created_at')
-      .is('deleted_at', null)
-      .gte('quote_date', yearAgo)
-      .not('status', 'in', '(cancelled,superseded)');
+    const { data } = monthlyRes;
     const byMonth = new Map();
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -61,10 +69,7 @@ export async function GET(req) {
     }
     monthly.push(...byMonth.values());
 
-    const { data: rec } = await sb.from('qt_quotations')
-      .select('id, quote_number, status, grand_total, blended_margin_pct, customer:customers(company_name)')
-      .is('deleted_at', null).order('created_at', { ascending: false }).limit(8);
-    recent = rec || [];
+    recent = recentRes.data || [];
   } catch (_) {}
 
   return json({ total, draft, pending, sent, accepted, expiring, customers, materials, quotedMonth, monthly, recent });

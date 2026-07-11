@@ -38,7 +38,11 @@ const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']);
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'no-store');
+  /* Folder listings only change when files are added — locally on next
+     request (max-age=300 keeps the browser from re-asking on every
+     navigation), in production only with a deploy (each deploy gets a
+     fresh CDN cache, so s-maxage can be generous). */
+  res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400');
 
   const slug = String(req.query?.set || '').trim();
   const set = SETS[slug];

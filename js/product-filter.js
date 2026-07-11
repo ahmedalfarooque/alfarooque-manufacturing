@@ -811,4 +811,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   /* Initial render — replaces the one from products.js */
   pfRenderAll();
+
+  /* The filter system owns the grid on this page — take over the
+     stale-while-revalidate refresh hook from products.js so a
+     background catalog update re-renders through the active filters
+     instead of resetting the grid to the unfiltered view. */
+  window.__catalogRefresh = function () {
+    pfRenderAll();
+    if (typeof renderNewArrival === 'function') renderNewArrival();
+    if (typeof cart !== 'undefined' && cart.renderDrawer) cart.renderDrawer();
+  };
 });

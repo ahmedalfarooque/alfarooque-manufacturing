@@ -19,8 +19,11 @@
    separate "Arabic looks broken" implementation is exactly what this
    avoids. */
 
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+/* jspdf + jspdf-autotable are loaded on demand (first Download/Print
+   click) instead of statically — they're ~400 KB of JS the print-preview
+   page otherwise pays for on every load even when the user never
+   generates a PDF. Output is byte-identical; only WHEN the library
+   loads changes. */
 import { renderArabicText, wrapArabicText } from './arabicText';
 
 const PAGE_W = 210;
@@ -135,7 +138,12 @@ function loadLogo() {
 async function buildQuotePdfDocument({ doc: q, products, entity, customer, terms, qrDataUrl, lang }) {
   const isAr = lang === 'ar';
   const t = L[isAr ? 'ar' : 'en'];
-  const logo = await loadLogo();
+  const [{ jsPDF }, autoTableMod, logo] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+    loadLogo(),
+  ]);
+  const autoTable = autoTableMod.default;
   const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
 
   /* Unified text drawing: plain Latin strings use jsPDF's native

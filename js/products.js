@@ -46,37 +46,103 @@ var CATEGORIES_MAP = {};
 var _productsReadyResolve;
 window.__productsReady = new Promise(function (resolve) { _productsReadyResolve = resolve; });
 
+/* ── Optimized image variants ──
+   Every product PNG/JPG under assets/images/ has pre-generated siblings:
+   "<name>.webp" (full size, ~90% smaller) and "<name>.thumb.webp" (640px,
+   for cards/thumbnails). The visual content is identical — only the
+   encoding changes. _IMG_FALLBACK maps each optimized path back to its
+   predecessor so a missing variant (e.g. a newly-uploaded image whose
+   siblings haven't been generated yet) silently falls back to the
+   original file via the delegated error handler below — no broken
+   images, no console noise, no code changes needed at upload time. */
+var _IMG_FALLBACK = {};
+function _optImg(src) {
+  if (!src || /^(https?:)?\/\//.test(src) || !/\.(png|jpe?g)$/i.test(src)) return src;
+  var webp = src.replace(/\.(png|jpe?g)$/i, '.webp');
+  _IMG_FALLBACK[webp] = src;
+  return webp;
+}
+function _thumbImg(src) {
+  if (!src || /^(https?:)?\/\//.test(src) || !/\.(png|jpe?g)$/i.test(src)) return src;
+  var thumb = src.replace(/\.(png|jpe?g)$/i, '.thumb.webp');
+  _IMG_FALLBACK[thumb] = _optImg(src); /* thumb -> full webp -> original */
+  return thumb;
+}
+/* One capture-phase listener catches load errors from every <img> this
+   page ever creates (cards, modal, lightbox, cart) — steps each failed
+   optimized URL back to its fallback exactly once. */
+document.addEventListener('error', function (e) {
+  var img = e.target;
+  if (!img || img.tagName !== 'IMG') return;
+  var src = img.getAttribute('src');
+  var fb = src && _IMG_FALLBACK[src];
+  if (fb) { delete _IMG_FALLBACK[src]; img.src = fb; }
+}, true);
+
+function _ingestCatalog(data) {
+  var rows = (data && data.products) || [];
+  PRODUCTS = rows.map(function (row) {
+    /* sizes is the only field the old static catalog didn't already
+       split by language at the data layer (t() baked the fallback
+       string into whichever language the page happened to be at
+       parse time) — pick the right one here, once, so every other
+       part of this file keeps reading p.sizes exactly as before. */
+    row.sizes = (IS_AR && row.sizesAr && row.sizesAr.length) ? row.sizesAr : row.sizes;
+    row.imgs = (row.imgs || []).map(_optImg);
+    row.img = row.imgs[0] || '';
+    row.imgsThumb = row.imgs.map(function (s) {
+      /* imgs are already .webp here; derive the thumb from the webp name */
+      return /\.webp$/i.test(s) && !/\.thumb\.webp$/i.test(s) ? s.replace(/\.webp$/i, '.thumb.webp') : s;
+    });
+    row.imgsThumb.forEach(function (tsrc, i) {
+      if (tsrc !== row.imgs[i]) _IMG_FALLBACK[tsrc] = row.imgs[i];
+    });
+    row.imgThumb = row.imgsThumb[0] || '';
+    return row;
+  });
+  PRODUCTS_MAP = {};
+  PRODUCTS.forEach(function (p) { PRODUCTS_MAP[p.id] = p; });
+
+  CATEGORIES_MAP = {};
+  ((data && data.categories) || []).forEach(function (c) {
+    CATEGORIES_MAP[c.slug] = { name: c.name, nameAr: c.name_ar || c.name };
+  });
+}
+
 (function loadProductsFromApi() {
   /* Categories now arrive in the same /api/products response (the
      separate /api/categories function was folded in to stay within
-     Vercel's 12-function Hobby-plan cap) — one request instead of two. */
-  fetch('/api/products').then(function (res) { return res.json(); })
-    .then(function (data) {
-      var catData = data;
+     Vercel's 12-function Hobby-plan cap) — one request instead of two.
 
-      var rows = (data && data.products) || [];
-      PRODUCTS = rows.map(function (row) {
-        /* sizes is the only field the old static catalog didn't already
-           split by language at the data layer (t() baked the fallback
-           string into whichever language the page happened to be at
-           parse time) — pick the right one here, once, so every other
-           part of this file keeps reading p.sizes exactly as before. */
-        row.sizes = (IS_AR && row.sizesAr && row.sizesAr.length) ? row.sizesAr : row.sizes;
-        return row;
-      });
-      PRODUCTS_MAP = {};
-      PRODUCTS.forEach(function (p) { PRODUCTS_MAP[p.id] = p; });
+     Stale-while-revalidate: the last good response is cached in
+     sessionStorage so repeat views in the same tab render instantly
+     from cache while a background fetch confirms freshness. If the
+     server copy differs (an admin edited the catalog), the stores are
+     refreshed and any already-rendered grid re-renders once — so data
+     is never stale for more than a moment. */
+  var CATALOG_CACHE_KEY = 'afq-catalog-v1';
+  var cachedRaw = null;
+  try { cachedRaw = sessionStorage.getItem(CATALOG_CACHE_KEY); } catch (e) {}
+  if (cachedRaw) {
+    try {
+      _ingestCatalog(JSON.parse(cachedRaw));
+      _productsReadyResolve();
+    } catch (e) { cachedRaw = null; }
+  }
 
-      CATEGORIES_MAP = {};
-      ((catData && catData.categories) || []).forEach(function (c) {
-        CATEGORIES_MAP[c.slug] = { name: c.name, nameAr: c.name_ar || c.name };
-      });
+  fetch('/api/products').then(function (res) { return res.text(); })
+    .then(function (raw) {
+      var data = JSON.parse(raw);
+      if (raw !== cachedRaw) {
+        _ingestCatalog(data);
+        try { sessionStorage.setItem(CATALOG_CACHE_KEY, raw); } catch (e) {}
+        /* Grid already painted from cache? Repaint it with fresh data. */
+        if (cachedRaw && window.__catalogRefresh) window.__catalogRefresh();
+      }
     })
     .catch(function (err) {
       console.error('[Products] Failed to load catalog from /api/products:', err);
-      PRODUCTS = [];
-      PRODUCTS_MAP = {};
-      CATEGORIES_MAP = {};
+      if (!cachedRaw) { PRODUCTS = []; PRODUCTS_MAP = {}; CATEGORIES_MAP = {}; }
     })
     .then(function () { _productsReadyResolve(); });
 })();
@@ -588,7 +654,10 @@ function buildCard(p) {
   imgArea.className = 'prod-card-img';
 
   if (hasImgs) {
-    new ProductImageStack(imgArea, p.imgs, name, p.id);
+    /* Cards render the 640px thumbnails — visually identical at card
+       size, a fraction of the bytes. Full-size images are only loaded
+       by the lightbox/modal/detail views. */
+    new ProductImageStack(imgArea, p.imgsThumb || p.imgs, name, p.id);
   } else {
     var noImg = document.createElement('div');
     noImg.className = 'prod-card-no-img';
@@ -1072,11 +1141,12 @@ var prodModal = {
       var self = this;
       var thumbFrag = document.createDocumentFragment();
       var thumbEls  = [];
+      var thumbSrcs = (p.imgsThumb && p.imgsThumb.length === imgs.length) ? p.imgsThumb : imgs;
       imgs.forEach(function(src, i) {
         var div = document.createElement('div');
         div.className = 'pm-thumb' + (i === 0 ? ' active' : '');
         var img = document.createElement('img');
-        img.src      = src;
+        img.src      = thumbSrcs[i];
         img.alt      = name + ' ' + (i + 1);
         img.loading  = 'lazy';
         img.decoding = 'async';
@@ -1314,7 +1384,7 @@ var cart = {
         el.className = 'cart-item';
         el.dataset.id = p.id;
         el.innerHTML = [
-          '<div class="cart-item-img"><img src="' + p.img + '" alt="' + name + '" loading="lazy" decoding="async"></div>',
+          '<div class="cart-item-img"><img src="' + (p.imgThumb || p.img) + '" alt="' + name + '" loading="lazy" decoding="async"></div>',
           '<div class="cart-item-info">',
             '<div class="cart-item-name">' + name + '</div>',
             '<div class="cart-item-unit-price">' + fmt(p.price * ci.qty) + '</div>',
@@ -1415,7 +1485,7 @@ var orderModal = {
     var p = getProduct(id);
     if (!p) return;
     var name = IS_AR ? p.nameAr : p.name;
-    document.getElementById('omProdImg').src = p.img;
+    document.getElementById('omProdImg').src = p.imgThumb || p.img;
     document.getElementById('omProdImg').alt = name;
     document.getElementById('omProdName').textContent = name;
     document.getElementById('omProdPrice').textContent = fmt(p.price);
@@ -1741,6 +1811,8 @@ var imgGallery = {
     if (!p || !this.el) return;
     var name = IS_AR ? p.nameAr : p.name;
     this.currentImgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
+    this.currentThumbs = (p.imgsThumb && p.imgsThumb.length === this.currentImgs.length)
+      ? p.imgsThumb : this.currentImgs;
     if (!this.currentImgs.length) return;
     this._savedScrollY = window.pageYOffset;
     this.buildThumbs(name);
@@ -1785,12 +1857,13 @@ var imgGallery = {
     var thumbsEl = document.getElementById('igThumbs');
     if (!thumbsEl) return;
     thumbsEl.innerHTML = '';
+    var thumbSrcs = this.currentThumbs || this.currentImgs;
     this.currentImgs.forEach(function(src, i) {
       var btn = document.createElement('button');
       btn.className = 'ig-thumb';
       btn.setAttribute('aria-label', name + ' ' + (i + 1));
       var img = document.createElement('img');
-      img.src = src;
+      img.src = thumbSrcs[i];
       img.alt = name + ' ' + (i + 1);
       img.loading = 'lazy';
       btn.appendChild(img);
@@ -1804,21 +1877,34 @@ var imgGallery = {
    INIT
    ════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function() {
-  /* Wait for the live catalog (see PRODUCT DATA above) before anything
-     below reads PRODUCTS/getProduct() — otherwise the very first render
-     of the grid/cart would run against an empty array. Resolves quickly
-     (same-origin JSON) and only once, on either success or failure. */
-  await window.__productsReady;
-
+  /* Everything that does NOT read PRODUCTS initialises immediately —
+     the hero slider, modals, gallery and newsletter form must never
+     wait on the catalog fetch (they used to, making the whole page
+     feel blocked on one network request). */
   slider.init();
-  renderProducts();
-  renderNewArrival();
   initNewsletterForm();
-  cart.init();
   prodModal.init();
   orderModal.init();
   imgGallery.init();
   updateYear();
+
+  /* Only the product-data consumers wait for the catalog (which
+     resolves instantly from sessionStorage on repeat views). */
+  await window.__productsReady;
+
+  renderProducts();
+  renderNewArrival();
+  cart.init();
+
+  /* Re-render hook for the stale-while-revalidate catalog cache: if a
+     background fetch finds the admin changed the catalog after we
+     painted from cache, repaint the grid + strip with fresh data.
+     product-filter.js overrides this when it owns the grid. */
+  window.__catalogRefresh = function () {
+    if (grid) { grid.innerHTML = ''; renderedCount = 0; renderBatch(); }
+    renderNewArrival();
+    cart.renderDrawer();
+  };
 
   /* Nav cart icon (present on every page) links here with ?openCart=1
      when the page itself has no cart drawer of its own. */

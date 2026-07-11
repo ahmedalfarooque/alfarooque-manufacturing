@@ -12,14 +12,25 @@ export async function GET(req) {
   const sb = getDb();
 
   const assignedUser = new URL(req.url).searchParams.get('assignedUser') || '';
-  let scopedProjectIds = null;
-  if (assignedUser) {
-    const { data: rows } = await sb.from('pm_project_assignees').select('project_id').eq('user_id', assignedUser);
-    scopedProjectIds = new Set((rows || []).map(r => r.project_id));
-  }
 
-  let projectsQuery = sb.from('pm_projects').select('*');
-  const { data: allProjects, error } = await projectsQuery;
+  /* All widgets read independent tables and every scoping filter is
+     applied in JS afterwards — so fire the whole set of queries in one
+     parallel burst instead of seven sequential round trips. */
+  const [scopedRes, projectsRes, prsRes, dusRes, qrsRes, customersRes, assigneesRes] = await Promise.all([
+    assignedUser
+      ? sb.from('pm_project_assignees').select('project_id').eq('user_id', assignedUser)
+      : Promise.resolve({ data: null }),
+    sb.from('pm_projects').select('*'),
+    sb.from('pm_purchase_requests').select('id, project_id, material_description, status, priority, created_at, pm_projects(project_name)').order('created_at', { ascending: false }),
+    sb.from('pm_daily_updates').select('project_id, update_date'),
+    sb.from('project_requests').select('status'),
+    sb.from('customers').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+    sb.from('pm_project_assignees').select('project_id'),
+  ]);
+
+  const scopedProjectIds = assignedUser ? new Set((scopedRes.data || []).map(r => r.project_id)) : null;
+
+  const { data: allProjects, error } = projectsRes;
   if (error) { console.error('[stats] projects failed:', error.message); return json({ error: 'Could not load stats.' }, 500); }
   const projects = scopedProjectIds ? allProjects.filter(p => scopedProjectIds.has(p.id)) : allProjects;
 
@@ -52,7 +63,7 @@ export async function GET(req) {
   const upcoming = [...projects].filter(p => p.status === 'Upcoming').sort((a, b) => new Date(a.start_date || 0) - new Date(b.start_date || 0)).slice(0, 5);
 
   /* ── Purchase Requests widget ── */
-  const { data: prs } = await sb.from('pm_purchase_requests').select('*, pm_projects(project_name)').order('created_at', { ascending: false });
+  const prs = prsRes.data;
   const prList = scopedProjectIds ? (prs || []).filter(r => scopedProjectIds.has(r.project_id)) : (prs || []);
   const prPending = prList.filter(r => r.status === 'Pending').length;
   const prApproved = prList.filter(r => r.status === 'Approved').length;
@@ -68,22 +79,22 @@ export async function GET(req) {
   const yesterdayStr = yesterday.toISOString().slice(0, 10);
   const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const { data: dus } = await sb.from('pm_daily_updates').select('project_id, update_date');
+  const dus = dusRes.data;
   const duList = scopedProjectIds ? (dus || []).filter(u => scopedProjectIds.has(u.project_id)) : (dus || []);
   const duToday = duList.filter(u => u.update_date === todayStr).length;
   const duYesterday = duList.filter(u => u.update_date === yesterdayStr).length;
   const duThisWeek = duList.filter(u => new Date(u.update_date) >= weekAgo).length;
 
   /* ── Quotation Requests widget (Update 1: dashboard cards) ── */
-  const { data: qrs } = await sb.from('project_requests').select('status');
+  const qrs = qrsRes.data;
   const qrPending = (qrs || []).filter(r => r.status === 'pending').length;
   const qrAccepted = (qrs || []).filter(r => r.status === 'accepted').length;
   const qrOnHold = (qrs || []).filter(r => r.status === 'on_hold').length;
   const qrRejected = (qrs || []).filter(r => r.status === 'rejected').length;
 
-  const { count: customersCount } = await sb.from('customers').select('id', { count: 'exact', head: true }).is('deleted_at', null);
+  const customersCount = customersRes.count;
 
-  const { data: assignedProjectIds } = await sb.from('pm_project_assignees').select('project_id');
+  const assignedProjectIds = assigneesRes.data;
   let projectsWithAssignees = new Set((assignedProjectIds || []).map(r => r.project_id));
   if (scopedProjectIds) projectsWithAssignees = new Set([...projectsWithAssignees].filter(id => scopedProjectIds.has(id)));
   const projectsWithUpdateToday = new Set(duList.filter(u => u.update_date === todayStr).map(u => u.project_id));

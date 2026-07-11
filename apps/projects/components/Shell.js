@@ -38,15 +38,26 @@ export default function Shell({ children, active }) {
   }, []);
 
   useEffect(() => {
+    /* Skip identical responses (no re-render on unchanged polls) and
+       don't poll hidden tabs — one refresh fires on return instead. */
+    let lastRaw = null;
     function loadNotifications() {
       fetch('/api/notifications', { credentials: 'same-origin' })
-        .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d) { setNotifications(d.notifications || []); setUnread(d.unread || 0); } })
+        .then(r => r.ok ? r.text() : null)
+        .then(raw => {
+          if (raw === null || raw === lastRaw) return;
+          lastRaw = raw;
+          let d; try { d = JSON.parse(raw); } catch (_) { return; }
+          setNotifications(d.notifications || []);
+          setUnread(d.unread || 0);
+        })
         .catch(() => {});
     }
     loadNotifications();
-    const interval = setInterval(loadNotifications, 20000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => { if (!document.hidden) loadNotifications(); }, 20000);
+    const onVisible = () => { if (!document.hidden) loadNotifications(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
   async function markRead(id, link) {
