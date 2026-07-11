@@ -7,6 +7,10 @@ import { GlassIcon } from '@/components/GlassIcons';
 const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
   { href: '/projects', labelKey: 'nav.projects', icon: 'folder' },
+  { href: '/orders', labelKey: 'nav.orders', icon: 'receipt', adminOnly: true },
+  { href: '/orders-deleted', labelKey: 'nav.ordersDeleted', icon: 'receipt', adminOnly: true },
+  { href: '/quotes', labelKey: 'nav.quotes', icon: 'mail', adminOnly: true },
+  { href: '/quotes-deleted', labelKey: 'nav.quotesDeleted', icon: 'mail', adminOnly: true },
   { href: '/purchase-requests', labelKey: 'nav.purchaseRequests', icon: 'receipt', adminOnly: true },
   { href: '/quotation-requests', labelKey: 'nav.quotationRequests', icon: 'mail', adminOnly: true },
   { href: '/customers', labelKey: 'nav.customers', icon: 'users', hideExternal: true },

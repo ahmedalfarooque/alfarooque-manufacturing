@@ -79,6 +79,28 @@ export function dateStr(d) {
   try { return new Date(d).toLocaleDateString('en-GB'); } catch (_) { return String(d); }
 }
 
+/* Splits the company name onto two header lines. "AL FAROOQUE" /
+   "ALFAROOQUE" is treated as the brand line with everything else
+   (the division name, e.g. "WOOD WORKS FACTORY") on line 2 — matching
+   this company's actual naming pattern exactly, spelled however it's
+   actually stored (no casing/spacing invented). Any other entity name
+   (including Arabic) falls back to a balanced word-count split so a
+   future/unknown entity name still wraps sensibly onto two lines. */
+function splitCompanyName(name) {
+  const s = String(name || '').trim();
+  if (!s) return ['', ''];
+  const brandMatch = s.match(/^(al\s?farooque)(\s+)(.+)$/i);
+  if (brandMatch) return [brandMatch[1], brandMatch[3]];
+  const words = s.split(/\s+/);
+  if (words.length <= 1) return [s, ''];
+  let bestIdx = Math.ceil(words.length / 2), bestDiff = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const diff = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length);
+    if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+  }
+  return [words.slice(0, bestIdx).join(' '), words.slice(bestIdx).join(' ')];
+}
+
 export default function QuoteDocument({ doc, products, entity, customer, terms, lang, qrDataUrl }) {
   const isAr = lang === 'ar';
   const t = L[isAr ? 'ar' : 'en'];
@@ -136,9 +158,18 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
       {/* Header — a true 3-column layout. The 3rd column here is just a
           reserved empty spacer matching the QR card's width, so the
           center title/meta column never stretches underneath it; the
-          actual QR image lives in .qdoc-body (see below) so it can be
-          page-1-only, but is sized/aligned to land exactly in this
-          reserved slot, reading as one continuous header row. */}
+          actual QR image is rendered as a separate, absolutely-positioned
+          sibling below (anchored to this same qdoc box, top-right) so it
+          can be page-1-only, landing exactly in this reserved slot and
+          reading as one continuous header row.
+          minmax(0, 1fr) — NOT bare 1fr — on the first column: a bare
+          `1fr` track computes a minimum width of `auto`, which lets long
+          content (the company name / contact line) grow past its own
+          column and visually overlap the title column next to it
+          instead of wrapping. minmax(0, 1fr) caps that minimum at 0,
+          which is what actually forces overflowing text to wrap within
+          its own column — this is the fix for the exact "company name
+          runs into QUOTATION" / "VAT No. collides with Valid Until" bug. */}
       {/* direction:'ltr' on the header/QR containers freezes their
           column/flex order regardless of document language — otherwise
           the browser mirrors grid columns and flex justify-content for
@@ -148,14 +179,16 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           identical between languages, per spec. */}
       <div className="qdoc-header" style={{
         position: 'relative', zIndex: 1, display: 'grid', direction: 'ltr',
-        gridTemplateColumns: qrDataUrl ? '1fr auto 138px' : '1fr auto',
+        gridTemplateColumns: qrDataUrl ? 'minmax(0, 1fr) auto 138px' : 'minmax(0, 1fr) auto',
         alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #6B7A4F', paddingBottom: 14,
       }}>
-        <div dir={dir} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <img src="/logo.png" alt="" style={{ height: 48, width: 'auto', flexShrink: 0 }} />
-          <div>
-            <div style={{ fontSize: 19, fontWeight: 700, color: '#46512F' }}>{eName}</div>
-            <div style={{ color: '#6b6b63' }}>{eAddr}</div>
+        <div dir={dir} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', minWidth: 0 }}>
+          <img src="/logo.png" alt="" style={{ height: 56, width: 'auto', flexShrink: 0 }} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 19, fontWeight: 700, color: '#46512F', lineHeight: 1.15 }}>
+              {splitCompanyName(eName).map((line, i) => line && <div key={i}>{line}</div>)}
+            </div>
+            <div style={{ color: '#6b6b63', marginTop: 3 }}>{eAddr}</div>
             <div style={{ color: '#6b6b63' }} dir="ltr">
               {entity?.phone && <span>☎ {entity.phone} </span>}
               {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
@@ -173,20 +206,33 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             </tbody>
           </table>
         </div>
-        {qrDataUrl && <div aria-hidden="true" />}
+        {/* Invisible spacer, NOT the QR image itself (see below) — its
+            only job is to make the header's grid row auto-size tall
+            enough to clear the QR card's real height (padding + 120px
+            image + caption ≈ 150px), so .qdoc-body naturally starts
+            below the QR with no overlap and no hard-coded margin on
+            .qdoc-body to maintain. Safe to have this repeat on every
+            printed page (unlike the actual QR image) since it renders
+            nothing visible. */}
+        {qrDataUrl && <div aria-hidden="true" style={{ minHeight: 150 }} />}
       </div>
 
-      <div className="qdoc-body" style={{ position: 'relative', zIndex: 1 }}>
-      {/* QR code — first-page-only by construction: this is normal
-          in-flow content (not position:fixed like the header, which
-          repeats on every printed page), so it renders exactly once,
-          right at the top of page 1. The negative top margin pulls it
-          up by the header's own height so it visually sits on the same
-          row as the logo/title (a third, right-aligned "column"),
-          while the customer box below still starts right after its
-          real box — no overlap, on screen or print. */}
+      {/* QR code — first-page-only by construction: position:absolute
+          against the outer .qdoc box (the nearest position:relative
+          ancestor) anchored to its top-right padding edge — the exact
+          same starting point the header itself renders from — instead
+          of the previous "pull it up by a hard-coded pixel guess"
+          approach, so this stays correctly aligned no matter how tall
+          the header's left column becomes (2-line company name, bigger
+          logo, or any future header content change) without needing a
+          matching magic-number update every time. Being absolutely
+          positioned takes it out of flow entirely, so it never affects
+          where .qdoc-body starts, on screen or in print; and because
+          .qdoc (its positioned ancestor) is one continuous flowed box
+          — not per-page — top:0 here lands on page 1 only, same as
+          before. */}
       {qrDataUrl && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', direction: 'ltr', marginTop: -104, marginBottom: 8, position: 'relative', zIndex: 2 }}>
+        <div style={{ position: 'absolute', top: 32, insetInlineEnd: 36, direction: 'ltr', zIndex: 2 }}>
           <div style={{
             textAlign: 'center', background: '#fff', padding: 8, borderRadius: 8,
             border: '1px solid #dcd9d2', boxShadow: '0 1px 4px rgba(26,26,24,0.08)',
@@ -196,6 +242,8 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           </div>
         </div>
       )}
+
+      <div className="qdoc-body" style={{ position: 'relative', zIndex: 1 }}>
       {/* Customer */}
       <div style={{ ...box, borderRadius: 8, padding: '10px 14px', marginTop: 14, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
         <div><span style={{ color: '#6b6b63' }}>{t.customer}: </span><b>{cName}</b></div>

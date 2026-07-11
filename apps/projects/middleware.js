@@ -13,7 +13,7 @@ async function verify(token) {
   }
 }
 
-const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/quotation-requests', '/users'];
+const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/quotation-requests', '/users', '/orders', '/orders-deleted', '/quotes', '/quotes-deleted'];
 const EXTERNAL_BLOCKED_PREFIXES = ['/customers'];
 
 /* This app has no basePath (it lives at the root of
@@ -64,5 +64,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*', '/quotation-requests/:path*', '/users/:path*'],
+  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*', '/quotation-requests/:path*', '/users/:path*', '/orders/:path*', '/orders-deleted/:path*', '/quotes/:path*', '/quotes-deleted/:path*'],
 };

@@ -37,13 +37,19 @@ async function withRetries(fn) {
 
 async function sendViaResend(p) {
   let res, data;
+  const hasAttachments = !!(p.attachments && p.attachments.length);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), hasAttachments ? 25000 : 8000);
   try {
     res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + env('RESEND_API_KEY'), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: p.from, to: [p.to], subject: p.subject, html: p.html }),
+      body: JSON.stringify({
+        from: p.from, to: [p.to], subject: p.subject, html: p.html,
+        attachments: hasAttachments
+          ? p.attachments.map(a => ({ filename: a.filename, content: a.contentBase64, content_type: a.mime || undefined }))
+          : undefined,
+      }),
       signal: controller.signal,
     });
     data = await res.json().catch(() => ({}));
@@ -68,7 +74,7 @@ async function sendViaResend(p) {
    flow below, just not shaped around a one-time code. Defaults `to`
    to EMAIL_TO (the admin inbox already configured in .env.local) so
    callers can omit it entirely for "notify the admin" emails. */
-async function sendEmail({ to, subject, html, mockLabel }) {
+async function sendEmail({ to, subject, html, mockLabel, attachments }) {
   const recipient = to || env('EMAIL_TO');
   if (!recipient) {
     console.warn('[email:MOCK] ' + (mockLabel || 'Notification') + ' — no recipient (set EMAIL_TO in apps/projects/.env.local).');
@@ -80,7 +86,7 @@ async function sendEmail({ to, subject, html, mockLabel }) {
     return { mocked: true };
   }
   const from = env('EMAIL_FROM') || 'noreply@alfarooque.com';
-  await withRetries(() => sendViaResend({ to: recipient, from, subject, html }));
+  await withRetries(() => sendViaResend({ to: recipient, from, subject, html, attachments }));
   return { mocked: false };
 }
 

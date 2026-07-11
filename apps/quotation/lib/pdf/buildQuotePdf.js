@@ -25,8 +25,8 @@ import { renderArabicText, wrapArabicText } from './arabicText';
 
 const PAGE_W = 210;
 const PAGE_H = 297;
-const MARGIN = 12;
-const HEADER_H = 40;
+const MARGIN = 15;
+const HEADER_H = 46; // +4mm vs. before, to fit the 2-line company name and the larger logo
 const FOOTER_H = 18;
 const GREEN = [70, 81, 47];
 const GREY = [107, 107, 99];
@@ -41,7 +41,7 @@ const BANK_DETAILS = {
 
 const L = {
   en: {
-    quotation: 'QUOTATION', number: 'Quotation No.', date: 'Date', customer: 'Customer',
+    quotation: 'QUOTATION', number: 'Quotation No.', date: 'Date', validUntil: 'Valid Until', customer: 'Customer',
     item: '#', description: 'Description', qty: 'Qty', unit: 'Unit', unitPrice: 'Unit Price',
     taxable: 'VAT', amount: 'Amount (SAR)', yes: 'T', no: '—',
     subtotal: 'Subtotal', discount: 'Discount', net: 'Net Total', vat: 'VAT', grandTotal: 'GRAND TOTAL', currency: 'SAR',
@@ -51,7 +51,7 @@ const L = {
     cr: 'CR', vatNo: 'VAT No.', tel: 'Tel', scanToVerify: 'Scan to Verify', page: 'Page', of: 'of',
   },
   ar: {
-    quotation: 'عرض سعر', number: 'رقم العرض', date: 'التاريخ', customer: 'العميل',
+    quotation: 'عرض سعر', number: 'رقم العرض', date: 'التاريخ', validUntil: 'صالح حتى', customer: 'العميل',
     item: '#', description: 'الوصف', qty: 'الكمية', unit: 'الوحدة', unitPrice: 'سعر الوحدة',
     taxable: 'ضريبة', amount: 'المبلغ (ر.س)', yes: 'نعم', no: '—',
     subtotal: 'المجموع', discount: 'الخصم', net: 'الصافي', vat: 'ضريبة القيمة المضافة', grandTotal: 'الإجمالي النهائي', currency: 'ر.س',
@@ -90,6 +90,28 @@ function dateStr(d) {
 }
 function rgbToHex(rgb) { return '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join(''); }
 
+/* Splits the company name onto two header lines — same rule as
+   components/QuoteDocument.js's splitCompanyName(), kept in sync by
+   hand since this is a separate rendering engine (jsPDF, not React/DOM)
+   that can't literally import a browser-only component. "AL FAROOQUE" /
+   "ALFAROOQUE" (spelled however it's actually stored) is the brand line,
+   everything else (the division name) is line 2; any other entity name
+   falls back to a balanced word-count split. */
+function splitCompanyName(name) {
+  const s = String(name || '').trim();
+  if (!s) return ['', ''];
+  const brandMatch = s.match(/^(al\s?farooque)(\s+)(.+)$/i);
+  if (brandMatch) return [brandMatch[1], brandMatch[3]];
+  const words = s.split(/\s+/);
+  if (words.length <= 1) return [s, ''];
+  let bestIdx = Math.ceil(words.length / 2), bestDiff = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const diff = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length);
+    if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+  }
+  return [words.slice(0, bestIdx).join(' '), words.slice(bestIdx).join(' ')];
+}
+
 function loadLogo() {
   return new Promise((resolve) => {
     const img = new window.Image();
@@ -106,7 +128,11 @@ function loadLogo() {
   });
 }
 
-export async function downloadQuotePdf({ doc: q, products, entity, customer, terms, qrDataUrl, lang }) {
+/* Builds the jsPDF document object without saving/printing it — the
+   ONE place both downloadQuotePdf() and printQuotePdf() draw from, so
+   Download, Print, and every browser's "Save as PDF" all produce the
+   exact same bytes instead of three separately-maintained renders. */
+async function buildQuotePdfDocument({ doc: q, products, entity, customer, terms, qrDataUrl, lang }) {
   const isAr = lang === 'ar';
   const t = L[isAr ? 'ar' : 'en'];
   const logo = await loadLogo();
@@ -303,20 +329,23 @@ export async function downloadQuotePdf({ doc: q, products, entity, customer, ter
       pdf.restoreGraphicsState();
     }
 
-    // Header
+    // Header — logo +18% (14mm -> 16.5mm), company name on two lines
+    // (brand / division), everything below it shifted down to match.
     let hx = MARGIN;
     if (logo) {
-      const logoH = 14, logoW = logoH * logo.ratio;
+      const logoH = 16.5, logoW = logoH * logo.ratio;
       pdf.addImage(logo.dataUrl, 'PNG', MARGIN, 6, logoW, logoH);
       hx = MARGIN + logoW + 4;
     }
-    drawText(eName, hx, 12, { size: 12.5, bold: true, color: GREEN });
-    drawText(eAddr, hx, 17, { size: 8, color: GREY });
+    const [nameLine1, nameLine2] = splitCompanyName(eName);
+    drawText(nameLine1, hx, 11.5, { size: 12.5, bold: true, color: GREEN });
+    if (nameLine2) drawText(nameLine2, hx, 16, { size: 12.5, bold: true, color: GREEN });
+    drawText(eAddr, hx, 20.5, { size: 8, color: GREY });
     const contactBits = [];
     if (entity?.phone) contactBits.push(`${t.tel}: ${entity.phone}`);
     if (entity?.cr_number) contactBits.push(`${t.cr}: ${entity.cr_number}`);
     if (entity?.vat_number) contactBits.push(`${t.vatNo}: ${entity.vat_number}`);
-    if (contactBits.length) drawText(contactBits.join('  ·  '), hx, 21.5, { size: 8, color: GREY });
+    if (contactBits.length) drawText(contactBits.join('  ·  '), hx, 25, { size: 8, color: GREY });
 
     // QR code — first page only, a true third header column (reserves
     // its own width so the title/meta column never overlaps it), clean
@@ -331,7 +360,19 @@ export async function downloadQuotePdf({ doc: q, products, entity, customer, ter
 
     drawText(t.quotation, titleRightEdge, 12, { align: 'right', size: 14, bold: true });
     drawText(`${t.number}: ${q.quote_number || ''}`, titleRightEdge, 17, { align: 'right', size: 8, color: GREY });
-    drawText(`${t.date}: ${dateStr(q.quote_date)}   ${t.customer}: ${cName}`, titleRightEdge, 21.5, { align: 'right', size: 8, color: GREY });
+    drawText(`${t.date}: ${dateStr(q.quote_date)}   ${t.validUntil}: ${dateStr(q.valid_until)}`, titleRightEdge, 21.5, { align: 'right', size: 8, color: GREY });
+    drawText(`${t.customer}: ${cName}`, titleRightEdge, 25.5, { align: 'right', size: 8, color: GREY });
+
+    /* Separator line drawn BEFORE the QR card — the QR card is an
+       opaque white rounded rect that extends well below this line's y
+       (a fixed 36mm QR + caption is taller than the header), so drawing
+       the line first and the card after means the card's own opaque
+       background papers over that stretch of line instead of a solid
+       green stroke cutting across the QR code, which is what happened
+       when this was drawn in the opposite order. */
+    pdf.setDrawColor(...GREEN); pdf.setLineWidth(0.6);
+    pdf.line(MARGIN, HEADER_H - 4, PAGE_W - MARGIN, HEADER_H - 4);
+    pdf.setLineWidth(0.1);
 
     if (qrOnThisPage) {
       const cardX = PAGE_W - MARGIN - qrCardW;
@@ -346,10 +387,6 @@ export async function downloadQuotePdf({ doc: q, products, entity, customer, ter
       drawText(t.scanToVerify, cardX + qrCardW / 2, cardY + qrCardPad + qrSize + 3.5, { align: 'center', size: 6, color: GREY });
     }
 
-    pdf.setDrawColor(...GREEN); pdf.setLineWidth(0.6);
-    pdf.line(MARGIN, HEADER_H - 4, PAGE_W - MARGIN, HEADER_H - 4);
-    pdf.setLineWidth(0.1);
-
     // Footer
     pdf.setDrawColor(216, 212, 204);
     pdf.line(MARGIN, PAGE_H - FOOTER_H + 2, PAGE_W - MARGIN, PAGE_H - FOOTER_H + 2);
@@ -361,5 +398,30 @@ export async function downloadQuotePdf({ doc: q, products, entity, customer, ter
     drawText(`${t.page} ${i} ${t.of} ${totalPages}`, PAGE_W / 2, PAGE_H - 4, { align: 'center', size: 7.2, color: GREY });
   }
 
-  pdf.save((q.quote_number || 'quotation') + '.pdf');
+  return pdf;
+}
+
+/* "Download PDF" button — builds the document and triggers an immediate
+   browser download. */
+export async function downloadQuotePdf(params) {
+  const pdf = await buildQuotePdfDocument(params);
+  pdf.save((params.doc.quote_number || 'quotation') + '.pdf');
+}
+
+/* "Print" button — builds the EXACT SAME document (same function, same
+   bytes) and opens it in a new tab as a real PDF instead of calling the
+   browser's native window.print() on the HTML preview. Printing an
+   actual PDF is pixel-identical across Chrome/Edge/Firefox/Safari and
+   Windows/macOS "Save as PDF", since every browser is just handing the
+   same fixed PDF bytes to its own PDF viewer/printer rather than
+   re-laying-out HTML (which is where cross-browser print differences
+   actually come from). autoPrint() opens the native print dialog
+   immediately in browsers whose built-in PDF viewer honors it (Chrome,
+   Edge); elsewhere the PDF still opens for the user to print or
+   Save-as-PDF from manually — either way it's the identical document. */
+export async function printQuotePdf(params) {
+  const pdf = await buildQuotePdfDocument(params);
+  pdf.autoPrint();
+  const url = pdf.output('bloburl');
+  window.open(url, '_blank');
 }

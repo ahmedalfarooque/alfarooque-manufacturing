@@ -2,19 +2,26 @@
 
 /* Print / PDF view — clean white A4 render of the quotation with a
    floating toolbar (hidden when printing).
-   - "Download PDF" builds a true multi-page A4 PDF programmatically
-     (lib/pdf/buildQuotePdf.js) and saves it immediately — no print
-     dialog, no preview tab. Works identically for English and Arabic:
-     Arabic strings are shaped via the browser's own Canvas 2D text
-     engine and embedded as images into the same jsPDF geometry (see
-     lib/pdf/arabicText.js) rather than jsPDF's native text(), which
-     can't shape Arabic glyphs — so both languages share one layout.
-   - "Print" keeps the existing browser print preview. */
+   - "Download PDF" and "Print" both build the exact same jsPDF document
+     (lib/pdf/buildQuotePdf.js) — Download saves it immediately, Print
+     opens it as a real PDF in a new tab (via pdf.autoPrint() +
+     pdf.output('bloburl')) instead of calling window.print() on this
+     HTML preview. Printing an actual PDF renders identically across
+     Chrome/Edge/Firefox/Safari and Windows/macOS "Save as PDF", since
+     the browser hands the same fixed bytes to its PDF viewer rather
+     than re-laying-out HTML. Arabic strings are shaped via the browser's
+     own Canvas 2D text engine and embedded as images into the same
+     jsPDF geometry (see lib/pdf/arabicText.js) rather than jsPDF's
+     native text(), which can't shape Arabic glyphs — so both languages
+     share one layout.
+   - The HTML render below (QuoteDocument) remains as the on-screen
+     preview, and still has a print stylesheet as a fallback for a
+     manual Ctrl+P, but the toolbar's own Print button no longer uses it. */
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import QuoteDocument, { money, dateStr } from '@/components/QuoteDocument';
-import { downloadQuotePdf } from '@/lib/pdf/buildQuotePdf';
+import { downloadQuotePdf, printQuotePdf } from '@/lib/pdf/buildQuotePdf';
 import { buildQuoteQrText, buildQuoteQrDataUrl } from '@/lib/qr';
 
 export default function PrintPage() {
@@ -22,6 +29,7 @@ export default function PrintPage() {
   const [data, setData] = useState(null);
   const [terms, setTerms] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState(null);
   /* read ?lang= without useSearchParams — avoids the Suspense-boundary
      requirement next build enforces for that hook */
@@ -76,22 +84,37 @@ export default function PrintPage() {
     return () => { cancelled = true; };
   }, [data, lang]);
 
+  function pdfParams() {
+    return {
+      doc: data.row,
+      products: data.products,
+      entity: data.row.entity_full || data.row.entity,
+      customer: data.row.customer,
+      terms,
+      qrDataUrl,
+      lang,
+    };
+  }
+
   async function downloadPdf() {
     setDownloading(true);
     try {
-      await downloadQuotePdf({
-        doc: data.row,
-        products: data.products,
-        entity: data.row.entity_full || data.row.entity,
-        customer: data.row.customer,
-        terms,
-        qrDataUrl,
-        lang,
-      });
+      await downloadQuotePdf(pdfParams());
     } catch (_) {
       window.print();
     } finally {
       setDownloading(false);
+    }
+  }
+
+  async function printPdf() {
+    setPrinting(true);
+    try {
+      await printQuotePdf(pdfParams());
+    } catch (_) {
+      window.print();
+    } finally {
+      setPrinting(false);
     }
   }
 
@@ -122,7 +145,9 @@ export default function PrintPage() {
         <button onClick={downloadPdf} disabled={downloading} style={btn(true)}>
           {downloading ? (lang === 'ar' ? 'جارٍ الإنشاء…' : 'Generating…') : (lang === 'ar' ? '⤓ تنزيل PDF' : '⤓ Download PDF')}
         </button>
-        <button onClick={() => window.print()} style={btn()}>{lang === 'ar' ? 'طباعة' : 'Print'}</button>
+        <button onClick={printPdf} disabled={printing} style={btn()}>
+          {printing ? (lang === 'ar' ? 'جارٍ الإنشاء…' : 'Preparing…') : (lang === 'ar' ? 'طباعة' : 'Print')}
+        </button>
         <a href={'/quotations/' + id} style={{ ...btn(), textDecoration: 'none', display: 'inline-block' }}>✕</a>
       </div>
 
