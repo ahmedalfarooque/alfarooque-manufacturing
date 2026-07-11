@@ -32,7 +32,7 @@ export async function GET(req) {
     count(sb, 'qt_quotations', q => q.eq('status', 'sent')),
     count(sb, 'qt_quotations', q => q.eq('status', 'accepted')),
     count(sb, 'qt_quotations', q => q.in('status', ['approved', 'sent']).gte('valid_until', today).lte('valid_until', in3days)),
-    count(sb, 'qt_customers'),
+    count(sb, 'customers'),
     count(sb, 'qt_materials'),
   ]);
 
@@ -62,7 +62,7 @@ export async function GET(req) {
     monthly.push(...byMonth.values());
 
     const { data: rec } = await sb.from('qt_quotations')
-      .select('id, quote_number, status, grand_total, blended_margin_pct, customer:qt_customers(company_name)')
+      .select('id, quote_number, status, grand_total, blended_margin_pct, customer:customers(company_name)')
       .is('deleted_at', null).order('created_at', { ascending: false }).limit(8);
     recent = rec || [];
   } catch (_) {}

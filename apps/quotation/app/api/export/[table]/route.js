@@ -67,7 +67,7 @@ const DEFS = {
     example: { code: 'M-00001', name: 'ام دي اف 18مم', kind: 'material', thickness_value: 18, thickness_unit: 'mm', unit: 'sheet', latest_price: 185, default_waste_pct: 10, status: 'active' },
   },
   customers: {
-    table: 'qt_customers', sheet: 'Customers', order: 'company_name',
+    table: 'customers', sheet: 'Customers', order: 'company_name',
     columns: [
       C('company_name', 'Company Name', 'اسم الشركة', true),
       C('contact_person', 'Contact Person', 'المسؤول', true),
@@ -76,6 +76,7 @@ const DEFS = {
       C('vat_number', 'VAT No', 'الرقم الضريبي'), C('cr_number', 'CR No', 'السجل التجاري'),
       C('address', 'Address', 'العنوان', true), C('status', 'Status', 'الحالة'), C('notes', 'Notes', 'ملاحظات', true),
     ],
+    map: (r) => ({ ...r, phone: r.mobile_number }),
     example: { company_name: 'فندق المثال', customer_type: 'hotel', phone: '05xxxxxxxx', city: 'Jeddah', status: 'active' },
   },
   quotations: {

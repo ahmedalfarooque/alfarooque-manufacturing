@@ -90,7 +90,8 @@ export default function CustomersPage() {
             ) : customers.length === 0 ? (
               <tr><td colSpan={9} className="py-8 text-center text-slate-400">No customers yet.</td></tr>
             ) : customers.map(c => (
-              <tr key={c.id} className="border-b border-black/5 dark:border-white/5">
+              <tr key={c.id} onClick={() => setModal({ mode: 'view', data: c })}
+                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
                 <td className="py-3 px-4 font-medium">{c.full_name}</td>
                 <td>{c.company_name || '—'}</td>
                 <td>{c.email || '—'}</td>
@@ -99,7 +100,7 @@ export default function CustomersPage() {
                 <td>{c.cr_number || '—'}</td>
                 <td>{c.city || '—'}</td>
                 <td>{new Date(c.created_at).toLocaleDateString()}</td>
-                <td className="text-right px-4 space-x-2">
+                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => setModal({ mode: 'view', data: c })} title="View" className="text-slate-400">{'\u{1F441}'}</button>
                   {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: c })} title="Edit" className="text-brand-500">✎</button>}
                   {isAdmin && <button onClick={() => deleteCustomer(c.id)} title="Delete" className="text-red-500">🗑</button>}

@@ -13,7 +13,7 @@ async function verify(token) {
   }
 }
 
-const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/users'];
+const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/quotation-requests', '/users'];
 const EXTERNAL_BLOCKED_PREFIXES = ['/customers'];
 
 /* This app has no basePath (it lives at the root of
@@ -37,12 +37,19 @@ export async function middleware(req) {
      already-logged-in visitor straight to the dashboard instead of
      re-showing a login form. */
   if (pathname.startsWith('/login') || pathname.startsWith('/view-login')) {
-    if (session) return redirectTo(req, '/dashboard');
+    if (session) {
+      const redirect = req.nextUrl.searchParams.get('redirect');
+      return redirectTo(req, redirect && redirect.startsWith('/') ? redirect : '/dashboard');
+    }
     return NextResponse.next();
   }
 
   if (!session) {
-    return redirectTo(req, '/login');
+    /* Preserve where the visitor was headed (e.g. a "View Request" email
+       link, or the quotation app's "Open Project" link) so login can
+       land them there instead of always the dashboard — Part 4/12. */
+    const target = pathname + (req.nextUrl.search || '');
+    return redirectTo(req, '/login?redirect=' + encodeURIComponent(target));
   }
 
   if (ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p)) && session.role !== 'admin') {
@@ -57,5 +64,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*', '/users/:path*'],
+  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*', '/quotation-requests/:path*', '/users/:path*'],
 };

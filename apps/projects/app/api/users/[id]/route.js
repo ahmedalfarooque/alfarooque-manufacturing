@@ -7,6 +7,7 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
+const { isSuperAdminEmail } = require('@/lib/superAdmin');
 
 const EDITABLE = ['full_name', 'position', 'phone', 'department', 'company', 'photo_url', 'status', 'otp_login_enabled', 'is_active'];
 const ROLES = ['admin', 'viewer', 'external'];
@@ -33,4 +34,27 @@ export async function PATCH(req, { params }) {
   if (error) { console.error('[users] update failed:', error.message); return json({ error: 'Could not update user.' }, 500); }
   if (!data) return json({ error: 'User not found.' }, 404);
   return json({ user: data });
+}
+
+/* platform_users is shared across both apps — a hard delete relies on the
+   DB's own foreign-key constraints to reject the delete if the user still
+   has associated records, surfaced here as a friendly error. */
+export async function DELETE(req, { params }) {
+  const { response, session } = requireSession(req, { adminOnly: true });
+  if (response) return response;
+  if (params.id === session.sub) return json({ error: 'You cannot delete your own account.' }, 400);
+
+  const sb = getDb();
+  const { data: target } = await sb.from('platform_users').select('id, email').eq('id', params.id).maybeSingle();
+  if (!target) return json({ error: 'User not found.' }, 404);
+  if (isSuperAdminEmail(target.email) && !isSuperAdminEmail(session.email)) {
+    return json({ error: 'This account cannot be deleted.' }, 403);
+  }
+
+  const { error } = await sb.from('platform_users').delete().eq('id', params.id);
+  if (error) {
+    if (error.code === '23503') return json({ error: 'Cannot delete: this user has associated records (projects, requests, etc.). Deactivate instead.' }, 409);
+    return json({ error: error.message }, 500);
+  }
+  return json({ ok: true });
 }

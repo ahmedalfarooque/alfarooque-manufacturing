@@ -2,7 +2,7 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
-const { autoProjectName } = require('@/lib/autoProjectName');
+const { buildProjectRow } = require('@/lib/createProjectRow');
 
 const SORTS = {
   latest: { column: 'created_at', ascending: false },
@@ -87,24 +87,7 @@ export async function POST(req) {
   if (!projectName && !projectDetails) return json({ error: 'Enter a project name or the project details (a short name will be generated automatically).' }, 400);
 
   const sb = getDb();
-  const row = {
-    customer_id: body.customer_id || null,
-    customer_name: body.customer_name,
-    company_name: body.company_name || null,
-    contact_person: body.contact_person || null,
-    contact_email: body.contact_email || null,
-    contact_phone: body.contact_phone || null,
-    address: body.address || null,
-    project_name: projectName || autoProjectName(projectDetails),
-    short_summary: body.short_summary || null,
-    project_details: projectDetails || null,
-    value: body.value ? Number(body.value) : 0,
-    start_date: body.start_date || null,
-    end_date: body.end_date || null,
-    status: body.status || 'Upcoming',
-    progress: body.progress != null ? Math.max(0, Math.min(100, Number(body.progress))) : 0,
-    notes: body.notes || null,
-  };
+  const row = buildProjectRow(body);
   const { data, error } = await sb.from('pm_projects').insert(row).select().single();
   if (error) { console.error('[projects] create failed:', error.message); return json({ error: 'Could not add project.' }, 500); }
 

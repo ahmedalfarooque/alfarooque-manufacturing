@@ -17,16 +17,16 @@ export default function StatCard({ icon, label, value, sub, tone, href, trend, t
   const Tag = href ? 'a' : 'div';
   const chartKey = trend ? JSON.stringify(trend) : bars ? bars.values.join(',') : String(ringPct);
   return (
-    <Tag {...(href ? { href } : {})} className={'glass-card glass-card--pad flex flex-col gap-3' + (href ? ' cursor-pointer' : '')}>
-      <span className="relative inline-flex items-center justify-center h-16 w-16 shrink-0 rounded-2xl border border-black/10 dark:border-white/10 backdrop-blur-md" aria-hidden="true">
-        <span className="absolute inset-0.5 rounded-xl" style={{ background: `radial-gradient(circle, ${color}30, transparent 72%)` }} />
-        <GlassIcon name={icon} size={58} bare className="relative" />
+    <Tag {...(href ? { href } : {})} className={'glass-card glass-card--pad flex flex-col gap-2' + (href ? ' cursor-pointer' : '')}>
+      <span className="relative inline-flex items-center justify-center h-11 w-11 shrink-0 rounded-xl border border-black/10 dark:border-white/10 backdrop-blur-md" aria-hidden="true">
+        <span className="absolute inset-0.5 rounded-lg" style={{ background: `radial-gradient(circle, ${color}30, transparent 72%)` }} />
+        <GlassIcon name={icon} size={38} bare className="relative" />
       </span>
       <div className="min-w-0">
-        <div className="text-3xl font-bold leading-none tracking-tight text-[#1A1A18] dark:text-[#F5F3EE]">{value}</div>
-        <div className="text-xs font-medium text-[#6B6B63] dark:text-[#A8A497] mt-1.5">{label}</div>
+        <div className="text-xl font-bold leading-none tracking-tight text-[#1A1A18] dark:text-[#F5F3EE]">{value}</div>
+        <div className="text-[11px] font-medium text-[#6B6B63] dark:text-[#A8A497] mt-1">{label}</div>
         {sub && (
-          <div className="text-[11px] text-[#8C8A80] mt-0.5">
+          <div className="text-[10px] text-[#8C8A80] mt-0.5">
             {typewriter ? <span key={sub} className="tw-caption">{sub}</span> : sub}
           </div>
         )}

@@ -239,7 +239,7 @@ html.dark .glass-card:hover {
   box-shadow: 0 0 0 1px rgba(140,160,91,0.20), 0 12px 32px rgba(0,0,0,0.45), 0 0 32px rgba(140,160,91,0.16);
 }
 .glass-card--pad {
-  padding: 20px;
+  padding: 14px;
 }
 
 /* ═══ Stat-card micro-animations — trend line / progress ring / mini bar

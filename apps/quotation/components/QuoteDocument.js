@@ -18,6 +18,8 @@ const L = {
     notes: 'Notes', terms: 'Terms & Conditions',
     preparedBy: 'Prepared by', approvedBy: 'Approved by', customerSign: 'Customer Acceptance',
     cr: 'CR', vatNo: 'VAT No.', yes: 'T', no: '—',
+    bankDetails: 'Bank Details', bank: 'Bank', accountNumber: 'Account Number', iban: 'IBAN', accountName: 'Account Name',
+    page: 'Page', of: 'of', website: 'Web', scanToVerify: 'Scan to verify',
   },
   ar: {
     quotation: 'عرض سعر', costEstimation: 'عرض سعر / تقدير تكلفة',
@@ -31,20 +33,31 @@ const L = {
     notes: 'ملاحظات', terms: 'الشروط والأحكام',
     preparedBy: 'إعداد', approvedBy: 'اعتماد', customerSign: 'موافقة العميل',
     cr: 'س.ت', vatNo: 'الرقم الضريبي', yes: 'نعم', no: '—',
+    bankDetails: 'التفاصيل البنكية', bank: 'البنك', accountNumber: 'رقم الحساب', iban: 'الآيبان', accountName: 'اسم الحساب',
+    page: 'صفحة', of: 'من', website: 'الموقع', scanToVerify: 'امسح للتحقق',
   },
+};
+
+/* Fixed bank-account block shown on every quotation, verbatim per company
+   instruction — not entity-specific, not user-editable. */
+const BANK_DETAILS = {
+  bank: 'Alinma Bank',
+  accountNumber: '68205594739000',
+  iban: 'SA5105000068205594739000',
+  accountName: 'Ismail Al Farooque Wooden Industries',
 };
 
 import { translate, hasArabic } from '@/lib/translate';
 
-function money(n) {
+export function money(n) {
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function dateStr(d) {
+export function dateStr(d) {
   if (!d) return '—';
   try { return new Date(d).toLocaleDateString('en-GB'); } catch (_) { return String(d); }
 }
 
-export default function QuoteDocument({ doc, products, entity, customer, terms, lang }) {
+export default function QuoteDocument({ doc, products, entity, customer, terms, lang, qrDataUrl }) {
   const isAr = lang === 'ar';
   const t = L[isAr ? 'ar' : 'en'];
   const dir = isAr ? 'rtl' : 'ltr';
@@ -69,19 +82,56 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
   const box = { border: '1px solid #d8d4cc' };
 
   return (
-    <div dir={dir} style={{
+    <div dir={dir} className="qdoc" style={{
       fontFamily: isAr ? "'IBM Plex Sans Arabic','Tajawal','Segoe UI',sans-serif" : "'Inter','Segoe UI',sans-serif",
-      color: '#1a1a18', background: '#fff', maxWidth: 794, margin: '0 auto', padding: '32px 36px', fontSize: 12.5, lineHeight: 1.5,
+      color: '#1a1a18', background: '#fff', maxWidth: 794, margin: '0 auto', padding: '32px 36px 64px', fontSize: 12.5, lineHeight: 1.5,
+      position: 'relative', overflow: 'hidden',
     }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, borderBottom: '3px solid #6B7A4F', paddingBottom: 14 }}>
-        <div>
-          <div style={{ fontSize: 19, fontWeight: 700, color: '#46512F' }}>{eName}</div>
-          <div style={{ color: '#6b6b63' }}>{eAddr}</div>
-          <div style={{ color: '#6b6b63' }} dir="ltr">
-            {entity?.phone && <span>☎ {entity.phone} </span>}
-            {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
-            {entity?.vat_number && <span> · {t.vatNo}: {entity.vat_number}</span>}
+      {/* Print-only repeating header/footer/watermark: Chrome repeats
+          position:fixed elements on every printed page, which is what
+          makes the header/logo/quote#/customer, watermark, and footer
+          appear on page 2, 3, 4… without any per-page JS. The .qdoc-body
+          gets matching top/bottom padding in print so its content never
+          renders underneath the fixed bars. Screen view is unaffected
+          (rules are scoped to @media print). */}
+      <style>{`
+        @media print {
+          .qdoc-header, .qdoc-footer { position: fixed; left: 0; right: 0; background: #fff; z-index: 2; }
+          .qdoc-header { top: 0; padding-top: 8mm; }
+          .qdoc-footer { bottom: 0; padding-bottom: 6mm; }
+          .qdoc-body { padding-top: 104px; padding-bottom: 64px; }
+          .qdoc-watermark { position: fixed !important; }
+        }
+      `}</style>
+
+      {/* Watermark — centered, low-opacity, behind all content. Purely
+          decorative: not present in the accessibility tree. */}
+      <img src="/logo.png" alt="" aria-hidden="true" className="qdoc-watermark" style={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: 380, height: 'auto', opacity: 0.06, zIndex: 0, pointerEvents: 'none',
+      }} />
+
+      {/* Header — a true 3-column layout. The 3rd column here is just a
+          reserved empty spacer matching the QR card's width, so the
+          center title/meta column never stretches underneath it; the
+          actual QR image lives in .qdoc-body (see below) so it can be
+          page-1-only, but is sized/aligned to land exactly in this
+          reserved slot, reading as one continuous header row. */}
+      <div className="qdoc-header" style={{
+        position: 'relative', zIndex: 1, display: 'grid',
+        gridTemplateColumns: qrDataUrl ? '1fr auto 138px' : '1fr auto',
+        alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #6B7A4F', paddingBottom: 14,
+      }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <img src="/logo.png" alt="" style={{ height: 48, width: 'auto', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: '#46512F' }}>{eName}</div>
+            <div style={{ color: '#6b6b63' }}>{eAddr}</div>
+            <div style={{ color: '#6b6b63' }} dir="ltr">
+              {entity?.phone && <span>☎ {entity.phone} </span>}
+              {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
+              {entity?.vat_number && <span> · {t.vatNo}: {entity.vat_number}</span>}
+            </div>
           </div>
         </div>
         <div style={{ textAlign: isAr ? 'left' : 'right' }}>
@@ -94,8 +144,29 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             </tbody>
           </table>
         </div>
+        {qrDataUrl && <div aria-hidden="true" />}
       </div>
 
+      <div className="qdoc-body" style={{ position: 'relative', zIndex: 1 }}>
+      {/* QR code — first-page-only by construction: this is normal
+          in-flow content (not position:fixed like the header, which
+          repeats on every printed page), so it renders exactly once,
+          right at the top of page 1. The negative top margin pulls it
+          up by the header's own height so it visually sits on the same
+          row as the logo/title (a third, right-aligned "column"),
+          while the customer box below still starts right after its
+          real box — no overlap, on screen or print. */}
+      {qrDataUrl && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -104, marginBottom: 8, position: 'relative', zIndex: 2 }}>
+          <div style={{
+            textAlign: 'center', background: '#fff', padding: 8, borderRadius: 8,
+            border: '1px solid #dcd9d2', boxShadow: '0 1px 4px rgba(26,26,24,0.08)',
+          }}>
+            <img src={qrDataUrl} alt="" width={120} height={120} style={{ display: 'block', borderRadius: 4 }} />
+            <div style={{ fontSize: 8, color: '#8c8a80', marginTop: 4, whiteSpace: 'nowrap' }}>{t.scanToVerify}</div>
+          </div>
+        </div>
+      )}
       {/* Customer */}
       <div style={{ ...box, borderRadius: 8, padding: '10px 14px', marginTop: 14, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
         <div><span style={{ color: '#6b6b63' }}>{t.customer}: </span><b>{cName}</b></div>
@@ -134,10 +205,11 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </tbody>
       </table>
 
-      {/* Totals + notes side by side */}
+      {/* Totals + delivery/notes side by side (last page only — this
+          simply falls wherever the item table ends, which is always
+          the final page since nothing follows it but this section) */}
       <div style={{ display: 'flex', gap: 16, marginTop: 14, alignItems: 'flex-start', breakInside: 'avoid' }}>
         <div style={{ flex: 1, fontSize: 11.5, color: '#55534c' }}>
-          {doc.payment_terms && <div><b>{t.paymentTerms}:</b> {loc(doc.payment_terms)}</div>}
           {doc.delivery_terms && <div><b>{t.deliveryTerms}:</b> {loc(doc.delivery_terms)}</div>}
           {doc.customer_notes && <div style={{ marginTop: 6 }}><b>{t.notes}:</b> {loc(doc.customer_notes)}</div>}
         </div>
@@ -155,7 +227,27 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </table>
       </div>
 
-      {/* Terms */}
+      {/* Payment Terms — a dynamic free-text section; entirely absent
+          (no heading either) when the field is empty. */}
+      {doc.payment_terms && String(doc.payment_terms).trim() && (
+        <div style={{ marginTop: 16, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
+          <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 3 }}>{t.paymentTerms}</div>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{loc(doc.payment_terms)}</div>
+        </div>
+      )}
+
+      {/* Bank Details */}
+      <div style={{ ...box, borderRadius: 8, padding: '10px 14px', marginTop: 16, fontSize: 11.5, breakInside: 'avoid' }}>
+        <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 6 }}>{t.bankDetails}</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 28px' }} dir="ltr">
+          <div><span style={{ color: '#6b6b63' }}>{t.bank}: </span><b>{BANK_DETAILS.bank}</b></div>
+          <div><span style={{ color: '#6b6b63' }}>{t.accountNumber}: </span><b>{BANK_DETAILS.accountNumber}</b></div>
+          <div><span style={{ color: '#6b6b63' }}>{t.iban}: </span><b>{BANK_DETAILS.iban}</b></div>
+          <div><span style={{ color: '#6b6b63' }}>{t.accountName}: </span><b>{BANK_DETAILS.accountName}</b></div>
+        </div>
+      </div>
+
+      {/* Terms & Conditions */}
       {(doc.terms_body_override || terms) && (
         <div style={{ marginTop: 16, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
           <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 3 }}>{t.terms}</div>
@@ -163,13 +255,34 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </div>
       )}
 
-      {/* Signatures */}
-      <div style={{ display: 'flex', gap: 20, marginTop: 34, breakInside: 'avoid' }}>
-        {[t.preparedBy, t.approvedBy, t.customerSign].map(s => (
-          <div key={s} style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #8c8a80', paddingTop: 5, fontSize: 11, color: '#6b6b63' }}>{s}</div>
-          </div>
-        ))}
+        {/* Signatures */}
+        <div style={{ display: 'flex', gap: 20, marginTop: 34, breakInside: 'avoid' }}>
+          {[t.preparedBy, t.approvedBy, t.customerSign].map(s => (
+            <div key={s} style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{ borderTop: '1px solid #8c8a80', paddingTop: 5, fontSize: 11, color: '#6b6b63' }}>{s}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer — repeated on every printed page via the .qdoc-footer
+          fixed-position rule the print page supplies; renders in normal
+          flow here too so it's visible in a plain (non-print) view. */}
+      <div className="qdoc-footer" style={{
+        marginTop: 24, paddingTop: 8, borderTop: '1px solid #d8d4cc',
+        fontSize: 9.5, color: '#8c8a80', textAlign: 'center', position: 'relative', zIndex: 1,
+      }}>
+        <div>
+          {eName}
+          {eAddr && <span> · {eAddr}</span>}
+          {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
+          {entity?.vat_number && <span> · {t.vatNo}: {entity.vat_number}</span>}
+        </div>
+        <div dir="ltr">
+          {entity?.phone && <span>☎ {entity.phone}</span>}
+          {entity?.email && <span> · ✉ {entity.email}</span>}
+          {entity?.website && <span> · {t.website}: {entity.website}</span>}
+        </div>
       </div>
     </div>
   );

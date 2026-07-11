@@ -12,7 +12,8 @@ import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
 import StatusBadge from '@/components/StatusBadge';
 import CostModelEditor from '@/components/CostModelEditor';
-import { useLanguage, pickL, codeLabel } from '@/lib/i18n';
+import { langHelpers, pickL, codeLabel } from '@/lib/i18n';
+import { projectStatusBadgeKey } from '@/lib/projectStatus';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { quotationSummary, productCostSummary, r2, scaleFactor, scaleCostLines } from '@/lib/costing';
 import { Button, Input, Textarea, Select, Field, Modal, Th, Td } from '@/components/ui';
@@ -34,8 +35,15 @@ function paramsFromRow(p) {
 
 export default function QuotationEditorPage() {
   const { id } = useParams();
-  const { t, tr, trL, lang, formatNumber, formatDate } = useLanguage();
   const [doc, setDoc] = useState(null);            // quotation row
+  /* The quotation's own saved output_lang is the master language for
+     everything in this editor (header, customer, products, terms,
+     buttons/labels, and — downstream — print/PDF/QR) per the language
+     spec; it deliberately overrides the app-wide language toggle used
+     by every other page, and switches instantly on patchDoc() with no
+     refetch since langHelpers() is a pure function of the value. */
+  const lang = doc?.output_lang || 'en';
+  const { t, tr, trL, formatNumber, formatDate } = langHelpers(lang);
   const [products, setProducts] = useState([]);    // [{...row, lines, cost_params, _open}]
   const [version, setVersion] = useState(null);
   const [dirty, setDirty] = useState(false);
@@ -48,6 +56,7 @@ export default function QuotationEditorPage() {
   const dCustQ = useDebouncedValue(custQ, 250);
   const [custRows, setCustRows] = useState([]);
   const [custOpen, setCustOpen] = useState(false);
+  const [pickedCustomer, setPickedCustomer] = useState(null); // full bilingual row, for instant re-display on language switch
   const [tabByProduct, setTabByProduct] = useState({});
   const [statusMsg, setStatusMsg] = useState(null);
   const [decision, setDecision] = useState(null);  // 'accept' | 'decline'
@@ -55,6 +64,8 @@ export default function QuotationEditorPage() {
   const [sendOpen, setSendOpen] = useState(false);
   const [sendForm, setSendForm] = useState({ to: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
+  const [projectRequest, setProjectRequest] = useState(null);
+  const [sendingToProjects, setSendingToProjects] = useState(false);
   const skipNextSave = useRef(true);
 
   const editable = doc && doc.status === 'draft';
@@ -68,11 +79,36 @@ export default function QuotationEditorPage() {
         setDoc(d.row);
         setVersion(d.row.updated_at);
         setProducts((d.products || []).map(p => ({ ...p, cost_params: paramsFromRow(p), _open: false })));
-        if (d.row.customer) setCustQ(pickL(d.row.customer, 'company_name', lang) || d.row.customer.company_name || '');
+        setProjectRequest(d.projectRequest || null);
+        if (d.row.customer) {
+          setPickedCustomer(d.row.customer);
+          setCustQ(pickL(d.row.customer, 'company_name', d.row.output_lang || 'en') || d.row.customer.company_name || '');
+        }
         skipNextSave.current = true;
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  /* Re-display the customer name in the newly-selected language, instantly
+     and with no refetch — but only while the search box isn't actively
+     being typed into, so it never clobbers in-progress input. */
+  useEffect(() => {
+    if (pickedCustomer && !custOpen) setCustQ(trL(pickedCustomer, 'company_name') || pickedCustomer.company_name || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
+  /* Light polling for just the project-request status (Part 7) — only
+     updates projectRequest, never the document/products state, so it
+     can't clobber an in-progress edit or the customer search box. */
+  useEffect(() => {
+    const timer = setInterval(() => {
+      fetch('/api/quotations/' + id, { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d) setProjectRequest(d.projectRequest || null); })
+        .catch(() => {});
+    }, 20000);
+    return () => clearInterval(timer);
   }, [id]);
 
   /* ── Catalogue & customer pickers ── */
@@ -233,8 +269,8 @@ export default function QuotationEditorPage() {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
       body: JSON.stringify({
         source_product_id: p.catalogue_product_id || null,
-        name: p.name ? p.name + (lang === 'ar' ? ' - خاص' : ' - Custom') : '',
-        description: p.description,
+        name: productField(p, 'name') ? productField(p, 'name') + (lang === 'ar' ? ' - خاص' : ' - Custom') : '',
+        description: productField(p, 'description'),
         unit: p.unit, dimensions: p.dimensions || {},
         unit_price: p.unit_price, cost_params: p.cost_params, lines: p.lines,
       }),
@@ -311,6 +347,20 @@ export default function QuotationEditorPage() {
     setDecision(null); setDecisionReason('');
   }
 
+  async function sendToProjects() {
+    if (sendingToProjects || projectRequest) return; // guards accidental double-click
+    setSendingToProjects(true);
+    setStatusMsg(null);
+    const res = await fetch(`/api/quotations/${id}/send-to-projects`, {
+      method: 'POST', credentials: 'same-origin',
+    }).catch(() => null);
+    const d = res ? await res.json().catch(() => ({})) : {};
+    setSendingToProjects(false);
+    if (!res || !res.ok) { setStatusMsg('⚠ ' + (d.error || t('common.genericError'))); return; }
+    setProjectRequest(d.row);
+    setStatusMsg(t('quote.sentToProjects'));
+  }
+
   async function clone(kind) {
     const res = await fetch(`/api/quotations/${id}/${kind}`, { method: 'POST', credentials: 'same-origin' }).catch(() => null);
     const d = res && res.ok ? await res.json() : null;
@@ -323,19 +373,44 @@ export default function QuotationEditorPage() {
   }
 
   const money = (n) => formatNumber(n, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const pname = (p) => trL(p, 'name');
   const custName = (c) => trL(c, 'company_name');
+
+  /* Product name/description are free-text inputs the user edits
+     directly (not read-only display), so instead of trL()'s "fall back
+     to the other language" behavior, a missing language-specific value
+     shows blank rather than the wrong-language text — satisfying "never
+     mix languages" for an editable field. Switching output_lang reads/
+     writes name_en+name_ar (or description_en/_ar) so both languages'
+     text survive independently across language toggles. */
+  const AR_RE = /[؀-ۿ]/;
+  function productField(p, base) {
+    const specific = p[base + (lang === 'ar' ? '_ar' : '_en')];
+    if (specific !== undefined && specific !== null && specific !== '') return specific;
+    const canonical = p[base] || '';
+    if (!canonical) return '';
+    return (lang === 'ar') === AR_RE.test(canonical) ? canonical : '';
+  }
+  function patchProductField(i, base, value) {
+    const key = base + (lang === 'ar' ? '_ar' : '_en');
+    patchProduct(i, { [key]: value, [base]: value });
+  }
+  const pname = (p) => productField(p, 'name') || trL(p, 'name');
   const saveLabel = { idle: dirty ? t('quote.unsaved') : '', saving: t('common.saving'), saved: t('quote.saved'), error: '⚠ ' + t('quote.saveError'), conflict: '⚠ ' + t('quote.conflict') }[saveState];
 
   return (
     <Shell active="/quotations">
-      <div className="space-y-4">
+      <div className="space-y-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         {/* ── Header bar ── */}
         <div className="glass-card p-4">
           <div className="flex flex-wrap items-center gap-3">
             <a href="/quotations" className="text-[#8C8A80] hover:underline text-sm">‹</a>
             <span className="font-semibold" dir="ltr">{doc.quote_number}</span>
             <StatusBadge status={doc.status} />
+            {doc.project_id && (
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-[#BC6B4E]/10 text-[#BC6B4E]" title={t('quote.projectLocked')}>
+                🔒 {t('quote.projectLocked')}
+              </span>
+            )}
             {doc.entity && <span className="text-[11px] text-[#8C8A80]">{lang === 'ar' ? (doc.entity.name_ar || doc.entity.name_en) : doc.entity.name_en}</span>}
             <span className="text-[11px] text-[#8C8A80]">{saveLabel}</span>
             <div className="flex-1" />
@@ -361,6 +436,12 @@ export default function QuotationEditorPage() {
                 <Button variant="danger" onClick={() => setDecision('decline')}>{t('quote.markRejected')}</Button>
               </>
             )}
+            {doc.status === 'accepted' && (
+              <Button onClick={() => doStatus('contract')}>{t('quote.markContracted')}</Button>
+            )}
+            {doc.status === 'contracted' && (
+              <Button onClick={() => doStatus('start')}>{t('quote.startProject')}</Button>
+            )}
             <Button variant="ghost" onClick={() => window.open('/quotations/' + id + '/print?lang=' + (doc.output_lang || 'en'), '_blank')}>
               ⤓ {t('quote.print')}
             </Button>
@@ -381,7 +462,7 @@ export default function QuotationEditorPage() {
                 <div className="absolute z-30 mt-1 w-full glass-card bg-white dark:bg-[#1B1B14] shadow-xl max-h-56 overflow-y-auto">
                   {custRows.slice(0, 8).map(c => (
                     <button key={c.id} type="button"
-                      onClick={() => { patchDoc({ customer_id: c.id }); setCustQ(custName(c)); setCustOpen(false); }}
+                      onClick={() => { patchDoc({ customer_id: c.id }); setPickedCustomer(c); setCustQ(custName(c)); setCustOpen(false); }}
                       className="w-full text-start px-3 py-2 text-sm hover:bg-[#F1EEE7] dark:hover:bg-white/5 border-b border-[#E5E2DD]/60 dark:border-white/5">
                       {custName(c)} <span className="text-[11px] text-[#8C8A80]" dir="ltr">{c.phone}</span>
                     </button>
@@ -399,8 +480,9 @@ export default function QuotationEditorPage() {
               <Select disabled={!editable} value={doc.output_lang || 'en'} onChange={e => patchDoc({ output_lang: e.target.value })}
                 options={[{ value: 'en', label: 'English' }, { value: 'ar', label: 'العربية' }]} />
             </Field>
-            <Field label={t('quote.paymentTerms')}>
-              <Input disabled={!editable} value={doc.payment_terms || ''} onChange={e => patchDoc({ payment_terms: e.target.value })} />
+            <Field label={t('quote.paymentTerms')} className="col-span-2">
+              <Textarea rows={3} placeholder={t('quote.paymentTermsPlaceholder')} disabled={!editable}
+                value={doc.payment_terms || ''} onChange={e => patchDoc({ payment_terms: e.target.value })} />
             </Field>
             <Field label={t('quote.deliveryTerms')}>
               <Input disabled={!editable} value={doc.delivery_terms || ''} onChange={e => patchDoc({ delivery_terms: e.target.value })} />
@@ -411,6 +493,32 @@ export default function QuotationEditorPage() {
           </div>
         </div>
 
+        {/* ── Project Integration (Part 4): only once Status = Started ── */}
+        {doc.status === 'started' && (
+          <div className="glass-card p-4">
+            <div className="font-semibold mb-1">{t('quote.projectIntegration')}</div>
+            {projectRequest ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-[#8C8A80]">{t('quote.sentToProjects')}</span>
+                <StatusBadge status={projectStatusBadgeKey(doc.project_status) || 'pr_' + projectRequest.status} />
+                {doc.project_id && (
+                  <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + doc.project_id}
+                    target="_blank" rel="noreferrer" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">
+                    ↗ {t('quote.openProject')}
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-[#8C8A80]">{t('quote.readyToTransfer')}</span>
+                <Button disabled={sendingToProjects} onClick={sendToProjects}>
+                  {sendingToProjects ? t('common.saving') : t('quote.sendToProjects')}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 xl:grid-cols-[1fr,320px] gap-4 items-start">
           {/* ── Products ── */}
           <div className="space-y-3">
@@ -419,8 +527,8 @@ export default function QuotationEditorPage() {
                 <div className="p-3 flex flex-wrap items-center gap-3">
                   <span className="text-[11px] text-[#8C8A80] w-5">{i + 1}.</span>
                   <div className="flex-1 min-w-[180px]">
-                    <Input disabled={!editable} value={p.name || ''} placeholder={t('f.name')}
-                      onChange={e => patchProduct(i, { name: e.target.value })} />
+                    <Input disabled={!editable} value={productField(p, 'name')} placeholder={t('f.name')}
+                      onChange={e => patchProductField(i, 'name', e.target.value)} />
                   </div>
                   <Input type="number" step="0.001" disabled={!editable} value={p.qty} className="w-20"
                     onChange={e => patchProduct(i, { qty: e.target.value })} title={t('cost.qty')} />
@@ -492,14 +600,14 @@ export default function QuotationEditorPage() {
                 <div className="px-3 pb-3">
                   <Textarea rows={2} disabled={!editable}
                     placeholder={t('quote.descriptionPlaceholder')}
-                    value={p.description || ''}
-                    onChange={e => patchProduct(i, { description: e.target.value })} />
+                    value={productField(p, 'description')}
+                    onChange={e => patchProductField(i, 'description', e.target.value)} />
                 </div>
 
                 {/* inline costing */}
                 {p._open && (
                   <div className="border-t border-[#E5E2DD] dark:border-white/[0.08] p-3 bg-[#F7F5F1]/50 dark:bg-black/10">
-                    <CostModelEditor markManual
+                    <CostModelEditor markManual lang={lang}
                       lines={p.lines} setLines={fn => { const next = typeof fn === 'function' ? fn(p.lines) : fn; patchProduct(i, { lines: next }); }}
                       params={p.cost_params} setParams={fn => { const next = typeof fn === 'function' ? fn(p.cost_params) : fn; patchProduct(i, { cost_params: next }); }}
                       tab={tabByProduct[i] || 'material'} setTab={s => setTabByProduct(m => ({ ...m, [i]: s }))}

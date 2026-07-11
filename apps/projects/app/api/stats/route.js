@@ -74,6 +74,15 @@ export async function GET(req) {
   const duYesterday = duList.filter(u => u.update_date === yesterdayStr).length;
   const duThisWeek = duList.filter(u => new Date(u.update_date) >= weekAgo).length;
 
+  /* ── Quotation Requests widget (Update 1: dashboard cards) ── */
+  const { data: qrs } = await sb.from('project_requests').select('status');
+  const qrPending = (qrs || []).filter(r => r.status === 'pending').length;
+  const qrAccepted = (qrs || []).filter(r => r.status === 'accepted').length;
+  const qrOnHold = (qrs || []).filter(r => r.status === 'on_hold').length;
+  const qrRejected = (qrs || []).filter(r => r.status === 'rejected').length;
+
+  const { count: customersCount } = await sb.from('customers').select('id', { count: 'exact', head: true }).is('deleted_at', null);
+
   const { data: assignedProjectIds } = await sb.from('pm_project_assignees').select('project_id');
   let projectsWithAssignees = new Set((assignedProjectIds || []).map(r => r.project_id));
   if (scopedProjectIds) projectsWithAssignees = new Set([...projectsWithAssignees].filter(id => scopedProjectIds.has(id)));
@@ -92,5 +101,7 @@ export async function GET(req) {
     upcomingProjects: upcoming,
     purchaseRequests: { pending: prPending, approved: prApproved, urgent: prUrgent, recent: prRecent },
     dailyUpdates: { today: duToday, yesterday: duYesterday, thisWeek: duThisWeek, missing: missingProjects },
+    quotationRequests: { pending: qrPending, accepted: qrAccepted, onHold: qrOnHold, rejected: qrRejected },
+    customersCount: customersCount || 0,
   });
 }

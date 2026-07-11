@@ -43,6 +43,7 @@
      included only by -ar pages), so it must never load statically here —
      js/admin/login.js injects/removes it when the language is Arabic. -->
 <link rel="stylesheet" href="/css/auth.css">
+<link rel="stylesheet" href="/css/glass-icons.css">
 <link rel="stylesheet" href="/css/admin/admin.css">
 <link rel="icon" href="/assets/images/logo/IAA_LOGO.png" type="image/png">
 </head>
@@ -90,7 +91,7 @@
 <div class="ad-login-wrap">
   <div class="ad-login-card">
     <div class="ad-login-logo">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <svg class="gicon gicon--md" aria-hidden="true"><use href="#gi-shield"/></svg>
     </div>
     <h1 class="ad-login-title" id="stepTitle">Admin Sign In</h1>
     <p class="ad-login-sub" id="stepSub">AL FAROOQUE Manufacturing — Enterprise Admin Portal</p>
@@ -126,6 +127,7 @@
 <!-- Public-site nav behavior (burger menu, scroll state, dropdown, language
      switcher, theme toggle, account control) — same scripts every public
      page loads, in the same order. -->
+<script src="/js/glass-icons.js"></script>
 <script src="/js/main.js"></script>
 <script src="/js/language-switcher.js"></script>
 <script src="/js/theme-switcher.js"></script>

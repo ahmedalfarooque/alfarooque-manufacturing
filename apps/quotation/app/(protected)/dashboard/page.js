@@ -6,13 +6,23 @@ import StatusBadge from '@/components/StatusBadge';
 import { useLanguage } from '@/lib/i18n';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
-function StatCard({ label, value, sub }) {
+function StatCard({ label, value, sub, href }) {
+  const Tag = href ? 'a' : 'div';
   return (
-    <div className="glass-card p-5">
-      <div className="text-[13px] text-[#8C8A80]">{label}</div>
-      <div className="text-3xl font-semibold mt-1">{value}</div>
-      {sub && <div className="text-[11px] text-[#8C8A80] mt-1">{sub}</div>}
-    </div>
+    <Tag {...(href ? { href } : {})}
+      className={'glass-card p-3.5 block transition-colors duration-200' + (href ? ' cursor-pointer hover:bg-[#F1EEE7] dark:hover:bg-white/5' : '')}>
+      <div className="text-[12px] text-[#8C8A80]">{label}</div>
+      <div className="text-2xl font-semibold mt-0.5">{value}</div>
+      {sub && <div className="text-[10px] text-[#8C8A80] mt-1">{sub}</div>}
+    </Tag>
+  );
+}
+
+function QuickLink({ href, label }) {
+  return (
+    <a href={href} className="glass-card p-4 flex items-center justify-between text-sm font-medium cursor-pointer hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">
+      {label} <span className="text-[#8C8A80]">›</span>
+    </a>
   );
 }
 
@@ -34,17 +44,26 @@ export default function DashboardPage() {
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-            <StatCard label={t('dashboard.totalQuotations')} value={formatNumber(stats.total || 0)} sub={t('dashboard.allTime')} />
-            <StatCard label={t('dashboard.draft')} value={formatNumber(stats.draft || 0)} />
-            <StatCard label={t('dashboard.pendingApproval')} value={formatNumber(stats.pending || 0)} />
-            <StatCard label={t('dashboard.sent')} value={formatNumber(stats.sent || 0)} />
-            <StatCard label={t('dashboard.accepted')} value={formatNumber(stats.accepted || 0)} />
-            <StatCard label={t('dashboard.expiringSoon')} value={formatNumber(stats.expiring || 0)} />
+            <StatCard href="/quotations" label={t('dashboard.totalQuotations')} value={formatNumber(stats.total || 0)} sub={t('dashboard.allTime')} />
+            <StatCard href="/quotations?status=draft" label={t('dashboard.draft')} value={formatNumber(stats.draft || 0)} />
+            <StatCard href="/quotations?status=pending_approval" label={t('dashboard.pendingApproval')} value={formatNumber(stats.pending || 0)} />
+            <StatCard href="/quotations?status=sent" label={t('dashboard.sent')} value={formatNumber(stats.sent || 0)} />
+            <StatCard href="/quotations?status=accepted" label={t('dashboard.accepted')} value={formatNumber(stats.accepted || 0)} />
+            <StatCard href="/quotations?status=approved" label={t('dashboard.expiringSoon')} value={formatNumber(stats.expiring || 0)} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard label={t('dashboard.quotedValueMonth')} value={formatNumber(stats.quotedMonth || 0, { minimumFractionDigits: 2 })} sub={t('dashboard.thisMonth')} />
-            <StatCard label={t('dashboard.customers')} value={formatNumber(stats.customers || 0)} />
-            <StatCard label={t('dashboard.materials')} value={formatNumber(stats.materials || 0)} />
+            <StatCard href="/reports" label={t('dashboard.quotedValueMonth')} value={formatNumber(stats.quotedMonth || 0, { minimumFractionDigits: 2 })} sub={t('dashboard.thisMonth')} />
+            <StatCard href="/customers" label={t('dashboard.customers')} value={formatNumber(stats.customers || 0)} />
+            <StatCard href="/materials" label={t('dashboard.materials')} value={formatNumber(stats.materials || 0)} />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
+            <QuickLink href="/catalogue" label={t('nav.catalogue')} />
+            <QuickLink href="/suppliers" label={t('nav.suppliers')} />
+            <QuickLink href="/labour" label={t('nav.labour')} />
+            <QuickLink href="/machines" label={t('nav.machines')} />
+            <QuickLink href="/expenses" label={t('nav.expenses')} />
+            <QuickLink href="/reports" label={t('nav.reports')} />
+            <QuickLink href="/users" label={t('nav.users')} />
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <div className="glass-card p-4">

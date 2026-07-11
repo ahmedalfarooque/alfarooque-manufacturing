@@ -4,10 +4,15 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Select, Field, EmptyState, Th, Td } from '@/components/ui';
+import { pickDefaultEntityId } from '@/lib/defaultEntity';
 
 const REPORTS = ['quotation-register', 'sales-by-customer', 'profit-margin', 'vat-summary',
   'products-pricelist', 'material-price-moves', 'top-materials', 'labour-rates', 'machines', 'expenses'];
 const DATED = ['quotation-register', 'sales-by-customer', 'profit-margin', 'vat-summary', 'material-price-moves'];
+/* These two report types are per-quotation rows (share the same base
+   query) — clicking a row opens that quotation. Other report types are
+   aggregates or master-data snapshots with no single record to open. */
+const LINKS_TO_QUOTATION = ['quotation-register', 'profit-margin'];
 
 export default function ReportsPage() {
   const { t, lang, formatNumber } = useLanguage();
@@ -21,7 +26,9 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetch('/api/entities', { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : { rows: [] }).then(d => setEntities(d.rows || [])).catch(() => {});
+      .then(r => r.ok ? r.json() : { rows: [] })
+      .then(d => { setEntities(d.rows || []); setEntity(pickDefaultEntityId(d.rows)); })
+      .catch(() => {});
   }, []);
 
   const qs = () => `from=${from}&to=${to}&entity=${entity}&lang=${lang}`;
@@ -75,11 +82,16 @@ export default function ReportsPage() {
               <table className="w-full">
                 <thead><tr>{data.columns.map(c => <Th key={c.key}>{c.header}</Th>)}</tr></thead>
                 <tbody>
-                  {data.rows.map((r, i) => (
-                    <tr key={i} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
-                      {data.columns.map(c => <Td key={c.key} dir="auto" className="whitespace-nowrap">{cell(r[c.key])}</Td>)}
-                    </tr>
-                  ))}
+                  {data.rows.map((r, i) => {
+                    const clickable = LINKS_TO_QUOTATION.includes(slug) && r.id;
+                    return (
+                      <tr key={i}
+                        onClick={clickable ? () => { window.location.href = '/quotations/' + r.id; } : undefined}
+                        className={'transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] ' + (clickable ? 'cursor-pointer' : '')}>
+                        {data.columns.map(c => <Td key={c.key} dir="auto" className="whitespace-nowrap">{cell(r[c.key])}</Td>)}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               <div className="px-4 py-2 text-[12px] text-[#8C8A80]">{data.rows.length} {t('reports.rows')}</div>

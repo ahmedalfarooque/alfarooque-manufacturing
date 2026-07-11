@@ -6,7 +6,9 @@
    reject  pending_approval → draft (with reason)
    accept  approved|sent → accepted (+won reason)
    decline approved|sent → rejected (+lost reason)
-   cancel  any pre-accepted → cancelled                                  */
+   cancel  any pre-accepted → cancelled
+   contract accepted → contracted (signed, ready to schedule)
+   start   contracted|accepted → started (surfaces Send to Projects)     */
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession, requireWrite } = require('@/lib/http');
@@ -70,6 +72,12 @@ export async function POST(req, { params }) {
   } else if (action === 'cancel') {
     if (['accepted', 'cancelled', 'superseded'].includes(qn.status)) return json({ error: 'Cannot cancel in status ' + qn.status }, 409);
     next = 'cancelled';
+  } else if (action === 'contract') {
+    if (qn.status !== 'accepted') return json({ error: 'Quotation must be accepted first.' }, 409);
+    next = 'contracted';
+  } else if (action === 'start') {
+    if (!['contracted', 'accepted'].includes(qn.status)) return json({ error: 'Quotation must be contracted (or accepted) first.' }, 409);
+    next = 'started';
   } else {
     return json({ error: 'Unknown action.' }, 400);
   }

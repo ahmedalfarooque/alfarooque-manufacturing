@@ -223,7 +223,8 @@ export default function MaterialsPage() {
               ) : rows.length === 0 ? (
                 <tr><td colSpan={8}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(row => (
-                <tr key={row.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                <tr key={row.id} onClick={() => open(row)}
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
                   <Td className="whitespace-nowrap" dir="ltr">{row.code || '—'}</Td>
                   <Td>{trL(row, 'name')}</Td>
                   <Td dir="ltr" className="text-start">{formatMaterialDims(row, t) || '—'}</Td>
@@ -231,7 +232,7 @@ export default function MaterialsPage() {
                   <Td>{catName(row.category_id)}</Td>
                   <Td className="whitespace-nowrap font-medium">{formatNumber(row.latest_price, { minimumFractionDigits: 2 })}</Td>
                   <Td>{formatNumber(row.default_waste_pct)}%</Td>
-                  <Td className="text-end whitespace-nowrap">
+                  <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
                     <button onClick={() => showHistory(row)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('materials.priceHistory')}</button>
                     <button onClick={() => open(row)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</button>
                     <button onClick={() => duplicateRow(row)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('common.duplicate')}</button>

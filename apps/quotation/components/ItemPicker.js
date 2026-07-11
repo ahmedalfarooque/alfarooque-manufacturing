@@ -5,7 +5,7 @@
    Keyboard-first: type to search, ↑/↓ to move, Enter to add, Esc closes. */
 
 import { useEffect, useRef, useState } from 'react';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, langHelpers } from '@/lib/i18n';
 import { formatMaterialDims } from '@/lib/dims';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Input } from '@/components/ui';
@@ -18,8 +18,9 @@ const API_BY_SECTION = {
   expense: '/api/expenses?q=',
 };
 
-export default function ItemPicker({ section, onPick }) {
-  const { t, tr, trL, lang, formatNumber } = useLanguage();
+export default function ItemPicker({ section, onPick, lang: langOverride }) {
+  const ctx = useLanguage();
+  const { t, tr, trL, lang, formatNumber } = langOverride ? langHelpers(langOverride) : ctx;
   const [q, setQ] = useState('');
   const dq = useDebouncedValue(q, 200);
   const [rows, setRows] = useState([]);

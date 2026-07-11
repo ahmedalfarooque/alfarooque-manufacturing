@@ -517,3 +517,20 @@ html[dir="rtl"] .ad-select { background-position: left 10px center; }
 /* Numeric/latin data keeps LTR shaping inside RTL pages */
 html[dir="rtl"] .ad-clock { direction: ltr; }
 html[dir="rtl"] .ad-otp-input { direction: ltr; }
+
+/* ═══ Glass icon system (lucide replaced by /js/admin/glass-lucide-shim.js) ═══
+   The generic `svg` rules above (nav 17px, icon-btn 16px, search 15px,
+   stat 18px) still size everything, so the layout cannot shift; the
+   overrides below give the 3D glass plates a touch more presence with
+   negative margins absorbing the difference. currentColor micro-glyphs
+   (.gi-glyph: plus / x / menu / spinner / checks) keep the original
+   lucide footprint and inherit the button's color states. */
+.gi-glyph { width: 16px; height: 16px; flex-shrink: 0; vertical-align: -3px; }
+.ad-nav-item .gicon { width: 20px; height: 20px; margin-block: -2px; }
+.ad-icon-btn .gicon { width: 20px; height: 20px; }
+.ad-search-wrap .gicon { width: 17px; height: 17px; }
+.ad-stat-icon .gicon { width: 22px; height: 22px; }
+.ad-coming-soon-icon .gicon { width: 34px; height: 34px; }
+.ad-oi-thumb--empty .gicon { width: 28px; height: 28px; }
+.ad-btn-sm .gi-glyph { width: 14px; height: 14px; }
+.ad-login-logo .gicon { width: 34px; height: 34px; }

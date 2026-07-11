@@ -159,13 +159,13 @@ export default function PurchaseRequestsPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
-        <StatCard icon={'\u{1F551}'} tone="amber" label={t('pr.kpi.pending')} value={kpis.Pending} />
-        <StatCard icon={'\u{1F50E}'} tone="blue" label={t('pr.kpi.underReview')} value={kpis['Under Review']} />
-        <StatCard icon="✔" tone="brand" label={t('pr.kpi.approved')} value={kpis.Approved} />
-        <StatCard icon="✕" tone="red" label={t('pr.kpi.rejected')} value={kpis.Rejected} />
-        <StatCard icon={'\u{1F6D2}'} tone="slate" label={t('pr.kpi.purchased')} value={kpis.Purchased} />
-        <StatCard icon={'\u{1F4B0}'} tone="amber" label={t('pr.kpi.paymentPending')} value={kpis['Payment Pending']} />
-        <StatCard icon="✓" tone="emerald" label={t('pr.kpi.paymentCompleted')} value={kpis['Payment Completed']} />
+        <StatCard icon="clock" tone="amber" label={t('pr.kpi.pending')} value={kpis.Pending} />
+        <StatCard icon="search" tone="blue" label={t('pr.kpi.underReview')} value={kpis['Under Review']} />
+        <StatCard icon="shield" tone="brand" label={t('pr.kpi.approved')} value={kpis.Approved} />
+        <StatCard icon="x" tone="red" label={t('pr.kpi.rejected')} value={kpis.Rejected} />
+        <StatCard icon="box" tone="slate" label={t('pr.kpi.purchased')} value={kpis.Purchased} />
+        <StatCard icon="receipt" tone="amber" label={t('pr.kpi.paymentPending')} value={kpis['Payment Pending']} />
+        <StatCard icon="target" tone="emerald" label={t('pr.kpi.paymentCompleted')} value={kpis['Payment Completed']} />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">
@@ -247,7 +247,8 @@ export default function PurchaseRequestsPage() {
             ) : pageRows.length === 0 ? (
               <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('pr.noMatch')}</td></tr>
             ) : pageRows.map((r, i) => (
-              <tr key={r.id} className="border-b border-black/5 dark:border-white/5">
+              <tr key={r.id} onClick={() => { window.location.href = '/purchase-requests/' + r.id; }}
+                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
                 <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
                 <td>{r.request_date}</td>
                 <td className="max-w-[160px] truncate">{r.project_name}</td>
@@ -255,7 +256,7 @@ export default function PurchaseRequestsPage() {
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{r.priority}</span></td>
                 <td>{r.requested_by_name || '—'}</td>
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{r.status}</span></td>
-                <td className="text-right px-4 space-x-2 whitespace-nowrap">
+                <td className="text-right px-4 space-x-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                   <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-slate-400">{'\u{1F441}'}</a>
                   <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-500">↗</a>
                   <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-red-500">🗑</button>

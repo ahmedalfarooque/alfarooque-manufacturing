@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/rtl.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/glass-icons.css">
 <link rel="stylesheet" href="/css/products.css">
 <link rel="stylesheet" href="/css/product-filter.css">
 <link rel="stylesheet" href="/css/products-categories.css">
@@ -70,10 +71,10 @@
     <li><a href="/pages/contact-ar.html" class="nav-cta">تواصل معنا</a></li>
   </ul>
   <div class="nav-actions">
-    <button type="button" class="nav-icon-btn nav-search-btn" id="navSearchBtn" aria-label="Search" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-    <a href="/products.html" class="nav-icon-btn nav-wishlist-btn" id="navWishlistBtn" aria-label="Wishlist"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span class="nav-icon-badge" id="navWishlistBadge" hidden>0</span></a>
-    <button type="button" class="nav-icon-btn nav-cart-btn" id="navCartBtn" aria-label="Cart"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg><span class="nav-icon-badge" id="navCartBadge" hidden>0</span></button>
-    <button type="button" class="nav-icon-btn nav-acct-btn" id="navAcctBtn" data-af-login aria-label="Account"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></button>
+    <button type="button" class="nav-icon-btn nav-search-btn" id="navSearchBtn" aria-label="Search" aria-expanded="false"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-search"/></svg></button>
+    <a href="/products.html" class="nav-icon-btn nav-wishlist-btn" id="navWishlistBtn" aria-label="Wishlist"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-heart"/></svg><span class="nav-icon-badge" id="navWishlistBadge" hidden>0</span></a>
+    <button type="button" class="nav-icon-btn nav-cart-btn" id="navCartBtn" aria-label="Cart"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-bag"/></svg><span class="nav-icon-badge" id="navCartBadge" hidden>0</span></button>
+    <button type="button" class="nav-icon-btn nav-acct-btn" id="navAcctBtn" data-af-login aria-label="Account"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-user"/></svg></button>
   </div>
   <button class="nav-burger" aria-label="فتح القائمة">
     <span></span><span></span><span></span>
@@ -81,7 +82,7 @@
 </nav>
 <div class="nav-search-panel" id="navSearchPanel" hidden>
   <form id="navSearchForm" class="nav-search-form" role="search">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-search"/></svg>
     <input type="search" id="navSearchInput" class="nav-search-input" placeholder="Search products…" aria-label="Search products" autocomplete="off">
     <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Close search">&#x2715;</button>
   </form>
@@ -503,10 +504,10 @@
     </div>
     <p class="footer-tag">تصنيع دقيق عبر الأعمال الخشبية والحديدية والألومنيوم — نخدم المملكة العربية السعودية والمنطقة. جزء من الفاروقي للصناعات.</p>
     <div class="footer-social">
-      <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
-      <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
-      <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-      <a href="https://wa.me/966563000051" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+      <a href="#" aria-label="LinkedIn"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-linkedin"/></svg></a>
+      <a href="#" aria-label="Twitter"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-x"/></svg></a>
+      <a href="#" aria-label="Instagram"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-instagram"/></svg></a>
+      <a href="https://wa.me/966563000051" aria-label="WhatsApp"><svg class="gicon gicon--sm" aria-hidden="true"><use href="#gi-whatsapp"/></svg></a>
     </div>
   </div>
   <div>
@@ -557,6 +558,7 @@
 <script src="/js/scroll-experience.js"></script>
 <script src="/js/main.js"></script>
 <script src="/js/language-switcher.js"></script>
+<script src="/js/glass-icons.js" defer></script>
 <script src="/js/theme-switcher.js"></script>
 <script src="/js/nav-actions.js"></script>
 <script src="/js/products.js"></script>

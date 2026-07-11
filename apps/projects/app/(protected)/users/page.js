@@ -23,11 +23,16 @@ const REFRESH_MS = 15000;
 
 export default function UsersPage() {
   const { t } = useLanguage();
+  const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [modal, setModal] = useState(null); // { mode: 'add'|'edit', data }
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+
+  useEffect(() => {
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+  }, []);
 
   const { data, error, refresh } = useLiveData('/api/users', REFRESH_MS);
   const allUsers = data?.users || [];
@@ -53,6 +58,13 @@ export default function UsersPage() {
     setModal(null);
     refresh();
     return respData;
+  }
+
+  async function deleteUser(u) {
+    if (!confirm(t('users.deleteConfirm') || 'This user will be permanently deleted. Are you sure?')) return;
+    const res = await fetch(`/api/users/${u.id}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (res.ok) refresh();
+    else { const d = await res.json().catch(() => ({})); alert(d.error || 'Could not delete user.'); }
   }
 
   return (
@@ -92,7 +104,8 @@ export default function UsersPage() {
             ) : users.length === 0 ? (
               <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('users.noUsersYet')}</td></tr>
             ) : users.map(u => (
-              <tr key={u.id} className="border-b border-black/5 dark:border-white/5">
+              <tr key={u.id} onClick={() => setModal({ mode: 'edit', data: u })}
+                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
                 <td className="py-3 px-4 font-medium">{u.full_name}</td>
                 <td>{u.email}</td>
                 <td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (ROLE_BADGE[u.role] || '')}>{t('role.' + u.role)}</span></td>
@@ -100,8 +113,9 @@ export default function UsersPage() {
                 <td>{u.department || '—'}</td>
                 <td>{u.company || '—'}</td>
                 <td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (STATUS_BADGE[u.status || 'Active'] || '')}>{t('users.status.' + (u.status || 'Active').toLowerCase())}</span></td>
-                <td className="text-right px-4 space-x-2">
+                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => setModal({ mode: 'edit', data: u })} title={t('common.edit')} className="text-brand-500">✎</button>
+                  {me && me.id !== u.id && <button onClick={() => deleteUser(u)} title={t('common.delete')} className="text-red-500">🗑</button>}
                 </td>
               </tr>
             ))}

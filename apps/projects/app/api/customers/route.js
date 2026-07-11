@@ -11,7 +11,7 @@ export async function GET(req) {
   const url = new URL(req.url);
   const search = (url.searchParams.get('search') || '').trim();
   const sb = getDb();
-  let query = sb.from('customers').select('*').order('full_name', { ascending: true });
+  let query = sb.from('customers').select('*').is('deleted_at', null).order('full_name', { ascending: true });
   if (search) query = query.or(`full_name.ilike.%${search}%,company_name.ilike.%${search}%,email.ilike.%${search}%,mobile_number.ilike.%${search}%`);
 
   const { data, error } = await query;

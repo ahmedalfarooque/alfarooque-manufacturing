@@ -25,7 +25,7 @@ async function quotationBase(sb, url) {
   const { from, to } = range(url);
   const entity = url.searchParams.get('entity');
   let q = sb.from('qt_quotations')
-    .select('quote_number, status, quote_date, valid_until, subtotal, discount_amount, net_total, vat_rate, vat_amount, grand_total, total_cost, blended_margin_pct, won_lost_reason, entity:qt_entities(code), customer:qt_customers(company_name, company_name_en, company_name_ar)')
+    .select('id, quote_number, status, quote_date, valid_until, subtotal, discount_amount, net_total, vat_rate, vat_amount, grand_total, total_cost, blended_margin_pct, won_lost_reason, entity:qt_entities(code), customer:customers(company_name, company_name_en, company_name_ar)')
     .is('deleted_at', null).gte('quote_date', from).lte('quote_date', to)
     .not('status', 'in', '(superseded)').order('quote_date', { ascending: false }).limit(10000);
   if (entity) q = q.eq('entity_id', entity);

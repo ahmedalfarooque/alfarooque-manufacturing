@@ -22,6 +22,9 @@ export default function CataloguePage() {
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
+  const [subCategory, setSubCategory] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [subCatMap, setSubCatMap] = useState({});
   const [status, setStatus] = useState('');
   const dq = useDebouncedValue(q, 300);
   const [modal, setModal] = useState(false);
@@ -42,6 +45,18 @@ export default function CataloguePage() {
   }, []);
   useEffect(() => { loadStale(); }, [loadStale]);
 
+  /* Category/sub-category filter options come from the data itself
+     (free text, e.g. imported from an external product sheet) rather
+     than a fixed enum, so every real value is always filterable. */
+  const loadCategories = useCallback(() => {
+    fetch('/api/catalogue/categories', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) { setCategories(d.categories || []); setSubCatMap(d.subCategoriesByCategory || {}); } })
+      .catch(() => {});
+  }, []);
+  useEffect(() => { loadCategories(); }, [loadCategories]);
+  useEffect(() => { setSubCategory(''); }, [category]);
+
   async function recalcAll(ids) {
     setRecalcBusy(true);
     const res = await fetch('/api/catalogue/stale', {
@@ -57,14 +72,14 @@ export default function CataloguePage() {
   }
 
   const load = useCallback(() => {
-    fetch(`/api/catalogue?q=${encodeURIComponent(dq)}&category=${encodeURIComponent(category)}&status=${status}&page=${page}`, { credentials: 'same-origin' })
+    fetch(`/api/catalogue?q=${encodeURIComponent(dq)}&category=${encodeURIComponent(category)}&sub=${encodeURIComponent(subCategory)}&status=${status}&page=${page}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [], total: 0 })
       .then(d => { setRows(d.rows || []); setTotal(d.total || 0); })
       .catch(() => { setRows([]); setTotal(0); });
-  }, [dq, category, status, page]);
+  }, [dq, category, subCategory, status, page]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [dq, category, status]);
+  useEffect(() => { setPage(1); }, [dq, category, subCategory, status]);
 
   const name = (r) => trL(r, 'name');
 
@@ -135,7 +150,11 @@ export default function CataloguePage() {
         <div className="flex flex-wrap items-center gap-3 p-4">
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder={t('catalogue.searchPlaceholder')} className="max-w-xs" />
           <Select value={category} onChange={e => setCategory(e.target.value)} className="max-w-[170px]"
-            options={[{ value: '', label: t('common.allCategories') }, ...CATEGORIES.map(c => ({ value: c, label: t('cat.' + c) }))]} />
+            options={[{ value: '', label: t('common.allCategories') }, ...categories.map(c => ({ value: c, label: codeLabel(t, 'cat', c) }))]} />
+          {category && (subCatMap[category] || []).length > 0 && (
+            <Select value={subCategory} onChange={e => setSubCategory(e.target.value)} className="max-w-[170px]"
+              options={[{ value: '', label: t('common.all') }, ...(subCatMap[category] || []).map(s => ({ value: s, label: s }))]} />
+          )}
           <Select value={status} onChange={e => setStatus(e.target.value)} className="max-w-[140px]"
             options={[{ value: '', label: t('status.active') }, { value: 'archived', label: t('status.archived') }]} />
           <div className="flex-1" />

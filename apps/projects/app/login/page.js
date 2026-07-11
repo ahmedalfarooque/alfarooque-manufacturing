@@ -43,8 +43,12 @@ export default function LoginPage() {
   const [dark, setDark] = useState(false);
   const timerRef = useRef(null);
 
+  const redirectRef = useRef(null);
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('mode') === 'admin') setMode('admin');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'admin') setMode('admin');
+    const redirect = params.get('redirect');
+    if (redirect && redirect.startsWith('/')) redirectRef.current = redirect;
   }, []);
   useEffect(() => () => clearInterval(timerRef.current), []);
   useEffect(() => {
@@ -100,7 +104,7 @@ export default function LoginPage() {
     try {
       await call(mode === 'admin' ? 'verify-otp' : 'view-verify-otp', { email, code });
       setMsg({ kind: 'success', text: 'Success — redirecting…' });
-      setTimeout(() => { window.location.href = mode === 'admin' ? '/dashboard' : '/view'; }, 400);
+      setTimeout(() => { window.location.href = redirectRef.current || (mode === 'admin' ? '/dashboard' : '/view'); }, 400);
     } catch (err) {
       setMsg({ kind: 'error', text: err.message });
       setBusy(false);

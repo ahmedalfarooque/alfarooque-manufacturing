@@ -6,8 +6,8 @@ import { useLanguage } from '@/lib/i18n';
 import { Select, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
 
 const TABLES = ['', 'qt_quotations', 'qt_quotation_products', 'qt_catalogue_products', 'qt_product_cost_lines',
-  'qt_materials', 'qt_customers', 'qt_suppliers', 'qt_labour_roles', 'qt_machines', 'qt_expense_templates',
-  'qt_entities', 'qt_settings', 'qt_user_roles'];
+  'qt_materials', 'customers', 'qt_suppliers', 'qt_labour_roles', 'qt_machines', 'qt_expense_templates',
+  'qt_entities', 'qt_settings', 'qt_user_roles', 'project_requests'];
 const ACTIONS = ['', 'insert', 'update', 'delete', 'status'];
 
 export default function AuditPage() {

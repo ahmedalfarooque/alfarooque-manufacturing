@@ -30,6 +30,7 @@ export const translations = {
     'shell.logout': 'Logout',
     'shell.notifications': 'Notifications',
     'shell.noNotificationsYet': 'No notifications yet.',
+    'shell.deleteNotification': 'Delete',
     'shell.toggleTheme': 'Toggle theme',
     'shell.toggleLanguage': 'Toggle language',
     'role.admin': 'Admin',
@@ -80,6 +81,7 @@ export const translations = {
     'common.cancel': 'Cancel',
     'common.actions': 'Actions',
     'common.confirmDelete': 'Delete this record?',
+    'quote.deleteConfirm': 'This quotation will be permanently deleted. Are you sure?',
     'common.noRecords': 'No records yet.',
     'common.all': 'All',
     'common.allTypes': 'All types',
@@ -215,6 +217,16 @@ export const translations = {
     'status.expired': 'Expired',
     'status.superseded': 'Superseded',
     'status.cancelled': 'Cancelled',
+    'status.contracted': 'Contracted',
+    'status.started': 'Started',
+    'status.pr_pending': 'Pending Review',
+    'status.pr_accepted': 'Accepted by Projects',
+    'status.pr_on_hold': 'On Hold',
+    'status.pr_rejected': 'Rejected',
+    'status.proj_upcoming': 'Project: Upcoming',
+    'status.proj_running': 'Project: Running',
+    'status.proj_completed': 'Project: Completed',
+    'status.proj_on_hold': 'Project: On Hold',
 
     // Quotations
     'quote.new': 'New Quotation',
@@ -229,6 +241,7 @@ export const translations = {
     'quote.date': 'Date',
     'quote.outputLang': 'PDF Language',
     'quote.paymentTerms': 'Payment Terms',
+    'quote.paymentTermsPlaceholder': 'e.g. 50% Advance, 30 Days Credit, LC at Sight, Cash, Progress Billing…',
     'quote.deliveryTerms': 'Delivery Terms',
     'quote.customerNotes': 'Notes to Customer',
     'quote.internalNotes': 'Internal Notes',
@@ -252,6 +265,14 @@ export const translations = {
     'quote.rejectReason': 'Reason for sending back:',
     'quote.markAccepted': 'Mark Accepted',
     'quote.markRejected': 'Mark Rejected',
+    'quote.markContracted': 'Mark Contracted',
+    'quote.startProject': 'Start Project',
+    'quote.projectIntegration': 'Project Integration',
+    'quote.readyToTransfer': 'Quotation is ready to be transferred.',
+    'quote.sendToProjects': 'Send to Projects',
+    'quote.sentToProjects': 'Sent to Projects — awaiting review.',
+    'quote.openProject': 'Open Project',
+    'quote.projectLocked': 'Project Running — Editing Locked',
     'quote.newRevision': 'New Revision',
     'quote.autoApproved': 'Approved automatically — within thresholds.',
     'quote.sentForApproval': 'Sent for approval — exceeds thresholds (amount, margin or discount).',
@@ -354,6 +375,7 @@ export const translations = {
     'users.platformRole': 'Platform',
     'users.qrole': 'Quotation Role',
     'users.since': 'Since',
+    'users.deleteConfirm': 'This user will be permanently deleted. Are you sure?',
     'users.matrix': 'Role Permissions',
     'users.roleSaved': 'Role updated for {email}.',
     'qrole.admin': 'Admin', 'qrole.manager': 'Manager', 'qrole.sales': 'Sales', 'qrole.estimator': 'Estimator',
@@ -368,6 +390,7 @@ export const translations = {
     'settings.vatRate': 'VAT %',
     'settings.addressEn': 'Address (EN)',
     'settings.addressAr': 'Address (AR)',
+    'settings.website': 'Website',
     'settings.quotePrefix': 'Quotation Prefix',
     'settings.nextSeq': 'Next Number',
     'settings.validityDays': 'Validity (days)',
@@ -429,6 +452,7 @@ export const translations = {
     'shell.logout': 'تسجيل الخروج',
     'shell.notifications': 'الإشعارات',
     'shell.noNotificationsYet': 'لا توجد إشعارات بعد.',
+    'shell.deleteNotification': 'حذف',
     'shell.toggleTheme': 'تبديل السمة',
     'shell.toggleLanguage': 'تبديل اللغة',
     'role.admin': 'مدير',
@@ -479,6 +503,7 @@ export const translations = {
     'common.cancel': 'إلغاء',
     'common.actions': 'إجراءات',
     'common.confirmDelete': 'هل تريد حذف هذا السجل؟',
+    'quote.deleteConfirm': 'سيتم حذف عرض السعر هذا نهائيًا. هل أنت متأكد؟',
     'common.noRecords': 'لا توجد سجلات بعد.',
     'common.all': 'الكل',
     'common.allTypes': 'كل الأنواع',
@@ -614,6 +639,16 @@ export const translations = {
     'status.expired': 'منتهي',
     'status.superseded': 'مستبدل',
     'status.cancelled': 'ملغي',
+    'status.contracted': 'متعاقد',
+    'status.started': 'قيد التنفيذ',
+    'status.pr_pending': 'بانتظار المراجعة',
+    'status.pr_accepted': 'مقبول من المشاريع',
+    'status.pr_on_hold': 'قيد الانتظار',
+    'status.pr_rejected': 'مرفوض',
+    'status.proj_upcoming': 'المشروع: قادم',
+    'status.proj_running': 'المشروع: قيد التنفيذ',
+    'status.proj_completed': 'المشروع: مكتمل',
+    'status.proj_on_hold': 'المشروع: قيد الانتظار',
 
     // Quotations
     'quote.new': 'عرض سعر جديد',
@@ -628,6 +663,7 @@ export const translations = {
     'quote.date': 'التاريخ',
     'quote.outputLang': 'لغة الملف',
     'quote.paymentTerms': 'شروط الدفع',
+    'quote.paymentTermsPlaceholder': 'مثال: دفعة مقدمة 50٪، آجل 30 يومًا، اعتماد مستندي عند الاطلاع، نقدًا، دفعات على مراحل…',
     'quote.deliveryTerms': 'شروط التسليم',
     'quote.customerNotes': 'ملاحظات للعميل',
     'quote.internalNotes': 'ملاحظات داخلية',
@@ -651,6 +687,14 @@ export const translations = {
     'quote.rejectReason': 'سبب الإعادة:',
     'quote.markAccepted': 'تحديد كمقبول',
     'quote.markRejected': 'تحديد كمرفوض',
+    'quote.markContracted': 'تحديد كمتعاقد',
+    'quote.startProject': 'بدء المشروع',
+    'quote.projectIntegration': 'ربط المشروع',
+    'quote.readyToTransfer': 'عرض السعر جاهز للتحويل إلى المشاريع.',
+    'quote.sendToProjects': 'إرسال إلى المشاريع',
+    'quote.sentToProjects': 'تم الإرسال إلى المشاريع — بانتظار المراجعة.',
+    'quote.openProject': 'فتح المشروع',
+    'quote.projectLocked': 'المشروع قيد التنفيذ — التعديل مقفل',
     'quote.newRevision': 'مراجعة جديدة',
     'quote.autoApproved': 'تم الاعتماد تلقائياً — ضمن الحدود المسموحة.',
     'quote.sentForApproval': 'أُرسل للاعتماد — تجاوز الحدود (المبلغ أو الهامش أو الخصم).',
@@ -753,6 +797,7 @@ export const translations = {
     'users.platformRole': 'المنصة',
     'users.qrole': 'دور عروض الأسعار',
     'users.since': 'منذ',
+    'users.deleteConfirm': 'سيتم حذف هذا المستخدم نهائيًا. هل أنت متأكد؟',
     'users.matrix': 'صلاحيات الأدوار',
     'users.roleSaved': 'تم تحديث دور {email}.',
     'qrole.admin': 'مدير النظام', 'qrole.manager': 'مدير', 'qrole.sales': 'مبيعات', 'qrole.estimator': 'مهندس تسعير',
@@ -767,6 +812,7 @@ export const translations = {
     'settings.vatRate': 'الضريبة ٪',
     'settings.addressEn': 'العنوان (إنجليزي)',
     'settings.addressAr': 'العنوان (عربي)',
+    'settings.website': 'الموقع الإلكتروني',
     'settings.quotePrefix': 'بادئة رقم العرض',
     'settings.nextSeq': 'الرقم التالي',
     'settings.validityDays': 'الصلاحية (أيام)',
@@ -863,7 +909,7 @@ function queueTranslation(text, lang) {
 }
 
 /* Pure lookup used by tr(); memo-safe (same inputs → same output). */
-function translateData(text, lang) {
+export function translateData(text, lang) {
   const s = text === null || text === undefined ? '' : String(text);
   if (!s.trim()) return s;
   if ((lang === 'ar') === AR_RE.test(s)) return s;      // already right language
@@ -882,6 +928,34 @@ export function pickL(row, base, lang) {
   const en = row[base + '_en'], ar = row[base + '_ar'];
   const v = lang === 'ar' ? (ar || en) : (en || ar);
   return v || row[base] || '';
+}
+
+/* Static (non-context) bundle of the same t/trL/tr/formatNumber/formatDate
+   helpers, bound to an explicit language instead of the app-wide UI
+   language context. Used to make a specific quotation's own saved
+   output_lang the "master language" for its own editor/print/PDF/QR —
+   overriding the global toggle for just that content — without touching
+   the shared LanguageProvider that every other page still relies on. */
+export function langHelpers(lang) {
+  const l = lang === 'ar' ? 'ar' : 'en';
+  const t = (key, vars) => {
+    let str = (translations[l] && translations[l][key]) || translations.en[key] || key;
+    if (vars) Object.keys(vars).forEach(k => { str = str.replace('{' + k + '}', String(vars[k])); });
+    return str;
+  };
+  const trL = (row, base = 'name') => pickL(row, base, l);
+  const tr = (text) => translateData(text, l);
+  const formatNumber = (value, opts) => {
+    if (value === null || value === undefined || value === '') return '';
+    try { return new Intl.NumberFormat(l === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', opts || { maximumFractionDigits: 2 }).format(Number(value)); }
+    catch (_) { return String(value); }
+  };
+  const formatDate = (value, opts) => {
+    if (!value) return '';
+    try { return new Intl.DateTimeFormat(l === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', opts || { dateStyle: 'medium' }).format(new Date(value)); }
+    catch (_) { return String(value); }
+  };
+  return { lang: l, t, trL, tr, formatNumber, formatDate };
 }
 
 /* Enum/code display: t('cat.DOORS') when defined, else raw code. */

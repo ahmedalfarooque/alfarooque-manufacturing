@@ -17,6 +17,7 @@ const {
   sessionCookieHeader, clearCookieHeader, readSession,
   isLoginRateLimited, recordLoginAttempt,
 } = require('@/lib/auth');
+const { isSuperAdminEmail } = require('@/lib/superAdmin');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VIEW_LOGIN_ALLOWED_DOMAIN = '@alfarooque.com';
@@ -37,7 +38,7 @@ function viewOtpEmailHtml(code) {
     '<p style="color:#888;font-size:12px;">If you did not request this, you can safely ignore this email.</p>' +
   '</div>';
 }
-function sanitizeUser(u) { return { id: u.id, email: u.email, full_name: u.full_name, role: u.role }; }
+function sanitizeUser(u) { return { id: u.id, email: u.email, full_name: u.full_name, role: isSuperAdminEmail(u.email) ? 'admin' : u.role }; }
 function json(data, status) { return new Response(JSON.stringify(data), { status: status || 200, headers: { 'Content-Type': 'application/json' } }); }
 function getIp(req) { return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || ''; }
 function getUa(req) { return req.headers.get('user-agent') || ''; }

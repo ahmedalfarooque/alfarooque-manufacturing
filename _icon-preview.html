@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Glass Icon Preview (temp)</title>
+<link rel="stylesheet" href="/css/glass-icons.css">
+<style>
+  body { margin:0; font-family: Inter, sans-serif; padding: 32px; background:#F7F5F1; color:#1A1A18; transition: background .3s; }
+  html.dark body { background:#14140F; color:#F5F3EE; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 18px; max-width: 1100px; }
+  .cell { text-align:center; font-size:11px; opacity:.75; }
+  .cell .gicon { width:64px; height:64px; display:block; margin:0 auto 6px; }
+</style>
+</head>
+<body>
+<h2 id="themeLabel">LIGHT</h2>
+<div class="grid" id="grid"></div>
+<script src="/js/glass-icons.js"></script>
+<script>
+  document.documentElement.classList.add('light'); document.body.classList.add('light');
+  const names = ['wood','steel','alu','target','gear','gem','flag','search','heart','bag','user','sun','moon','pin','phone','mail','clock','linkedin','x','instagram','whatsapp','door','shield','box','dashboard','bell','truck','wrench','folder','receipt','users','chart','logout'];
+  const variant = n => n==='wood'?' gicon--wood':n==='steel'?' gicon--steel':n==='alu'?' gicon--alu':'';
+  document.getElementById('grid').innerHTML = names.map(n =>
+    '<div class="cell"><svg class="gicon'+variant(n)+'"><use href="#gi-'+n+'"/></svg>'+n+'</div>').join('');
+</script>
+</body>
+</html>

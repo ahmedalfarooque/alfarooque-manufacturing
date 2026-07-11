@@ -8,6 +8,7 @@ const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
   { href: '/projects', labelKey: 'nav.projects', icon: 'folder' },
   { href: '/purchase-requests', labelKey: 'nav.purchaseRequests', icon: 'receipt', adminOnly: true },
+  { href: '/quotation-requests', labelKey: 'nav.quotationRequests', icon: 'mail', adminOnly: true },
   { href: '/customers', labelKey: 'nav.customers', icon: 'users', hideExternal: true },
   { href: '/users', labelKey: 'nav.users', icon: 'user', adminOnly: true },
 ];
@@ -52,6 +53,32 @@ export default function Shell({ children, active }) {
     setUnread(prev => Math.max(0, prev - 1));
     setNotifOpen(false);
     if (link) window.location.href = link;
+  }
+
+  /* Inline Accept/Hold/Reject directly on a quotation_request notification
+     (Part 5) — extracts the request id from the notification's own link
+     (/quotation-requests/{id}) rather than a second lookup round-trip. */
+  async function actOnQuotationRequest(e, n, status) {
+    e.stopPropagation();
+    const id = (n.link || '').split('/').filter(Boolean).pop();
+    if (!id) return;
+    await fetch(`/api/quotation-requests/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+      body: JSON.stringify({ status }),
+    }).catch(() => {});
+    await fetch(`/api/notifications/${n.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ is_read: true }),
+    }).catch(() => {});
+    setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, is_read: true } : x));
+    setUnread(prev => Math.max(0, prev - 1));
+  }
+
+  async function deleteNotification(e, id) {
+    e.stopPropagation();
+    await fetch(`/api/notifications/${id}`, { method: 'DELETE', credentials: 'same-origin' }).catch(() => {});
+    const wasUnread = notifications.some(n => n.id === id && !n.is_read);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    if (wasUnread) setUnread(u => Math.max(0, u - 1));
   }
 
   function toggleTheme() {
@@ -129,15 +156,25 @@ export default function Shell({ children, active }) {
                     {notifications.length === 0 ? (
                       <div className="px-4 py-6 text-center text-sm text-[#8C8A80]">{t('shell.noNotificationsYet')}</div>
                     ) : notifications.map(n => (
-                      <button key={n.id} onClick={() => markRead(n.id, n.link)}
+                      <div key={n.id}
                         className={'w-full text-start px-4 py-3 border-b border-[#E5E2DD]/60 dark:border-white/5 hover:bg-[#F7F5F1] dark:hover:bg-white/5 transition-colors duration-200 ' + (n.is_read ? 'opacity-60' : '')}>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-medium truncate">{n.title}</span>
-                          {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />}
-                        </div>
-                        {n.body && <div className="text-xs text-[#6B6B63] truncate">{n.body}</div>}
-                        <div className="text-[11px] text-[#8C8A80] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
-                      </button>
+                        <button onClick={() => markRead(n.id, n.link)} className="w-full text-start">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-medium truncate">{n.title}</span>
+                            {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />}
+                          </div>
+                          {n.body && <div className="text-xs text-[#6B6B63] whitespace-pre-line">{n.body}</div>}
+                          <div className="text-[11px] text-[#8C8A80] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                        </button>
+                        {n.type === 'quotation_request' && !n.is_read && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <button onClick={(e) => actOnQuotationRequest(e, n, 'accepted')} className="text-xs px-2 py-1 rounded-lg bg-emerald-600 text-white">{t('qr.accept')}</button>
+                            <button onClick={(e) => actOnQuotationRequest(e, n, 'on_hold')} className="text-xs px-2 py-1 rounded-lg bg-amber-600 text-white">{t('qr.hold')}</button>
+                            <button onClick={(e) => actOnQuotationRequest(e, n, 'rejected')} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white">{t('qr.reject')}</button>
+                          </div>
+                        )}
+                        <button onClick={(e) => deleteNotification(e, n.id)} className="text-[11px] text-[#8C8A80] hover:text-red-500 mt-1">{t('common.delete')}</button>
+                      </div>
                     ))}
                   </div>
                 </>

@@ -52,6 +52,12 @@ const ORDER = [
   'quotation-schema-v5-fix.sql',   // consolidated v3 + v4 + cache reload (idempotent)
   'quotation-schema-v6-bilingual.sql', // stored bilingual columns + perf indexes
   'quotation-schema-v7-material-dims.sql', // structured height/width/length/thickness (value+unit)
+  'apps-schema-v9-shared-customers.sql', // shared public.customers (also used by apps/projects) — cross-app, applied here since quotation is the only app with an automated migrator
+  'quotation-schema-v8-contracted-started-status.sql', // adds 'contracted'/'started' to qt_quotations.status
+  'apps-schema-v10-project-requests.sql', // project_requests table (quotation -> projects handoff) — cross-app
+  'apps-schema-v11-quotation-project-sync.sql', // project_status/project_request_id/project_id sync-back columns — cross-app
+  'quotation-schema-v9-ww03-rename.sql', // Wood Works entity code/quote_prefix 'WW' -> 'WW-03'
+  'quotation-schema-v10-pdf-system.sql', // qt_entities.website + strip hardcoded payment clause from terms templates
 ];
 
 async function main() {

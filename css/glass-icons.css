@@ -1,0 +1,64 @@
+/* ═══════════════════════════════════════════════════════════════
+   AL FAROOQUE — Glass icon family: tints + sizing
+   One glass MATERIAL for every icon (see assets/icons/glass-icons.svg);
+   tint via three CSS vars the sprite's gradients read:
+     --gi-t  main tint · --gi-t2 deep tint · --gi-hl highlight
+   Strategy (deliberate): unified brand-olive tint everywhere EXCEPT the
+   three division icons, which carry their own material hue (wood/steel/
+   aluminium) because divisions are the one semantic distinction the
+   site draws everywhere else. Both themes get tuned values so glass
+   neither washes out (light) nor goes muddy (dark).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* IMPORTANT: the sprite's gradients/filters live in the injected
+   #giSpriteRoot document fragment, so their var() lookups resolve
+   THERE — not on each consuming .gicon. Theme tints therefore sit on
+   the sprite root; the three division hues have their own gradient
+   sets inside the sprite (giInkGradW/S/A) reading --gw/--gs/--ga vars. */
+#giSpriteRoot svg {
+  /* dark theme defaults (site default is light; overridden below) */
+  --gi-t:  #A3B873; --gi-t2: #566440; --gi-hl: #FFFFFF;
+  --gw-t:  #B08D57; --gw-t2: #6E5230;   /* wood  */
+  --gs-t:  #7E93A8; --gs-t2: #46586B;   /* steel */
+  --ga-t:  #8FB6C4; --ga-t2: #4E7381;   /* aluminium */
+}
+:is(html.light, body.light) #giSpriteRoot svg {
+  --gi-t:  #6B7A4F; --gi-t2: #46512F;
+  --gw-t:  #96713D; --gw-t2: #5C431F;
+  --gs-t:  #5B7288; --gs-t2: #35485A;
+  --ga-t:  #5E92A5; --ga-t2: #3A606F;
+}
+
+.gicon {
+  width: 44px;
+  height: 44px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Division classes kept for markup semantics; the hue itself comes from
+   the symbol's dedicated gradients (see note above). */
+.gicon--wood, .gicon--steel, .gicon--alu {}
+
+/* ── Sizes ── */
+.gicon--sm { width: 26px; height: 26px; }
+.gicon--md { width: 34px; height: 34px; }
+.gicon--lg { width: 56px; height: 56px; }
+.gicon--xl { width: 72px; height: 72px; }
+
+/* Badge accent: tiny glass icon sitting inside text pills/badges */
+.gicon--badge {
+  width: 18px;
+  height: 18px;
+  margin-inline-end: 5px;
+  margin-top: -2px;
+}
+
+/* Icons appear once the sprite has been injected (avoids a beat of
+   empty <use> boxes); anything else in the layout is unaffected. */
+.gicon { opacity: 0; transition: opacity 0.25s ease; }
+.gi-ready .gicon { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .gicon { transition: none; }
+}

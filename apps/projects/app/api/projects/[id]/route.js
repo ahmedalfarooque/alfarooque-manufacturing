@@ -55,7 +55,14 @@ export async function PATCH(req, { params }) {
   if (error) { console.error('[projects] update failed:', error.message); return json({ error: 'Could not update project.' }, 500); }
   if (!data) return json({ error: 'Project not found.' }, 404);
 
-  if (patch.status) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Status changed to ${patch.status}` });
+  if (patch.status) {
+    await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Status changed to ${patch.status}` });
+    /* Sync live status back into the source quotation, if this project
+       was created from one (Part 10) — same Postgres instance, direct
+       write, no HTTP call needed. No-op (0 rows) for manually-created
+       projects with no linked quotation. */
+    await sb.from('qt_quotations').update({ project_status: patch.status }).eq('project_id', params.id).catch(() => {});
+  }
   if ('progress' in patch) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Completion changed to ${patch.progress}%` });
   const otherFieldsChanged = Object.keys(patch).some(k => k !== 'status' && k !== 'progress');
   if (otherFieldsChanged) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: 'Project Edited' });

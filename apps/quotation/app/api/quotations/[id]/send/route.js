@@ -44,7 +44,7 @@ export async function POST(req, { params }) {
   const body = await req.json().catch(() => ({}));
 
   const { data: qn } = await sb.from('qt_quotations')
-    .select('*, entity:qt_entities(name_en, name_ar), customer:qt_customers(email, company_name)')
+    .select('*, entity:qt_entities(name_en, name_ar), customer:customers(email, company_name)')
     .eq('id', params.id).is('deleted_at', null).single();
   if (!qn) return json({ error: 'Not found' }, 404);
   if (!['approved', 'sent'].includes(qn.status)) {

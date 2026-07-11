@@ -69,6 +69,7 @@ export default function DashboardPage() {
         <StatCard icon="clock" tone="amber" label={t('dashboard.upcomingProjects')} value={stats.upcomingCount} sub={`${upcomingPct}% ${t('dashboard.ofTotal')}`} href="/projects?status=Upcoming" ringPct={upcomingPct} />
         <StatCard icon="x" tone="red" label={t('dashboard.onHoldProjects')} value={stats.onHoldCount} sub={`${onHoldPct}% ${t('dashboard.ofTotal')}`} href={'/projects?status=' + encodeURIComponent('On Hold')} ringPct={onHoldPct} />
         <StatCard icon="users" tone="brand" label={t('dashboard.teamMembers')} value={users.length} sub={t('dashboard.internalExternalUsers')} href="/users" typewriter />
+        <StatCard icon="users" tone="slate" label={t('nav.customers')} value={stats.customersCount || 0} href="/customers" />
         <StatCard icon="clock" tone="amber" label={t('dashboard.prPending')} value={stats.purchaseRequests.pending} sub={t('dashboard.awaitingReview')} href="/purchase-requests?status=Pending" typewriter />
         <StatCard icon="shield" tone="blue" label={t('dashboard.prApproved')} value={stats.purchaseRequests.approved} sub={t('dashboard.approvedRequests')} href="/purchase-requests?status=Approved" />
       </div>
@@ -81,6 +82,13 @@ export default function DashboardPage() {
         <StatCard icon="clock" tone="slate" label={t('dashboard.updatesYesterday')} value={stats.dailyUpdates.yesterday} sub={t('dashboard.submittedYesterday')} href="/projects" />
         <StatCard icon="chart" tone="blue" label={t('dashboard.thisWeek')} value={stats.dailyUpdates.thisWeek} sub={t('dashboard.last7Days')} href="/projects" />
         <StatCard icon="bell" tone="red" label={t('dashboard.missingUpdates')} value={stats.dailyUpdates.missing} sub={t('dashboard.assignedNoUpdate')} href="/projects" />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="clock" tone="amber" label={t('qr.kpi.pending')} value={stats.quotationRequests.pending} href="/quotation-requests?status=pending" />
+        <StatCard icon="target" tone="emerald" label={t('qr.kpi.accepted')} value={stats.quotationRequests.accepted} href="/quotation-requests?status=accepted" />
+        <StatCard icon="clock" tone="amber" label={t('qr.kpi.onHold')} value={stats.quotationRequests.onHold} href="/quotation-requests?status=on_hold" />
+        <StatCard icon="x" tone="red" label={t('qr.kpi.rejected')} value={stats.quotationRequests.rejected} href="/quotation-requests?status=rejected" />
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">

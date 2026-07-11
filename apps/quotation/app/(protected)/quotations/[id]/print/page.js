@@ -1,17 +1,27 @@
 'use client';
 
 /* Print / PDF view — clean white A4 render of the quotation with a
-   floating toolbar (hidden when printing). "Download PDF" = the
-   browser's print-to-PDF, which renders Arabic + RTL perfectly. */
+   floating toolbar (hidden when printing).
+   - "Download PDF" builds a true multi-page A4 PDF programmatically
+     (lib/pdf/buildQuotePdf.js) and saves it immediately — no print
+     dialog, no preview tab. English-only: jsPDF can't shape Arabic
+     glyphs correctly, so an Arabic-language quotation falls back to
+     the browser print dialog instead of a broken-looking PDF.
+   - "Print" keeps the existing browser print preview, which renders
+     Arabic + RTL perfectly via the real HTML/CSS document. */
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import QuoteDocument from '@/components/QuoteDocument';
+import QuoteDocument, { money, dateStr } from '@/components/QuoteDocument';
+import { downloadQuotePdf } from '@/lib/pdf/buildQuotePdf';
+import { buildQuoteQrText, buildQuoteQrDataUrl } from '@/lib/qr';
 
 export default function PrintPage() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [terms, setTerms] = useState(null);
+  const [downloading, setDownloading] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState(null);
   /* read ?lang= without useSearchParams — avoids the Suspense-boundary
      requirement next build enforces for that hook */
   const [lang, setLang] = useState(null);
@@ -39,6 +49,51 @@ export default function PrintPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  /* QR is language-aware and rebuilt only when the underlying data or
+     the toggled language actually changes — a cancelled-flag guards
+     against a stale async result overwriting a newer one (no duplicate
+     or out-of-order regeneration). */
+  useEffect(() => {
+    if (!data || !lang) return;
+    let cancelled = false;
+    const entity = data.row.entity_full || data.row.entity;
+    const customer = data.row.customer;
+    const isAr = lang === 'ar';
+    const pick = (row, base) => row && (isAr ? (row[base + '_ar'] || row[base + '_en']) : (row[base + '_en'] || row[base + '_ar']));
+    const entityName = isAr ? (entity?.name_ar || entity?.name_en) : (entity?.name_en || entity?.name_ar);
+    const customerName = customer ? (pick(customer, 'company_name') || customer.company_name) : '';
+    const text = buildQuoteQrText(lang, {
+      entityName, customerName,
+      quoteNumber: data.row.quote_number,
+      quoteDate: dateStr(data.row.quote_date),
+      validUntil: dateStr(data.row.valid_until),
+      grandTotal: money(data.row.grand_total),
+      currency: isAr ? 'ر.س' : 'SAR',
+      phone: entity?.phone, email: entity?.email, website: entity?.website,
+    });
+    buildQuoteQrDataUrl(text).then(url => { if (!cancelled) setQrDataUrl(url); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [data, lang]);
+
+  async function downloadPdf() {
+    if (lang === 'ar') { window.print(); return; }
+    setDownloading(true);
+    try {
+      await downloadQuotePdf({
+        doc: data.row,
+        products: data.products,
+        entity: data.row.entity_full || data.row.entity,
+        customer: data.row.customer,
+        terms,
+        qrDataUrl,
+      });
+    } catch (_) {
+      window.print();
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   if (!data) return <div style={{ padding: 40, fontFamily: 'sans-serif', color: '#888' }}>{lang === 'ar' ? 'جارٍ التحميل…' : 'Loading…'}</div>;
 
   return (
@@ -49,7 +104,12 @@ export default function PrintPage() {
           body, html { background: #fff !important; }
           .print-sheet { box-shadow: none !important; margin: 0 !important; }
         }
-        @page { size: A4; margin: 12mm; }
+        /* Zero browser page margin — the document itself supplies its
+           own 32px/36px padding (~8.5mm) as the visible A4 margin, and
+           its content width (794px) already equals true A4 width at
+           96dpi, so nothing gets scaled or clipped by a second,
+           conflicting page margin. */
+        @page { size: A4; margin: 0; }
       `}</style>
 
       <div className="no-print" style={{
@@ -58,7 +118,10 @@ export default function PrintPage() {
       }}>
         <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
           style={btn()}>{lang === 'ar' ? 'English' : 'عربي'}</button>
-        <button onClick={() => window.print()} style={btn(true)}>{lang === 'ar' ? '⤓ تنزيل PDF / طباعة' : '⤓ PDF / Print'}</button>
+        <button onClick={downloadPdf} disabled={downloading} style={btn(true)}>
+          {downloading ? (lang === 'ar' ? 'جارٍ الإنشاء…' : 'Generating…') : (lang === 'ar' ? '⤓ تنزيل PDF' : '⤓ Download PDF')}
+        </button>
+        <button onClick={() => window.print()} style={btn()}>{lang === 'ar' ? 'طباعة' : 'Print'}</button>
         <a href={'/quotations/' + id} style={{ ...btn(), textDecoration: 'none', display: 'inline-block' }}>✕</a>
       </div>
 
@@ -70,6 +133,7 @@ export default function PrintPage() {
           customer={data.row.customer}
           terms={terms}
           lang={lang || 'en'}
+          qrDataUrl={qrDataUrl}
         />
       </div>
     </div>

@@ -12,8 +12,10 @@ function json(data, status) {
    write/delete regardless of what the UI shows, so a viewer can never
    mutate data even by calling the API directly. */
 const { readSession } = require('./auth');
+const { setRequestIp } = require('./requestContext');
 
 function requireSession(req, { adminOnly } = {}) {
+  setRequestIp(req);
   const session = readSession(req);
   if (!session) return { response: json({ error: 'Not authenticated.' }, 401) };
   if (adminOnly && session.role !== 'admin') return { response: json({ error: 'Viewers cannot perform this action.' }, 403) };
@@ -43,6 +45,7 @@ async function isAssignedOrAdmin(session, projectId) {
    the requested permission ('write' by default — manager/sales/
    estimator). readonly/production/accountant are blocked from writes. */
 async function requireWrite(req, perm) {
+  setRequestIp(req);
   const session = readSession(req);
   if (!session) return { response: json({ error: 'Not authenticated.' }, 401) };
   if (session.role === 'admin') return { session, qrole: 'admin' };

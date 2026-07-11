@@ -24,7 +24,7 @@
       "name": "projects-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "apps/projects", "run", "dev"],
-      "port": 3020,
+      "port": 3021,
       "autoPort": true
     },
     {

@@ -122,13 +122,14 @@ export default function CustomersPage() {
               ) : rows.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(row => (
-                <tr key={row.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                <tr key={row.id} onClick={() => open(row)}
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
                   <Td>{trL(row, 'company_name') || '—'}</Td>
                   <Td>{trL(row, 'contact_person') || row.contact_person || '—'}</Td>
                   <Td dir="ltr">{row.phone || '—'}</Td>
                   <Td>{t('ctype.' + (row.customer_type || 'other'))}</Td>
                   <Td>{row.city || '—'}</Td>
-                  <Td className="text-end whitespace-nowrap">
+                  <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
                     <button onClick={() => open(row)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</button>
                     <button onClick={() => remove(row)} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
                   </Td>

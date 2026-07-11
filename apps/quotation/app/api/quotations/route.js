@@ -18,7 +18,7 @@ export async function GET(req) {
   const from = (page - 1) * PAGE_SIZE;
 
   let query = sb.from('qt_quotations')
-    .select('id, quote_number, revision, status, quote_date, valid_until, grand_total, blended_margin_pct, entity:qt_entities(code), customer:qt_customers(company_name, company_name_en, company_name_ar)', { count: 'exact' })
+    .select('id, quote_number, revision, status, project_status, project_id, quote_date, valid_until, grand_total, blended_margin_pct, entity:qt_entities(code), customer:customers(company_name, company_name_en, company_name_ar)', { count: 'exact' })
     .is('deleted_at', null);
   if (status) query = query.eq('status', status);
   if (q) query = query.ilike('quote_number', `%${q.replace(/[%,()]/g, '')}%`);

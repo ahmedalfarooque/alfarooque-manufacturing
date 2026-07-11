@@ -20,3 +20,12 @@ export async function PATCH(req, { params }) {
   if (!data) return json({ error: 'Notification not found.' }, 404);
   return json({ notification: data });
 }
+
+export async function DELETE(req, { params }) {
+  const { response, session } = requireSession(req);
+  if (response) return response;
+  const sb = getDb();
+  const { error } = await sb.from('notifications').delete().eq('id', params.id).eq('user_id', session.sub);
+  if (error) { console.error('[notifications] delete failed:', error.message); return json({ error: 'Could not delete notification.' }, 500); }
+  return json({ ok: true });
+}

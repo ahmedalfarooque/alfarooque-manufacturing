@@ -4,8 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import StatusBadge from '@/components/StatusBadge';
 import { useLanguage } from '@/lib/i18n';
+import { projectStatusBadgeKey } from '@/lib/projectStatus';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Button, Input, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
+import { isSuperAdminEmail } from '@/lib/superAdmin';
+import { pickDefaultEntityId } from '@/lib/defaultEntity';
 
 const TABS = ['', 'draft', 'pending_approval', 'approved', 'sent', 'accepted', 'expired'];
 
@@ -26,6 +29,11 @@ export default function QuotationsPage() {
   const [customerId, setCustomerId] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [me, setMe] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/me', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+  }, []);
 
   const load = useCallback(() => {
     fetch(`/api/quotations?q=${encodeURIComponent(dq)}&status=${tab}&page=${page}`, { credentials: 'same-origin' })
@@ -37,11 +45,26 @@ export default function QuotationsPage() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setPage(1); }, [dq, tab]);
 
+  /* Dashboard cards deep-link here with ?status=... (Update 1) — adopt
+     it as the initial tab once, on mount. */
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('status');
+    if (fromUrl && TABS.includes(fromUrl)) setTab(fromUrl);
+  }, []);
+
+  /* Light polling so Projects-side accept/hold/reject decisions (Part 7)
+     show up without a manual refresh — same ~20s convention used by the
+     notification bell elsewhere in this app. */
+  useEffect(() => {
+    const timer = setInterval(load, 20000);
+    return () => clearInterval(timer);
+  }, [load]);
+
   useEffect(() => {
     if (!newOpen) return;
     fetch('/api/entities', { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [] })
-      .then(d => { setEntities(d.rows || []); if (d.rows && d.rows[0]) setEntityId(d.rows[0].id); })
+      .then(d => { setEntities(d.rows || []); setEntityId(pickDefaultEntityId(d.rows)); })
       .catch(() => {});
   }, [newOpen]);
 
@@ -107,7 +130,19 @@ export default function QuotationsPage() {
                   <Td>{r.entity ? r.entity.code : '—'}</Td>
                   <Td dir="ltr" className="whitespace-nowrap font-medium">{formatNumber(r.grand_total, { minimumFractionDigits: 2 })}</Td>
                   <Td>{r.blended_margin_pct != null ? formatNumber(r.blended_margin_pct, { maximumFractionDigits: 1 }) + '%' : '—'}</Td>
-                  <Td><StatusBadge status={r.status} /></Td>
+                  <Td onClick={e => r.project_id && e.stopPropagation()}>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <StatusBadge status={r.status} />
+                      {r.project_status && (
+                        r.project_id ? (
+                          <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + r.project_id}
+                            target="_blank" rel="noreferrer" title={t('quote.openProject')}>
+                            <StatusBadge status={projectStatusBadgeKey(r.project_status)} />
+                          </a>
+                        ) : <StatusBadge status={projectStatusBadgeKey(r.project_status)} />
+                      )}
+                    </div>
+                  </Td>
                   <Td className="whitespace-nowrap">{r.valid_until ? formatDate(r.valid_until) : '—'}</Td>
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
                     <a href={'/quotations/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</a>
@@ -116,10 +151,11 @@ export default function QuotationsPage() {
                       const d = res && res.ok ? await res.json() : null;
                       if (d && d.id) window.location.href = '/quotations/' + d.id;
                     }} className="text-[#8C8A80] hover:underline text-sm me-3">{t('catalogue.duplicate')}</button>
-                    {['draft', 'cancelled', 'rejected', 'expired'].includes(r.status) && (
+                    {(['draft', 'cancelled', 'rejected', 'expired'].includes(r.status) || (me && isSuperAdminEmail(me.email))) && (
                       <button onClick={async () => {
-                        if (!window.confirm(t('common.confirmDelete') + '\n' + r.quote_number)) return;
-                        await fetch('/api/quotations/' + r.id, { method: 'DELETE', credentials: 'same-origin' }).catch(() => {});
+                        if (!window.confirm(t('quote.deleteConfirm'))) return;
+                        const res = await fetch('/api/quotations/' + r.id, { method: 'DELETE', credentials: 'same-origin' }).catch(() => null);
+                        if (!res || !res.ok) { const d = res ? await res.json().catch(() => ({})) : {}; alert(d.error || t('common.genericError')); return; }
                         load();
                       }} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
                     )}

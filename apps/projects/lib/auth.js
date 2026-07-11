@@ -7,6 +7,7 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { getDb } = require('./db');
+const { isSuperAdminEmail } = require('./superAdmin');
 
 const APP = 'projects';
 const COOKIE_NAME = 'af_projects_session';
@@ -61,7 +62,12 @@ function readSession(req) {
   const cookies = parseCookies(req.headers.get ? req.headers.get('cookie') : req.headers.cookie);
   const token = cookies[COOKIE_NAME];
   if (!token) return null;
-  return verifySession(token);
+  const session = verifySession(token);
+  /* Super admin override (one master account, unrestricted everywhere) —
+     enforced here so it cascades through every adminOnly check without
+     touching each route individually. */
+  if (session && isSuperAdminEmail(session.email)) session.role = 'admin';
+  return session;
 }
 
 async function isLoginRateLimited(email) {

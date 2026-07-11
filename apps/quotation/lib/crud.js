@@ -9,6 +9,7 @@
 const { getDb } = require('./db');
 const { json, requireSession, requireWrite } = require('./http');
 const { translate, hasArabic } = require('./translate');
+const { currentIp } = require('./requestContext');
 
 const PAGE_SIZE = 25;
 
@@ -27,6 +28,7 @@ async function audit(sb, table, recordId, action, oldData, newData, actorId) {
     await sb.from('qt_audit_logs').insert({
       table_name: table, record_id: recordId, action,
       old_data: oldData || null, new_data: newData || null, actor_id: actorId,
+      ip: currentIp(),
     });
   } catch (_) {}
 }

@@ -51,8 +51,8 @@ export async function POST(req) {
   if (!ws) return json({ error: 'Workbook has no sheets.' }, 400);
 
   const sb = getDb();
-  const { data: existing } = await sb.from('qt_customers').select('phone').is('deleted_at', null);
-  const seenPhones = new Set((existing || []).map(r => normPhone(r.phone)).filter(Boolean));
+  const { data: existing } = await sb.from('customers').select('mobile_number').is('deleted_at', null);
+  const seenPhones = new Set((existing || []).map(r => normPhone(r.mobile_number)).filter(Boolean));
 
   let headerPassed = false;
   const toInsert = [];
@@ -77,10 +77,12 @@ export async function POST(req) {
     if (!company && !contact && !phone) { skippedEmpty++; return; }
     if (phone && seenPhones.has(phone)) { skippedDup++; return; }
     if (phone) seenPhones.add(phone);
+    const name = company || contact || null;
     toInsert.push({
-      company_name: company || contact || null,
+      full_name: name,
+      company_name: name,
       contact_person: contact || null,
-      phone: phone || null,
+      mobile_number: phone || null,
       customer_type: guessType(company || contact),
       city: 'Jeddah',
       status: 'active',
@@ -92,12 +94,12 @@ export async function POST(req) {
   let inserted = 0;
   for (let i = 0; i < toInsert.length; i += 200) {
     const chunk = toInsert.slice(i, i + 200);
-    const { error } = await sb.from('qt_customers').insert(chunk);
+    const { error } = await sb.from('customers').insert(chunk);
     if (error) return json({ error: error.message, inserted }, 500);
     inserted += chunk.length;
   }
 
-  await audit(sb, 'qt_customers', null, 'insert', null,
+  await audit(sb, 'customers', null, 'insert', null,
     { import: 'customers', inserted, duplicates: skippedDup, empty: skippedEmpty }, session.sub);
   return json({ inserted, duplicates: skippedDup, empty: skippedEmpty });
 }

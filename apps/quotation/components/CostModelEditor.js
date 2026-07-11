@@ -8,7 +8,7 @@
    engine the server re-runs on save. */
 
 import { useMemo } from 'react';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, langHelpers } from '@/lib/i18n';
 import { costLineTotal, productCostSummary } from '@/lib/costing';
 import { formatMaterialDims } from '@/lib/dims';
 import ItemPicker from '@/components/ItemPicker';
@@ -63,8 +63,13 @@ export function lineFromMaster(section, r, t) {
 const BASIS_OPTIONS = ['auto', 'fixed', 'area', 'perimeter', 'length', 'volume'];
 const SCALABLE_SECTIONS = ['material', 'hardware', 'labour', 'machine'];
 
-export default function CostModelEditor({ lines, setLines, params, setParams, tab, setTab, markManual }) {
-  const { t, tr, trL, lang, formatNumber } = useLanguage();
+export default function CostModelEditor({ lines, setLines, params, setParams, tab, setTab, markManual, lang: langOverride }) {
+  const ctx = useLanguage();
+  /* An explicit `lang` prop (the quotation's own output_lang) overrides
+     the app-wide language toggle for this editor — used only from the
+     quotation editor; the catalogue product editor doesn't pass it, so
+     it's unaffected and keeps following the global toggle as before. */
+  const { t, tr, trL, lang, formatNumber } = langOverride ? langHelpers(langOverride) : ctx;
 
   const summary = useMemo(() => productCostSummary(lines, { ...params, qty: 1 }), [lines, params]);
   const sectionLines = lines.map((l, i) => ({ ...l, _i: i })).filter(l => l.section === tab);
@@ -106,7 +111,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
           {tab === 'other' ? (
             <Button variant="ghost" onClick={() => addLine('other')}>+ {t('cost.addLine')}</Button>
           ) : (
-            <ItemPicker section={tab} onPick={r => addLine(tab, r)} />
+            <ItemPicker section={tab} onPick={r => addLine(tab, r)} lang={langOverride} />
           )}
         </div>
 

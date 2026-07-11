@@ -21,6 +21,7 @@ export default function UsersPage() {
   const { t, formatDate } = useLanguage();
   const [rows, setRows] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [me, setMe] = useState(null);
 
   const load = useCallback(() => {
     fetch('/api/admin/users', { credentials: 'same-origin' })
@@ -29,6 +30,16 @@ export default function UsersPage() {
       .catch(() => setRows([]));
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    fetch('/api/me', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user || d)).catch(() => {});
+  }, []);
+
+  async function deleteUser(u) {
+    if (!confirm(t('users.deleteConfirm'))) return;
+    const res = await fetch(`/api/admin/users/${u.id}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (res.ok) load();
+    else { const d = await res.json().catch(() => ({})); setMsg('⚠ ' + (d.error || t('common.genericError'))); }
+  }
 
   async function setRole(user, role) {
     setMsg(null);
@@ -49,13 +60,13 @@ export default function UsersPage() {
             <table className="w-full">
               <thead><tr>
                 <Th>{t('f.name')}</Th><Th>{t('f.email')}</Th><Th>{t('users.platformRole')}</Th>
-                <Th>{t('users.qrole')}</Th><Th>{t('users.since')}</Th>
+                <Th>{t('users.qrole')}</Th><Th>{t('users.since')}</Th><Th className="text-end">{t('common.actions')}</Th>
               </tr></thead>
               <tbody>
                 {rows === null ? (
-                  <tr><Td colSpan={5} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                  <tr><Td colSpan={6} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={5}><EmptyState text={t('common.noRecords')} /></td></tr>
+                  <tr><td colSpan={6}><EmptyState text={t('common.noRecords')} /></td></tr>
                 ) : rows.map(u => (
                   <tr key={u.id}>
                     <Td>{u.full_name || '—'}</Td>
@@ -70,6 +81,11 @@ export default function UsersPage() {
                       )}
                     </Td>
                     <Td className="text-[12px] text-[#8C8A80] whitespace-nowrap">{formatDate(u.created_at)}</Td>
+                    <Td className="text-end whitespace-nowrap">
+                      {me && me.id !== u.id && (
+                        <button onClick={() => deleteUser(u)} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                      )}
+                    </Td>
                   </tr>
                 ))}
               </tbody>

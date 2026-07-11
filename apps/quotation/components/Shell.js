@@ -62,6 +62,14 @@ export default function Shell({ children, active }) {
     if (link) window.location.href = link;
   }
 
+  async function deleteNotification(e, id) {
+    e.stopPropagation();
+    await fetch(`/api/notifications/${id}`, { method: 'DELETE', credentials: 'same-origin' }).catch(() => {});
+    const wasUnread = notifications.some(n => n.id === id && !n.is_read);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    if (wasUnread) setUnread(u => Math.max(0, u - 1));
+  }
+
   function toggleTheme() {
     const next = !dark;
     setDark(next);
@@ -136,15 +144,18 @@ export default function Shell({ children, active }) {
                     {notifications.length === 0 ? (
                       <div className="px-4 py-6 text-center text-sm text-[#8C8A80]">{t('shell.noNotificationsYet')}</div>
                     ) : notifications.map(n => (
-                      <button key={n.id} onClick={() => markRead(n.id, n.link)}
+                      <div key={n.id}
                         className={'w-full text-start px-4 py-3 border-b border-[#E5E2DD]/60 dark:border-white/5 hover:bg-[#F7F5F1] dark:hover:bg-white/5 transition-colors duration-200 ' + (n.is_read ? 'opacity-60' : '')}>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-medium truncate">{tr(n.title)}</span>
-                          {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />}
-                        </div>
-                        {n.body && <div className="text-xs text-[#6B6B63] truncate">{tr(n.body)}</div>}
-                        <div className="text-[11px] text-[#8C8A80] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
-                      </button>
+                        <button onClick={() => markRead(n.id, n.link)} className="w-full text-start">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-medium truncate">{tr(n.title)}</span>
+                            {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />}
+                          </div>
+                          {n.body && <div className="text-xs text-[#6B6B63] whitespace-pre-line">{tr(n.body)}</div>}
+                          <div className="text-[11px] text-[#8C8A80] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                        </button>
+                        <button onClick={(e) => deleteNotification(e, n.id)} className="text-[11px] text-[#8C8A80] hover:text-[#BC6B4E] mt-1">{t('shell.deleteNotification')}</button>
+                      </div>
                     ))}
                   </div>
                 </>

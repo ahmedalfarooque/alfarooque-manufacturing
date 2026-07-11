@@ -9,7 +9,7 @@ const { json, requireSession } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 
 const ENTITY_FIELDS = ['name_en', 'name_ar', 'cr_number', 'vat_number', 'address_en', 'address_ar',
-  'phone', 'email', 'default_vat_rate', 'quote_prefix', 'next_seq', 'is_active'];
+  'phone', 'email', 'website', 'default_vat_rate', 'quote_prefix', 'next_seq', 'is_active'];
 const SETTING_KEYS = ['profit_defaults', 'approval_thresholds', 'defaults', 'translation', 'numbering'];
 
 export async function GET(req) {

@@ -9,7 +9,7 @@ export async function GET(req, { params }) {
   const { response } = requireSession(req);
   if (response) return response;
   const sb = getDb();
-  const { data, error } = await sb.from('customers').select('*').eq('id', params.id).maybeSingle();
+  const { data, error } = await sb.from('customers').select('*').eq('id', params.id).is('deleted_at', null).maybeSingle();
   if (error) return json({ error: 'Could not load customer.' }, 500);
   if (!data) return json({ error: 'Customer not found.' }, 404);
   return json({ customer: data });
@@ -36,7 +36,12 @@ export async function DELETE(req, { params }) {
   const { response } = requireSession(req, { adminOnly: true });
   if (response) return response;
   const sb = getDb();
-  const { error } = await sb.from('customers').delete().eq('id', params.id);
+  /* Soft-delete: customers are shared with apps/quotation, and existing
+     quotations may still reference this row. A hard delete would either
+     fail the FK or silently orphan quotation history. */
+  const { error } = await sb.from('customers')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', params.id);
   if (error) { console.error('[customers] delete failed:', error.message); return json({ error: 'Could not delete customer.' }, 500); }
   return json({ ok: true });
 }

@@ -67,6 +67,7 @@ export default function SettingsPage() {
               <Field label={t('settings.addressEn')}><Input value={num(e.address_en)} onChange={ev => patchEntity(i, { address_en: ev.target.value })} /></Field>
               <Field label={t('settings.addressAr')}><Input dir="rtl" value={num(e.address_ar)} onChange={ev => patchEntity(i, { address_ar: ev.target.value })} /></Field>
               <Field label={t('f.email')}><Input dir="ltr" value={num(e.email)} onChange={ev => patchEntity(i, { email: ev.target.value })} /></Field>
+              <Field label={t('settings.website')}><Input dir="ltr" value={num(e.website)} onChange={ev => patchEntity(i, { website: ev.target.value })} /></Field>
               <Field label={t('settings.quotePrefix')}><Input dir="ltr" value={num(e.quote_prefix)} onChange={ev => patchEntity(i, { quote_prefix: ev.target.value })} /></Field>
               <Field label={t('settings.nextSeq')}><Input type="number" dir="ltr" value={num(e.next_seq)} onChange={ev => patchEntity(i, { next_seq: ev.target.value })} /></Field>
             </div>
