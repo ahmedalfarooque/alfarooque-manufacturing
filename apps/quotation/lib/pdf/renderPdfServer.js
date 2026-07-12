@@ -145,6 +145,29 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
       await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
       if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (_) {} }
     });
+    /* Belt-and-suspenders on top of the specific waits above: poll the
+       document's actual rendered height until it stops changing, rather
+       than trusting any fixed list of "wait for X, Y, Z" conditions.
+       Terms & Conditions text loads via a SEPARATE API call that only
+       fires after the main quotation data resolves (see print/page.js)
+       — if that (or anything else async) is still landing after the
+       specific waits above are done, the height measured further down
+       would be taken from a not-yet-final layout, silently producing a
+       wrong single/multi-page decision no matter how many named waits
+       precede it. This catches that whole class of issue generically:
+       stop as soon as 3 consecutive checks agree, or after 3s regardless
+       (never hangs the request on a genuinely-still-loading page). */
+    await page.evaluate(async () => {
+      const qdoc = document.querySelector('.qdoc');
+      if (!qdoc) return;
+      let stableCount = 0, lastHeight = -1;
+      for (let i = 0; i < 20 && stableCount < 3; i++) {
+        const h = qdoc.scrollHeight;
+        stableCount = h === lastHeight ? stableCount + 1 : 0;
+        lastHeight = h;
+        await new Promise(res => setTimeout(res, 150));
+      }
+    });
 
     /* A physical PDF page is a fixed size — unlike the on-screen view,
        which just ends wherever the content ends. Using format:'A4'
@@ -193,6 +216,13 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
       const pxPerMm = rect.width / pageWmm;
       return qdoc.scrollHeight / pxPerMm;
     }, PAGE_W_MM);
+
+    /* Logged (visible in `vercel logs`) so the NEXT test gives concrete
+       numbers instead of another guess if this still doesn't fix it —
+       specifically: did content genuinely measure over the tolerance
+       (real multi-page content), or under it but something else forced
+       pagination anyway (a bug elsewhere, e.g. in the branch below). */
+    console.log(`[pdf] contentHeightMm=${contentHeightMm.toFixed(1)} tolerance=${ONE_PAGE_TOLERANCE_MM} singlePage=${contentHeightMm <= ONE_PAGE_TOLERANCE_MM}`);
 
     const pdfBuffer = contentHeightMm <= ONE_PAGE_TOLERANCE_MM
       ? await page.pdf({
