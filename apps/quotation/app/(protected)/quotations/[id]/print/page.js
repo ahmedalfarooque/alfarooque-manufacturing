@@ -166,8 +166,19 @@ export default function PrintPage() {
            own 32px/36px padding (~8.5mm) as the visible A4 margin, and
            its content width (794px) already equals true A4 width at
            96dpi, so nothing gets scaled or clipped by a second,
-           conflicting page margin. */
-        @page { size: A4; margin: 0; }
+           conflicting page margin.
+           Deliberately no size: value here (page size is controlled
+           purely from the server-side page.pdf() call now, see
+           renderPdfServer.js) — declaring size: A4 on this rule caused
+           a real, reproducible Chrome bug: whenever the requested custom
+           page.pdf({width, height}) had width > height (any quotation
+           shorter than 210mm), Chrome silently SWAPPED the two
+           dimensions in the output PDF, as if "correcting" back to the
+           orientation implied by the CSS-declared A4 size. Confirmed by
+           direct testing: identical width/height values produced a
+           correctly-oriented PDF with this size:A4 declaration removed,
+           and a swapped one with it present. */
+        @page { margin: 0; }
       `}</style>
 
       <div className="no-print" style={{
