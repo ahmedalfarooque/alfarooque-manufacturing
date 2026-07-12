@@ -165,24 +165,20 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           .qdoc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .qdoc-watermark { position: fixed !important; }
           .qdoc-body table tr { break-inside: avoid; page-break-inside: avoid; }
-          /* Footer pinned NEAR the bottom of the A4 page (not floating
-             mid-page after the signatures, and not flush against the
-             true physical edge either): force the layout table to be at
-             least almost one full page-content tall (297mm minus .qdoc's
-             own 32px top + 64px bottom padding, minus a further 6mm so
-             the footer sits with a small, deliberate margin above the
-             page's true bottom edge instead of touching it), and give
-             the header/footer rows a token 1px height — the browser
-             then hands ALL the leftover height to the unconstrained
-             body row, so any blank space lands between the signatures
-             and the footer instead of below the footer. vertical-
-             align:top above keeps the body content at the top of that
-             stretched row (cells otherwise default to middle, which
-             would have floated the whole body to the page's vertical
-             center). Documents longer than one page are unaffected:
-             table height is a minimum, and pagination proceeds
-             normally. */
-          .qdoc-layout { min-height: calc(297mm - 96px - 6mm); }
+          /* Footer pinned to the BOTTOM of the A4 page, not floating
+             mid-page after the signatures: force the layout table to be
+             at least one full page-content tall (297mm minus .qdoc's own
+             32px top + 64px bottom padding), and give the header/footer
+             rows a token 1px height — the browser then hands ALL the
+             leftover height to the unconstrained body row, so any blank
+             space lands between the signatures and the footer instead of
+             below the footer. vertical-align:top above keeps the body
+             content at the top of that stretched row (cells otherwise
+             default to middle, which would have floated the whole body
+             to the page's vertical center). Documents longer than one
+             page are unaffected: table height is a minimum, and
+             pagination proceeds normally. */
+          .qdoc-layout { min-height: calc(297mm - 96px); }
           .qdoc-layout > thead > tr, .qdoc-layout > tfoot > tr { height: 1px; }
         }
       `}</style>
