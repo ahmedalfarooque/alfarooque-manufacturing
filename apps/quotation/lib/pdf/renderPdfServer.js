@@ -224,10 +224,28 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
        pagination anyway (a bug elsewhere, e.g. in the branch below). */
     console.log(`[pdf] contentHeightMm=${contentHeightMm.toFixed(1)} tolerance=${ONE_PAGE_TOLERANCE_MM} singlePage=${contentHeightMm <= ONE_PAGE_TOLERANCE_MM}`);
 
+    /* Root cause, confirmed via production logging: contentHeightMm was
+       measuring well under tolerance (e.g. 251.8mm vs a 415.8mm cutoff)
+       — the height/threshold logic was never the bug. The custom page
+       was generated at EXACTLY that measured height with zero margin.
+       QuoteDocument.js has a print-only rule (.qdoc-body table tr {
+       break-inside: avoid }) telling the browser to push a WHOLE row to
+       the next page rather than split it if a page boundary falls
+       inside it. scrollHeight is measured under normal SCREEN-media
+       layout; the instant page.pdf() actually prints, PRINT-media rules
+       apply (this one, plus color-adjust, watermark repositioning) and
+       even a sub-millimeter rounding difference between the two layout
+       passes is enough for the last row/footer to land fractionally
+       past that exact boundary — which then pushes the ENTIRE element
+       to a near-empty page 2, exactly matching the reported bug. A
+       small buffer below removes the exact-fit condition that
+       break-inside:avoid needs in order to misfire. */
+    const SINGLE_PAGE_BUFFER_MM = 8;
+
     const pdfBuffer = contentHeightMm <= ONE_PAGE_TOLERANCE_MM
       ? await page.pdf({
           width: `${PAGE_W_MM}mm`,
-          height: `${contentHeightMm}mm`,
+          height: `${contentHeightMm + SINGLE_PAGE_BUFFER_MM}mm`,
           printBackground: true,
         })
       : await page.pdf({
