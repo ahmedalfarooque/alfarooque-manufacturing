@@ -165,21 +165,22 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           .qdoc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .qdoc-watermark { position: fixed !important; }
           .qdoc-body table tr { break-inside: avoid; page-break-inside: avoid; }
-          /* Footer pinned to the BOTTOM of the A4 page, not floating
-             mid-page after the signatures: force the layout table to be
-             at least one full page-content tall (297mm minus .qdoc's own
-             32px top + 64px bottom padding), and give the header/footer
-             rows a token 1px height — the browser then hands ALL the
-             leftover height to the unconstrained body row, so any blank
-             space lands between the signatures and the footer instead of
-             below the footer. vertical-align:top above keeps the body
-             content at the top of that stretched row (cells otherwise
-             default to middle, which would have floated the whole body
-             to the page's vertical center). Documents longer than one
-             page are unaffected: table height is a minimum, and
-             pagination proceeds normally. */
-          .qdoc-layout { min-height: calc(297mm - 96px); }
-          .qdoc-layout > thead > tr, .qdoc-layout > tfoot > tr { height: 1px; }
+          /* No forced/artificial page height here — the document renders
+             at its natural height (header + body + footer, whatever that
+             adds up to), same as the on-screen preview. A short
+             quotation ends up shorter than a full A4 page with the
+             footer following right after the signatures (blank paper
+             below is normal for a short printed document); a long one
+             flows across multiple natural A4 pages via the browser's own
+             pagination, with the thead/tfoot repeating on each. This was
+             previously a hardcoded min-height: calc(297mm - 96px) rule
+             that force-stretched the table to fill a full page and
+             pinned the footer to the bottom — removed because its correctness
+             depended on assumptions about the header/footer's exact
+             rendered height that don't reliably hold across different
+             Chromium builds (local Chrome vs. the Linux Chromium bundled
+             for the Vercel deployment), which is what made production's
+             output diverge from localhost's. */
         }
       `}</style>
 
