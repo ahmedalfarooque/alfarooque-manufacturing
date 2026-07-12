@@ -116,11 +116,6 @@ export default function Shell({ children, active }) {
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
-          <button onClick={logout}
-            className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 text-[#4A4A45] dark:text-[#A8A497] hover:bg-[#F1EEE7] dark:hover:bg-white/5">
-            <GlassIcon name="logout" size={20} className="shrink-0" />{t('shell.logout')}
-          </button>
-          <div className="my-2 border-t border-[#E5E2DD] dark:border-white/[0.08]" />
           {NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
             <a key={item.href} href={item.href}
               className={
@@ -177,6 +172,10 @@ export default function Shell({ children, active }) {
             </button>
             <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
               <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
+            </button>
+            <button onClick={logout} className="glass-ctrl">
+              <GlassIcon name="logout" size={16} className="ctrl-icon" />
+              <span className="ctrl-label">{t('shell.logout')}</span>
             </button>
           </div>
         </header>
