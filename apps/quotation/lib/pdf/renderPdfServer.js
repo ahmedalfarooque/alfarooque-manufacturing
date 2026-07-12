@@ -50,6 +50,38 @@ function findBrowserExecutable() {
   return null;
 }
 
+/* Module-scope cache: Vercel (and most serverless platforms) reuse the
+   same warm container — and this module's top-level scope with it —
+   across consecutive invocations, not just within one. Launching a
+   fresh headless Chromium (extracting @sparticuz/chromium's bundled
+   libs, spawning the process, waiting for its DevTools socket) is the
+   single biggest cost in this whole pipeline, typically 1-3s on its
+   own — paid again on EVERY download even when the previous request's
+   browser is still sitting there idle. Keeping one browser alive
+   across invocations and only opening/closing a PAGE per request skips
+   that relaunch entirely on a warm container. isConnected() guards the
+   one real edge case: a cold container (or one whose Chromium process
+   died/was reclaimed) needs a fresh launch, same as before. */
+let sharedBrowserPromise = null;
+async function getSharedBrowser(launchOptions) {
+  if (sharedBrowserPromise) {
+    try {
+      const existing = await sharedBrowserPromise;
+      if (existing.isConnected()) return existing;
+    } catch (_) {
+      // fall through and relaunch — the cached launch itself failed
+    }
+    sharedBrowserPromise = null;
+  }
+  const puppeteer = require('puppeteer-core');
+  /* Assigned before awaiting so concurrent callers on the same warm
+     container dedupe onto this one in-flight launch instead of each
+     starting their own. Cleared on failure (above) so a bad launch
+     doesn't permanently wedge the container into always throwing. */
+  sharedBrowserPromise = puppeteer.launch(launchOptions);
+  return sharedBrowserPromise;
+}
+
 /* Renders `pageUrl` (must be same-origin, reachable by this server
    process) to a PDF buffer using a real headless Chrome tab.
    `cookieHeader` forwards the caller's own session cookie so the
@@ -57,7 +89,6 @@ function findBrowserExecutable() {
    own browser — no separate service-auth/token system needed. */
 async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
   const localExecutable = findBrowserExecutable();
-  const puppeteer = require('puppeteer-core');
 
   let launchOptions;
   if (localExecutable) {
@@ -102,10 +133,11 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
     };
   }
 
-  const browser = await puppeteer.launch(launchOptions);
+  const browser = await getSharedBrowser(launchOptions);
 
+  let page;
   try {
-    const page = await browser.newPage();
+    page = await browser.newPage();
     await page.setViewport({ width: 900, height: 1200, deviceScaleFactor: 2 });
 
     if (cookieHeader) {
@@ -117,7 +149,15 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
       if (cookies.length) await page.setCookie(...cookies);
     }
 
-    await page.goto(pageUrl, { waitUntil: 'networkidle0', timeout: 30000 });
+    /* domcontentloaded, not networkidle0: the print page is fully
+       client-rendered (fetches the quotation, then terms, then builds
+       the QR client-side) — networkidle0 forces an extra unconditional
+       500ms-of-silence wait on top of that real data-loading time, on
+       EVERY request. The explicit waits right below (.qdoc appearing,
+       fonts, images, height stability) already gate on the document
+       actually being ready, so they make networkidle0 redundant rather
+       than replace a needed guarantee. */
+    await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.waitForSelector('.qdoc', { timeout: 15000 });
     /* The QR data-URL is generated client-side AFTER the quotation data
        loads — briefly later than .qdoc itself appears. Wait for it so
@@ -263,7 +303,12 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
         });
     return pdfBuffer;
   } finally {
-    await browser.close();
+    /* Close only the PAGE, not the browser — the browser is now a
+       shared, warm-reused instance (see getSharedBrowser above) so a
+       later request on the same container can skip relaunching it
+       entirely. Guard against `page` never having been assigned if
+       newPage() itself threw. */
+    if (page) await page.close().catch(() => {});
   }
 }
 
