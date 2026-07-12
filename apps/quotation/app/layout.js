@@ -21,7 +21,17 @@ const arabicFont = IBM_Plex_Sans_Arabic({
   subsets: ['arabic'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-arabic',
-  display: 'swap',
+  /* 'block' (not 'swap'): the PDF pipeline measures the document's real
+     rendered height, then prints, immediately after document.fonts.ready
+     resolves (see renderPdfServer.js). With 'swap', the browser paints
+     text with a FALLBACK font first and swaps to this one asynchronously
+     — document.fonts.ready can resolve in the gap before that swap
+     actually repaints, so the measured height reflects the wrong font's
+     metrics. 'block' holds text rendering until this (self-hosted,
+     same-origin, near-instant) font is ready, so by the time anything
+     paints the correct font is already active — measurement and paint
+     are guaranteed consistent. */
+  display: 'block',
 });
 
 export const metadata = {

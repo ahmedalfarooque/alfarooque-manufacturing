@@ -126,11 +126,24 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
        PDF over a missing decoration. */
     await page.waitForSelector('.qdoc-qr img', { timeout: 5000 }).catch(() => {});
     /* Real fonts, real images, real Grid/RTL layout — wait for both to
-       settle before printing so nothing is mid-load in the capture. */
+       settle before printing so nothing is mid-load in the capture.
+       document.fonts.ready is awaited TWICE with a rendered-frame gap in
+       between: the Arabic font is loaded from a separate <html> root
+       layout, and its own load promise can still be pending — or just
+       resolving without having repainted yet — at the moment this
+       evaluate() call starts. A single await can therefore resolve
+       before the correct font's metrics have actually been applied,
+       which is exactly what caused the content-height measurement below
+       to read a shorter (wrong-font) height than what actually painted,
+       pushing the real render onto an unwanted second page. Waiting
+       again after a rendered frame confirms the font that's active NOW
+       is stable, not mid-swap. */
     await page.evaluate(async () => {
       if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (_) {} }
       const imgs = Array.from(document.images);
       await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })));
+      await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+      if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (_) {} }
     });
 
     /* A physical PDF page is a fixed size — unlike the on-screen view,
