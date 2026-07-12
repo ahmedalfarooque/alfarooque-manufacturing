@@ -239,8 +239,16 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
        past that exact boundary — which then pushes the ENTIRE element
        to a near-empty page 2, exactly matching the reported bug. A
        small buffer below removes the exact-fit condition that
-       break-inside:avoid needs in order to misfire. */
-    const SINGLE_PAGE_BUFFER_MM = 8;
+       break-inside:avoid needs in order to misfire.
+
+       Also covers a second, separate gap: QuoteDocument.js now reserves
+       an extra print-only padding-bottom (~16mm) on .qdoc-body so
+       content can't render underneath the footer, which is now
+       position:fixed to the physical page bottom. scrollHeight is
+       measured in normal SCREEN mode, where that print-only padding
+       doesn't exist yet, so the measurement undercounts the real
+       printed height by roughly that same ~16mm. */
+    const SINGLE_PAGE_BUFFER_MM = 20;
 
     const pdfBuffer = contentHeightMm <= ONE_PAGE_TOLERANCE_MM
       ? await page.pdf({

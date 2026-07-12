@@ -170,22 +170,36 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           .qdoc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .qdoc-watermark { position: fixed !important; }
           .qdoc-body table tr { break-inside: avoid; page-break-inside: avoid; }
-          /* No forced/artificial page height here — the document renders
-             at its natural height (header + body + footer, whatever that
-             adds up to), same as the on-screen preview. A short
-             quotation ends up shorter than a full A4 page with the
-             footer following right after the signatures (blank paper
-             below is normal for a short printed document); a long one
-             flows across multiple natural A4 pages via the browser's own
-             pagination, with the thead/tfoot repeating on each. This was
-             previously a hardcoded min-height: calc(297mm - 96px) rule
-             that force-stretched the table to fill a full page and
-             pinned the footer to the bottom — removed because its correctness
-             depended on assumptions about the header/footer's exact
-             rendered height that don't reliably hold across different
-             Chromium builds (local Chrome vs. the Linux Chromium bundled
-             for the Vercel deployment), which is what made production's
-             output diverge from localhost's. */
+          /* No forced/artificial page HEIGHT here — the document still
+             renders at its natural total height (header + body + footer),
+             same as the on-screen preview; only WHERE the footer sits
+             within that height changes below. A short quotation is still
+             shorter than a full A4 page; a long one still flows across
+             multiple natural A4 pages via the browser's own pagination.
+             This was previously a hardcoded min-height rule that
+             force-stretched the WHOLE TABLE to fill a full page —
+             removed because its correctness depended on assumptions
+             about the header/footer's exact rendered height that don't
+             reliably hold across different Chromium builds, which is
+             what made production's output diverge from localhost's. */
+
+          /* Footer pinned to the physical BOTTOM of every printed page —
+             independent of how much content that page has. position:fixed
+             is the standard, well-established browser mechanism for this:
+             fixed-position elements repeat automatically on every page of
+             a print job, anchored to the PAGE's own edge rather than to
+             where content happens to end (which is what a plain tfoot
+             gives you: it repeats, but only wherever that page's tbody
+             content stops). left/right must be explicit px values (not 0)
+             — position:fixed takes an element out of the box model
+             entirely, so it stops respecting its ancestor's padding and
+             would otherwise render flush to the page's physical edges.
+             36px matches .qdoc's own horizontal padding below, so the
+             footer still lines up with the rest of the content.
+             qdoc-body gets matching bottom padding so its last content
+             (signatures) never renders underneath this fixed footer. */
+          .qdoc-footer { position: fixed !important; bottom: 0; left: 36px; right: 36px; background: #fff; z-index: 2; }
+          .qdoc-body { padding-bottom: 72px; }
         }
       `}</style>
 
