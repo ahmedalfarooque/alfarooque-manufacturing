@@ -107,13 +107,17 @@ export default function Shell({ children, active }) {
           </div>
         </div>
         <div className="px-5 py-3 flex items-center gap-2 border-b border-[#E5E2DD] dark:border-white/[0.08]">
-          <div className="h-8 w-8 rounded-full bg-brand-600/15 flex items-center justify-center text-xs font-medium text-brand-700 dark:text-brand-300">
+          <div className="h-8 w-8 rounded-full bg-brand-600/15 flex items-center justify-center text-xs font-medium text-brand-700 dark:text-brand-300 shrink-0">
             {(user?.full_name || user?.email || '?').slice(0, 1).toUpperCase()}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-sm text-[#1A1A18] dark:text-[#F5F3EE] truncate">{user?.full_name || t('shell.loading')}</div>
             <div className="text-[11px] text-[#8C8A80] truncate">{user?.role ? t('role.' + user.role) : ''}</div>
           </div>
+          <button onClick={logout} title={t('shell.logout')} aria-label={t('shell.logout')}
+            className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-[#4A4A45] dark:text-[#A8A497] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">
+            <GlassIcon name="logout" size={18} />
+          </button>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
           {NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
@@ -126,11 +130,6 @@ export default function Shell({ children, active }) {
             </a>
           ))}
         </nav>
-        <div className="p-3">
-          <button onClick={logout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[#4A4A45] dark:text-[#A8A497] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">
-            <GlassIcon name="logout" size={20} className="shrink-0" />{t('shell.logout')}
-          </button>
-        </div>
       </aside>
 
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
