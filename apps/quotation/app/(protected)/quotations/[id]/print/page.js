@@ -2,27 +2,32 @@
 
 /* Print / PDF view — clean white A4 render of the quotation with a
    floating toolbar (hidden when printing).
-   - "Download PDF" and "Print" both build the exact same jsPDF document
-     (lib/pdf/buildQuotePdf.js) — Download saves it immediately, Print
-     opens it as a real PDF in a new tab (via pdf.autoPrint() +
-     pdf.output('bloburl')) instead of calling window.print() on this
-     HTML preview. Printing an actual PDF renders identically across
-     Chrome/Edge/Firefox/Safari and Windows/macOS "Save as PDF", since
-     the browser hands the same fixed bytes to its PDF viewer rather
-     than re-laying-out HTML. Arabic strings are shaped via the browser's
-     own Canvas 2D text engine and embedded as images into the same
-     jsPDF geometry (see lib/pdf/arabicText.js) rather than jsPDF's
-     native text(), which can't shape Arabic glyphs — so both languages
-     share one layout.
-   - The HTML render below (QuoteDocument) remains as the on-screen
-     preview, and still has a print stylesheet as a fallback for a
-     manual Ctrl+P, but the toolbar's own Print button no longer uses it. */
+   - The QuoteDocument below IS the single source of truth. "Download
+     PDF" and "Print" both ask the SERVER to print this exact same URL
+     with a real headless Chrome tab (app/api/quotations/[id]/pdf,
+     lib/pdf/renderPdfServer.js) — not a client-side DOM-to-canvas
+     rasterizer. A from-scratch CSS re-implementation (html2canvas) could
+     not reliably reproduce this document's CSS Grid header, custom
+     Arabic web fonts, and RTL layout — real Chrome printing the real
+     page has no such gap, since it's the exact same engine already
+     rendering the preview.
+   - A manual Ctrl+P still falls back to this page's own print
+     stylesheet (kept below) as a safety net, and if the server-side
+     renderer is unavailable in this environment (e.g. no local Chrome/
+     Edge install found), both buttons fall back to the previous
+     client-side html2canvas pipeline so the feature still works. */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import QuoteDocument, { money, dateStr } from '@/components/QuoteDocument';
 import { downloadQuotePdf, printQuotePdf } from '@/lib/pdf/buildQuotePdf';
 import { buildQuoteQrText, buildQuoteQrDataUrl } from '@/lib/qr';
+
+async function fetchServerPdfBlob(id, lang) {
+  const res = await fetch(`/api/quotations/${id}/pdf?lang=${lang}`, { credentials: 'same-origin' });
+  if (!res.ok) throw new Error('Server-side PDF generation unavailable');
+  return res.blob();
+}
 
 export default function PrintPage() {
   const { id } = useParams();
@@ -31,6 +36,7 @@ export default function PrintPage() {
   const [downloading, setDownloading] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState(null);
+  const sheetRef = useRef(null);
   /* read ?lang= without useSearchParams — avoids the Suspense-boundary
      requirement next build enforces for that hook */
   const [lang, setLang] = useState(null);
@@ -47,7 +53,18 @@ export default function PrintPage() {
       .then(async d => {
         if (!d || !d.row) return;
         setData(d);
-        if (!lang) setLang(d.row.output_lang || 'en');
+        /* Fall back to the quotation's own output language ONLY when the
+           URL didn't explicitly request one. Checked against the URL
+           directly, NOT the `lang` state: this callback's closure captured
+           lang from the initial render (null), so `if (!lang)` was true
+           even after the ?lang= effect had already set it — clobbering an
+           explicit ?lang=ar with output_lang. That race is exactly why the
+           server-side PDF endpoint (which always passes ?lang=) kept
+           producing the English document from the Arabic button. */
+        const urlLang = (() => {
+          try { return new URLSearchParams(window.location.search).get('lang'); } catch (_) { return null; }
+        })();
+        if (urlLang !== 'ar' && urlLang !== 'en') setLang(d.row.output_lang || 'en');
         if (d.row.terms_template_id && !d.row.terms_body_override) {
           const r2 = await fetch('/api/terms/' + d.row.terms_template_id, { credentials: 'same-origin' }).catch(() => null);
           const t2 = r2 && r2.ok ? await r2.json() : null;
@@ -84,24 +101,28 @@ export default function PrintPage() {
     return () => { cancelled = true; };
   }, [data, lang]);
 
-  function pdfParams() {
-    return {
-      doc: data.row,
-      products: data.products,
-      entity: data.row.entity_full || data.row.entity,
-      customer: data.row.customer,
-      terms,
-      qrDataUrl,
-      lang,
-    };
+  /* The .qdoc element mounted below — literally the on-screen preview
+     — is what gets captured. Not data passed to a second renderer. */
+  function getDocEl() {
+    return sheetRef.current && sheetRef.current.querySelector('.qdoc');
   }
 
   async function downloadPdf() {
     setDownloading(true);
+    const filename = (data.row.quote_number || 'quotation') + '.pdf';
     try {
-      await downloadQuotePdf(pdfParams());
+      const blob = await fetchServerPdfBlob(id, lang || 'en');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch (_) {
-      window.print();
+      try {
+        await downloadQuotePdf(getDocEl(), filename);
+      } catch (_) {
+        window.print();
+      }
     } finally {
       setDownloading(false);
     }
@@ -110,9 +131,15 @@ export default function PrintPage() {
   async function printPdf() {
     setPrinting(true);
     try {
-      await printQuotePdf(pdfParams());
+      const blob = await fetchServerPdfBlob(id, lang || 'en');
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
     } catch (_) {
-      window.print();
+      try {
+        await printQuotePdf(getDocEl());
+      } catch (_) {
+        window.print();
+      }
     } finally {
       setPrinting(false);
     }
@@ -151,7 +178,7 @@ export default function PrintPage() {
         <a href={'/quotations/' + id} style={{ ...btn(), textDecoration: 'none', display: 'inline-block' }}>✕</a>
       </div>
 
-      <div className="print-sheet" style={{ background: '#fff', maxWidth: 794, margin: '0 auto', boxShadow: '0 8px 40px rgba(0,0,0,.18)', borderRadius: 4 }}>
+      <div ref={sheetRef} className="print-sheet" style={{ background: '#fff', maxWidth: 794, margin: '0 auto', boxShadow: '0 8px 40px rgba(0,0,0,.18)', borderRadius: 4 }}>
         <QuoteDocument
           doc={data.row}
           products={data.products}

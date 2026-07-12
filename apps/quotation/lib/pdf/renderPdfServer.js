@@ -1,0 +1,100 @@
+'use strict';
+
+/* Server-side PDF rendering via a REAL Chrome instance (puppeteer-core
+   driving Chrome DevTools Protocol's Page.printToPDF) instead of
+   html2canvas rasterizing a DOM snapshot in the browser tab.
+
+   Why this replaced the html2canvas approach: html2canvas is its own
+   from-scratch reimplementation of CSS layout/paint — it does not use
+   the browser's real rendering engine. It has long-documented gaps in
+   CSS Grid support, custom @font-face loading inside its internal DOM
+   clone, and RTL/bidi handling. On this specific document (a CSS Grid
+   header, custom Arabic web fonts, RTL text) that mismatch surfaced as
+   real bugs: header rows overlapping the customer box, footer text
+   clipped mid-line — because the pixels html2canvas produced did not
+   actually match what the live page measured/showed. Puppeteer instead
+   asks a genuine, fully-updated Chrome to print the EXACT SAME URL the
+   user previews in their own browser tab, using Chrome's own print
+   engine — the same code path as a manual Ctrl+P or "Save as PDF". This
+   is the only way to GUARANTEE preview/PDF/print pixel parity for a
+   document this CSS-heavy, rather than approximate it. */
+
+const fs = require('fs');
+
+const CHROME_CANDIDATES = [
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium-browser',
+  '/usr/bin/chromium',
+  process.env.PUPPETEER_EXECUTABLE_PATH,
+].filter(Boolean);
+
+function findBrowserExecutable() {
+  for (const p of CHROME_CANDIDATES) {
+    try { if (fs.existsSync(p)) return p; } catch (_) {}
+  }
+  return null;
+}
+
+/* Renders `pageUrl` (must be same-origin, reachable by this server
+   process) to a PDF buffer using a real headless Chrome tab.
+   `cookieHeader` forwards the caller's own session cookie so the
+   protected print page authenticates exactly as it would for the user's
+   own browser — no separate service-auth/token system needed. */
+async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
+  const executablePath = findBrowserExecutable();
+  if (!executablePath) {
+    throw new Error('No local Chrome/Edge install found for server-side PDF rendering (checked common Windows/Linux paths and PUPPETEER_EXECUTABLE_PATH).');
+  }
+
+  const puppeteer = require('puppeteer-core');
+  const browser = await puppeteer.launch({
+    executablePath,
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--force-color-profile=srgb'],
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 900, height: 1200, deviceScaleFactor: 2 });
+
+    if (cookieHeader) {
+      const url = new URL(pageUrl);
+      const cookies = cookieHeader.split(';').map(c => c.trim()).filter(Boolean).map(c => {
+        const idx = c.indexOf('=');
+        return { name: c.slice(0, idx), value: c.slice(idx + 1), domain: url.hostname, path: '/' };
+      });
+      if (cookies.length) await page.setCookie(...cookies);
+    }
+
+    await page.goto(pageUrl, { waitUntil: 'networkidle0', timeout: 30000 });
+    await page.waitForSelector('.qdoc', { timeout: 15000 });
+    /* The QR data-URL is generated client-side AFTER the quotation data
+       loads — briefly later than .qdoc itself appears. Wait for it so
+       the printed page never captures the pre-QR frame; tolerate its
+       absence (short timeout, swallowed) rather than failing the whole
+       PDF over a missing decoration. */
+    await page.waitForSelector('.qdoc-qr img', { timeout: 5000 }).catch(() => {});
+    /* Real fonts, real images, real Grid/RTL layout — wait for both to
+       settle before printing so nothing is mid-load in the capture. */
+    await page.evaluate(async () => {
+      if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (_) {} }
+      const imgs = Array.from(document.images);
+      await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })));
+    });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: true, // honors the page's own @page { size: A4; margin: 0 } rule
+    });
+    return pdfBuffer;
+  } finally {
+    await browser.close();
+  }
+}
+
+module.exports = { renderUrlToPdfBuffer, findBrowserExecutable };
