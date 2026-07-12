@@ -130,7 +130,6 @@ export default function ProductDetailPage() {
   const [recost, setRecost] = useState(null);   // null | {changes}
   const [infoOpen, setInfoOpen] = useState(false);
   const [info, setInfo] = useState({});
-  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     fetch('/api/catalogue/' + id, { credentials: 'same-origin' })
@@ -138,13 +137,15 @@ export default function ProductDetailPage() {
       .then(d => {
         /* A deleted (or otherwise missing) product resolves here with
            d === null (404) — without this, `product` stayed null forever
-           and the page just kept showing "Loading…" with no way out. */
-        if (!d || !d.row) { setNotFound(true); return; }
+           and the page just kept showing "Loading…" with no way out.
+           Sent straight back to the list with no interstitial message —
+           the row is just gone there, nothing to explain. */
+        if (!d || !d.row) { window.location.replace('/catalogue'); return; }
         setProduct(d.row);
         setLines(d.lines || []);
         setParams({ ...DEFAULT_PARAMS, ...(d.row.cost_params || {}) });
       })
-      .catch(() => setNotFound(true));
+      .catch(() => {});
   }, [id]);
 
   function markDirty(fn) { return (...args) => { setDirty(true); return fn(...args); }; }
@@ -200,16 +201,6 @@ export default function ProductDetailPage() {
     if (d && d.row) { setProduct(d.row); setInfoOpen(false); }
   }
 
-  if (notFound) {
-    return (
-      <Shell active="/catalogue">
-        <div className="glass-card p-6 max-w-md text-center mx-auto space-y-3">
-          <div className="text-sm text-[#8C8A80]">{t('catalogue.notFound')}</div>
-          <a href="/catalogue" className="inline-block text-brand-600 dark:text-brand-400 hover:underline text-sm">{t('catalogue.backToList')}</a>
-        </div>
-      </Shell>
-    );
-  }
   if (!product) {
     return <Shell active="/catalogue"><div className="text-sm text-[#8C8A80]">{t('shell.loading')}</div></Shell>;
   }
