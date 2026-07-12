@@ -10,17 +10,23 @@ const nextConfig = {
     ];
   },
   /* @sparticuz/chromium (lib/pdf/renderPdfServer.js) locates its bundled
-     Chromium binary relative to its own module path at runtime. Next.js's
-     automatic serverless file tracer does not follow that dynamic lookup,
-     so without this the "bin" folder is silently left out of the deployed
-     function — the exact production error this fixes:
-     "The input directory '.../api/quotations/[id]/bin' does not exist."
-     The key is matched with picomatch against the route's NORMALIZED app
-     path (e.g. "/app/api/quotations/[id]/pdf" — no "route.js" suffix,
-     leading slash present), not the literal file path — verified
-     directly against Next 14.2.15's own matching code before landing on
-     this pattern. */
+     Chromium binary via path.join(__dirname, 'bin') at runtime — a
+     relative lookup that assumes __dirname still points at the real
+     node_modules/@sparticuz/chromium folder. The REAL root cause of the
+     production 500 ("The input directory '.../api/quotations/[id]/bin'
+     does not exist") is that Next's webpack build BUNDLES that package's
+     own code into the route's compiled output, which changes what
+     __dirname resolves to at runtime — it ends up pointing at the
+     ROUTE's own compiled folder, not the package's folder, so the
+     lookup fails no matter how many extra files get copied alongside it
+     (outputFileTracingIncludes/vercel.json includeFiles both still
+     leave the CODE looking in the wrong place). serverComponentsExternalPackages
+     tells Next to leave this package unbundled — resolved via a plain
+     Node require() at runtime instead — which is what keeps __dirname
+     correct and is the documented fix for this exact class of bug with
+     puppeteer-core/@sparticuz/chromium under Next.js. */
   experimental: {
+    serverComponentsExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
     outputFileTracingIncludes: {
       '/app/api/quotations/*/pdf': ['./node_modules/@sparticuz/chromium/bin/**'],
     },
