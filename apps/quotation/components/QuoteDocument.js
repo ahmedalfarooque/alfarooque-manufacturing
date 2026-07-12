@@ -165,20 +165,23 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           .qdoc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .qdoc-watermark { position: fixed !important; }
           .qdoc-body table tr { break-inside: avoid; page-break-inside: avoid; }
-          /* Footer pinned to the BOTTOM of the A4 page, not floating
-             mid-page after the signatures: force the layout table to be
-             at least one full page-content tall (297mm minus .qdoc's own
-             32px top + 64px bottom padding), and give the header/footer
-             rows a token 1px height — the browser then hands ALL the
-             leftover height to the unconstrained body row, so any blank
-             space lands between the signatures and the footer instead of
-             below the footer. vertical-align:top above keeps the body
-             content at the top of that stretched row (cells otherwise
-             default to middle, which would have floated the whole body
-             to the page's vertical center). Documents longer than one
-             page are unaffected: table height is a minimum, and
-             pagination proceeds normally. */
-          .qdoc-layout { min-height: calc(297mm - 96px); }
+          /* Footer pinned NEAR the bottom of the A4 page (not floating
+             mid-page after the signatures, and not flush against the
+             true physical edge either): force the layout table to be at
+             least almost one full page-content tall (297mm minus .qdoc's
+             own 32px top + 64px bottom padding, minus a further 15mm so
+             the footer sits with genuine breathing room above the page's
+             true bottom edge instead of touching it), and give the
+             header/footer rows a token 1px height — the browser then
+             hands ALL the leftover height to the unconstrained body row,
+             so any blank space lands between the signatures and the
+             footer instead of below the footer. vertical-align:top above
+             keeps the body content at the top of that stretched row
+             (cells otherwise default to middle, which would have floated
+             the whole body to the page's vertical center). Documents
+             longer than one page are unaffected: table height is a
+             minimum, and pagination proceeds normally. */
+          .qdoc-layout { min-height: calc(297mm - 96px - 15mm); }
           .qdoc-layout > thead > tr, .qdoc-layout > tfoot > tr { height: 1px; }
         }
       `}</style>
@@ -410,9 +413,9 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
       )}
 
       {/* Bank Details */}
-      <div style={{ ...box, borderRadius: 8, padding: '10px 14px', marginTop: 16, fontSize: 11.5, breakInside: 'avoid' }}>
-        <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 6 }}>{t.bankDetails}</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 28px' }} dir="ltr">
+      <div style={{ ...box, borderRadius: 8, padding: '12px 14px', marginTop: 28, fontSize: 11.5, breakInside: 'avoid' }}>
+        <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 8 }}>{t.bankDetails}</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 28px' }} dir="ltr">
           <div><span style={{ color: '#6b6b63' }}>{t.bank}: </span><b>{BANK_DETAILS.bank}</b></div>
           <div><span style={{ color: '#6b6b63' }}>{t.accountNumber}: </span><b>{BANK_DETAILS.accountNumber}</b></div>
           <div><span style={{ color: '#6b6b63' }}>{t.iban}: </span><b>{BANK_DETAILS.iban}</b></div>
@@ -422,17 +425,17 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
 
       {/* Terms & Conditions */}
       {(doc.terms_body_override || terms) && (
-        <div style={{ marginTop: 16, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
-          <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 3 }}>{t.terms}</div>
-          <div style={{ whiteSpace: 'pre-wrap' }}>{locProse(doc.terms_body_override || terms.body, isAr)}</div>
+        <div style={{ marginTop: 28, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
+          <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 6 }}>{t.terms}</div>
+          <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{locProse(doc.terms_body_override || terms.body, isAr)}</div>
         </div>
       )}
 
         {/* Signatures */}
-        <div style={{ display: 'flex', gap: 20, marginTop: 34, breakInside: 'avoid' }}>
+        <div style={{ display: 'flex', gap: 20, marginTop: 64, breakInside: 'avoid' }}>
           {[t.preparedBy, t.approvedBy, t.customerSign].map(s => (
             <div key={s} style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #8c8a80', paddingTop: 5, fontSize: 11, color: '#6b6b63' }}>{s}</div>
+              <div style={{ borderTop: '1px solid #8c8a80', paddingTop: 8, fontSize: 11, color: '#6b6b63' }}>{s}</div>
             </div>
           ))}
         </div>
