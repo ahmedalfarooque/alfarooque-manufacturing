@@ -88,6 +88,16 @@ export const translations = {
     'common.allCategories': 'All categories',
     'common.importing': 'Importing…',
     'common.importExcel': 'Import Excel',
+    'common.close': 'Close',
+
+    // Profile
+    'profile.title': 'My Profile',
+    'profile.saved': 'Profile updated.',
+    'profile.changePassword': 'Change Password',
+    'profile.currentPassword': 'Current Password',
+    'profile.newPassword': 'New Password',
+    'profile.confirmPassword': 'Confirm New Password',
+    'profile.passwordMismatch': 'New password and confirmation do not match.',
 
     // Fields
     'f.name': 'Name',
@@ -510,6 +520,16 @@ export const translations = {
     'common.allCategories': 'كل الفئات',
     'common.importing': 'جارٍ الاستيراد…',
     'common.importExcel': 'استيراد إكسل',
+    'common.close': 'إغلاق',
+
+    // Profile
+    'profile.title': 'ملفي الشخصي',
+    'profile.saved': 'تم تحديث الملف الشخصي.',
+    'profile.changePassword': 'تغيير كلمة المرور',
+    'profile.currentPassword': 'كلمة المرور الحالية',
+    'profile.newPassword': 'كلمة المرور الجديدة',
+    'profile.confirmPassword': 'تأكيد كلمة المرور الجديدة',
+    'profile.passwordMismatch': 'كلمة المرور الجديدة والتأكيد غير متطابقين.',
 
     // Fields
     'f.name': 'الاسم',

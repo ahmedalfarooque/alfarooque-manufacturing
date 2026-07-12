@@ -106,7 +106,7 @@ export default function Shell({ children, active }) {
             <div className="text-[11px] text-[#8C8A80]">{t('shell.appTagline')}</div>
           </div>
         </div>
-        <div className="px-5 py-3 flex items-center gap-2 border-b border-[#E5E2DD] dark:border-white/[0.08]">
+        <a href="/profile" className="px-5 py-3 flex items-center gap-2 border-b border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">
           <div className="h-8 w-8 rounded-full bg-brand-600/15 flex items-center justify-center text-xs font-medium text-brand-700 dark:text-brand-300 shrink-0">
             {(user?.full_name || user?.email || '?').slice(0, 1).toUpperCase()}
           </div>
@@ -114,7 +114,7 @@ export default function Shell({ children, active }) {
             <div className="text-sm text-[#1A1A18] dark:text-[#F5F3EE] truncate">{user?.full_name || t('shell.loading')}</div>
             <div className="text-[11px] text-[#8C8A80] truncate">{user?.role ? t('role.' + user.role) : ''}</div>
           </div>
-        </div>
+        </a>
         <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
           {NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
             <a key={item.href} href={item.href}
@@ -134,7 +134,11 @@ export default function Shell({ children, active }) {
         <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/[0.08] bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-xl" onClick={() => setSidebarOpen(true)}>☰</button>
-            <h1 className="font-semibold text-lg capitalize">{(() => { const navItem = NAV.find(i => i.href === active); return navItem ? t(navItem.labelKey) : String(active || '').replace('/', ''); })()}</h1>
+            <h1 className="font-semibold text-lg capitalize">{(() => {
+              if (active === '/profile') return t('profile.title');
+              const navItem = NAV.find(i => i.href === active);
+              return navItem ? t(navItem.labelKey) : String(active || '').replace('/', '');
+            })()}</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
