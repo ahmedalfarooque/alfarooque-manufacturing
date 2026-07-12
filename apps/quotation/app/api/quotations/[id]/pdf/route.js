@@ -14,6 +14,14 @@
 const { requireSession } = require('@/lib/http');
 const { renderUrlToPdfBuffer } = require('@/lib/pdf/renderPdfServer');
 
+/* Node runtime required — puppeteer-core/@sparticuz/chromium launch a
+   real child process, which the Edge runtime cannot do. Launching
+   Chromium cold + navigating + printing routinely takes longer than
+   Vercel's default 10s function timeout; 60s gives real headroom
+   (Vercel still caps this to whatever the plan actually allows). */
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function GET(req, { params }) {
   const { response, session } = requireSession(req);
   if (response) return response;

@@ -17,7 +17,18 @@
    user previews in their own browser tab, using Chrome's own print
    engine — the same code path as a manual Ctrl+P or "Save as PDF". This
    is the only way to GUARANTEE preview/PDF/print pixel parity for a
-   document this CSS-heavy, rather than approximate it. */
+   document this CSS-heavy, rather than approximate it.
+
+   Two Chrome sources, so the SAME code path renders identically in both
+   places:
+   - Local dev (Windows/Mac/Linux with a real browser installed): use
+     that install directly via puppeteer-core, zero extra download.
+   - Vercel (serverless — no browser present, and no permission to
+     install one): @sparticuz/chromium ships a Vercel-compatible headless
+     Chromium binary sized to fit the platform's function size limit.
+     Without this, production silently fell back to the older
+     client-side html2canvas renderer (see buildQuotePdf.js) — which is
+     exactly the imprecise renderer this whole file exists to replace. */
 
 const fs = require('fs');
 
@@ -45,17 +56,34 @@ function findBrowserExecutable() {
    protected print page authenticates exactly as it would for the user's
    own browser — no separate service-auth/token system needed. */
 async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
-  const executablePath = findBrowserExecutable();
-  if (!executablePath) {
-    throw new Error('No local Chrome/Edge install found for server-side PDF rendering (checked common Windows/Linux paths and PUPPETEER_EXECUTABLE_PATH).');
+  const localExecutable = findBrowserExecutable();
+  const puppeteer = require('puppeteer-core');
+
+  let launchOptions;
+  if (localExecutable) {
+    launchOptions = {
+      executablePath: localExecutable,
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--force-color-profile=srgb'],
+    };
+  } else {
+    /* No local browser (serverless) — use the bundled Vercel-compatible
+       Chromium build instead of failing over to the old renderer. */
+    let chromium;
+    try {
+      chromium = require('@sparticuz/chromium');
+    } catch (_) {
+      throw new Error('No local Chrome/Edge install found, and @sparticuz/chromium is not installed for serverless fallback.');
+    }
+    launchOptions = {
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+      args: [...chromium.args, '--force-color-profile=srgb'],
+      defaultViewport: chromium.defaultViewport,
+    };
   }
 
-  const puppeteer = require('puppeteer-core');
-  const browser = await puppeteer.launch({
-    executablePath,
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--force-color-profile=srgb'],
-  });
+  const browser = await puppeteer.launch(launchOptions);
 
   try {
     const page = await browser.newPage();
