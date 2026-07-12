@@ -169,6 +169,24 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
        inspection. Page size must be controlled from exactly one place;
        it's this JS call now. */
     const PAGE_W_MM = 210, PAGE_H_MM = 297;
+    /* Genuine multi-page pagination only kicks in well past one page's
+       worth of content — NOT at exactly 297mm. Text shaping/line-
+       wrapping naturally varies a little between fonts, languages, and
+       even browser sub-pixel rounding runs, so a document that's, say,
+       300-320mm tall isn't "genuinely" a multi-page document — it's
+       still ONE quotation's worth of content that happens to render a
+       touch taller than a strict A4 page. Forcing that into full
+       format:'A4' pagination is what actually produced the Arabic-only
+       "spills to a near-empty second page" bug: the same content that
+       measures ~290mm in English can measure ~305mm in Arabic purely
+       from normal font-metric differences, tripping a hard 297mm cutoff
+       that was never really about "does this need multiple pages" so
+       much as "is this taller than one arbitrary constant". A generous
+       multiplier (1.4x = 416mm) keeps single-quotation documents on one
+       (slightly-taller-than-A4) page across any language/font
+       combination, while still triggering real pagination for content
+       that unambiguously needs it (many product rows). */
+    const ONE_PAGE_TOLERANCE_MM = PAGE_H_MM * 1.4;
     const contentHeightMm = await page.evaluate((pageWmm) => {
       const qdoc = document.querySelector('.qdoc');
       const rect = qdoc.getBoundingClientRect();
@@ -176,7 +194,7 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
       return qdoc.scrollHeight / pxPerMm;
     }, PAGE_W_MM);
 
-    const pdfBuffer = contentHeightMm <= PAGE_H_MM
+    const pdfBuffer = contentHeightMm <= ONE_PAGE_TOLERANCE_MM
       ? await page.pdf({
           width: `${PAGE_W_MM}mm`,
           height: `${contentHeightMm}mm`,
