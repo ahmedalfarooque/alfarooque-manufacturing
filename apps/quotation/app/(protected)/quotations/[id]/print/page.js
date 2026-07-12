@@ -148,12 +148,19 @@ export default function PrintPage() {
   if (!data) return <div style={{ padding: 40, fontFamily: 'sans-serif', color: '#888' }}>{lang === 'ar' ? 'جارٍ التحميل…' : 'Loading…'}</div>;
 
   return (
-    <div style={{ background: '#e9e6e0', minHeight: '100vh', padding: '24px 0' }}>
+    <div className="print-stage" style={{ background: '#e9e6e0', minHeight: '100vh', padding: '24px 0' }}>
       <style>{`
         @media print {
           .no-print { display: none !important; }
           body, html { background: #fff !important; }
-          .print-sheet { box-shadow: none !important; margin: 0 !important; }
+          /* The grey on-screen stage must contribute NOTHING to the
+             printed page: its min-height:100vh resolves against the
+             PRINT page box (297mm) when printing, and together with its
+             24px padding it inflated every generated PDF past one A4
+             page — the "oversized page with blank space after the
+             footer" bug. Zero it all out for print. */
+          .print-stage { min-height: 0 !important; padding: 0 !important; background: #fff !important; }
+          .print-sheet { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; }
         }
         /* Zero browser page margin — the document itself supplies its
            own 32px/36px padding (~8.5mm) as the visible A4 margin, and
