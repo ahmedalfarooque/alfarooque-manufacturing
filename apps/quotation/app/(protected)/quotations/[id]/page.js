@@ -67,6 +67,7 @@ export default function QuotationEditorPage() {
   const [projectRequest, setProjectRequest] = useState(null);
   const [sendingToProjects, setSendingToProjects] = useState(false);
   const skipNextSave = useRef(true);
+  const [notFound, setNotFound] = useState(false);
 
   const editable = doc && doc.status === 'draft';
 
@@ -75,7 +76,12 @@ export default function QuotationEditorPage() {
     fetch('/api/quotations/' + id, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        if (!d || !d.row) return;
+        /* A deleted (or otherwise missing) quotation resolves here with
+           d === null (404) — without this, `doc` stayed null forever and
+           the page below just kept showing "Loading…" with no way out,
+           e.g. after deleting the quotation you were still viewing in
+           another tab, or navigating back to a since-deleted one. */
+        if (!d || !d.row) { setNotFound(true); return; }
         setDoc(d.row);
         setVersion(d.row.updated_at);
         setProducts((d.products || []).map(p => ({ ...p, cost_params: paramsFromRow(p), _open: false })));
@@ -86,7 +92,7 @@ export default function QuotationEditorPage() {
         }
         skipNextSave.current = true;
       })
-      .catch(() => {});
+      .catch(() => setNotFound(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -368,6 +374,16 @@ export default function QuotationEditorPage() {
     else if (d && d.error) setStatusMsg('⚠ ' + d.error);
   }
 
+  if (notFound) {
+    return (
+      <Shell active="/quotations">
+        <div className="glass-card p-6 max-w-md text-center mx-auto space-y-3">
+          <div className="text-sm text-[#8C8A80]">{t('quote.notFound')}</div>
+          <a href="/quotations" className="inline-block text-brand-600 dark:text-brand-400 hover:underline text-sm">{t('quote.backToList')}</a>
+        </div>
+      </Shell>
+    );
+  }
   if (!doc || !totals) {
     return <Shell active="/quotations"><div className="text-sm text-[#8C8A80]">{t('shell.loading')}</div></Shell>;
   }
