@@ -1,6 +1,28 @@
 import './globals.css';
+import { IBM_Plex_Sans_Arabic } from 'next/font/google';
 import { LanguageProvider } from '@/lib/i18n';
 import GlassIconsLoader from '@/components/GlassIcons';
+
+/* Self-hosted via next/font/google: the font files are downloaded ONCE
+   at build time and served from this app's own domain — no runtime
+   network request to fonts.googleapis.com at all. This is what
+   actually fixes Arabic PDF generation: QuoteDocument.js's font-family
+   for Arabic was previously just a wishful list of names
+   ('IBM Plex Sans Arabic','Tajawal','Segoe UI',sans-serif) with NO
+   loading mechanism behind any of them — it only ever "worked" on
+   local Windows dev because Segoe UI happens to be a real installed
+   system font there with decent Arabic coverage. Vercel's serverless
+   Chromium has none of those fonts, so Arabic text fell through to a
+   generic sans-serif with no Arabic glyphs at all — rendering
+   invisible, and (since the fallback's metrics differ) reflowing onto
+   a second page. Exposed as a CSS variable so QuoteDocument.js can
+   reference it directly instead of a hopeful font-family string. */
+const arabicFont = IBM_Plex_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-arabic',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'QuotePro — AL FAROOQUE Quotation & Costing',
@@ -10,7 +32,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={arabicFont.variable}>
       <head>
         <script
           dangerouslySetInnerHTML={{

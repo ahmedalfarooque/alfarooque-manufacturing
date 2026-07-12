@@ -127,7 +127,12 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
 
   return (
     <div dir={dir} className="qdoc" style={{
-      fontFamily: isAr ? "'IBM Plex Sans Arabic','Tajawal','Segoe UI',sans-serif" : "'Inter','Segoe UI',sans-serif",
+      /* var(--font-arabic) is the actual self-hosted font (see
+         app/layout.js) — the named fallbacks after it are just a safety
+         net for the rare case that variable isn't defined (e.g. this
+         component rendered outside the app's own root layout), not the
+         primary loading mechanism. */
+      fontFamily: isAr ? "var(--font-arabic), 'IBM Plex Sans Arabic','Tajawal','Segoe UI',sans-serif" : "'Inter','Segoe UI',sans-serif",
       color: '#1a1a18', background: '#fff', maxWidth: 794, margin: '0 auto', padding: '32px 36px 64px', fontSize: 12.5, lineHeight: 1.5,
       position: 'relative', overflow: 'hidden',
     }}>
