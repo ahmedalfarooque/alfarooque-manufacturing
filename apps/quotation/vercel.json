@@ -2,5 +2,10 @@
   "framework": "nextjs",
   "crons": [
     { "path": "/api/cron/expire", "schedule": "0 3 * * *" }
-  ]
+  ],
+  "functions": {
+    "app/api/quotations/*/pdf/route.js": {
+      "includeFiles": "node_modules/@sparticuz/chromium/bin/**"
+    }
+  }
 }
