@@ -68,7 +68,26 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
     };
   } else {
     /* No local browser (serverless) — use the bundled Vercel-compatible
-       Chromium build instead of failing over to the old renderer. */
+       Chromium build instead of failing over to the old renderer.
+
+       @sparticuz/chromium only extracts its bundled shared libraries
+       (libnss3.so and friends) and points LD_LIBRARY_PATH at them when
+       isRunningInAwsLambda()/isRunningInAwsLambdaNode20() returns true —
+       both of which check for AWS-specific env vars (AWS_EXECUTION_ENV,
+       AWS_LAMBDA_JS_RUNTIME). Vercel's functions run on similar
+       Amazon-Linux-based infrastructure but never set those vars, so on
+       Vercel the package silently skips extracting its own libraries —
+       producing "libnss3.so: cannot open shared object file" at launch,
+       since the .so files it needs simply never got unpacked. Setting
+       AWS_LAMBDA_JS_RUNTIME ourselves (recognized value: any string
+       containing "20.x") makes isRunningInAwsLambdaNode20() true,
+       triggering the AL2023 library extraction + LD_LIBRARY_PATH setup
+       this package needs to actually find its own bundled libraries —
+       harmless on real AWS Lambda too, since it only affects this
+       package's own internal detection, nothing else. Must be set
+       BEFORE requiring the module, since the check runs at module load
+       time, not inside executablePath(). */
+    process.env.AWS_LAMBDA_JS_RUNTIME ??= 'nodejs20.x';
     let chromium;
     try {
       chromium = require('@sparticuz/chromium');
