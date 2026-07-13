@@ -4,7 +4,7 @@ import Shell from '@/components/Shell';
 import StatCard from '@/components/StatCard';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLiveData } from '@/lib/useLiveData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum, trExpiryDays } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 
 const COLORS = { Running: '#10b981', Idle: '#f59e0b', Stopped: '#ef4444', Offline: '#64748b' };
@@ -21,13 +21,13 @@ export default function DashboardPage() {
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
   if (!stats) return <Shell active="/dashboard"><div className="text-slate-400">{t('dash.loadingDashboard')}</div></Shell>;
 
-  const pieData = Object.entries(stats.statusBreakdown).map(([name, value]) => ({ name, value }));
+  const pieData = Object.entries(stats.statusBreakdown).map(([name, value]) => ({ name: trEnum(t, 'status', name), key: name, value }));
   const distanceData = stats.topByDistance.map(v => ({ name: v.vehicle_number, distance: Number(v.distance_km) }));
   const statusHistoryData = stats.statusHistory.map(s => ({
     date: s.snapshot_date.slice(5), Running: s.running, Stopped: s.stopped,
   }));
-  const driverPieData = Object.entries(stats.driverStatusBreakdown || {}).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value }));
-  const typeData = Object.entries(stats.typeBreakdown || {}).map(([name, value]) => ({ name, value }));
+  const driverPieData = Object.entries(stats.driverStatusBreakdown || {}).filter(([, v]) => v > 0).map(([name, value]) => ({ name: trEnum(t, 'status', name), key: name, value }));
+  const typeData = Object.entries(stats.typeBreakdown || {}).map(([name, value]) => ({ name: trEnum(t, 'vtype', name), value }));
   const expiryChartData = Object.entries(stats.expiryLevelCounts || {}).map(([key, counts]) => ({
     name: EXPIRY_LABELS[key] || key, green: counts.green, yellow: counts.yellow, orange: counts.orange, red: counts.red,
   }));
@@ -56,13 +56,13 @@ export default function DashboardPage() {
         <StatCard icon="clock" tone="amber" label={t('dash.idle')} value={stats.idle} sub={`${idlePct}% ${t('dash.ofTotal')}`} href="/vehicles?status=Idle" ringPct={idlePct} />
         <StatCard icon="x" tone="red" label={t('dash.stopped')} value={stats.stopped} sub={`${stoppedPct}% ${t('dash.ofTotal')}`} href="/vehicles?status=Stopped" ringPct={stoppedPct} />
         <StatCard icon="users" tone="blue" label={t('dash.totalDrivers')} value={stats.totalDrivers} sub={t('dash.activeDrivers')} typewriter />
-        <StatCard icon="pin" tone="slate" label={t('dash.totalDistance')} value={fmt(stats.totalDistance) + ' km'} sub={t('dash.thisPeriod')} />
+        <StatCard icon="pin" tone="slate" label={t('dash.totalDistance')} value={fmt(stats.totalDistance) + ' ' + t('common.km')} sub={t('dash.thisPeriod')} />
         <StatCard icon="chart" tone="brand" label={t('dash.totalTrips')} value={stats.totalTrips} sub={t('dash.loggedTrips')} typewriter />
-        <StatCard icon="gear" tone="blue" label={t('dash.avgSpeed')} value={stats.avgSpeed != null ? stats.avgSpeed + ' km/h' : '—'} sub={stats.avgSpeed != null ? t('dash.fromLoggedTrips') : t('dash.noTripsLoggedYet')} />
+        <StatCard icon="gear" tone="blue" label={t('dash.avgSpeed')} value={stats.avgSpeed != null ? stats.avgSpeed + ' ' + t('common.kmh') : '—'} sub={stats.avgSpeed != null ? t('dash.fromLoggedTrips') : t('dash.noTripsLoggedYet')} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="bag" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' L'} sub={t('dash.thisPeriod')} />
+        <StatCard icon="bag" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' ' + t('common.liter')} sub={t('dash.thisPeriod')} />
         <StatCard icon="gem" tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} typewriter />
         <StatCard icon="wrench" tone="amber" label={t('dash.maintenanceDue')} value={stats.maintenanceDueCount} sub={t('dash.vehicles')} href="/maintenance-schedule" />
         <StatCard icon="bell" tone="red" label={t('dash.activeAlerts')} value={stats.activeAlerts} sub={t('dash.unread')} href="/alerts" />
@@ -96,7 +96,7 @@ export default function DashboardPage() {
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
-                {pieData.map(d => <Cell key={d.name} fill={COLORS[d.name] || '#94a3b8'} />)}
+                {pieData.map(d => <Cell key={d.key} fill={COLORS[d.key] || '#94a3b8'} />)}
               </Pie>
               <Tooltip />
               <Legend />
@@ -116,8 +116,8 @@ export default function DashboardPage() {
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="Running" stroke="#10b981" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Stopped" stroke="#ef4444" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Running" name={trEnum(t, 'status', 'Running')} stroke="#10b981" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Stopped" name={trEnum(t, 'status', 'Stopped')} stroke="#ef4444" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -144,7 +144,7 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={driverPieData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
-                  {driverPieData.map(d => <Cell key={d.name} fill={DRIVER_COLORS[d.name] || '#94a3b8'} />)}
+                  {driverPieData.map(d => <Cell key={d.key} fill={DRIVER_COLORS[d.key] || '#94a3b8'} />)}
                 </Pie>
                 <Tooltip />
                 <Legend />
@@ -176,10 +176,10 @@ export default function DashboardPage() {
               <XAxis type="number" allowDecimals={false} />
               <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="green" stackId="e" fill={LEVEL_COLORS.green} />
-              <Bar dataKey="yellow" stackId="e" fill={LEVEL_COLORS.yellow} />
-              <Bar dataKey="orange" stackId="e" fill={LEVEL_COLORS.orange} />
-              <Bar dataKey="red" stackId="e" fill={LEVEL_COLORS.red} radius={[0, 4, 4, 0]} />
+              <Bar dataKey="green" name={t('level.green')} stackId="e" fill={LEVEL_COLORS.green} />
+              <Bar dataKey="yellow" name={t('level.yellow')} stackId="e" fill={LEVEL_COLORS.yellow} />
+              <Bar dataKey="orange" name={t('level.orange')} stackId="e" fill={LEVEL_COLORS.orange} />
+              <Bar dataKey="red" name={t('level.red')} stackId="e" fill={LEVEL_COLORS.red} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -273,9 +273,9 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 min-w-0">
                     <span>{LEVEL_DOT[n.level]}</span>
                     <span className="font-medium truncate">{n.entityName}</span>
-                    <span className="text-slate-400 text-xs">{n.category}</span>
+                    <span className="text-slate-400 text-xs">{trEnum(t, 'expiryCat', n.category)}</span>
                   </div>
-                  <span className="text-xs text-slate-500 shrink-0">{n.label}</span>
+                  <span className="text-xs text-slate-500 shrink-0">{trExpiryDays(t, n.days)}</span>
                 </a>
               </li>
             ))}
@@ -292,12 +292,12 @@ export default function DashboardPage() {
                 <tr><th className="py-1.5">{t('dash.vehicle')}</th><th>{t('dash.driver')}</th><th>{t('dash.fromTo')}</th><th>{t('dash.distance')}</th></tr>
               </thead>
               <tbody>
-                {stats.recentTrips.map(t => (
-                  <tr key={t.id} className="border-t border-black/5 dark:border-white/5">
-                    <td className="py-2">{t.cars?.vehicle_number}</td>
-                    <td>{t.driver || '—'}</td>
-                    <td>{t.from_place} → {t.to_place}</td>
-                    <td>{t.distance_km ? t.distance_km + ' km' : '—'}</td>
+                {stats.recentTrips.map(trip => (
+                  <tr key={trip.id} className="border-t border-black/5 dark:border-white/5">
+                    <td className="py-2">{trip.cars?.vehicle_number}</td>
+                    <td>{trip.driver || '—'}</td>
+                    <td>{trip.from_place} → {trip.to_place}</td>
+                    <td>{trip.distance_km ? trip.distance_km + ' ' + t('common.km') : '—'}</td>
                   </tr>
                 ))}
               </tbody>

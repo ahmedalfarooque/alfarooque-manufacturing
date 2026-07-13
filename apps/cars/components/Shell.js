@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
@@ -80,14 +80,14 @@ export default function Shell({ children, active }) {
             <div className="text-[11px] text-[#8C8A80]">{t('shell.tagline')}</div>
           </div>
         </div>
-        <div className="px-5 py-3 text-[11px] uppercase tracking-wider text-[#8C8A80]">{user?.role || ' '}</div>
+        <div className="px-5 py-3 text-[11px] uppercase tracking-wider text-[#8C8A80]">{user?.role ? trEnum(t, 'role', user.role) : ' '}</div>
         <div className="px-5 pb-3 flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-[#6B7A4F]/15 flex items-center justify-center text-xs font-medium text-[#566440] dark:text-brand-300">
             {(user?.full_name || user?.email || '?').slice(0, 1).toUpperCase()}
           </div>
           <div className="min-w-0">
             <div className="text-sm text-[#1A1A18] dark:text-[#F5F3EE] truncate">{user?.full_name || t('shell.loading')}</div>
-            <div className="text-[11px] text-[#8C8A80] capitalize truncate">{user?.role}</div>
+            <div className="text-[11px] text-[#8C8A80] capitalize truncate">{user?.role ? trEnum(t, 'role', user.role) : ''}</div>
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2">

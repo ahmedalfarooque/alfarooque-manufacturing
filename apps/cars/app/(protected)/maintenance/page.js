@@ -6,7 +6,7 @@ import Dropdown from '@/components/Dropdown';
 import { ShopModal, EMPTY_FORM as EMPTY_SHOP_FORM } from '@/app/(protected)/maintenance-shops/page';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 const PAYMENT_BADGE = {
   Paid: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -82,7 +82,7 @@ export default function MaintenanceRecordsPage() {
   useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   async function deleteRecord(id) {
-    if (!confirm('Delete this maintenance record and all its attachments? This cannot be undone.')) return;
+    if (!confirm(t('maint.confirmDelete'))) return;
     const res = await fetch(`/api/maintenance-records/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) load();
   }
@@ -106,7 +106,7 @@ export default function MaintenanceRecordsPage() {
         <Dropdown value={driverId} onChange={v => { setPage(1); setDriverId(v); }} placeholder={t('maint.allDrivers')} options={drivers.map(d => [d.id, d.full_name])} />
         <Dropdown value={shopId} onChange={v => { setPage(1); setShopId(v); }} placeholder={t('maint.allShops')} options={shops.map(s => [s.id, s.name])} />
         <Dropdown value={category} onChange={v => { setPage(1); setCategory(v); }} placeholder={t('maint.allCategories')} options={categories.map(c => [c.name, c.name])} />
-        <Dropdown value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder={t('maint.allPaymentStatus')} options={[['Paid', 'Paid'], ['Unpaid', 'Unpaid'], ['Partial', 'Partial']]} />
+        <Dropdown value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder={t('maint.allPaymentStatus')} options={['Paid', 'Unpaid', 'Partial'].map(p => [p, trEnum(t, 'payment', p)])} />
         <div className="flex items-center gap-1">
           <input type="date" value={dateFrom} onChange={e => { setPage(1); setDateFrom(e.target.value); }} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-2 py-2 text-xs" />
           <span className="text-slate-400 text-xs">{t('maint.to')}</span>
@@ -154,7 +154,7 @@ export default function MaintenanceRecordsPage() {
                 <td>{r.currency} {fmt(r.amount)}</td>
                 <td>{r.odometer_km ? fmt(r.odometer_km) : '—'}</td>
                 <td>{r.invoice_number || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{r.payment_status}</span></td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{trEnum(t, 'payment', r.payment_status)}</span></td>
                 <td>{r.platform_users?.full_name || r.platform_users?.email || '—'}</td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title={t('maint.view')} className="text-slate-400">{'\u{1F441}'}</button>
@@ -226,48 +226,48 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('maint.sectionBasic')}</div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Vehicle</label>
-            <Dropdown value={form.car_id} onChange={v => setForm(f => ({ ...f, car_id: v }))} placeholder="Select vehicle…"
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.vehicle')}</label>
+            <Dropdown value={form.car_id} onChange={v => setForm(f => ({ ...f, car_id: v }))} placeholder={t('maint.selectVehicle')}
               options={cars.map(c => [c.id, c.vehicle_number])} />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Driver</label>
-            <Dropdown value={form.driver_id || ''} onChange={v => setForm(f => ({ ...f, driver_id: v }))} placeholder="— None —"
-              options={[['', '— None —'], ...drivers.map(d => [d.id, d.full_name])]} />
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.driver')}</label>
+            <Dropdown value={form.driver_id || ''} onChange={v => setForm(f => ({ ...f, driver_id: v }))} placeholder={t('common.none')}
+              options={[['', t('common.none')], ...drivers.map(d => [d.id, d.full_name])]} />
           </div>
-          <Field label="Maintenance Date" type="date" value={form.maintenance_date} onChange={set('maintenance_date')} required />
+          <Field label={t('fields.maintenanceDate')} type="date" value={form.maintenance_date} onChange={set('maintenance_date')} required />
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Category</label>
-            <Dropdown value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} placeholder="Select category…"
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.category')}</label>
+            <Dropdown value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} placeholder={t('maint.selectCategory')}
               options={categories.map(c => [c.name, c.name])} />
           </div>
-          <Field label="Maintenance Type" value={form.maintenance_type} onChange={set('maintenance_type')} />
+          <Field label={t('fields.maintenanceType')} value={form.maintenance_type} onChange={set('maintenance_type')} />
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Workshop / Shop</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.workshopShop')}</label>
             <div className="flex gap-1">
-              <Dropdown className="flex-1" value={form.shop_id || ''} onChange={v => setForm(f => ({ ...f, shop_id: v }))} placeholder="— None —"
-                options={[['', '— None —'], ...shops.map(s => [s.id, s.name])]} />
-              <button type="button" onClick={() => setAddShopOpen(true)} title="Add New Shop" className="px-2 rounded-lg border border-black/10 dark:border-white/10 text-sm shrink-0">+</button>
+              <Dropdown className="flex-1" value={form.shop_id || ''} onChange={v => setForm(f => ({ ...f, shop_id: v }))} placeholder={t('common.none')}
+                options={[['', t('common.none')], ...shops.map(s => [s.id, s.name])]} />
+              <button type="button" onClick={() => setAddShopOpen(true)} title={t('maint.addNewShop')} className="px-2 rounded-lg border border-black/10 dark:border-white/10 text-sm shrink-0">+</button>
             </div>
           </div>
-          <Field label="Odometer (KM)" type="number" value={form.odometer_km} onChange={set('odometer_km')} />
-          <Field label="Amount" type="number" value={form.amount} onChange={set('amount')} />
-          <Field label="Currency" value={form.currency} onChange={set('currency')} />
-          <Field label="Invoice Number" value={form.invoice_number} onChange={set('invoice_number')} />
+          <Field label={t('fields.odometerKm')} type="number" value={form.odometer_km} onChange={set('odometer_km')} />
+          <Field label={t('fields.amount')} type="number" value={form.amount} onChange={set('amount')} />
+          <Field label={t('fields.currency')} value={form.currency} onChange={set('currency')} />
+          <Field label={t('fields.invoiceNumber')} value={form.invoice_number} onChange={set('invoice_number')} />
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Payment Status</label>
-            <Dropdown value={form.payment_status} onChange={v => setForm(f => ({ ...f, payment_status: v }))} options={['Unpaid', 'Paid', 'Partial']} />
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.paymentStatus')}</label>
+            <Dropdown value={form.payment_status} onChange={v => setForm(f => ({ ...f, payment_status: v }))} options={['Unpaid', 'Paid', 'Partial'].map(p => [p, trEnum(t, 'payment', p)])} />
           </div>
-          <Field label="Technician" value={form.technician} onChange={set('technician')} />
-          <Field label="Warranty" value={form.warranty} onChange={set('warranty')} />
+          <Field label={t('fields.technician')} value={form.technician} onChange={set('technician')} />
+          <Field label={t('fields.warranty')} value={form.warranty} onChange={set('warranty')} />
         </div>
 
         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('maint.sectionDetails')}</div>
         <div className="grid gap-3">
-          <TextArea label="Work Performed" value={form.work_performed} onChange={set('work_performed')} />
-          <TextArea label="Parts Changed" value={form.parts_changed} onChange={set('parts_changed')} />
-          <TextArea label="Labor Details" value={form.labor_details} onChange={set('labor_details')} />
-          <TextArea label="Additional Notes" value={form.notes} onChange={set('notes')} />
+          <TextArea label={t('fields.workPerformed')} value={form.work_performed} onChange={set('work_performed')} />
+          <TextArea label={t('fields.partsChanged')} value={form.parts_changed} onChange={set('parts_changed')} />
+          <TextArea label={t('fields.laborDetails')} value={form.labor_details} onChange={set('labor_details')} />
+          <TextArea label={t('fields.additionalNotes')} value={form.notes} onChange={set('notes')} />
         </div>
         {modal.mode === 'add' && <p className="text-xs text-slate-500">{t('maint.attachmentsHint')}</p>}
 

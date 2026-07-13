@@ -9,8 +9,10 @@
    themeable, and matches this app's existing surface/border tokens. */
 
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '@/lib/i18n';
 
 export default function Dropdown({ value, onChange, options, placeholder, className, disabled }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
   const ref = useRef(null);
@@ -42,7 +44,7 @@ export default function Dropdown({ value, onChange, options, placeholder, classN
           'w-full flex items-center justify-between gap-2 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-white/[0.03] px-3 py-2 text-sm text-start ' +
           (disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-brand-500/40 cursor-pointer')
         }>
-        <span className={'truncate ' + (selected ? '' : 'text-slate-400')}>{selected ? selected.label : (placeholder || 'Select…')}</span>
+        <span className={'truncate ' + (selected ? '' : 'text-slate-400')}>{selected ? selected.label : (placeholder || t('common.select'))}</span>
         <span className={'text-slate-400 text-xs shrink-0 transition-transform ' + (open ? 'rotate-180' : '')}>▾</span>
       </button>
       {open && (

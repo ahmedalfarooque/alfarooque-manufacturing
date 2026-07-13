@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import StatCard from '@/components/StatCard';
 import { useLiveData } from '@/lib/useLiveData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, RadialBarChart, RadialBar } from 'recharts';
 
 const COLORS = { Running: '#3b82f6', Completed: '#10b981', Upcoming: '#f59e0b', 'On Hold': '#ef4444' };
@@ -47,7 +47,8 @@ export default function DashboardPage() {
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
   if (!stats) return <Shell active="/dashboard"><div className="text-[#8C8A80]">{t('dashboard.loading')}</div></Shell>;
 
-  const pieData = Object.entries(stats.statusBreakdown).map(([name, value]) => ({ name, value }));
+  /* Slice/legend labels display translated; fill colors stay keyed on the raw status. */
+  const pieData = Object.entries(stats.statusBreakdown).map(([name, value]) => ({ name: trEnum(t, 'status', name), rawName: name, value }));
   // Chart data for stat cards — only where the number is already backed by
   // a real percentage or breakdown shown elsewhere on this page; never
   // fabricated for a bare point-in-time count.
@@ -97,7 +98,7 @@ export default function DashboardPage() {
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2}>
-                {pieData.map(d => <Cell key={d.name} fill={COLORS[d.name] || '#94a3b8'} />)}
+                {pieData.map(d => <Cell key={d.rawName} fill={COLORS[d.rawName] || '#94a3b8'} />)}
               </Pie>
               <Tooltip />
               <Legend />
@@ -162,9 +163,9 @@ export default function DashboardPage() {
                     className="w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
                     <div className="flex items-center justify-between">
                       <span className="font-medium truncate">{r.material_description}</span>
-                      <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (PR_STATUS_BADGE[r.status] || '')}>{r.status}</span>
+                      <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (PR_STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span>
                     </div>
-                    <div className="text-xs text-[#6B6B63]">{r.project_name} · {r.priority} · {formatDate(r.created_at)}</div>
+                    <div className="text-xs text-[#6B6B63]">{r.project_name} · {trEnum(t, 'status', r.priority)} · {formatDate(r.created_at)}</div>
                   </button>
                 </li>
               ))}
@@ -238,7 +239,7 @@ function ExternalDashboard({ stats, error }) {
           <a key={p.id} href={'/projects/' + p.id} className="glass-card glass-card--pad hover:border-brand-600/40 transition">
             <div className="flex items-center justify-between mb-1">
               <span className="font-medium truncate">{p.project_name}</span>
-              <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span>
+              <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span>
             </div>
             <div className="text-xs text-[#6B6B63]">{p.customer_name}</div>
             <div className="h-1.5 rounded-full bg-black/10 dark:bg-white/10 mt-3 overflow-hidden">
@@ -259,7 +260,7 @@ function ExternalDashboard({ stats, error }) {
                   <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
                     <div className="flex items-center justify-between">
                       <span className="font-medium truncate">{r.material_description}</span>
-                      <span className="text-xs text-[#8C8A80] shrink-0">{r.status}</span>
+                      <span className="text-xs text-[#8C8A80] shrink-0">{trEnum(t, 'status', r.status)}</span>
                     </div>
                     <div className="text-xs text-[#6B6B63]">{r.project_name}</div>
                   </a>
@@ -277,7 +278,7 @@ function ExternalDashboard({ stats, error }) {
                   <a href={'/projects/' + u.project_id + '?tab=daily-updates'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
                     <div className="flex items-center justify-between">
                       <span className="font-medium truncate">{u.project_name}</span>
-                      <span className="text-xs text-[#8C8A80] shrink-0">{u.status}</span>
+                      <span className="text-xs text-[#8C8A80] shrink-0">{trEnum(t, 'status', u.status)}</span>
                     </div>
                     <div className="text-xs text-[#6B6B63]">{u.update_date}</div>
                   </a>
@@ -309,7 +310,7 @@ function ProjectListCard({ title, projects, dateKey, dateLabel, noneLabel }) {
                 className="w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
                 <div className="flex items-center justify-between">
                   <span className="font-medium truncate">{p.project_name}</span>
-                  <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span>
+                  <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span>
                 </div>
                 <div className="text-xs text-[#6B6B63]">{p.customer_name} · {dateLabel} {p[dateKey] || '—'}</div>
               </button>

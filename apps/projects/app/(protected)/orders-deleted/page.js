@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
 function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
@@ -76,7 +76,7 @@ export default function DeletedOrdersPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder={t('oq.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={setStatus} options={['All', ...ORDER_STATUSES]} />
+        <Dropdown value={status} onChange={setStatus} options={['All', ...ORDER_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         <Dropdown value={recovery} onChange={setRecovery}
           options={RECOVERY_OPTIONS.map(r => [r, r === 'All' ? t('oq.allRecovery') : t('oq.recovery' + r.charAt(0).toUpperCase() + r.slice(1))])} />
       </div>
@@ -116,7 +116,7 @@ export default function DeletedOrdersPage() {
                     <td className="max-w-[160px] truncate">{name}</td>
                     <td className="max-w-[180px] truncate" dir="ltr">{email}</td>
                     <td dir="ltr">{money(r.grand_total)}</td>
-                    <td className="capitalize">{label(r.status)}</td>
+                    <td className="capitalize">{trEnum(t, 'status', r.status)}</td>
                     <td>{r.deleted_by_name || '—'}</td>
                     <td>{r.deleted_at ? new Date(r.deleted_at).toLocaleDateString() : '—'}</td>
                     <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></td>

@@ -5,7 +5,7 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -84,7 +84,7 @@ export default function VehiclesPage() {
   }
 
   async function deleteVehicle(id) {
-    if (!confirm('Delete this vehicle? This can be reversed by a database admin, but not from this screen.')) return;
+    if (!confirm(t('vehicles.confirmDelete'))) return;
     const res = await fetch(`/api/cars/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) load();
   }
@@ -145,9 +145,9 @@ export default function VehiclesPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-5 gap-3">
         <input placeholder={t('vehicles.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={['All', 'Running', 'Idle', 'Stopped', 'Offline']} />
-        <Dropdown value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={['All', 'Diesel', 'Petrol', 'Electric']} />
-        <Dropdown value={assignment} onChange={v => { setPage(1); setAssignment(v); }} options={['All', 'Assigned', 'Unassigned']} />
+        <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={[['All', t('common.all')], ...['Running', 'Idle', 'Stopped', 'Offline'].map(s => [s, trEnum(t, 'status', s)])]} />
+        <Dropdown value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={[['All', t('common.all')], ...['Diesel', 'Petrol', 'Electric'].map(f => [f, trEnum(t, 'fuel', f)])]} />
+        <Dropdown value={assignment} onChange={v => { setPage(1); setAssignment(v); }} options={[['All', t('common.all')], ...['Assigned', 'Unassigned'].map(a => [a, trEnum(t, 'assignment', a)])]} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -178,10 +178,10 @@ export default function VehiclesPage() {
                 <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
                 <td className="font-medium">{v.vehicle_number}</td>
                 <td>{v.name || '—'}</td>
-                <td>{v.type}</td>
-                <td>{v.fuel_type}</td>
+                <td>{trEnum(t, 'vtype', v.type)}</td>
+                <td>{trEnum(t, 'fuel', v.fuel_type)}</td>
                 <td>{v.driver || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{v.status}</span></td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span></td>
                 <td>{v.location || '—'}</td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
                   <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} className="text-slate-400">{'\u{1F441}'}</button>
@@ -239,40 +239,40 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
 
         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('vehicles.sectionBasic')}</div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Vehicle Number" value={form.vehicle_number} onChange={set('vehicle_number')} required />
-          <Field label="Name" value={form.name || ''} onChange={set('name')} />
-          <Field label="Type" value={form.type || ''} onChange={set('type')} />
-          <Field label="Fuel Type" value={form.fuel_type || ''} onChange={set('fuel_type')} />
-          <Field label="Driver" value={form.driver || ''} onChange={set('driver')} />
+          <Field label={t('fields.vehicleNumber')} value={form.vehicle_number} onChange={set('vehicle_number')} required />
+          <Field label={t('fields.name')} value={form.name || ''} onChange={set('name')} />
+          <Field label={t('fields.type')} value={form.type || ''} onChange={set('type')} />
+          <Field label={t('fields.fuelType')} value={form.fuel_type || ''} onChange={set('fuel_type')} />
+          <Field label={t('fields.driver')} value={form.driver || ''} onChange={set('driver')} />
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Status</label>
-            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Running', 'Idle', 'Stopped', 'Offline']} />
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.status')}</label>
+            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Running', 'Idle', 'Stopped', 'Offline'].map(s => [s, trEnum(t, 'status', s)])} />
           </div>
-          <Field label="Current KM" value={form.current_km ?? ''} onChange={set('current_km')} type="number" />
-          <Field label="Location" value={form.location || ''} onChange={set('location')} />
+          <Field label={t('fields.currentKm')} value={form.current_km ?? ''} onChange={set('current_km')} type="number" />
+          <Field label={t('fields.location')} value={form.location || ''} onChange={set('location')} />
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Assigned Driver</label>
-            <Dropdown value={form.assigned_driver_id || ''} onChange={v => setForm(f => ({ ...f, assigned_driver_id: v }))} placeholder="— None —"
-              options={[['', '— None —'], ...(drivers || []).map(d => [d.id, d.full_name])]} />
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.assignedDriver')}</label>
+            <Dropdown value={form.assigned_driver_id || ''} onChange={v => setForm(f => ({ ...f, assigned_driver_id: v }))} placeholder={t('common.none')}
+              options={[['', t('common.none')], ...(drivers || []).map(d => [d.id, d.full_name])]} />
           </div>
         </div>
 
         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('vehicles.sectionInsurance')}</div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Insurance Company" value={form.insurance_company || ''} onChange={set('insurance_company')} />
-          <Field label="Insurance Number" value={form.insurance_number || ''} onChange={set('insurance_number')} />
-          <Field label="Insurance Expiry" value={form.insurance_expiry || ''} onChange={set('insurance_expiry')} type="date" />
-          <Field label="Registration Expiry" value={form.registration_expiry || ''} onChange={set('registration_expiry')} type="date" />
-          <Field label="VIN Number" value={form.vin_number || ''} onChange={set('vin_number')} />
-          <Field label="Engine Number" value={form.engine_number || ''} onChange={set('engine_number')} />
+          <Field label={t('fields.insuranceCompany')} value={form.insurance_company || ''} onChange={set('insurance_company')} />
+          <Field label={t('fields.insuranceNumber')} value={form.insurance_number || ''} onChange={set('insurance_number')} />
+          <Field label={t('fields.insuranceExpiry')} value={form.insurance_expiry || ''} onChange={set('insurance_expiry')} type="date" />
+          <Field label={t('fields.registrationExpiry')} value={form.registration_expiry || ''} onChange={set('registration_expiry')} type="date" />
+          <Field label={t('fields.vinNumber')} value={form.vin_number || ''} onChange={set('vin_number')} />
+          <Field label={t('fields.engineNumber')} value={form.engine_number || ''} onChange={set('engine_number')} />
         </div>
 
         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('vehicles.sectionService')}</div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Last Service Date" value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" />
-          <Field label="Next Service Date" value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" />
-          <Field label="Purchase Date" value={form.purchase_date || ''} onChange={set('purchase_date')} type="date" />
-          <Field label="Purchase Cost" value={form.purchase_cost ?? ''} onChange={set('purchase_cost')} type="number" />
+          <Field label={t('fields.lastServiceDate')} value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" />
+          <Field label={t('fields.nextServiceDate')} value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" />
+          <Field label={t('fields.purchaseDate')} value={form.purchase_date || ''} onChange={set('purchase_date')} type="date" />
+          <Field label={t('fields.purchaseCost')} value={form.purchase_cost ?? ''} onChange={set('purchase_cost')} type="number" />
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
@@ -323,11 +323,11 @@ function ImportModal({ onClose, onDone }) {
         {result ? (
           <div className="text-sm space-y-1">
             <div className="text-emerald-500 font-medium">{t('vehicles.importComplete')}</div>
-            <div>Vehicles added: {result.inserted}</div>
-            <div>Vehicles skipped (already exists): {result.skippedDuplicate}</div>
-            <div>Vehicles skipped (no plate number): {result.skippedEmpty}</div>
-            {result.maintenance?.sheetFound && <div>Maintenance items added: {result.maintenance.inserted} (skipped {result.maintenance.skipped})</div>}
-            {result.maintenanceLog?.sheetFound && <div>Service history entries added: {result.maintenanceLog.inserted} (skipped {result.maintenanceLog.skipped})</div>}
+            <div>{t('vehicles.importAdded', { n: result.inserted })}</div>
+            <div>{t('vehicles.importSkippedDuplicate', { n: result.skippedDuplicate })}</div>
+            <div>{t('vehicles.importSkippedEmpty', { n: result.skippedEmpty })}</div>
+            {result.maintenance?.sheetFound && <div>{t('vehicles.importMaintAdded', { n: result.maintenance.inserted, skipped: result.maintenance.skipped })}</div>}
+            {result.maintenanceLog?.sheetFound && <div>{t('vehicles.importLogAdded', { n: result.maintenanceLog.inserted, skipped: result.maintenanceLog.skipped })}</div>}
             <button onClick={onDone} className="mt-3 w-full px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{t('vehicles.importDone')}</button>
           </div>
         ) : (

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 import { STATUS_BADGE } from '../page';
 
 function money(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }); }
@@ -55,17 +55,17 @@ export default function QuotationRequestDetailPage() {
             <h2 className="text-lg font-semibold" dir="ltr">{row.quote_number}</h2>
             <p className="text-xs text-slate-500">{t('qr.breadcrumb')}</p>
           </div>
-          <span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[row.status] || '')}>{row.status.replace(/_/g, ' ')}</span>
+          <span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[row.status] || '')}>{trEnum(t, 'status', row.status)}</span>
         </div>
 
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 space-y-2 text-sm">
           <div className="flex justify-between"><span className="text-slate-400">{t('qr.col.customer')}</span><span>{customerName}</span></div>
           <div className="flex justify-between"><span className="text-slate-400">{t('qr.col.amount')}</span><span dir="ltr">{money(row.amount)}</span></div>
           <div className="flex justify-between"><span className="text-slate-400">{t('qr.col.date')}</span><span>{row.quotation?.quote_date || '—'}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">{t('qr.col.currentStatus')}</span><span className="capitalize">{(row.quotation?.status || '—').replace(/_/g, ' ')}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Requested By</span><span>{row.requested_by_name || '—'}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">{t('qr.col.currentStatus')}</span><span className="capitalize">{row.quotation?.status ? trEnum(t, 'status', row.quotation.status) : '—'}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">{t('pd.requestedBy')}</span><span>{row.requested_by_name || '—'}</span></div>
           {row.customer?.email && <div className="flex justify-between"><span className="text-slate-400">{t('common.email')}</span><span dir="ltr">{row.customer.email}</span></div>}
-          {row.customer?.mobile_number && <div className="flex justify-between"><span className="text-slate-400">Mobile</span><span dir="ltr">{row.customer.mobile_number}</span></div>}
+          {row.customer?.mobile_number && <div className="flex justify-between"><span className="text-slate-400">{t('cust.col.mobile')}</span><span dir="ltr">{row.customer.mobile_number}</span></div>}
         </div>
 
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 flex flex-wrap items-center gap-2">

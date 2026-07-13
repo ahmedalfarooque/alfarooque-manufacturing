@@ -7,7 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -233,8 +233,8 @@ export default function PurchaseRequestsPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder={t('pr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES]} />
-        <Dropdown value={priority} onChange={setPriority} options={['All', 'Normal', 'Urgent', 'Critical']} />
+        <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
+        <Dropdown value={priority} onChange={setPriority} options={['All', 'Normal', 'Urgent', 'Critical'].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -265,9 +265,9 @@ export default function PurchaseRequestsPage() {
                 <td>{r.request_date}</td>
                 <td className="max-w-[160px] truncate">{r.project_name}</td>
                 <td className="max-w-[220px] truncate">{r.material_description}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{r.priority}</span></td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></td>
                 <td>{r.requested_by_name || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{r.status}</span></td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
                 <td className="text-right px-4 space-x-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                   <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-slate-400">{'\u{1F441}'}</a>
                   <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-500">↗</a>

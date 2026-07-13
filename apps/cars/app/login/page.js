@@ -6,7 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 
 const API = '/api/auth';
 
-async function call(action, extra) {
+async function call(action, extra, fallbackError) {
   const res = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -16,7 +16,7 @@ async function call(action, extra) {
   let data = {};
   try { data = await res.json(); } catch (_) {}
   if (!res.ok) {
-    const err = new Error(data.error || 'Something went wrong.');
+    const err = new Error(data.error || fallbackError || 'Something went wrong.');
     err.retryAfter = data.retryAfter;
     throw err;
   }
@@ -83,7 +83,7 @@ export default function LoginPage() {
     e.preventDefault();
     setMsg(null); setBusy(true);
     try {
-      const data = mode === 'admin' ? await call('login', { email, password }) : await call('view-login', { email });
+      const data = mode === 'admin' ? await call('login', { email, password }, t('login.genericError')) : await call('view-login', { email }, t('login.genericError'));
       setMsg({ kind: 'success', text: data.message });
       setStep('otp');
       startCooldown(60);
@@ -98,8 +98,8 @@ export default function LoginPage() {
     e.preventDefault();
     setMsg(null); setBusy(true);
     try {
-      await call(mode === 'admin' ? 'verify-otp' : 'view-verify-otp', { email, code });
-      setMsg({ kind: 'success', text: 'Success — redirecting…' });
+      await call(mode === 'admin' ? 'verify-otp' : 'view-verify-otp', { email, code }, t('login.genericError'));
+      setMsg({ kind: 'success', text: t('login.successRedirect') });
       setTimeout(() => { window.location.href = mode === 'admin' ? '/dashboard' : '/view'; }, 400);
     } catch (err) {
       setMsg({ kind: 'error', text: err.message });
@@ -110,7 +110,7 @@ export default function LoginPage() {
   async function resend() {
     setMsg(null);
     try {
-      const data = await call(mode === 'admin' ? 'resend-otp' : 'view-resend-otp', { email });
+      const data = await call(mode === 'admin' ? 'resend-otp' : 'view-resend-otp', { email }, t('login.genericError'));
       setMsg({ kind: 'success', text: data.message });
       startCooldown(60);
     } catch (err) {

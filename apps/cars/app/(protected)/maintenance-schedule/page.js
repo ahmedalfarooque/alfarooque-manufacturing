@@ -5,7 +5,7 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 const STATUS_BADGE = {
   Healthy: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -58,7 +58,7 @@ export default function MaintenanceSchedulePage() {
   }
 
   async function deleteItem(id) {
-    if (!confirm('Delete this schedule item? This cannot be undone.')) return;
+    if (!confirm(t('maintSchedule.confirmDelete'))) return;
     const res = await fetch(`/api/maintenance/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) load();
   }
@@ -96,8 +96,8 @@ export default function MaintenanceSchedulePage() {
                 <td>{fmt(m.last_service_km)}</td>
                 <td>{fmt(m.interval_km)}</td>
                 <td>{fmt(m.next_due_km)}</td>
-                <td className={m.remaining_km < 0 ? 'text-red-500' : ''}>{fmt(m.remaining_km)} km</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{m.status}</span></td>
+                <td className={m.remaining_km < 0 ? 'text-red-500' : ''}>{fmt(m.remaining_km)} {t('common.km')}</td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{trEnum(t, 'status', m.status)}</span></td>
                 {isAdmin && (
                   <td className="text-right px-4 space-x-2">
                     <button onClick={() => setModal(m)} title={t('maintSchedule.edit')} className="text-brand-500">✎ {t('maintSchedule.edit')}</button>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 import { QUOTE_STATUS_BADGE } from '../page';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
@@ -118,7 +118,7 @@ export default function QuoteDetailPage() {
       <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h2 className="text-lg font-semibold">{quote.name || quote.email || '—'}</h2>
-          <span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (QUOTE_STATUS_BADGE[quote.status] || '')}>{label(quote.status)}</span>
+          <span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (QUOTE_STATUS_BADGE[quote.status] || '')}>{trEnum(t, 'status', quote.status)}</span>
         </div>
 
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 space-y-2 text-sm">
@@ -133,7 +133,7 @@ export default function QuoteDetailPage() {
             <div>
               <label className="text-xs text-slate-400 block mb-1">{t('oq.col.status')}</label>
               <select value={status} onChange={e => setStatus(e.target.value)} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2">
-                {QUOTE_STATUSES.map(s => <option key={s} value={s}>{label(s)}</option>)}
+                {QUOTE_STATUSES.map(s => <option key={s} value={s}>{trEnum(t, 'status', s)}</option>)}
               </select>
             </div>
             <div>

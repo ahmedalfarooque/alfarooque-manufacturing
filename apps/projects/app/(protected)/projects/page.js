@@ -7,7 +7,7 @@ import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -138,7 +138,8 @@ export default function ProjectsPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder={t('projects.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={['All', 'Running', 'Completed', 'Upcoming', 'On Hold']} />
+        <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }}
+          options={['All', 'Running', 'Completed', 'Upcoming', 'On Hold'].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         {me?.role !== 'external' && (
           <Dropdown value={assignedUser} onChange={v => { setPage(1); setAssignedUser(v); }}
             options={[['All', t('projects.allUsers')], ...users.map(u => [u.id, u.full_name || u.email])]}
@@ -179,7 +180,7 @@ export default function ProjectsPage() {
                 <td><AssigneeChips assignees={p.assignees} /></td>
                 <td>{p.start_date || '—'}</td>
                 <td>{p.end_date || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{p.status}</span></td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span></td>
                 <td>
                   <div className="w-24 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
                     <div className="h-full bg-brand-500" style={{ width: p.progress + '%' }} />
@@ -336,7 +337,8 @@ export function ProjectModal({ modal, onClose, onSave }) {
           <Field label={t('projects.modal.endDate')} value={form.end_date || ''} onChange={set('end_date')} type="date" />
           <div>
             <label className="block text-xs text-slate-500 mb-1">{t('common.status')}</label>
-            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Running', 'Completed', 'Upcoming', 'On Hold']} />
+            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))}
+              options={['Running', 'Completed', 'Upcoming', 'On Hold'].map(s => [s, trEnum(t, 'status', s)])} />
           </div>
           <Field label={t('projects.modal.progressPct')} value={form.progress ?? 0} onChange={set('progress')} type="number" min={0} max={100} />
         </div>

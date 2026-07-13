@@ -7,7 +7,7 @@ import OrderDetailsModal from '@/components/shared/OrderDetailsModal';
 import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected'];
 export const STATUS_BADGE = {
@@ -78,7 +78,7 @@ export default function OrdersPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder={t('oq.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={setStatus} options={['All', ...ORDER_STATUSES]} />
+        <Dropdown value={status} onChange={setStatus} options={['All', ...ORDER_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -112,8 +112,8 @@ export default function OrdersPage() {
                   <td className="max-w-[160px] truncate">{name}</td>
                   <td className="max-w-[180px] truncate" dir="ltr">{email}</td>
                   <td dir="ltr">{money(r.grand_total)}</td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{label(r.status)}</span></td>
-                  <td className="capitalize">{label(r.payment_status || 'pending')}</td>
+                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
+                  <td className="capitalize">{trEnum(t, 'status', r.payment_status || 'pending')}</td>
                   <td>{new Date(r.created_at).toLocaleDateString()}</td>
                   <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">

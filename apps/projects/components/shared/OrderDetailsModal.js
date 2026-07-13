@@ -14,7 +14,7 @@
    the Website Admin's modal still needs the same edit made here. */
 
 import { useEffect, useState } from 'react';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed'];
 const CANCELLED_STATUSES = ['cancelled', 'returned', 'rejected'];
@@ -50,7 +50,7 @@ function Row({ label, value }) {
   );
 }
 
-function ItemCard({ item, t, onImageClick }) {
+function ItemCard({ item, t, lang, onImageClick }) {
   const p = item.product || null;
   const images = (p && Array.isArray(p.images) ? p.images : []);
   const qty = Number(item.qty) || 1;
@@ -59,6 +59,16 @@ function ItemCard({ item, t, onImageClick }) {
   const spec = (lbl, val) => val ? (
     <div className="flex justify-between text-xs py-0.5"><span className="text-slate-400">{lbl}</span><span>{val}</span></div>
   ) : null;
+  /* Display follows the CURRENT UI language, not the language the order/
+     product was originally entered in — Arabic product fields ride along
+     on p (see lib/orderEnrich.js); fall back to the base field when no
+     translation is stored. */
+  const ar = lang === 'ar';
+  const prodName = ar ? ((p && p.name_ar) || item.name || (p && p.name)) : (item.name || (p && p.name));
+  const prodDesc = p ? (ar ? (p.description_ar || p.description) : p.description) : null;
+  const prodCategory = p ? (ar ? (p.category_ar || p.category) : p.category) : null;
+  const prodSizes = p ? (ar && p.sizes_ar?.length ? p.sizes_ar : p.sizes) : [];
+  const prodFinishes = p ? (ar && p.finishes_ar?.length ? p.finishes_ar : p.finishes) : [];
 
   return (
     <div className="flex gap-3 rounded-lg border border-black/5 dark:border-white/10 p-3">
@@ -81,15 +91,15 @@ function ItemCard({ item, t, onImageClick }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-sm truncate">{item.name || (p && p.name) || t('oq.item')}</div>
-        {p?.description && <div className="text-xs text-slate-400 line-clamp-2 mt-0.5">{p.description}</div>}
+        <div className="font-medium text-sm truncate">{prodName || t('oq.item')}</div>
+        {prodDesc && <div className="text-xs text-slate-400 line-clamp-2 mt-0.5">{prodDesc}</div>}
         <div className="mt-1">
-          {spec(t('oq.specCategory'), p?.category)}
+          {spec(t('oq.specCategory'), prodCategory)}
           {spec(t('oq.specSku'), p?.sku)}
           {spec(t('oq.specMaterial'), item.material || p?.material)}
-          {spec(t('oq.specSize'), item.size || (p?.sizes?.length ? p.sizes.join(' / ') : null))}
+          {spec(t('oq.specSize'), item.size || (prodSizes?.length ? prodSizes.join(' / ') : null))}
           {spec(t('oq.specColor'), item.color)}
-          {spec(t('oq.specFinish'), item.finish || (p?.finishes?.length ? p.finishes.join(' / ') : null))}
+          {spec(t('oq.specFinish'), item.finish || (prodFinishes?.length ? prodFinishes.join(' / ') : null))}
           {spec(t('oq.specQuantity'), '× ' + qty)}
           {spec(t('oq.unitPrice'), money(unit))}
         </div>
@@ -100,7 +110,7 @@ function ItemCard({ item, t, onImageClick }) {
 }
 
 export default function OrderDetailsModal({ orderId, onClose }) {
-  const { t } = useLanguage();
+  const { t, lang, formatDate } = useLanguage();
   const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
   const [lightbox, setLightbox] = useState(null); // { images, idx }
@@ -136,8 +146,8 @@ export default function OrderDetailsModal({ orderId, onClose }) {
             {order && (
               <>
                 <span dir="ltr">{order.order_no || order.id.slice(0, 8)}</span>
-                <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{label(order.status)}</span>
-                <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.payment_status] || 'bg-amber-500/10 text-amber-600')}>{label(order.payment_status || 'pending')}</span>
+                <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{trEnum(t, 'status', order.status)}</span>
+                <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.payment_status] || 'bg-amber-500/10 text-amber-600')}>{trEnum(t, 'status', order.payment_status || 'pending')}</span>
               </>
             )}
           </h3>
@@ -153,7 +163,7 @@ export default function OrderDetailsModal({ orderId, onClose }) {
               <div>
                 <div className="text-xs font-semibold text-slate-400 mb-2">{t('oq.productsCount', { n: items.length })}</div>
                 {items.length ? (
-                  <div className="space-y-2">{items.map((it, i) => <ItemCard key={i} item={it} t={t} onImageClick={(imgs, idx) => setLightbox({ images: imgs, idx })} />)}</div>
+                  <div className="space-y-2">{items.map((it, i) => <ItemCard key={i} item={it} t={t} lang={lang} onImageClick={(imgs, idx) => setLightbox({ images: imgs, idx })} />)}</div>
                 ) : (
                   <p className="text-slate-400 text-sm">{t('oq.noItemDetails')}</p>
                 )}
@@ -174,9 +184,9 @@ export default function OrderDetailsModal({ orderId, onClose }) {
                 <div className="text-xs font-semibold text-slate-400 mb-2">{t('oq.orderInfo')}</div>
                 <div className="rounded-lg border border-black/5 dark:border-white/10 px-3">
                   <Row label={t('oq.col.orderNo')} value={<span dir="ltr">{order.order_no || order.id}</span>} />
-                  <Row label={t('oq.col.date')} value={new Date(order.created_at).toLocaleString()} />
-                  <Row label={t('oq.col.status')} value={<span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{label(order.status)}</span>} />
-                  <Row label={t('oq.paymentStatus')} value={<span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.payment_status] || 'bg-amber-500/10 text-amber-600')}>{label(order.payment_status || 'pending')}</span>} />
+                  <Row label={t('oq.col.date')} value={formatDate(order.created_at, { dateStyle: 'medium', timeStyle: 'short' })} />
+                  <Row label={t('oq.col.status')} value={<span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{trEnum(t, 'status', order.status)}</span>} />
+                  <Row label={t('oq.paymentStatus')} value={<span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.payment_status] || 'bg-amber-500/10 text-amber-600')}>{trEnum(t, 'status', order.payment_status || 'pending')}</span>} />
                   <Row label={t('oq.currentStage')} value={order.current_stage} />
                   <Row label={t('oq.tracking')} value={(order.tracking_pct || 0) + '%'} />
                   <Row label={t('oq.estCompletion')} value={order.estimated_completion} />
@@ -196,7 +206,7 @@ export default function OrderDetailsModal({ orderId, onClose }) {
                         <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (done ? 'bg-brand-600 text-white' : 'bg-black/10 dark:bg-white/10 text-slate-400')}>
                           {done ? '✓' : ''}
                         </div>
-                        <div className="text-[10px] text-center text-slate-400 capitalize leading-tight">{label(s)}</div>
+                        <div className="text-[10px] text-center text-slate-400 capitalize leading-tight">{trEnum(t, 'status', s)}</div>
                       </div>
                     );
                   })}

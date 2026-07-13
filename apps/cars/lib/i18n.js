@@ -272,6 +272,249 @@ export const translations = {
     'login.resendCodeIn': 'Resend code ({seconds}s)',
     'login.backToEmail': '← Back to email',
     'login.backToEmailPassword': '← Back to email & password',
+    'login.successRedirect': 'Success — redirecting…',
+    'login.genericError': 'Something went wrong.',
+
+    // Common
+    'common.all': 'All',
+    'common.none': '— None —',
+    'common.select': 'Select…',
+    'common.print': 'Print',
+    'common.edit': 'Edit',
+    'common.delete': 'Delete',
+    'common.download': 'Download',
+    'common.upload': 'Upload',
+    'common.replace': 'Replace',
+    'common.km': 'km',
+    'common.kmh': 'km/h',
+    'common.liter': 'L',
+    'common.loading': 'Loading…',
+
+    // Roles (session role labels shown in the sidebar)
+    'role.admin': 'admin',
+    'role.viewer': 'viewer',
+    'role.user': 'user',
+
+    // DB enum display values (stored in English, displayed via trEnum)
+    'status.Running': 'Running',
+    'status.Idle': 'Idle',
+    'status.Stopped': 'Stopped',
+    'status.Offline': 'Offline',
+    'status.Active': 'Active',
+    'status.Inactive': 'Inactive',
+    'status.On Leave': 'On Leave',
+    'status.Terminated': 'Terminated',
+    'status.Healthy': 'Healthy',
+    'status.Upcoming': 'Upcoming',
+    'status.Overdue': 'Overdue',
+    'payment.Paid': 'Paid',
+    'payment.Unpaid': 'Unpaid',
+    'payment.Partial': 'Partial',
+    'fuel.Diesel': 'Diesel',
+    'fuel.Petrol': 'Petrol',
+    'fuel.Electric': 'Electric',
+    'assignment.Assigned': 'Assigned',
+    'assignment.Unassigned': 'Unassigned',
+    'vtype.Truck': 'Truck',
+    'vtype.Car': 'Car',
+    'vtype.Van': 'Van',
+    'vtype.Bus': 'Bus',
+    'vtype.Pickup': 'Pickup',
+    'vtype.Trailer': 'Trailer',
+    'vtype.SUV': 'SUV',
+    'level.green': 'green',
+    'level.yellow': 'yellow',
+    'level.orange': 'orange',
+    'level.red': 'red',
+    'expiryCat.License': 'License',
+    'expiryCat.Iqama': 'Iqama',
+    'expiryCat.Passport': 'Passport',
+    'expiryCat.Medical': 'Medical',
+    'expiryCat.Insurance': 'Insurance',
+    'expiryCat.Registration': 'Registration',
+
+    // Expiry labels (computed from day counts)
+    'expiry.notSet': 'Not set',
+    'expiry.expiredAgo': 'Expired {days}d ago',
+    'expiry.expiresToday': 'Expires today',
+    'expiry.daysLeft': '{days}d left',
+
+    // Alerts page
+    'alerts.markRead': 'Mark read',
+
+    // Shared form/detail field labels
+    'fields.vehicleNumber': 'Vehicle Number',
+    'fields.name': 'Name',
+    'fields.type': 'Type',
+    'fields.fuelType': 'Fuel Type',
+    'fields.driver': 'Driver',
+    'fields.status': 'Status',
+    'fields.currentKm': 'Current KM',
+    'fields.location': 'Location',
+    'fields.assignedDriver': 'Assigned Driver',
+    'fields.insuranceCompany': 'Insurance Company',
+    'fields.insuranceNumber': 'Insurance Number',
+    'fields.insuranceExpiry': 'Insurance Expiry',
+    'fields.registrationExpiry': 'Registration Expiry',
+    'fields.vinNumber': 'VIN Number',
+    'fields.engineNumber': 'Engine Number',
+    'fields.lastServiceDate': 'Last Service Date',
+    'fields.nextServiceDate': 'Next Service Date',
+    'fields.purchaseDate': 'Purchase Date',
+    'fields.purchaseCost': 'Purchase Cost',
+    'fields.make': 'Make',
+    'fields.model': 'Model',
+    'fields.year': 'Year',
+    'fields.color': 'Color',
+    'fields.serialNumber': 'Serial Number',
+    'fields.fullName': 'Full Name',
+    'fields.fullNameAr': 'Full Name (Arabic)',
+    'fields.employeeId': 'Employee ID',
+    'fields.phone': 'Phone',
+    'fields.whatsapp': 'WhatsApp',
+    'fields.email': 'Email',
+    'fields.nationality': 'Nationality',
+    'fields.dateOfBirth': 'Date of Birth',
+    'fields.bloodGroup': 'Blood Group',
+    'fields.address': 'Address',
+    'fields.emergencyContact': 'Emergency Contact',
+    'fields.emergencyPhone': 'Emergency Phone',
+    'fields.department': 'Department',
+    'fields.designation': 'Designation',
+    'fields.joiningDate': 'Joining Date',
+    'fields.assignedVehicle': 'Assigned Vehicle',
+    'fields.experience': 'Experience',
+    'fields.experienceYears': 'Experience (years)',
+    'fields.yearsSuffix': '{n} yrs',
+    'fields.drivingCategory': 'Driving Category',
+    'fields.licenseNumber': 'License Number',
+    'fields.licenseType': 'License Type',
+    'fields.issueDate': 'Issue Date',
+    'fields.expiryDate': 'Expiry Date',
+    'fields.licenseIssue': 'License Issue',
+    'fields.licenseExpiry': 'License Expiry',
+    'fields.iqamaNumber': 'Iqama Number',
+    'fields.iqamaExpiry': 'Iqama Expiry',
+    'fields.passportNumber': 'Passport Number',
+    'fields.passportExpiry': 'Passport Expiry',
+    'fields.medicalExpiry': 'Medical Expiry',
+    'fields.telephone': 'Telephone',
+    'fields.crNumber': 'CR Number',
+    'fields.notes': 'Notes',
+    'fields.vehicle': 'Vehicle',
+    'fields.category': 'Category',
+    'fields.maintenanceDate': 'Maintenance Date',
+    'fields.maintenanceType': 'Maintenance Type',
+    'fields.workshopShop': 'Workshop / Shop',
+    'fields.odometerKm': 'Odometer (KM)',
+    'fields.amount': 'Amount',
+    'fields.currency': 'Currency',
+    'fields.invoiceNumber': 'Invoice Number',
+    'fields.paymentStatus': 'Payment Status',
+    'fields.technician': 'Technician',
+    'fields.warranty': 'Warranty',
+    'fields.workPerformed': 'Work Performed',
+    'fields.partsChanged': 'Parts Changed',
+    'fields.laborDetails': 'Labor Details',
+    'fields.additionalNotes': 'Additional Notes',
+
+    // Vehicles page (confirm/import results)
+    'vehicles.confirmDelete': 'Delete this vehicle? This can be reversed by a database admin, but not from this screen.',
+    'vehicles.importAdded': 'Vehicles added: {n}',
+    'vehicles.importSkippedDuplicate': 'Vehicles skipped (already exists): {n}',
+    'vehicles.importSkippedEmpty': 'Vehicles skipped (no plate number): {n}',
+    'vehicles.importMaintAdded': 'Maintenance items added: {n} (skipped {skipped})',
+    'vehicles.importLogAdded': 'Service history entries added: {n} (skipped {skipped})',
+
+    // Vehicle detail page
+    'vehicleView.back': '← Back to Vehicles',
+    'vehicleView.breadcrumb': 'Dashboard > Vehicles > {name}',
+    'vehicleView.driverPrefix': 'Driver: {name}',
+    'vehicleView.noDriver': 'No driver assigned',
+    'vehicleView.expiryStatus': 'Expiry Status',
+    'vehicleView.insurance': 'Insurance',
+    'vehicleView.registration': 'Registration',
+    'vehicleView.vehicleInfo': 'Vehicle Information',
+    'vehicleView.insuranceRegPurchase': 'Insurance, Registration & Purchase',
+    'vehicleView.driverPhone': 'Driver Phone',
+    'vehicleView.maintHistory': 'Maintenance History',
+    'vehicleView.noServiceHistory': 'No service history.',
+    'vehicleView.service': 'Service',
+    'vehicleView.tripHistory': 'Trip History',
+    'vehicleView.noTrips': 'No trips logged.',
+    'vehicleView.currentAlerts': 'Current Alerts',
+
+    // Drivers page (confirm)
+    'drivers.confirmDelete': 'Delete this driver? This cannot be undone.',
+
+    // Driver detail page
+    'driverView.back': '← Back to Drivers',
+    'driverView.breadcrumb': 'Dashboard > Drivers > {name}',
+    'driverView.assigned': 'Assigned: {vehicle}',
+    'driverView.noVehicle': 'No vehicle assigned',
+    'driverView.expiryStatus': 'Expiry Status',
+    'driverView.license': 'License',
+    'driverView.iqama': 'Iqama',
+    'driverView.passport': 'Passport',
+    'driverView.medical': 'Medical',
+    'driverView.personalInfo': 'Personal Information',
+    'driverView.employmentLicense': 'Employment & License',
+    'driverView.photosDocs': 'Photos & Documents',
+    'driverView.timeline': 'Timeline',
+    'driverView.slotProfile': 'Profile Photo',
+    'driverView.slotLicenseFront': 'License (Front)',
+    'driverView.slotLicenseBack': 'License (Back)',
+    'driverView.slotIqamaFront': 'Iqama (Front)',
+    'driverView.slotIqamaBack': 'Iqama (Back)',
+
+    // Maintenance records (confirm/modal extras)
+    'maint.confirmDelete': 'Delete this maintenance record and all its attachments? This cannot be undone.',
+    'maint.selectVehicle': 'Select vehicle…',
+    'maint.selectCategory': 'Select category…',
+    'maint.addNewShop': 'Add New Shop',
+
+    // Maintenance record detail page
+    'maintView.back': '← Back to Maintenance',
+    'maintView.breadcrumb': 'Dashboard > Maintenance > {name}',
+    'maintView.vehicleInfo': 'Vehicle Information',
+    'maintView.driverInfo': 'Driver Information',
+    'maintView.workshopInfo': 'Workshop Information',
+    'maintView.maintInfo': 'Maintenance Information',
+    'maintView.plateNumber': 'Plate Number',
+    'maintView.vehicleName': 'Vehicle Name',
+    'maintView.driverName': 'Driver Name',
+    'maintView.shopName': 'Shop Name',
+    'maintView.vat': 'VAT',
+    'maintView.cr': 'CR',
+    'maintView.cost': 'Cost',
+    'maintView.partsUsed': 'Parts Used',
+    'maintView.labor': 'Labor',
+    'maintView.noDriver': 'No driver assigned.',
+    'maintView.noWorkshop': 'No workshop recorded.',
+    'maintView.attachments': 'Attachments',
+    'maintView.noAttachments': 'No attachments uploaded yet.',
+    'maintView.confirmDeleteAttachment': 'Delete this attachment?',
+    'maintView.history': 'History',
+    'maintView.createdDate': 'Created Date',
+    'maintView.updatedDate': 'Updated Date',
+    'maintView.createdBy': 'Created By',
+    'maintView.slotInvoicePdf': 'Invoice (PDF)',
+    'maintView.slotInvoiceImage': 'Invoice (Image)',
+    'maintView.slotBefore': 'Before Repair',
+    'maintView.slotDuring': 'During Repair',
+    'maintView.slotAfter': 'After Repair',
+    'maintView.slotDocument': 'Supporting Document',
+    'maintView.slotBeforeShort': 'Before',
+    'maintView.slotDuringShort': 'During',
+    'maintView.slotAfterShort': 'After',
+    'maintView.slotDocumentShort': 'Document',
+
+    // Maintenance schedule (confirm)
+    'maintSchedule.confirmDelete': 'Delete this schedule item? This cannot be undone.',
+
+    // Maintenance shops (confirm/errors)
+    'shops.confirmDelete': 'Delete this shop? This can be undone by a database admin, but not from this screen.',
+    'shops.deleteFailed': 'Could not delete shop.',
   },
   ar: {
     // Shell / nav
@@ -539,6 +782,249 @@ export const translations = {
     'login.resendCodeIn': 'إعادة إرسال الرمز ({seconds}ث)',
     'login.backToEmail': '← العودة إلى البريد الإلكتروني',
     'login.backToEmailPassword': '← العودة إلى البريد الإلكتروني وكلمة المرور',
+    'login.successRedirect': 'تم بنجاح — جارٍ إعادة التوجيه…',
+    'login.genericError': 'حدث خطأ ما.',
+
+    // Common
+    'common.all': 'الكل',
+    'common.none': '— لا يوجد —',
+    'common.select': 'اختر…',
+    'common.print': 'طباعة',
+    'common.edit': 'تعديل',
+    'common.delete': 'حذف',
+    'common.download': 'تنزيل',
+    'common.upload': 'رفع',
+    'common.replace': 'استبدال',
+    'common.km': 'كم',
+    'common.kmh': 'كم/س',
+    'common.liter': 'لتر',
+    'common.loading': 'جارٍ التحميل…',
+
+    // Roles (session role labels shown in the sidebar)
+    'role.admin': 'مسؤول',
+    'role.viewer': 'مشاهد',
+    'role.user': 'مستخدم',
+
+    // DB enum display values (stored in English, displayed via trEnum)
+    'status.Running': 'تعمل',
+    'status.Idle': 'خاملة',
+    'status.Stopped': 'متوقفة',
+    'status.Offline': 'غير متصلة',
+    'status.Active': 'نشط',
+    'status.Inactive': 'غير نشط',
+    'status.On Leave': 'في إجازة',
+    'status.Terminated': 'منتهي الخدمة',
+    'status.Healthy': 'سليمة',
+    'status.Upcoming': 'قادمة',
+    'status.Overdue': 'متأخرة',
+    'payment.Paid': 'مدفوعة',
+    'payment.Unpaid': 'غير مدفوعة',
+    'payment.Partial': 'مدفوعة جزئيًا',
+    'fuel.Diesel': 'ديزل',
+    'fuel.Petrol': 'بنزين',
+    'fuel.Electric': 'كهربائية',
+    'assignment.Assigned': 'معينة',
+    'assignment.Unassigned': 'غير معينة',
+    'vtype.Truck': 'شاحنة',
+    'vtype.Car': 'سيارة',
+    'vtype.Van': 'فان',
+    'vtype.Bus': 'حافلة',
+    'vtype.Pickup': 'بيك أب',
+    'vtype.Trailer': 'مقطورة',
+    'vtype.SUV': 'دفع رباعي',
+    'level.green': 'أخضر',
+    'level.yellow': 'أصفر',
+    'level.orange': 'برتقالي',
+    'level.red': 'أحمر',
+    'expiryCat.License': 'الرخصة',
+    'expiryCat.Iqama': 'الإقامة',
+    'expiryCat.Passport': 'جواز السفر',
+    'expiryCat.Medical': 'الفحص الطبي',
+    'expiryCat.Insurance': 'التأمين',
+    'expiryCat.Registration': 'التسجيل',
+
+    // Expiry labels (computed from day counts)
+    'expiry.notSet': 'غير محدد',
+    'expiry.expiredAgo': 'منتهية منذ {days} يوم',
+    'expiry.expiresToday': 'تنتهي اليوم',
+    'expiry.daysLeft': 'متبقٍ {days} يوم',
+
+    // Alerts page
+    'alerts.markRead': 'وضع كمقروء',
+
+    // Shared form/detail field labels
+    'fields.vehicleNumber': 'رقم المركبة',
+    'fields.name': 'الاسم',
+    'fields.type': 'النوع',
+    'fields.fuelType': 'نوع الوقود',
+    'fields.driver': 'السائق',
+    'fields.status': 'الحالة',
+    'fields.currentKm': 'العداد الحالي (كم)',
+    'fields.location': 'الموقع',
+    'fields.assignedDriver': 'السائق المعين',
+    'fields.insuranceCompany': 'شركة التأمين',
+    'fields.insuranceNumber': 'رقم التأمين',
+    'fields.insuranceExpiry': 'انتهاء التأمين',
+    'fields.registrationExpiry': 'انتهاء التسجيل',
+    'fields.vinNumber': 'رقم الهيكل (VIN)',
+    'fields.engineNumber': 'رقم المحرك',
+    'fields.lastServiceDate': 'تاريخ آخر خدمة',
+    'fields.nextServiceDate': 'تاريخ الخدمة القادمة',
+    'fields.purchaseDate': 'تاريخ الشراء',
+    'fields.purchaseCost': 'تكلفة الشراء',
+    'fields.make': 'الصانع',
+    'fields.model': 'الطراز',
+    'fields.year': 'السنة',
+    'fields.color': 'اللون',
+    'fields.serialNumber': 'الرقم التسلسلي',
+    'fields.fullName': 'الاسم الكامل',
+    'fields.fullNameAr': 'الاسم الكامل (بالعربية)',
+    'fields.employeeId': 'الرقم الوظيفي',
+    'fields.phone': 'الهاتف',
+    'fields.whatsapp': 'واتساب',
+    'fields.email': 'البريد الإلكتروني',
+    'fields.nationality': 'الجنسية',
+    'fields.dateOfBirth': 'تاريخ الميلاد',
+    'fields.bloodGroup': 'فصيلة الدم',
+    'fields.address': 'العنوان',
+    'fields.emergencyContact': 'جهة الاتصال للطوارئ',
+    'fields.emergencyPhone': 'هاتف الطوارئ',
+    'fields.department': 'القسم',
+    'fields.designation': 'المسمى الوظيفي',
+    'fields.joiningDate': 'تاريخ الالتحاق',
+    'fields.assignedVehicle': 'المركبة المعينة',
+    'fields.experience': 'الخبرة',
+    'fields.experienceYears': 'الخبرة (سنوات)',
+    'fields.yearsSuffix': '{n} سنة',
+    'fields.drivingCategory': 'فئة القيادة',
+    'fields.licenseNumber': 'رقم الرخصة',
+    'fields.licenseType': 'نوع الرخصة',
+    'fields.issueDate': 'تاريخ الإصدار',
+    'fields.expiryDate': 'تاريخ الانتهاء',
+    'fields.licenseIssue': 'إصدار الرخصة',
+    'fields.licenseExpiry': 'انتهاء الرخصة',
+    'fields.iqamaNumber': 'رقم الإقامة',
+    'fields.iqamaExpiry': 'انتهاء الإقامة',
+    'fields.passportNumber': 'رقم جواز السفر',
+    'fields.passportExpiry': 'انتهاء جواز السفر',
+    'fields.medicalExpiry': 'انتهاء الفحص الطبي',
+    'fields.telephone': 'الهاتف الثابت',
+    'fields.crNumber': 'رقم السجل التجاري',
+    'fields.notes': 'ملاحظات',
+    'fields.vehicle': 'المركبة',
+    'fields.category': 'الفئة',
+    'fields.maintenanceDate': 'تاريخ الصيانة',
+    'fields.maintenanceType': 'نوع الصيانة',
+    'fields.workshopShop': 'الورشة',
+    'fields.odometerKm': 'قراءة العداد (كم)',
+    'fields.amount': 'المبلغ',
+    'fields.currency': 'العملة',
+    'fields.invoiceNumber': 'رقم الفاتورة',
+    'fields.paymentStatus': 'حالة الدفع',
+    'fields.technician': 'الفني',
+    'fields.warranty': 'الضمان',
+    'fields.workPerformed': 'الأعمال المنفذة',
+    'fields.partsChanged': 'القطع المستبدلة',
+    'fields.laborDetails': 'تفاصيل العمالة',
+    'fields.additionalNotes': 'ملاحظات إضافية',
+
+    // Vehicles page (confirm/import results)
+    'vehicles.confirmDelete': 'هل تريد حذف هذه المركبة؟ يمكن التراجع عن ذلك بواسطة مسؤول قاعدة البيانات، لكن ليس من هذه الشاشة.',
+    'vehicles.importAdded': 'المركبات المضافة: {n}',
+    'vehicles.importSkippedDuplicate': 'مركبات تم تخطيها (موجودة مسبقًا): {n}',
+    'vehicles.importSkippedEmpty': 'مركبات تم تخطيها (بدون رقم لوحة): {n}',
+    'vehicles.importMaintAdded': 'عناصر الصيانة المضافة: {n} (تم تخطي {skipped})',
+    'vehicles.importLogAdded': 'سجلات الخدمة المضافة: {n} (تم تخطي {skipped})',
+
+    // Vehicle detail page
+    'vehicleView.back': '← العودة إلى المركبات',
+    'vehicleView.breadcrumb': 'لوحة التحكم > المركبات > {name}',
+    'vehicleView.driverPrefix': 'السائق: {name}',
+    'vehicleView.noDriver': 'لا يوجد سائق معين',
+    'vehicleView.expiryStatus': 'حالة انتهاء الصلاحية',
+    'vehicleView.insurance': 'التأمين',
+    'vehicleView.registration': 'التسجيل',
+    'vehicleView.vehicleInfo': 'معلومات المركبة',
+    'vehicleView.insuranceRegPurchase': 'التأمين والتسجيل والشراء',
+    'vehicleView.driverPhone': 'هاتف السائق',
+    'vehicleView.maintHistory': 'سجل الصيانة',
+    'vehicleView.noServiceHistory': 'لا يوجد سجل خدمات.',
+    'vehicleView.service': 'خدمة',
+    'vehicleView.tripHistory': 'سجل الرحلات',
+    'vehicleView.noTrips': 'لا توجد رحلات مسجلة.',
+    'vehicleView.currentAlerts': 'التنبيهات الحالية',
+
+    // Drivers page (confirm)
+    'drivers.confirmDelete': 'هل تريد حذف هذا السائق؟ لا يمكن التراجع عن ذلك.',
+
+    // Driver detail page
+    'driverView.back': '← العودة إلى السائقين',
+    'driverView.breadcrumb': 'لوحة التحكم > السائقون > {name}',
+    'driverView.assigned': 'المركبة المعينة: {vehicle}',
+    'driverView.noVehicle': 'لا توجد مركبة معينة',
+    'driverView.expiryStatus': 'حالة انتهاء الصلاحية',
+    'driverView.license': 'الرخصة',
+    'driverView.iqama': 'الإقامة',
+    'driverView.passport': 'جواز السفر',
+    'driverView.medical': 'الفحص الطبي',
+    'driverView.personalInfo': 'المعلومات الشخصية',
+    'driverView.employmentLicense': 'التوظيف والرخصة',
+    'driverView.photosDocs': 'الصور والمستندات',
+    'driverView.timeline': 'الخط الزمني',
+    'driverView.slotProfile': 'الصورة الشخصية',
+    'driverView.slotLicenseFront': 'الرخصة (الأمام)',
+    'driverView.slotLicenseBack': 'الرخصة (الخلف)',
+    'driverView.slotIqamaFront': 'الإقامة (الأمام)',
+    'driverView.slotIqamaBack': 'الإقامة (الخلف)',
+
+    // Maintenance records (confirm/modal extras)
+    'maint.confirmDelete': 'هل تريد حذف سجل الصيانة هذا وجميع مرفقاته؟ لا يمكن التراجع عن ذلك.',
+    'maint.selectVehicle': 'اختر مركبة…',
+    'maint.selectCategory': 'اختر فئة…',
+    'maint.addNewShop': 'إضافة ورشة جديدة',
+
+    // Maintenance record detail page
+    'maintView.back': '← العودة إلى الصيانة',
+    'maintView.breadcrumb': 'لوحة التحكم > الصيانة > {name}',
+    'maintView.vehicleInfo': 'معلومات المركبة',
+    'maintView.driverInfo': 'معلومات السائق',
+    'maintView.workshopInfo': 'معلومات الورشة',
+    'maintView.maintInfo': 'معلومات الصيانة',
+    'maintView.plateNumber': 'رقم اللوحة',
+    'maintView.vehicleName': 'اسم المركبة',
+    'maintView.driverName': 'اسم السائق',
+    'maintView.shopName': 'اسم الورشة',
+    'maintView.vat': 'الرقم الضريبي',
+    'maintView.cr': 'السجل التجاري',
+    'maintView.cost': 'التكلفة',
+    'maintView.partsUsed': 'القطع المستخدمة',
+    'maintView.labor': 'العمالة',
+    'maintView.noDriver': 'لا يوجد سائق معين.',
+    'maintView.noWorkshop': 'لم تُسجل ورشة.',
+    'maintView.attachments': 'المرفقات',
+    'maintView.noAttachments': 'لم يتم رفع مرفقات بعد.',
+    'maintView.confirmDeleteAttachment': 'هل تريد حذف هذا المرفق؟',
+    'maintView.history': 'السجل',
+    'maintView.createdDate': 'تاريخ الإنشاء',
+    'maintView.updatedDate': 'تاريخ التحديث',
+    'maintView.createdBy': 'أنشئ بواسطة',
+    'maintView.slotInvoicePdf': 'الفاتورة (PDF)',
+    'maintView.slotInvoiceImage': 'الفاتورة (صورة)',
+    'maintView.slotBefore': 'قبل الإصلاح',
+    'maintView.slotDuring': 'أثناء الإصلاح',
+    'maintView.slotAfter': 'بعد الإصلاح',
+    'maintView.slotDocument': 'مستند داعم',
+    'maintView.slotBeforeShort': 'قبل',
+    'maintView.slotDuringShort': 'أثناء',
+    'maintView.slotAfterShort': 'بعد',
+    'maintView.slotDocumentShort': 'مستند',
+
+    // Maintenance schedule (confirm)
+    'maintSchedule.confirmDelete': 'هل تريد حذف عنصر الجدول هذا؟ لا يمكن التراجع عن ذلك.',
+
+    // Maintenance shops (confirm/errors)
+    'shops.confirmDelete': 'هل تريد حذف هذه الورشة؟ يمكن التراجع عن ذلك بواسطة مسؤول قاعدة البيانات، لكن ليس من هذه الشاشة.',
+    'shops.deleteFailed': 'تعذر حذف الورشة.',
   },
 };
 
@@ -557,11 +1043,41 @@ function formatDateFor(lang, value, opts) {
   return d.toLocaleDateString(LOCALE[lang] || LOCALE.en, opts);
 }
 
+function formatDateTimeFor(lang, value, opts) {
+  if (!value) return '';
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleString(LOCALE[lang] || LOCALE.en, opts);
+}
+
 function formatNumberFor(lang, value, opts) {
   if (value === null || value === undefined || value === '') return '';
   const n = Number(value);
   if (isNaN(n)) return String(value);
   return n.toLocaleString(LOCALE[lang] || LOCALE.en, opts);
+}
+
+/* Displays the translation for a DB-stored English enum value (e.g.
+   trEnum(t, 'status', 'Active') → «نشط» in Arabic) while the stored value
+   stays English; values without a dictionary entry render as-is. */
+export function trEnum(t, prefix, value) {
+  if (value === null || value === undefined || value === '') return value;
+  const key = prefix + '.' + value;
+  const s = t(key);
+  return s === key ? value : s;
+}
+
+/* Localized label for an expiry day-count (mirrors lib/expiry.js labels). */
+export function trExpiryDays(t, days) {
+  if (days === null || days === undefined) return t('expiry.notSet');
+  if (days < 0) return t('expiry.expiredAgo', { days: Math.abs(days) });
+  if (days === 0) return t('expiry.expiresToday');
+  return t('expiry.daysLeft', { days });
+}
+
+/* Localized label for an expiryInfo() object from lib/expiry.js. */
+export function trExpiry(t, info) {
+  return trExpiryDays(t, info ? info.days : null);
 }
 
 const LanguageContext = createContext(null);
@@ -599,9 +1115,10 @@ export function LanguageProvider({ children }) {
   }, [lang]);
 
   const formatDate = useCallback((value, opts) => formatDateFor(lang, value, opts), [lang]);
+  const formatDateTime = useCallback((value, opts) => formatDateTimeFor(lang, value, opts), [lang]);
   const formatNumber = useCallback((value, opts) => formatNumberFor(lang, value, opts), [lang]);
 
-  const value = useMemo(() => ({ lang, setLang, t, formatDate, formatNumber }), [lang, setLang, t, formatDate, formatNumber]);
+  const value = useMemo(() => ({ lang, setLang, t, formatDate, formatDateTime, formatNumber }), [lang, setLang, t, formatDate, formatDateTime, formatNumber]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
@@ -611,8 +1128,14 @@ export function useLanguage() {
   if (!ctx) {
     // Fallback so components don't crash if used outside the provider (e.g. during tests).
     return {
-      lang: 'en', setLang: () => {}, t: (key) => translations.en[key] ?? key,
+      lang: 'en', setLang: () => {},
+      t: (key, vars) => {
+        let str = translations.en[key] ?? key;
+        if (vars) { for (const k of Object.keys(vars)) str = str.replace(`{${k}}`, vars[k]); }
+        return str;
+      },
       formatDate: (v, opts) => formatDateFor('en', v, opts),
+      formatDateTime: (v, opts) => formatDateTimeFor('en', v, opts),
       formatNumber: (v, opts) => formatNumberFor('en', v, opts),
     };
   }

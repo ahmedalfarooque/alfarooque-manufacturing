@@ -44,10 +44,10 @@ export default function MaintenanceShopsPage() {
   useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   async function deleteShop(id) {
-    if (!confirm('Delete this shop? This can be undone by a database admin, but not from this screen.')) return;
+    if (!confirm(t('shops.confirmDelete'))) return;
     const res = await fetch(`/api/shops/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) { alert(data.error || 'Could not delete shop.'); return; }
+    if (!res.ok) { alert(data.error || t('shops.deleteFailed')); return; }
     load();
   }
 
@@ -157,14 +157,14 @@ export function ShopModal({ modal, onClose, onSaved }) {
           <Field label={t('shops.colName')} value={form.name} onChange={set('name')} required className="col-span-2" />
           <Field label={t('shops.colContact')} value={form.contact_person} onChange={set('contact_person')} />
           <Field label={t('shops.colMobile')} value={form.mobile} onChange={set('mobile')} />
-          <Field label="Telephone" value={form.telephone} onChange={set('telephone')} />
-          <Field label="Email" value={form.email} onChange={set('email')} type="email" />
-          <Field label="Address" value={form.address} onChange={set('address')} className="col-span-2" />
+          <Field label={t('fields.telephone')} value={form.telephone} onChange={set('telephone')} />
+          <Field label={t('fields.email')} value={form.email} onChange={set('email')} type="email" />
+          <Field label={t('fields.address')} value={form.address} onChange={set('address')} className="col-span-2" />
           <Field label={t('shops.colCity')} value={form.city} onChange={set('city')} />
           <Field label={t('shops.colVat')} value={form.vat_number} onChange={set('vat_number')} />
-          <Field label="CR Number" value={form.cr_number} onChange={set('cr_number')} />
+          <Field label={t('fields.crNumber')} value={form.cr_number} onChange={set('cr_number')} />
           <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">Notes</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.notes')}</label>
             <textarea value={form.notes || ''} onChange={set('notes')} rows={2} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
           </div>
         </div>

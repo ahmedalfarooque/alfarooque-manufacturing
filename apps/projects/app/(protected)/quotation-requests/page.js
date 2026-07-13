@@ -7,7 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum } from '@/lib/i18n';
 
 export const STATUS_BADGE = {
   pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -114,7 +114,7 @@ export default function QuotationRequestsPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder={t('qr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES]} />
+        <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -147,7 +147,7 @@ export default function QuotationRequestsPage() {
                 <td dir="ltr">{money(r.amount)}</td>
                 <td>{r.quote_date || '—'}</td>
                 <td className="capitalize">{(r.quotation_status || '—').replace(/_/g, ' ')}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{r.status.replace(/_/g, ' ')}</span></td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
                 <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2 flex-wrap">
                     {r.status === 'pending' && (

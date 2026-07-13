@@ -7,7 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
 
 const STATUS_BADGE = {
   Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -69,7 +69,7 @@ export default function DriversPage() {
   }
 
   async function deleteDriver(id) {
-    if (!confirm('Delete this driver? This cannot be undone.')) return;
+    if (!confirm(t('drivers.confirmDelete'))) return;
     const res = await fetch(`/api/drivers/${id}`, { method: 'DELETE', credentials: 'same-origin' });
     if (res.ok) refresh();
   }
@@ -120,7 +120,7 @@ export default function DriversPage() {
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder={t('drivers.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={setStatus} options={['All', 'Active', 'Inactive', 'On Leave', 'Terminated']} />
+        <Dropdown value={status} onChange={setStatus} options={[['All', t('common.all')], ...['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])]} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -160,9 +160,9 @@ export default function DriversPage() {
                   <td className="font-medium">{d.full_name}</td>
                   <td>{d.phone || '—'}</td>
                   <td>{d.cars?.vehicle_number || '—'}</td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + lic.className}>{lic.dot} {lic.label}</span></td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {iqama.label}</span></td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{d.status}</span></td>
+                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + lic.className}>{lic.dot} {trExpiry(t, lic)}</span></td>
+                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {trExpiry(t, iqama)}</span></td>
+                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span></td>
                   <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
                     <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-slate-400">{'\u{1F441}'}</button>
                     {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} className="text-brand-500">✎</button>}
@@ -217,50 +217,50 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
         {err && <div className="text-red-500 text-sm">{err}</div>}
 
         <Section title={t('drivers.sectionPersonal')}>
-          <Field label="Full Name" value={form.full_name} onChange={set('full_name')} required />
-          <Field label="Full Name (Arabic)" value={form.full_name_ar || ''} onChange={set('full_name_ar')} />
-          <Field label="Employee ID" value={form.employee_id || ''} onChange={set('employee_id')} />
-          <Field label="Phone" value={form.phone || ''} onChange={set('phone')} />
-          <Field label="WhatsApp" value={form.whatsapp || ''} onChange={set('whatsapp')} />
-          <Field label="Email" type="email" value={form.email || ''} onChange={set('email')} />
-          <Field label="Nationality" value={form.nationality || ''} onChange={set('nationality')} />
-          <Field label="Date of Birth" type="date" value={form.date_of_birth || ''} onChange={set('date_of_birth')} />
-          <Field label="Blood Group" value={form.blood_group || ''} onChange={set('blood_group')} />
-          <div className="col-span-2"><Field label="Address" value={form.address || ''} onChange={set('address')} /></div>
-          <Field label="Emergency Contact" value={form.emergency_contact || ''} onChange={set('emergency_contact')} />
-          <Field label="Emergency Phone" value={form.emergency_phone || ''} onChange={set('emergency_phone')} />
+          <Field label={t('fields.fullName')} value={form.full_name} onChange={set('full_name')} required />
+          <Field label={t('fields.fullNameAr')} value={form.full_name_ar || ''} onChange={set('full_name_ar')} />
+          <Field label={t('fields.employeeId')} value={form.employee_id || ''} onChange={set('employee_id')} />
+          <Field label={t('fields.phone')} value={form.phone || ''} onChange={set('phone')} />
+          <Field label={t('fields.whatsapp')} value={form.whatsapp || ''} onChange={set('whatsapp')} />
+          <Field label={t('fields.email')} type="email" value={form.email || ''} onChange={set('email')} />
+          <Field label={t('fields.nationality')} value={form.nationality || ''} onChange={set('nationality')} />
+          <Field label={t('fields.dateOfBirth')} type="date" value={form.date_of_birth || ''} onChange={set('date_of_birth')} />
+          <Field label={t('fields.bloodGroup')} value={form.blood_group || ''} onChange={set('blood_group')} />
+          <div className="col-span-2"><Field label={t('fields.address')} value={form.address || ''} onChange={set('address')} /></div>
+          <Field label={t('fields.emergencyContact')} value={form.emergency_contact || ''} onChange={set('emergency_contact')} />
+          <Field label={t('fields.emergencyPhone')} value={form.emergency_phone || ''} onChange={set('emergency_phone')} />
         </Section>
 
         <Section title={t('drivers.sectionEmployment')}>
-          <Field label="Department" value={form.department || ''} onChange={set('department')} />
-          <Field label="Designation" value={form.designation || ''} onChange={set('designation')} />
-          <Field label="Joining Date" type="date" value={form.joining_date || ''} onChange={set('joining_date')} />
+          <Field label={t('fields.department')} value={form.department || ''} onChange={set('department')} />
+          <Field label={t('fields.designation')} value={form.designation || ''} onChange={set('designation')} />
+          <Field label={t('fields.joiningDate')} type="date" value={form.joining_date || ''} onChange={set('joining_date')} />
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Status</label>
-            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive', 'On Leave', 'Terminated']} />
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.status')}</label>
+            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])} />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Assigned Vehicle</label>
-            <Dropdown value={form.assigned_car_id || ''} onChange={v => setForm(f => ({ ...f, assigned_car_id: v }))} placeholder="— None —"
-              options={[['', '— None —'], ...cars.map(c => [c.id, c.vehicle_number + ' — ' + c.name])]} />
+            <label className="block text-xs text-slate-500 mb-1">{t('fields.assignedVehicle')}</label>
+            <Dropdown value={form.assigned_car_id || ''} onChange={v => setForm(f => ({ ...f, assigned_car_id: v }))} placeholder={t('common.none')}
+              options={[['', t('common.none')], ...cars.map(c => [c.id, c.vehicle_number + ' — ' + c.name])]} />
           </div>
-          <Field label="Experience (years)" type="number" value={form.experience_years ?? ''} onChange={set('experience_years')} />
-          <Field label="Driving Category" value={form.driving_category || ''} onChange={set('driving_category')} />
+          <Field label={t('fields.experienceYears')} type="number" value={form.experience_years ?? ''} onChange={set('experience_years')} />
+          <Field label={t('fields.drivingCategory')} value={form.driving_category || ''} onChange={set('driving_category')} />
         </Section>
 
         <Section title={t('drivers.sectionLicense')}>
-          <Field label="License Number" value={form.license_number || ''} onChange={set('license_number')} />
-          <Field label="License Type" value={form.license_type || ''} onChange={set('license_type')} />
-          <Field label="Issue Date" type="date" value={form.license_issue_date || ''} onChange={set('license_issue_date')} />
-          <Field label="Expiry Date" type="date" value={form.license_expiry_date || ''} onChange={set('license_expiry_date')} />
+          <Field label={t('fields.licenseNumber')} value={form.license_number || ''} onChange={set('license_number')} />
+          <Field label={t('fields.licenseType')} value={form.license_type || ''} onChange={set('license_type')} />
+          <Field label={t('fields.issueDate')} type="date" value={form.license_issue_date || ''} onChange={set('license_issue_date')} />
+          <Field label={t('fields.expiryDate')} type="date" value={form.license_expiry_date || ''} onChange={set('license_expiry_date')} />
         </Section>
 
         <Section title={t('drivers.sectionIqama')}>
-          <Field label="Iqama Number" value={form.iqama_number || ''} onChange={set('iqama_number')} />
-          <Field label="Iqama Expiry" type="date" value={form.iqama_expiry_date || ''} onChange={set('iqama_expiry_date')} />
-          <Field label="Passport Number" value={form.passport_number || ''} onChange={set('passport_number')} />
-          <Field label="Passport Expiry" type="date" value={form.passport_expiry_date || ''} onChange={set('passport_expiry_date')} />
-          <Field label="Medical Expiry" type="date" value={form.medical_expiry_date || ''} onChange={set('medical_expiry_date')} />
+          <Field label={t('fields.iqamaNumber')} value={form.iqama_number || ''} onChange={set('iqama_number')} />
+          <Field label={t('fields.iqamaExpiry')} type="date" value={form.iqama_expiry_date || ''} onChange={set('iqama_expiry_date')} />
+          <Field label={t('fields.passportNumber')} value={form.passport_number || ''} onChange={set('passport_number')} />
+          <Field label={t('fields.passportExpiry')} type="date" value={form.passport_expiry_date || ''} onChange={set('passport_expiry_date')} />
+          <Field label={t('fields.medicalExpiry')} type="date" value={form.medical_expiry_date || ''} onChange={set('medical_expiry_date')} />
         </Section>
 
         <div>
