@@ -144,3 +144,7 @@ vite.config.ts.timestamp-*
 
 .vercel
 .env*
+
+# local dev server logs
+devlog*.txt
+apps/*/devlog.txt
