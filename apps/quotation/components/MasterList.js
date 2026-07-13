@@ -8,7 +8,12 @@
      DELETE {api}/{id}          → { ok }
    Columns: [{ key, labelKey, render?(row) }]
    Fields:  [{ key, labelKey, type: 'text'|'number'|'textarea'|'select',
-               options?: [{value,label|labelKey}], required?, step? }]  */
+               options?: [{value,label|labelKey}], required?, step?,
+               onChange?(value, form) → partial form patch }]
+   `onChange` is opt-in per field: when the user edits that field the
+   returned patch is merged into the form (e.g. Labour's monthly salary
+   auto-filling the daily/hourly rates). Fields without it — i.e. every
+   other module — behave exactly as before.                            */
 
 import { useCallback, useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
@@ -132,7 +137,10 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
                 ) : (
                   <Input type={f.type === 'number' ? 'number' : 'text'} step={f.step || (f.type === 'number' ? '0.01' : undefined)}
                     required={f.required} dir={f.dir} value={form[f.key] ?? ''}
-                    onChange={e => setForm(s => ({ ...s, [f.key]: e.target.value }))} />
+                    onChange={e => setForm(s => {
+                      const next = { ...s, [f.key]: e.target.value };
+                      return f.onChange ? { ...next, ...(f.onChange(e.target.value, next) || {}) } : next;
+                    })} />
                 )}
               </Field>
             ))}

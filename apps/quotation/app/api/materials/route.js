@@ -29,9 +29,16 @@ export const POST = makeCreateHandler({
   bilingual: ['name'],
   prepare: async (row, { sb }) => {
     if (!row.code) {
-      /* Auto code: M-00001 / H-00001 style, based on table count. */
-      const { count } = await sb.from('qt_materials').select('id', { count: 'exact', head: true });
-      row.code = (row.kind === 'hardware' ? 'H-' : 'M-') + String((count || 0) + 1).padStart(5, '0');
+      /* Auto code: M-00001 / H-00001 style. Based on the highest existing
+         auto code (not table count) so it never collides after deletes. */
+      const prefix = row.kind === 'hardware' ? 'H-' : 'M-';
+      const { data } = await sb.from('qt_materials').select('code')
+        .like('code', prefix + '%').order('code', { ascending: false }).limit(1);
+      const last = data && data[0] ? parseInt(String(data[0].code).slice(prefix.length), 10) || 0 : 0;
+      row.code = prefix + String(last + 1).padStart(5, '0');
+      /* Convention: barcode mirrors the code when not supplied
+         (matches the master-list import and Save-as-New). */
+      if (!row.barcode) row.barcode = row.code;
     }
     return row;
   },

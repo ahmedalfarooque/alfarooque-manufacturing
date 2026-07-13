@@ -1,0 +1,398 @@
+  [env] Loaded .env.local
+
+  ------------------------------------------------------------
+  AL FAROOQUE Development Environment
+
+  Main Website        http://localhost:3000
+  Cars App            http://localhost:3010
+  Projects App        http://localhost:3020
+  Quotation App       http://localhost:3030
+
+  Starting development servers...
+
+  [main-site] Static site + API listening on http://localhost:3000
+  Routes registered: 15
+  Static assets served from: C:\Websites\alfarooque-manufacturing live
+
+  [email] ✓ Configured — provider: resend | from: noreply@arshad.alfarooque.com | to: arshad@alfarooque.com
+
+  ✓ Main Website Ready
+  [cars-app] Starting dev server on port 3010…
+(node:22552) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+  [projects-app] Starting dev server on port 3020…
+  [quotation-app] Starting dev server on port 3030…
+
+> af-project-management@1.0.0 dev
+> next dev -p 3020
+
+
+> af-cars-tracking@1.0.0 dev
+> next dev -p 3010
+
+
+> af-quotation@0.1.0 predev
+> node scripts/migrate.js --if-configured && node scripts/load-staged.js --if-ready && node scripts/backfill-bilingual.js --if-ready
+
+ ⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use :::3020
+    at Server.setupListenHandle [as _listen2] (node:net:2009:16)
+    at listenInCluster (node:net:2066:12)
+    at Server.listen (node:net:2171:7)
+    at C:\Websites\alfarooque-manufacturing live\apps\projects\node_modules\next\dist\server\lib\start-server.js:280:16
+    at new Promise (<anonymous>)
+    at startServer (C:\Websites\alfarooque-manufacturing live\apps\projects\node_modules\next\dist\server\lib\start-server.js:191:11)
+    at C:\Websites\alfarooque-manufacturing live\apps\projects\node_modules\next\dist\server\lib\start-server.js:310:52
+    at Span.traceAsyncFn (C:\Websites\alfarooque-manufacturing live\apps\projects\node_modules\next\dist\trace\trace.js:154:26)
+    at process.<anonymous> (C:\Websites\alfarooque-manufacturing live\apps\projects\node_modules\next\dist\server\lib\start-server.js:310:35)
+    at process.emit (node:events:509:28) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 3020
+}
+[migrate] already applied: quotation-schema.sql
+[?25h
+[migrate] already applied: quotation-schema-v2.sql
+[migrate] already applied: quotation-schema-v5-fix.sql
+  [projects-app] Exited unexpectedly (code 0) — restarting (1/5)…
+[migrate] already applied: quotation-schema-v6-bilingual.sql
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3010
+  ✓ Cars App Ready
+  - Environments: .env.local
+
+ ✓ Starting...
+[migrate] already applied: quotation-schema-v7-material-dims.sql
+[migrate] already applied: apps-schema-v9-shared-customers.sql
+[migrate] already applied: quotation-schema-v8-contracted-started-status.sql
+[migrate] already applied: apps-schema-v10-project-requests.sql
+[migrate] already applied: apps-schema-v11-quotation-project-sync.sql
+[migrate] already applied: quotation-schema-v9-ww03-rename.sql
+[migrate] already applied: quotation-schema-v10-pdf-system.sql
+[migrate] schema cache reload requested — database is up to date.
+  Projects App: port 3020 held by a previous instance (PID 32128) — stopping it…
+[load] staged import already completed earlier — skipping (delete qt_settings key "staged_import" to re-run).
+[backfill] loading qt_lang_backup originals…
+  [projects-app] Starting dev server on port 3020…
+[backfill] 1253 backed-up original values available
+
+> af-project-management@1.0.0 dev
+> next dev -p 3020
+
+ ✓ Ready in 2.6s
+  ✓ qt_catalogue_products: 0 rows backfilled
+  ✓ qt_quotation_products: 0 rows backfilled
+  ✓ qt_materials: 0 rows backfilled
+  ✓ qt_suppliers: 0 rows backfilled
+  ✓ qt_customers: 0 rows backfilled
+  ✓ qt_machines: 0 rows backfilled
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3020
+  ✓ Projects App Ready
+  - Environments: .env.local
+
+ ✓ Starting...
+  ✓ qt_labour_roles: 0 rows backfilled
+  ✓ qt_expense_templates: 0 rows backfilled
+[backfill] DONE — 0 rows updated (permanent; re-runs are no-ops).
+
+> af-quotation@0.1.0 dev
+> next dev -p 3030
+
+ ⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use :::3030
+    at Server.setupListenHandle [as _listen2] (node:net:2009:16)
+    at listenInCluster (node:net:2066:12)
+    at Server.listen (node:net:2171:7)
+    at C:\Websites\alfarooque-manufacturing live\apps\quotation\node_modules\next\dist\server\lib\start-server.js:280:16
+    at new Promise (<anonymous>)
+    at startServer (C:\Websites\alfarooque-manufacturing live\apps\quotation\node_modules\next\dist\server\lib\start-server.js:191:11)
+    at C:\Websites\alfarooque-manufacturing live\apps\quotation\node_modules\next\dist\server\lib\start-server.js:310:52
+    at Span.traceAsyncFn (C:\Websites\alfarooque-manufacturing live\apps\quotation\node_modules\next\dist\trace\trace.js:154:26)
+    at process.<anonymous> (C:\Websites\alfarooque-manufacturing live\apps\quotation\node_modules\next\dist\server\lib\start-server.js:310:35)
+    at process.emit (node:events:509:28) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 3030
+}
+[?25h
+  [quotation-app] Exited unexpectedly (code 0) — restarting (1/5)…
+  Quotation App: port 3030 held by a previous instance (PID 18900) — stopping it…
+ ✓ Ready in 2.5s
+  [quotation-app] Starting dev server on port 3030…
+
+> af-quotation@0.1.0 predev
+> node scripts/migrate.js --if-configured && node scripts/load-staged.js --if-ready && node scripts/backfill-bilingual.js --if-ready
+
+[migrate] already applied: quotation-schema.sql
+[migrate] already applied: quotation-schema-v2.sql
+[migrate] already applied: quotation-schema-v5-fix.sql
+[migrate] already applied: quotation-schema-v6-bilingual.sql
+[migrate] already applied: quotation-schema-v7-material-dims.sql
+[migrate] already applied: apps-schema-v9-shared-customers.sql
+[migrate] already applied: quotation-schema-v8-contracted-started-status.sql
+[migrate] already applied: apps-schema-v10-project-requests.sql
+[migrate] already applied: apps-schema-v11-quotation-project-sync.sql
+[migrate] already applied: quotation-schema-v9-ww03-rename.sql
+[migrate] already applied: quotation-schema-v10-pdf-system.sql
+[migrate] schema cache reload requested — database is up to date.
+[load] staged import already completed earlier — skipping (delete qt_settings key "staged_import" to re-run).
+[backfill] loading qt_lang_backup originals…
+[backfill] 1253 backed-up original values available
+  ✓ qt_catalogue_products: 0 rows backfilled
+  ✓ qt_quotation_products: 0 rows backfilled
+  ✓ qt_materials: 0 rows backfilled
+  ✓ qt_suppliers: 0 rows backfilled
+  ✓ qt_customers: 0 rows backfilled
+  ✓ qt_machines: 0 rows backfilled
+  ✓ qt_labour_roles: 0 rows backfilled
+  ✓ qt_expense_templates: 0 rows backfilled
+[backfill] DONE — 0 rows updated (permanent; re-runs are no-ops).
+
+> af-quotation@0.1.0 dev
+> next dev -p 3030
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3030
+  ✓ Quotation App Ready
+
+  Development environment ready.
+
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.3s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 997ms (455 modules)
+ GET /login 200 in 1171ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 3s (469 modules)
+ GET /login 200 in 3182ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 4.1s (482 modules)
+ GET /login 200 in 4298ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.1s (607 modules)
+ GET / 307 in 2310ms
+ ✓ Compiled /middleware in 455ms (152 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1420ms (1687 modules)
+ GET /dashboard 200 in 1654ms
+ ✓ Compiled /api/auth in 395ms (911 modules)
+ ✓ Compiled (916 modules)
+ GET /api/auth 200 in 1248ms
+ GET /api/auth 200 in 154ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1285ms (608 modules)
+ GET /api/stats 200 in 3397ms
+ GET / 307 in 1520ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 543ms (152 modules)
+ ○ Compiling /dashboard ...
+ GET /api/stats 200 in 1779ms
+ ✓ Compiled /dashboard in 3.3s (1680 modules)
+ GET /dashboard 200 in 3577ms
+ ○ Compiling / ...
+ ✓ Compiled / in 629ms (478 modules)
+ GET / 307 in 841ms
+ ○ Compiling /api/users ...
+ ✓ Compiled /api/users in 526ms (1699 modules)
+ ○ Compiling /middleware ...
+ GET /null 404 in 1009ms
+ ✓ Compiled /middleware in 615ms (152 modules)
+ GET /null 404 in 45ms
+ GET /api/auth 200 in 1223ms
+ GET /api/users 200 in 1209ms
+ GET /api/notifications 200 in 1221ms
+ GET /api/stats 200 in 1289ms
+ GET /api/notifications 200 in 217ms
+ GET /api/auth 200 in 229ms
+ GET /api/users 200 in 230ms
+ GET /api/auth 200 in 201ms
+ GET /api/notifications 200 in 221ms
+ ○ Compiling /dashboard ...
+ GET /api/users 200 in 170ms
+ GET /api/notifications 200 in 162ms
+ GET /api/auth 200 in 182ms
+ GET /api/users 200 in 183ms
+ ✓ Compiled /dashboard in 3.3s (1510 modules)
+ GET /dashboard 200 in 3550ms
+ ○ Compiling /api/stats ...
+ ✓ Compiled /api/stats in 761ms (913 modules)
+ ✓ Compiled (921 modules)
+ GET /api/auth 200 in 1396ms
+ GET /api/notifications 200 in 1453ms
+ GET /api/stats 200 in 1473ms
+ GET /api/auth 200 in 249ms
+ GET /api/notifications 200 in 196ms
+ GET /api/stats 200 in 343ms
+ GET /api/stats 200 in 1905ms
+ GET /null 404 in 62ms
+ GET /api/notifications 200 in 216ms
+ GET /api/stats 200 in 229ms
+ GET /api/notifications 200 in 142ms
+ GET /null 404 in 23ms
+ GET /api/stats 200 in 172ms
+ GET /api/notifications 200 in 137ms
+ GET /api/stats 200 in 1750ms
+ GET /api/stats 200 in 1882ms
+ GET /api/stats 200 in 1810ms
+ GET /api/stats 200 in 1803ms
+ GET /dashboard 200 in 238ms
+ GET /api/notifications 200 in 248ms
+ GET /api/auth 200 in 285ms
+ GET /api/stats 200 in 325ms
+ GET /api/notifications 200 in 174ms
+ GET /api/auth 200 in 167ms
+ GET /api/stats 200 in 249ms
+ GET /null 404 in 65ms
+ GET /api/stats 200 in 257ms
+ GET /api/notifications 200 in 302ms
+ GET /api/notifications 200 in 187ms
+ GET /dashboard 200 in 56ms
+ GET /api/auth 200 in 191ms
+ GET /api/notifications 200 in 220ms
+ GET /api/stats 200 in 281ms
+ GET /api/auth 200 in 200ms
+ GET /api/notifications 200 in 191ms
+ GET /api/stats 200 in 236ms
+ GET /api/notifications 200 in 204ms
+ GET /api/stats 200 in 1738ms
+ GET /dashboard 200 in 90ms
+ GET /api/auth 200 in 205ms
+ GET /api/notifications 200 in 225ms
+ GET /api/auth 200 in 172ms
+ GET /api/notifications 200 in 160ms
+ GET /api/stats 200 in 489ms
+ GET /api/stats 200 in 247ms
+   Reload env: .env.local
+ ✓ Compiled in 548ms (1819 modules)
+ GET /api/stats 200 in 2175ms
+[?25h
+  [quotation-app] Exited unexpectedly (code 0) — restarting (2/5)…
+  [quotation-app] Starting dev server on port 3030…
+
+> af-quotation@0.1.0 predev
+> node scripts/migrate.js --if-configured && node scripts/load-staged.js --if-ready && node scripts/backfill-bilingual.js --if-ready
+
+[migrate] already applied: quotation-schema.sql
+[migrate] already applied: quotation-schema-v2.sql
+[migrate] already applied: quotation-schema-v5-fix.sql
+[migrate] already applied: quotation-schema-v6-bilingual.sql
+[migrate] already applied: quotation-schema-v7-material-dims.sql
+[migrate] already applied: apps-schema-v9-shared-customers.sql
+[migrate] already applied: quotation-schema-v8-contracted-started-status.sql
+[migrate] already applied: apps-schema-v10-project-requests.sql
+[migrate] already applied: apps-schema-v11-quotation-project-sync.sql
+[migrate] already applied: quotation-schema-v9-ww03-rename.sql
+[migrate] already applied: quotation-schema-v10-pdf-system.sql
+[migrate] schema cache reload requested — database is up to date.
+[load] staged import already completed earlier — skipping (delete qt_settings key "staged_import" to re-run).
+[backfill] loading qt_lang_backup originals…
+[backfill] 1253 backed-up original values available
+  ✓ qt_catalogue_products: 0 rows backfilled
+  ✓ qt_quotation_products: 0 rows backfilled
+  ✓ qt_materials: 0 rows backfilled
+  ✓ qt_suppliers: 0 rows backfilled
+  ✓ qt_customers: 0 rows backfilled
+  ✓ qt_machines: 0 rows backfilled
+  ✓ qt_labour_roles: 0 rows backfilled
+  ✓ qt_expense_templates: 0 rows backfilled
+[backfill] DONE — 0 rows updated (permanent; re-runs are no-ops).
+
+> af-quotation@0.1.0 dev
+> next dev -p 3030
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3030
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.7s
+ GET /api/stats 200 in 1819ms
+ ✓ Compiled /login in 191ms (900 modules)
+ GET /login 200 in 326ms
+ ✓ Compiled /login in 240ms (771 modules)
+ GET /login 200 in 398ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 3.4s (482 modules)
+ GET /login 200 in 3606ms
+ GET /api/stats 200 in 2191ms
+ GET /api/stats 200 in 2345ms
+ ○ Compiling /api/notifications ...
+ ✓ Compiled /api/notifications in 1133ms (183 modules)
+ GET /api/notifications 200 in 1547ms
+ GET /api/notifications 200 in 168ms
+ GET /dashboard 200 in 150ms
+ ○ Compiling /api/users ...
+ ✓ Compiled /api/users in 581ms (1684 modules)
+ GET /null 404 in 863ms
+ GET /api/notifications 200 in 1053ms
+ GET /api/users 200 in 1074ms
+ GET /api/auth 200 in 1095ms
+ GET /api/stats 200 in 1125ms
+ GET /api/notifications 200 in 142ms
+ GET /api/users 200 in 148ms
+ GET /api/auth 200 in 146ms
+ GET /api/auth 200 in 146ms
+ GET /api/notifications 200 in 149ms
+ GET /api/users 200 in 166ms
+ GET /api/auth 200 in 135ms
+ GET /api/users 200 in 161ms
+ GET /api/notifications 200 in 265ms
+ GET /api/notifications 200 in 170ms
+ GET /null 404 in 40ms
+ GET /api/notifications 200 in 178ms
+ GET /api/stats 200 in 210ms
+ GET /api/notifications 200 in 143ms
+ GET /api/stats 200 in 1685ms
+ ✓ Compiled /quotes in 494ms (1694 modules)
+ GET /quotes 200 in 612ms
+ ✓ Compiled /api/quotes in 183ms (921 modules)
+ GET /api/auth 200 in 316ms
+ ✓ Compiled in 0ms (921 modules)
+ ✓ Compiled in 0ms (921 modules)
+ GET /api/notifications 200 in 557ms
+ ✓ Compiled in 1ms (921 modules)
+ GET /api/notifications 200 in 435ms
+ GET /api/auth 200 in 728ms
+ GET /api/quotes 200 in 1084ms
+ ○ Compiling /purchase-requests ...
+ ✓ Compiled /purchase-requests in 2.1s (2069 modules)
+ GET /purchase-requests 200 in 2297ms
+ ✓ Compiled /api/purchase-requests in 209ms (1110 modules)
+ GET /api/auth 200 in 586ms
+ GET /api/notifications 200 in 589ms
+ GET /api/purchase-requests 200 in 591ms
+ GET /api/auth 200 in 143ms
+ GET /api/notifications 200 in 155ms
+ GET /api/auth 200 in 139ms
+ GET /api/auth 200 in 138ms
+ GET /api/purchase-requests 200 in 190ms
+ GET /api/notifications 200 in 251ms
+ ○ Compiling /projects ...
+ ✓ Compiled /projects in 587ms (2081 modules)
+ GET /projects 200 in 672ms
+ GET /api/auth 200 in 259ms
+ ✓ Compiled /api/projects in 245ms (1120 modules)
+ ✓ Compiled in 0ms (1120 modules)
+ GET /api/users 200 in 653ms
+ ✓ Compiled in 0ms (1120 modules)
+ GET /api/notifications 200 in 696ms
+ GET /api/auth 200 in 599ms
+ ✓ Compiled in 0ms (1120 modules)
+ ✓ Compiled in 1ms (1120 modules)
+ ✓ Compiled in 0ms (1120 modules)
+ GET /api/projects?search=&status=All&assignedUser=All&page=1&pageSize=25 200 in 1257ms
+ ✓ Compiled in 0ms (1120 modules)
+ GET /api/notifications 200 in 917ms
+ GET /api/users 200 in 997ms
+ GET /api/auth 200 in 914ms
+ GET /api/users 200 in 169ms
+ GET /api/auth 200 in 148ms
+ GET /api/users 200 in 165ms
+ GET /api/notifications 200 in 333ms

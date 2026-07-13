@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { getDb } = require('./db');
 const { isSuperAdminEmail } = require('./superAdmin');
+const { SSO_COOKIE_NAME, verifySsoSession } = require('./sso');
 
 const APP = 'projects';
 const COOKIE_NAME = 'af_projects_session';
@@ -49,20 +50,30 @@ function parseCookies(header) {
   });
   return out;
 }
-function sessionCookieHeader(token, maxAgeSeconds) {
+/* `domain` (optional) scopes the cookie to the parent domain
+   (.alfarooque.com) so the admin logout-everywhere flow can clear it
+   from any sibling app. Omitted on localhost — behaviour unchanged. */
+function sessionCookieHeader(token, maxAgeSeconds, domain) {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=' + token + '; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
+  const dom = domain ? 'Domain=' + domain + '; ' : '';
+  return COOKIE_NAME + '=' + token + '; Path=/; ' + dom + 'HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
 }
-function clearCookieHeader() {
+function clearCookieHeader(domain) {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
+  const dom = domain ? 'Domain=' + domain + '; ' : '';
+  return COOKIE_NAME + '=; Path=/; ' + dom + 'HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
 }
 
 function readSession(req) {
   const cookies = parseCookies(req.headers.get ? req.headers.get('cookie') : req.headers.cookie);
   const token = cookies[COOKIE_NAME];
-  if (!token) return null;
-  const session = verifySession(token);
+  let session = token ? verifySession(token) : null;
+  /* SSO fallback — an Admin already signed into a sibling app (QuotePro/
+     Cars) is accepted here without a second login. verifySsoSession only
+     ever returns admin payloads, so no other role can cross apps and
+     permissions are never elevated. */
+  if (!session && cookies[SSO_COOKIE_NAME]) session = verifySsoSession(cookies[SSO_COOKIE_NAME]);
+  if (!session) return null;
   /* Super admin override (one master account, unrestricted everywhere) —
      enforced here so it cascades through every adminOnly check without
      touching each route individually. */

@@ -128,3 +128,35 @@ tracked" rather than inventing numbers), document upload UI for projects
 (the `pm_project_documents` table and Supabase Storage convention are ready,
 the upload screen isn't wired up yet), and a dedicated Reports page for
 either app.
+
+## 5. Unified Admin Workspace (SSO + app switcher)
+
+The three apps now share an admin single sign-on. For it to work in
+production, **all three Vercel projects** (quotation, projects, cars) need
+one extra environment variable with the **same value**:
+
+```bash
+# generate ONCE, then add the SAME value to all three projects:
+openssl rand -hex 32
+npx vercel env add SSO_JWT_SECRET production   # repeat in each app's folder
+```
+
+How it works (no schema changes, no new tables):
+
+- On admin login each app sets, next to its own session cookie, an extra
+  `af_sso_session` JWT cookie scoped to `.alfarooque.com` (auto-detected
+  from the request host — override with `AF_COOKIE_DOMAIN` if ever needed).
+  The sibling apps accept that cookie for `role='admin'` only.
+- The header shows an **Applications** switcher to admins only
+  (QuotePro / Projects / Car Inventory). Non-admin users see no change.
+- Admin logout anywhere clears all three apps' session cookies + the SSO
+  cookie and revokes the user's rows in `platform_sessions` for all apps.
+- Theme and language follow the admin across apps via `af_theme` /
+  `af_lang` preference cookies (also parent-domain scoped).
+- On localhost nothing extra is needed: browsers share cookies across
+  ports, so `localhost:3030/3020/3010` behave exactly like production
+  (each app's `.env.local` already carries the shared `SSO_JWT_SECRET`).
+- Switcher URLs are resolved automatically (localhost ports in dev, the
+  current parent domain in production) and can be overridden with
+  `NEXT_PUBLIC_QUOTATION_APP_URL` / `NEXT_PUBLIC_PROJECTS_APP_URL` /
+  `NEXT_PUBLIC_CARS_APP_URL`.

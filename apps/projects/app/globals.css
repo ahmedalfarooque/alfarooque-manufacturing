@@ -301,3 +301,19 @@ html.dark .glass-card:hover {
   .mbar-bar { animation: none; height: var(--mbar-h); }
   .tw-caption { animation: none; width: auto; }
 }
+
+
+/* ═══ Admin app-switcher buttons — same .glass-ctrl recipe (height,
+   radius, glass, shadows, hover), but they keep their pill shape and
+   TEXT label on mobile: below 768px the generic .glass-ctrl collapses
+   to a 44px icon circle and hides .ctrl-label, which would leave these
+   text-only buttons empty. Scoped strictly to .app-switch-btn — nothing
+   else in the header changes. ═══ */
+@media (max-width: 768px) {
+  .glass-ctrl.app-switch-btn {
+    width: auto; height: 34px;
+    padding: 0 10px; border-radius: 40px;
+    font-size: 12px; gap: 6px;
+  }
+  .glass-ctrl.app-switch-btn .ctrl-label { display: inline; font-size: 11px; }
+}

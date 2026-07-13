@@ -10,6 +10,7 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { getDb } = require('./db');
+const { SSO_COOKIE_NAME, verifySsoSession } = require('./sso');
 
 const APP = 'cars';
 const COOKIE_NAME = 'af_cars_session';
@@ -51,13 +52,18 @@ function parseCookies(header) {
   });
   return out;
 }
-function sessionCookieHeader(token, maxAgeSeconds) {
+/* `domain` (optional) scopes the cookie to the parent domain
+   (.alfarooque.com) so the admin logout-everywhere flow can clear it
+   from any sibling app. Omitted on localhost — behaviour unchanged. */
+function sessionCookieHeader(token, maxAgeSeconds, domain) {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=' + token + '; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
+  const dom = domain ? 'Domain=' + domain + '; ' : '';
+  return COOKIE_NAME + '=' + token + '; Path=/; ' + dom + 'HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=' + maxAgeSeconds;
 }
-function clearCookieHeader() {
+function clearCookieHeader(domain) {
   const secure = process.env.NODE_ENV !== 'development' ? 'Secure; ' : '';
-  return COOKIE_NAME + '=; Path=/; HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
+  const dom = domain ? 'Domain=' + domain + '; ' : '';
+  return COOKIE_NAME + '=; Path=/; ' + dom + 'HttpOnly; ' + secure + 'SameSite=Strict; Max-Age=0';
 }
 
 /* Reads the session from the request's Cookie header and returns the
@@ -66,8 +72,14 @@ function clearCookieHeader() {
 function readSession(req) {
   const cookies = parseCookies(req.headers.get ? req.headers.get('cookie') : req.headers.cookie);
   const token = cookies[COOKIE_NAME];
-  if (!token) return null;
-  return verifySession(token);
+  const session = token ? verifySession(token) : null;
+  if (session) return session;
+  /* SSO fallback — an Admin already signed into a sibling app (QuotePro/
+     Projects) is accepted here without a second login. verifySsoSession
+     only ever returns admin payloads, so no other role can cross apps
+     and permissions are never elevated. */
+  if (cookies[SSO_COOKIE_NAME]) return verifySsoSession(cookies[SSO_COOKIE_NAME]);
+  return null;
 }
 
 async function isLoginRateLimited(email) {

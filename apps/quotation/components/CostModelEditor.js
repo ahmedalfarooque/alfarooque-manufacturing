@@ -7,11 +7,12 @@
    never touches master data. Totals come from lib/costing — the same
    engine the server re-runs on save. */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLanguage, langHelpers } from '@/lib/i18n';
 import { costLineTotal, productCostSummary } from '@/lib/costing';
 import { formatMaterialDims } from '@/lib/dims';
 import ItemPicker from '@/components/ItemPicker';
+import MaterialEditDialog, { lineValuesFromMaterial } from '@/components/MaterialEditDialog';
 import { Button, Input, Select } from '@/components/ui';
 
 const SECTIONS = ['material', 'hardware', 'labour', 'machine', 'expense', 'other'];
@@ -73,6 +74,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
 
   const summary = useMemo(() => productCostSummary(lines, { ...params, qty: 1 }), [lines, params]);
   const sectionLines = lines.map((l, i) => ({ ...l, _i: i })).filter(l => l.section === tab);
+  const [matEdit, setMatEdit] = useState(null);   // { index, sourceId } — material version-control dialog
 
   function patchLine(i, patch) {
     setLines(prev => prev.map((l, j) => j === i ? { ...l, ...patch } : l));
@@ -141,8 +143,20 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
                         onChange={e => patchLine(l._i, { name: e.target.value })} />
                     ) : (
                       <>
-                        <div className="font-medium">{name(l)}</div>
+                        <div className="font-medium">
+                          {name(l)}
+                          {(l.section === 'material' || l.section === 'hardware') && (
+                            <button type="button" title={t('matdlg.editMaterial')}
+                              onClick={() => setMatEdit({ index: l._i, sourceId: l.source_id })}
+                              className="ms-1.5 text-[#8C8A80] hover:text-brand-600 dark:hover:text-brand-400 text-[13px] align-middle">✎</button>
+                          )}
+                        </div>
                         {l.spec_text && <div className="text-[11px] text-[#8C8A80]" dir="ltr">{l.spec_text}</div>}
+                        {l.extra && l.extra.material_override && (
+                          <span className="inline-block mt-0.5 text-[10px] px-1.5 rounded-full bg-brand-600/15 text-brand-700 dark:text-brand-300">
+                            {t('matdlg.localOverride')}
+                          </span>
+                        )}
                       </>
                     )}
                   </td>
@@ -226,6 +240,30 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
           </table>
         </div>
       </div>
+
+      {/* ── Material version-control dialog (FR-MAT-VC) ──
+          SAVE → master updated, snapshot refreshed here.
+          SAVE AS NEW → new master created, this line re-points to it.
+          CLOSE → values applied ONLY to this document's line (local
+          override); the materials database is untouched. */}
+      {matEdit && (
+        <MaterialEditDialog materialId={matEdit.sourceId} context="document" lang={langOverride}
+          onDone={(res) => {
+            const i = matEdit.index;
+            setMatEdit(null);
+            if (res.action === 'saved') {
+              patchLine(i, lineValuesFromMaterial(res.material, formatMaterialDims(res.material, t)));
+            } else if (res.action === 'savedAsNew') {
+              patchLine(i, { ...lineValuesFromMaterial(res.material, formatMaterialDims(res.material, t)), source_id: res.material.id });
+            } else if (res.action === 'applyLocal') {
+              const l = lines[i];
+              patchLine(i, {
+                ...lineValuesFromMaterial(res.values, formatMaterialDims(res.values, t)),
+                extra: { ...((l && l.extra) || {}), material_override: true },
+              });
+            }
+          }} />
+      )}
 
       {/* ── Right: cost summary (sticky) ── */}
       <div className="glass-card p-4 xl:sticky xl:top-20 space-y-3">

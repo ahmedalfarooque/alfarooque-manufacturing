@@ -4,7 +4,7 @@
   "private": true,
   "description": "AL FAROOQUE — Project Management System (deployed independently at projects.alfarooque.com)",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3020",
     "build": "next build",
     "start": "next start -p 3020",
     "lint": "next lint"

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { readPref, writePref, LANG_PREF_COOKIE } from './prefs';
 
 export const LANG_KEY = 'af-cars-lang';
 
@@ -571,7 +572,9 @@ export function LanguageProvider({ children }) {
   useEffect(() => {
     let saved = 'en';
     try {
-      saved = localStorage.getItem(LANG_KEY) || 'en';
+      /* Cross-app pref cookie wins (latest choice made in ANY app);
+         the per-app localStorage key stays as the fallback. */
+      saved = readPref(LANG_PREF_COOKIE) || localStorage.getItem(LANG_KEY) || 'en';
     } catch (_) {}
     setLangState(saved);
     applyDomLang(saved);
@@ -581,6 +584,7 @@ export function LanguageProvider({ children }) {
     setLangState(next);
     applyDomLang(next);
     try { localStorage.setItem(LANG_KEY, next); } catch (_) {}
+    writePref(LANG_PREF_COOKIE, next);
   }, []);
 
   const t = useCallback((key, vars) => {

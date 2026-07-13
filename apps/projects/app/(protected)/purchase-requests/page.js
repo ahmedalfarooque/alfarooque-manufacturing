@@ -38,7 +38,7 @@ const ALL_STATUSES = ['Pending', 'Under Review', 'Approved', 'Rejected', 'On Hol
 const REFRESH_MS = 15000;
 
 export default function PurchaseRequestsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
@@ -120,24 +120,36 @@ export default function PurchaseRequestsPage() {
       r.request_date, r.project_name, r.customer_name, `"${(r.material_description || '').replace(/"/g, '""')}"`,
       r.priority, r.requested_by_name, r.status,
     ].join(',')));
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    /* Prepend a UTF-8 BOM so Excel opens Arabic data as Unicode instead
+       of ANSI (which would show mojibake like "Ø§Ù„Ø®Ø´Ø¨"). */
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'purchase-requests.csv'; a.click();
     URL.revokeObjectURL(url);
   }
 
+  /* Standardized A4 report PDF — shared engine (lib/reportPdf.js).
+     Exports exactly the same rows and columns as the Excel/CSV export
+     above, so both formats always carry identical data. */
   async function exportPdf() {
-    const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
-    await import('jspdf-autotable');
-    const doc = new jsPDF({ orientation: 'landscape' });
-    doc.text('AL FAROOQUE — Purchase Requests', 14, 14);
-    doc.autoTable({
-      startY: 20,
-      head: [['#', 'Date', 'Project', 'Materials', 'Priority', 'Requested By', 'Status']],
-      body: rows.map((r, i) => [i + 1, r.request_date, r.project_name, r.material_description, r.priority, r.requested_by_name, r.status]),
+    const ar = lang === 'ar';
+    const { exportReportPdf } = await import('@/lib/reportPdf');
+    await exportReportPdf({
+      title: ar ? 'تقرير طلبات الشراء' : 'Purchase Requests Report',
+      columns: [
+        { key: 'request_date', header: ar ? 'التاريخ' : 'Date' },
+        { key: 'project_name', header: ar ? 'المشروع' : 'Project' },
+        { key: 'customer_name', header: ar ? 'العميل' : 'Customer' },
+        { key: 'material_description', header: ar ? 'المواد' : 'Materials' },
+        { key: 'priority', header: ar ? 'الأولوية' : 'Priority' },
+        { key: 'requested_by_name', header: ar ? 'مقدم الطلب' : 'Requested By' },
+        { key: 'status', header: ar ? 'الحالة' : 'Status' },
+      ],
+      rows,
+      lang,
+      fileName: 'purchase-requests-report.pdf',
     });
-    doc.save('purchase-requests.pdf');
   }
 
   function printReport() { window.print(); }

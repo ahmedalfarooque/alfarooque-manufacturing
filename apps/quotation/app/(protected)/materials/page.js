@@ -7,6 +7,7 @@ import { formatMaterialDims, DIM_UNITS } from '@/lib/dims';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Button, Input, Textarea, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
 import ImportButton from '@/components/ImportButton';
+import MaterialEditDialog from '@/components/MaterialEditDialog';
 
 const FIELD_DEFS_TOP = [
   ['code', 'f.code', 'text'],
@@ -111,14 +112,13 @@ export default function MaterialsPage() {
   };
 
   function open(row) {
+    /* Editing an existing material goes through the version-control
+       dialog (SAVE / SAVE AS NEW / CLOSE) — FR-MAT-VC. Adding a brand
+       new material keeps the plain create form below. */
+    if (row) { setModal({ row }); return; }
     const init = { kind: kind || 'material', unit: 'piece', default_waste_pct: 0 };
     DIM_FIELDS.forEach(k => { init[k + '_unit'] = 'mm'; });
-    FIELD_DEFS.forEach(([k]) => { if (row) init[k] = row[k] ?? ''; });
-    if (row) DIM_FIELDS.forEach(k => {
-      init[k + '_value'] = row[k + '_value'] ?? '';
-      init[k + '_unit'] = row[k + '_unit'] || 'mm';
-    });
-    setForm(init); setErr(null); setModal({ row });
+    setForm(init); setErr(null); setModal({ row: null });
   }
 
   async function save(e) {
@@ -246,8 +246,21 @@ export default function MaterialsPage() {
         <Pagination page={page} pageSize={25} total={total} onPage={setPage} />
       </div>
 
-      {modal && (
-        <Modal title={t(modal.row ? 'common.edit' : 'common.add') + ' — ' + t('nav.materials')} onClose={() => setModal(null)} wide>
+      {modal && modal.row && (
+        <MaterialEditDialog material={modal.row} context="master"
+          onDone={(res) => {
+            setModal(null);
+            if (res.action === 'saved' || res.action === 'savedAsNew') {
+              if (res.action === 'savedAsNew' && res.material) {
+                setImportResult(t('matdlg.createdAsNew', { code: res.material.code }));
+              }
+              load();
+            }
+          }} />
+      )}
+
+      {modal && !modal.row && (
+        <Modal title={t('common.add') + ' — ' + t('nav.materials')} onClose={() => setModal(null)} wide>
           <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {FIELD_DEFS_TOP.map(([key, labelKey, kindType, required, dir]) => (
               <Field key={key} label={t(labelKey)} required={required} className={kindType === 'textarea' ? 'md:col-span-3' : ''}>

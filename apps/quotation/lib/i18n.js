@@ -6,6 +6,7 @@
    localStorage('af-quotation-lang'). */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { readPref, writePref, LANG_PREF_COOKIE } from './prefs';
 
 const STORAGE_KEY = 'af-quotation-lang';
 
@@ -162,6 +163,18 @@ export const translations = {
     'materials.priceHistory': 'Price History',
     'materials.noPriceHistory': 'No price history yet.',
     'materials.priceEditNote': 'Changing the latest price will add a new entry to this material’s price history.',
+
+    // Material edit version control (FR-MAT-VC)
+    'matdlg.title': 'Edit Material',
+    'matdlg.editMaterial': 'Edit material',
+    'matdlg.saveAsNew': 'Save as New',
+    'matdlg.saveHint': 'Overwrite the original material (same ID & code). Updates it everywhere it is referenced.',
+    'matdlg.saveAsNewHint': 'Create a separate new material with a new ID and auto-generated code. The original stays unchanged.',
+    'matdlg.closeHintDoc': 'Nothing is saved to the materials database — the edited values apply only to this document.',
+    'matdlg.closeHintMaster': 'Close without saving any changes to the materials database.',
+    'matdlg.unsavedPrompt': 'You have unsaved edits — choose one of the options below before leaving.',
+    'matdlg.localOverride': 'local override',
+    'matdlg.createdAsNew': 'Saved as new material {code}. The original material was not changed.',
 
     // Imports
     'import.customersResult': 'Imported {inserted} customers ({duplicates} duplicates skipped).',
@@ -382,6 +395,7 @@ export const translations = {
     'report.labour-rates': 'Labour Rates',
     'report.machines': 'Machines',
     'report.expenses': 'Expense Templates',
+    'report.materials-report': 'Materials Report',
     'users.platformRole': 'Platform',
     'users.qrole': 'Quotation Role',
     'users.since': 'Since',
@@ -594,6 +608,18 @@ export const translations = {
     'materials.priceHistory': 'سجل الأسعار',
     'materials.noPriceHistory': 'لا يوجد سجل أسعار بعد.',
     'materials.priceEditNote': 'تغيير آخر سعر سيضيف سجلاً جديداً في تاريخ أسعار هذه المادة.',
+
+    // التحكم بإصدارات المواد عند التعديل
+    'matdlg.title': 'تعديل المادة',
+    'matdlg.editMaterial': 'تعديل المادة',
+    'matdlg.saveAsNew': 'حفظ كمادة جديدة',
+    'matdlg.saveHint': 'استبدال المادة الأصلية (نفس المعرّف والكود) وتحديثها في كل مكان تُستخدم فيه.',
+    'matdlg.saveAsNewHint': 'إنشاء مادة جديدة منفصلة بمعرّف جديد وكود يُنشأ تلقائياً، مع بقاء المادة الأصلية دون تغيير.',
+    'matdlg.closeHintDoc': 'لن يُحفظ أي شيء في قاعدة بيانات المواد — القيم المعدّلة تُطبق على هذا المستند فقط.',
+    'matdlg.closeHintMaster': 'إغلاق دون حفظ أي تغييرات في قاعدة بيانات المواد.',
+    'matdlg.unsavedPrompt': 'لديك تعديلات غير محفوظة — اختر أحد الخيارات أدناه قبل المغادرة.',
+    'matdlg.localOverride': 'تعديل خاص بالمستند',
+    'matdlg.createdAsNew': 'تم الحفظ كمادة جديدة {code}. لم يتم تغيير المادة الأصلية.',
 
     // Imports
     'import.customersResult': 'تم استيراد {inserted} عميلاً (تم تخطي {duplicates} مكرر).',
@@ -814,6 +840,7 @@ export const translations = {
     'report.labour-rates': 'أجور العمالة',
     'report.machines': 'المكائن',
     'report.expenses': 'قوالب المصاريف',
+    'report.materials-report': 'تقرير المواد',
     'users.platformRole': 'المنصة',
     'users.qrole': 'دور عروض الأسعار',
     'users.since': 'منذ',
@@ -1002,7 +1029,9 @@ export function LanguageProvider({ children }) {
     loadSessionCache('en');
     loadSessionCache('ar');
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      /* Cross-app pref cookie wins (latest choice made in ANY app);
+         the per-app localStorage key stays as the fallback. */
+      const saved = readPref(LANG_PREF_COOKIE) || localStorage.getItem(STORAGE_KEY);
       if (saved === 'ar' || saved === 'en') {
         setLangState(saved);
         applyDom(saved);
@@ -1015,6 +1044,7 @@ export function LanguageProvider({ children }) {
     setLangState(next);
     applyDom(next);
     try { localStorage.setItem(STORAGE_KEY, next); } catch (_) {}
+    writePref(LANG_PREF_COOKIE, next);
   }, []);
 
   const t = useCallback((key, vars) => {

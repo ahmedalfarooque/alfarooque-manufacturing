@@ -84,9 +84,12 @@ function col(row, names) {
 }
 function toNum(v) { const n = parseFloat(String(v).replace(/[^\d.\-]/g, '')); return Number.isFinite(n) ? n : null; }
 
-async function buildXlsx({ sheetName, columns, rows }) {
+async function buildXlsx({ sheetName, columns, rows, rtl }) {
   const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet(sheetName || 'Sheet1', { views: [{ state: 'frozen', ySplit: 1 }] });
+  /* rightToLeft view for Arabic exports (Part 6) — exceljs writes UTF-8
+     so Arabic content is never corrupted; this just flips the sheet
+     orientation. Frozen header row preserved. */
+  const ws = wb.addWorksheet(sheetName || 'Sheet1', { views: [{ state: 'frozen', ySplit: 1, rightToLeft: !!rtl }] });
   ws.columns = columns.map(c => ({ header: c.header, key: c.key, width: c.width || Math.max(14, c.header.length + 4) }));
   ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
   ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF46512F' } };

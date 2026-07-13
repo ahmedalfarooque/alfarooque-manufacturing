@@ -22,7 +22,7 @@ const EMPTY_FORM = {
 };
 
 export default function VehiclesPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -91,17 +91,38 @@ export default function VehiclesPage() {
 
   function exportExcel() { window.location.href = '/api/cars/export'; }
 
+  /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same
+     as the QuotePro and Projects apps. Fetches ALL vehicles through the
+     existing list API (pages of 100 — its max) so the PDF carries the
+     same complete dataset and columns as the Excel export. */
   async function exportPdf() {
-    const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
-    await import('jspdf-autotable');
-    const doc = new jsPDF({ orientation: 'landscape' });
-    doc.text('AL FAROOQUE — Vehicles', 14, 14);
-    doc.autoTable({
-      startY: 20,
-      head: [['#', 'Vehicle Number', 'Name', 'Type', 'Fuel', 'Driver', 'Status', 'Location']],
-      body: vehicles.map((v, i) => [i + 1, v.vehicle_number, v.name || '—', v.type, v.fuel_type, v.driver || '—', v.status, v.location || '—']),
+    const all = [];
+    for (let p = 1; p <= 200; p++) {
+      const res = await fetch('/api/cars?' + new URLSearchParams({ page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
+      const d = res && res.ok ? await res.json() : null;
+      if (!d || !Array.isArray(d.vehicles) || d.vehicles.length === 0) break;
+      all.push(...d.vehicles);
+      if (all.length >= (d.total || 0)) break;
+    }
+    const ar = lang === 'ar';
+    const { exportReportPdf } = await import('@/lib/reportPdf');
+    await exportReportPdf({
+      title: ar ? 'تقرير المركبات' : 'Vehicles Report',
+      columns: [
+        { key: 'vehicle_number', header: ar ? 'رقم المركبة' : 'Vehicle Number' },
+        { key: 'name', header: ar ? 'اسم المركبة' : 'Vehicle Name' },
+        { key: 'type', header: ar ? 'النوع' : 'Type' },
+        { key: 'fuel_type', header: ar ? 'الوقود' : 'Fuel Type' },
+        { key: 'driver', header: ar ? 'السائق' : 'Driver' },
+        { key: 'status', header: ar ? 'الحالة' : 'Status' },
+        { key: 'current_km', header: ar ? 'العداد (كم)' : 'Current KM' },
+        { key: 'location', header: ar ? 'الموقع' : 'Location' },
+        { key: 'last_update', header: ar ? 'آخر تحديث' : 'Last Update' },
+      ],
+      rows: all,
+      lang,
+      fileName: 'vehicles-report.pdf',
     });
-    doc.save('vehicles.pdf');
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));

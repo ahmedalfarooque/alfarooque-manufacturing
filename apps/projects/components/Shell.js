@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
+import AppSwitcherButtons from '@/components/AppSwitcherButtons';
+import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
 
 const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
@@ -32,7 +34,9 @@ export default function Shell({ children, active }) {
       .then(d => d && setUser(d.user))
       .catch(() => {});
     try {
-      const saved = localStorage.getItem('af-projects-theme');
+      /* Cross-app pref cookie wins (latest choice made in ANY app);
+         the per-app localStorage key stays as the fallback. */
+      const saved = readPref(THEME_PREF_COOKIE) || localStorage.getItem('af-projects-theme');
       setDark(saved === 'dark');
     } catch (_) {}
   }, []);
@@ -101,6 +105,7 @@ export default function Shell({ children, active }) {
     setDark(next);
     document.documentElement.classList.toggle('dark', next);
     try { localStorage.setItem('af-projects-theme', next ? 'dark' : 'light'); } catch (_) {}
+    writePref(THEME_PREF_COOKIE, next ? 'dark' : 'light');
   }
 
   async function logout() {
@@ -158,6 +163,7 @@ export default function Shell({ children, active }) {
             <h1 className="font-semibold text-lg capitalize">{(() => { const navItem = NAV.find(i => i.href === active); return navItem ? t(navItem.labelKey) : active.replace('/', ''); })()}</h1>
           </div>
           <div className="flex items-center gap-3">
+            <AppSwitcherButtons user={user} />
             <div className="relative">
               <button onClick={() => setNotifOpen(o => !o)} className="relative h-9 w-9 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-sm transition-colors duration-200 hover:bg-[#F1EEE7] dark:hover:bg-white/5" aria-label={t('shell.notifications')}>
                 <GlassIcon name="bell" size={18} />

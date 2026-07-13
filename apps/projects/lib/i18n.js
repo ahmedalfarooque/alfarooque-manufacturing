@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { readPref, writePref, LANG_PREF_COOKIE } from './prefs';
 
 const STORAGE_KEY = 'af-projects-lang';
 
@@ -588,7 +589,9 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      /* Cross-app pref cookie wins (latest choice made in ANY app);
+         the per-app localStorage key stays as the fallback. */
+      const saved = readPref(LANG_PREF_COOKIE) || localStorage.getItem(STORAGE_KEY);
       if (saved === 'ar' || saved === 'en') {
         setLangState(saved);
         applyDocumentLang(saved);
@@ -604,6 +607,7 @@ export function LanguageProvider({ children }) {
     setLangState(next);
     applyDocumentLang(next);
     try { localStorage.setItem(STORAGE_KEY, next); } catch (_) {}
+    writePref(LANG_PREF_COOKIE, next);
   }, []);
 
   const t = useCallback((key, vars) => {

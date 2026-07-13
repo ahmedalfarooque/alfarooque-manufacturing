@@ -29,13 +29,13 @@ function labourRate(role, unit) {
 /* Builds { staleByProduct: Map(productId → [{lineId, section, old, new}]) } */
 async function findStale(sb) {
   const { data: lines } = await sb.from('qt_product_cost_lines')
-    .select('id, product_id, section, source_id, unit, unit_cost')
+    .select('id, product_id, section, source_id, unit, unit_cost, extra')
     .not('source_id', 'is', null).limit(50000);
   if (!lines || !lines.length) return new Map();
 
   const ids = (secs) => [...new Set(lines.filter(l => secs.includes(l.section)).map(l => l.source_id))];
   const [mats, labs, machs, exps] = await Promise.all([
-    ids(['material', 'hardware']).length ? sb.from('qt_materials').select('id, latest_price').in('id', ids(['material', 'hardware'])) : { data: [] },
+    ids(['material', 'hardware']).length ? sb.from('qt_materials').select('id, latest_price, unit').in('id', ids(['material', 'hardware'])) : { data: [] },
     ids(['labour']).length ? sb.from('qt_labour_roles').select('id, hourly_rate, daily_rate, monthly_rate').in('id', ids(['labour'])) : { data: [] },
     ids(['machine']).length ? sb.from('qt_machines').select('id, hourly_cost').in('id', ids(['machine'])) : { data: [] },
     ids(['expense']).length ? sb.from('qt_expense_templates').select('id, default_amount, unit').in('id', ids(['expense'])) : { data: [] },
@@ -47,10 +47,15 @@ async function findStale(sb) {
 
   const stale = new Map();
   for (const l of lines) {
+    /* rate_locked lines keep their entered rate forever (e.g. bulk-imported
+       cost models whose rates are unit-converted / excl-VAT by design). */
+    if (l.extra && l.extra.rate_locked) continue;
     let next = null;
     if (l.section === 'material' || l.section === 'hardware') {
       const m = matMap.get(l.source_id);
-      if (m && r2(Number(m.latest_price)) !== r2(Number(l.unit_cost))) next = Number(m.latest_price);
+      /* Lines costed in a different unit than the master (e.g. per-m² line
+         vs per-piece master price) are not comparable — never refresh. */
+      if (m && m.unit === l.unit && r2(Number(m.latest_price)) !== r2(Number(l.unit_cost))) next = Number(m.latest_price);
     } else if (l.section === 'labour') {
       const rle = labMap.get(l.source_id);
       if (rle) {

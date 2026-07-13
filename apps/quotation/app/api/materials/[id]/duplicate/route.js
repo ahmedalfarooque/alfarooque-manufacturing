@@ -12,8 +12,13 @@ export const POST = makeDuplicateHandler({
   table: 'qt_materials',
   fields: FIELDS,
   prepareCopy: async (copy, { sb }) => {
-    const { count } = await sb.from('qt_materials').select('id', { count: 'exact', head: true });
-    copy.code = (copy.kind === 'hardware' ? 'H-' : 'M-') + String((count || 0) + 1).padStart(5, '0');
+    /* Highest existing auto code (not table count) — collision-safe. */
+    const prefix = copy.kind === 'hardware' ? 'H-' : 'M-';
+    const { data } = await sb.from('qt_materials').select('code')
+      .like('code', prefix + '%').order('code', { ascending: false }).limit(1);
+    const last = data && data[0] ? parseInt(String(data[0].code).slice(prefix.length), 10) || 0 : 0;
+    copy.code = prefix + String(last + 1).padStart(5, '0');
+    copy.barcode = copy.code;
     if (copy.name) copy.name = copy.name + ' (copy)';
     if (copy.name_en) copy.name_en = copy.name_en + ' (copy)';
     if (copy.name_ar) copy.name_ar = copy.name_ar + ' (نسخة)';

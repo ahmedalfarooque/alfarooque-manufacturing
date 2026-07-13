@@ -161,6 +161,50 @@ const REPORTS = {
       C('default_amount', 'Default', 'الافتراضي'), C('unit', 'Unit', 'الوحدة')],
     run: async (sb) => (await sb.from('qt_expense_templates').select('*').is('deleted_at', null).order('category')).data || [],
   },
+  /* Materials Report — built entirely from the EXISTING qt_materials
+     table (+ its category / supplier lookups). No new tables, no schema
+     change. Category / Sub Category are derived from the material's
+     category and its parent in qt_material_categories (parent = Category,
+     leaf = Sub Category). Stock columns are intentionally omitted: this
+     schema has no stock/min-stock fields, and inventing them would mean a
+     schema change (out of scope) — Cost maps to the material's latest
+     price. Textual columns carry *_en/*_ar so the shared localizer picks
+     the right language just like every other report. */
+  'materials-report': {
+    columns: [C('code', 'Material Code', 'كود المادة'), C('name', 'Material Name', 'اسم المادة', true),
+      C('category', 'Category', 'الفئة', true), C('sub_category', 'Sub Category', 'الفئة الفرعية', true),
+      C('unit', 'Unit', 'الوحدة'), C('supplier', 'Supplier', 'المورد', true),
+      C('latest_price', 'Cost', 'التكلفة'), C('status', 'Status', 'الحالة'),
+      C('created_at', 'Created Date', 'تاريخ الإنشاء'), C('updated_at', 'Last Updated', 'آخر تحديث')],
+    run: async (sb) => {
+      const [matsRes, catsRes, supsRes] = await Promise.all([
+        sb.from('qt_materials').select('*').is('deleted_at', null).order('code').limit(10000),
+        sb.from('qt_material_categories').select('id, name_en, name_ar, parent_id'),
+        sb.from('qt_suppliers').select('id, name_en, name_ar'),
+      ]);
+      const catMap = new Map((catsRes.data || []).map(c => [c.id, c]));
+      const supMap = new Map((supsRes.data || []).map(s => [s.id, s]));
+      return (matsRes.data || []).map(m => {
+        const leaf = catMap.get(m.category_id) || null;
+        const parent = leaf && leaf.parent_id ? (catMap.get(leaf.parent_id) || null) : null;
+        const cat = parent || leaf;          // top category
+        const sub = parent ? leaf : null;    // sub category only when a hierarchy exists
+        const sup = supMap.get(m.default_supplier_id) || null;
+        return {
+          code: m.code || '',
+          name: m.name_en || m.name_ar || '', name_en: m.name_en, name_ar: m.name_ar,
+          category: cat ? (cat.name_en || cat.name_ar || '') : '', category_en: cat ? cat.name_en : null, category_ar: cat ? cat.name_ar : null,
+          sub_category: sub ? (sub.name_en || sub.name_ar || '') : '', sub_category_en: sub ? sub.name_en : null, sub_category_ar: sub ? sub.name_ar : null,
+          unit: m.unit || '',
+          supplier: sup ? (sup.name_en || sup.name_ar || '') : '', supplier_en: sup ? sup.name_en : null, supplier_ar: sup ? sup.name_ar : null,
+          latest_price: m.latest_price,
+          status: m.status || '',
+          created_at: m.created_at ? String(m.created_at).slice(0, 10) : '',
+          updated_at: m.updated_at ? String(m.updated_at).slice(0, 10) : '',
+        };
+      });
+    },
+  },
 };
 
 export async function GET(req, { params }) {
@@ -189,7 +233,7 @@ export async function GET(req, { params }) {
 
   const format = url.searchParams.get('format') || 'json';
   const filename = `${params.slug}-${new Date().toISOString().slice(0, 10)}-${lang}`;
-  if (format === 'xlsx') return xlsxResponse(await buildXlsx({ sheetName: params.slug, columns, rows }), filename + '.xlsx');
+  if (format === 'xlsx') return xlsxResponse(await buildXlsx({ sheetName: params.slug, columns, rows, rtl: lang === 'ar' }), filename + '.xlsx');
   if (format === 'csv') return csvResponse(columns, rows, filename + '.csv');
   return json({ columns, rows });
 }

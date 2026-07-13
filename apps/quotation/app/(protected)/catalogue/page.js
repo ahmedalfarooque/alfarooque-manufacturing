@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage, codeLabel } from '@/lib/i18n';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import { Button, Input, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
+import { Button, Input, Textarea, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
 
 const CATEGORIES = ['DOORS', 'WINDOWS', 'KITCHEN', 'FURNITURE', 'CHAIRS', 'SOFA', 'CUPBOARDS',
   'TABLES', 'COUNTERS', 'CLADDING', 'CURTAINS', 'STEEL', 'ALUMINIUM', 'GLASS', 'OTHER'];
@@ -260,6 +260,13 @@ export default function CataloguePage() {
             </Field>
             <Field label={t('f.unit')}><Input value={form.unit ?? 'nos'} onChange={e => setForm(s => ({ ...s, unit: e.target.value }))} /></Field>
             <Field label="SKU"><Input value={form.sku ?? ''} onChange={e => setForm(s => ({ ...s, sku: e.target.value }))} /></Field>
+            {/* Description / Scope of Work — bilingual, printed on quotations (A0). */}
+            <Field label={t('catalogue.descriptionEn')} className="md:col-span-2">
+              <Textarea value={form.description_en ?? ''} onChange={e => setForm(s => ({ ...s, description_en: e.target.value }))} />
+            </Field>
+            <Field label={t('catalogue.descriptionAr')} className="md:col-span-2">
+              <Textarea dir="rtl" value={form.description_ar ?? ''} onChange={e => setForm(s => ({ ...s, description_ar: e.target.value }))} />
+            </Field>
             <div className="md:col-span-2 text-[11px] text-[#8C8A80]">{t('catalogue.translateNote')}</div>
             {err && <div className="md:col-span-2 text-sm text-[#BC6B4E]">{err}</div>}
             <div className="md:col-span-2 flex justify-end gap-2">

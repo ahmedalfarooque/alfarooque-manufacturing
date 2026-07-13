@@ -26,7 +26,7 @@ const EMPTY_FORM = {
 };
 
 export default function DriversPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
@@ -76,17 +76,31 @@ export default function DriversPage() {
 
   function exportExcel() { window.location.href = '/api/drivers/export'; }
 
+  /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same
+     as the QuotePro and Projects apps. `sorted` already holds the FULL
+     driver list (this page paginates client-side), with the same columns
+     as the Excel export. */
   async function exportPdf() {
-    const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
-    await import('jspdf-autotable');
-    const doc = new jsPDF({ orientation: 'landscape' });
-    doc.text('AL FAROOQUE — Drivers', 14, 14);
-    doc.autoTable({
-      startY: 20,
-      head: [['#', 'Name', 'Phone', 'Vehicle', 'License Expiry', 'Iqama Expiry', 'Status']],
-      body: sorted.map((d, i) => [i + 1, d.full_name, d.phone || '—', d.cars?.vehicle_number || '—', d.license_expiry_date || '—', d.iqama_expiry_date || '—', d.status]),
+    const ar = lang === 'ar';
+    const { exportReportPdf } = await import('@/lib/reportPdf');
+    await exportReportPdf({
+      title: ar ? 'تقرير السائقين' : 'Drivers Report',
+      columns: [
+        { key: 'full_name', header: ar ? 'الاسم الكامل' : 'Full Name' },
+        { key: 'employee_id', header: ar ? 'الرقم الوظيفي' : 'Employee ID' },
+        { key: 'phone', header: ar ? 'الهاتف' : 'Phone' },
+        { key: 'vehicle', header: ar ? 'المركبة' : 'Vehicle' },
+        { key: 'nationality', header: ar ? 'الجنسية' : 'Nationality' },
+        { key: 'license_number', header: ar ? 'رقم الرخصة' : 'License Number' },
+        { key: 'license_expiry_date', header: ar ? 'انتهاء الرخصة' : 'License Expiry' },
+        { key: 'iqama_number', header: ar ? 'رقم الإقامة' : 'Iqama Number' },
+        { key: 'iqama_expiry_date', header: ar ? 'انتهاء الإقامة' : 'Iqama Expiry' },
+        { key: 'status', header: ar ? 'الحالة' : 'Status' },
+      ],
+      rows: sorted.map(d => ({ ...d, vehicle: d.cars?.vehicle_number || '' })),
+      lang,
+      fileName: 'drivers-report.pdf',
     });
-    doc.save('drivers.pdf');
   }
 
   return (

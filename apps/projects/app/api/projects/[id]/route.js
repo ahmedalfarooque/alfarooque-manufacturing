@@ -87,11 +87,41 @@ async function getExistingDetails(sb, id) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response, session } = requireSession(req, { adminOnly: true });
   if (response) return response;
 
   const sb = getDb();
+  /* Admin can delete ANY project regardless of status (Draft, Pending,
+     Running, On Hold, Completed, Cancelled, …).
+
+     Why deletes used to fail for Running/Completed projects: those are
+     typically created from a quotation, so qt_quotations.project_id and
+     project_requests.project_id point at them — both plain FKs with NO
+     cascade. Postgres rejected the delete with an FK violation, which
+     surfaced as a generic "Could not delete project." and looked like a
+     status-based restriction. The fix is data-level unlinking (no schema
+     change): the quotation and the original request row survive, they
+     just stop pointing at the deleted project. Everything project-owned
+     (logs, documents, assignees, purchase requests, daily updates,
+     notifications) is still removed by the existing `on delete cascade`
+     FKs, exactly as before. Non-admins never reach this handler —
+     requireSession(adminOnly) above is unchanged. */
+  const { error: qErr } = await sb.from('qt_quotations')
+    .update({ project_id: null, project_status: null })
+    .eq('project_id', params.id);
+  if (qErr) { console.error('[projects] delete: unlink quotation failed:', qErr.message); return json({ error: 'Could not delete project.' }, 500); }
+
+  const { error: rErr } = await sb.from('project_requests')
+    .update({ project_id: null })
+    .eq('project_id', params.id);
+  if (rErr) { console.error('[projects] delete: unlink project request failed:', rErr.message); return json({ error: 'Could not delete project.' }, 500); }
+
   const { error } = await sb.from('pm_projects').delete().eq('id', params.id);
   if (error) { console.error('[projects] delete failed:', error.message); return json({ error: 'Could not delete project.' }, 500); }
+
+  /* Audit trail: who deleted what, when. The per-project activity log
+     rows cascade away with the project itself, so this goes to the
+     server log (no audit-table structure changes, per the brief). */
+  console.log(`[projects] audit: project ${params.id} deleted by admin ${session.sub} at ${new Date().toISOString()}`);
   return json({ ok: true });
 }

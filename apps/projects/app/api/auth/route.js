@@ -17,6 +17,9 @@ const {
   sessionCookieHeader, clearCookieHeader, readSession,
   isLoginRateLimited, recordLoginAttempt,
 } = require('@/lib/auth');
+const {
+  signSsoSession, ssoCookieHeader, clearSsoCookieHeaders, clearAllAppCookieHeaders, cookieDomainFromReq,
+} = require('@/lib/sso');
 const { isSuperAdminEmail } = require('@/lib/superAdmin');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,11 +64,11 @@ export async function POST(req) {
     const ip = getIp(req), ua = getUa(req);
 
     if (action === 'login') return await handleLogin(sb, body, ip);
-    if (action === 'verify-otp') return await handleVerifyOtp(sb, body, ip, ua);
+    if (action === 'verify-otp') return await handleVerifyOtp(sb, body, ip, ua, req);
     if (action === 'resend-otp') return await handleResendOtp(sb, body);
     if (action === 'logout') return handleLogout(sb, req);
     if (action === 'view-login') return await handleViewLogin(sb, body);
-    if (action === 'view-verify-otp') return await handleViewVerifyOtp(sb, body, ip, ua);
+    if (action === 'view-verify-otp') return await handleViewVerifyOtp(sb, body, ip, ua, req);
     if (action === 'view-resend-otp') return await handleViewResendOtp(sb, body);
     return json({ error: 'Unknown action.' }, 400);
   } catch (err) {
@@ -110,7 +113,7 @@ async function handleLogin(sb, body, ip) {
   }
 }
 
-async function handleVerifyOtp(sb, body, ip, ua) {
+async function handleVerifyOtp(sb, body, ip, ua, req) {
   const email = String(body.email || '').trim().toLowerCase();
   const code = String(body.code || '').trim();
   if (!EMAIL_RE.test(email) || !/^\d{6}$/.test(code)) return json({ error: 'Please enter the 6-digit code.' }, 400);
@@ -146,7 +149,14 @@ async function handleVerifyOtp(sb, body, ip, ua) {
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
   const res = json({ ok: true, user: sanitizeUser(user) });
-  res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS));
+  const cookieDomain = cookieDomainFromReq(req);
+  res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomain));
+  /* Admin SSO — one extra parent-domain cookie signs the Admin into the
+     sibling apps too (QuotePro / Projects / Car Inventory behave as one
+     ERP). Only ever minted for admins; every other role is untouched. */
+  if (sanitizeUser(user).role === 'admin') {
+    res.headers.append('Set-Cookie', ssoCookieHeader(signSsoSession(user), cookieDomain));
+  }
   return res;
 }
 
@@ -259,7 +269,7 @@ async function handleViewLogin(sb, body) {
   }
 }
 
-async function handleViewVerifyOtp(sb, body, ip, ua) {
+async function handleViewVerifyOtp(sb, body, ip, ua, req) {
   const email = String(body.email || '').trim().toLowerCase();
   const code = String(body.code || '').trim();
   if (!EMAIL_RE.test(email) || !/^\d{6}$/.test(code)) return json({ error: 'Please enter the 6-digit code.' }, 400);
@@ -301,7 +311,14 @@ async function handleViewVerifyOtp(sb, body, ip, ua) {
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
   const res = json({ ok: true, user: sanitizeUser(user) });
-  res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS));
+  const cookieDomain = cookieDomainFromReq(req);
+  res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomain));
+  /* Admin SSO — one extra parent-domain cookie signs the Admin into the
+     sibling apps too (QuotePro / Projects / Car Inventory behave as one
+     ERP). Only ever minted for admins; every other role is untouched. */
+  if (sanitizeUser(user).role === 'admin') {
+    res.headers.append('Set-Cookie', ssoCookieHeader(signSsoSession(user), cookieDomain));
+  }
   return res;
 }
 
@@ -339,12 +356,25 @@ async function handleViewResendOtp(sb, body) {
 
 async function handleLogout(sb, req) {
   const session = readSession(req);
-  if (session) {
-    await sb.from('platform_sessions').update({ revoked_at: new Date().toISOString() })
-      .eq('user_id', session.sub).eq('app', APP).is('revoked_at', null);
-  }
+  const cookieDomain = cookieDomainFromReq(req);
   const res = json({ ok: true });
-  res.headers.set('Set-Cookie', clearCookieHeader());
+  if (session && session.role === 'admin') {
+    /* Admin logout = logout EVERYWHERE: revoke this user's sessions in
+       all three apps and clear all three session cookies plus the SSO
+       cookie (possible because they are parent-domain scoped). */
+    await sb.from('platform_sessions').update({ revoked_at: new Date().toISOString() })
+      .eq('user_id', session.sub).is('revoked_at', null);
+    for (const h of clearAllAppCookieHeaders(cookieDomain)) res.headers.append('Set-Cookie', h);
+  } else {
+    /* Non-admins: exactly the previous behaviour — this app only. */
+    if (session) {
+      await sb.from('platform_sessions').update({ revoked_at: new Date().toISOString() })
+        .eq('user_id', session.sub).eq('app', APP).is('revoked_at', null);
+    }
+    res.headers.append('Set-Cookie', clearCookieHeader());
+    if (cookieDomain) res.headers.append('Set-Cookie', clearCookieHeader(cookieDomain));
+  }
+  for (const h of clearSsoCookieHeaders(cookieDomain)) res.headers.append('Set-Cookie', h);
   return res;
 }
 

@@ -23,7 +23,7 @@ const EMPTY_FORM = {
 const REFRESH_MS = 15000;
 
 export default function ProjectsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -82,17 +82,38 @@ export default function ProjectsPage() {
 
   function exportExcel() { window.location.href = '/api/projects/export'; }
 
+  /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same
+     as the QuotePro and Car Inventory apps: branded header/footer on
+     every page, fitted table, page numbers. Fetches ALL projects through
+     the existing list API (pages of 100 — the API's max) so the PDF
+     carries the same complete dataset as the Excel export, with the
+     same columns. No API changes. */
   async function exportPdf() {
-    const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
-    await import('jspdf-autotable');
-    const doc = new jsPDF({ orientation: 'landscape' });
-    doc.text('AL FAROOQUE — Projects', 14, 14);
-    doc.autoTable({
-      startY: 20,
-      head: [['#', 'Customer', 'Company', 'Project', 'Status', 'Progress']],
-      body: rows.map((p, i) => [i + 1, p.customer_name, p.company_name || '—', p.project_name, p.status, p.progress + '%']),
+    const all = [];
+    for (let p = 1; p <= 200; p++) {
+      const res = await fetch('/api/projects?' + new URLSearchParams({ status: 'All', page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
+      const d = res && res.ok ? await res.json() : null;
+      if (!d || !Array.isArray(d.projects) || d.projects.length === 0) break;
+      all.push(...d.projects);
+      if (all.length >= (d.total || 0)) break;
+    }
+    const ar = lang === 'ar';
+    const { exportReportPdf } = await import('@/lib/reportPdf');
+    await exportReportPdf({
+      title: ar ? 'تقرير المشاريع' : 'Projects Report',
+      columns: [
+        { key: 'customer_name', header: ar ? 'العميل' : 'Customer Name' },
+        { key: 'company_name', header: ar ? 'الشركة' : 'Company' },
+        { key: 'project_name', header: ar ? 'المشروع' : 'Project Name' },
+        { key: 'start_date', header: ar ? 'تاريخ البدء' : 'Start Date' },
+        { key: 'end_date', header: ar ? 'تاريخ الانتهاء' : 'End Date' },
+        { key: 'status', header: ar ? 'الحالة' : 'Status' },
+        { key: 'progress', header: ar ? 'الإنجاز ٪' : 'Progress %' },
+      ],
+      rows: all,
+      lang,
+      fileName: 'projects-report.pdf',
     });
-    doc.save('projects.pdf');
   }
 
   function printReport() { window.print(); }

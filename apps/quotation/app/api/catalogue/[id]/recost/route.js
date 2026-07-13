@@ -27,7 +27,7 @@ export async function POST(req, { params }) {
 
   const ids = (section) => lines.filter(l => l.section === section || (section === 'material' && l.section === 'hardware')).map(l => l.source_id);
   const [mats, labs, machs, exps] = await Promise.all([
-    sb.from('qt_materials').select('id, latest_price, default_waste_pct').in('id', ids('material')),
+    sb.from('qt_materials').select('id, latest_price, default_waste_pct, unit').in('id', ids('material')),
     sb.from('qt_labour_roles').select('id, hourly_rate, daily_rate, monthly_rate').in('id', lines.filter(l => l.section === 'labour').map(l => l.source_id)),
     sb.from('qt_machines').select('id, hourly_cost, setup_cost').in('id', lines.filter(l => l.section === 'machine').map(l => l.source_id)),
     sb.from('qt_expense_templates').select('id, default_amount, unit').in('id', lines.filter(l => l.section === 'expense').map(l => l.source_id)),
@@ -39,10 +39,14 @@ export async function POST(req, { params }) {
 
   const changes = [];
   for (const l of lines) {
+    /* rate_locked lines keep their entered rate; unit-converted material
+       lines (line unit ≠ master unit) are not comparable to the master
+       price and must never be auto-refreshed. */
+    if (l.extra && l.extra.rate_locked) continue;
     let next = null;
     if (l.section === 'material' || l.section === 'hardware') {
       const m = matMap.get(l.source_id);
-      if (m && Number(m.latest_price) !== Number(l.unit_cost)) next = Number(m.latest_price);
+      if (m && m.unit === l.unit && Number(m.latest_price) !== Number(l.unit_cost)) next = Number(m.latest_price);
     } else if (l.section === 'labour') {
       const r = labMap.get(l.source_id);
       if (r) {

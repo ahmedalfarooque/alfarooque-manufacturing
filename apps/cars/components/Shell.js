@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
+import AppSwitcherButtons from '@/components/AppSwitcherButtons';
+import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
 
 const NAV = [
   { href: '/dashboard', key: 'nav.dashboard', icon: 'dashboard' },
@@ -40,7 +42,9 @@ export default function Shell({ children, active }) {
       .then(d => d && setUser(d.user))
       .catch(() => {});
     try {
-      const saved = localStorage.getItem('af-cars-theme');
+      /* Cross-app pref cookie wins (latest choice made in ANY app);
+         the per-app localStorage key stays as the fallback. */
+      const saved = readPref(THEME_PREF_COOKIE) || localStorage.getItem('af-cars-theme');
       setDark(saved === 'dark');
     } catch (_) {}
   }, []);
@@ -50,6 +54,7 @@ export default function Shell({ children, active }) {
     setDark(next);
     document.documentElement.classList.toggle('dark', next);
     try { localStorage.setItem('af-cars-theme', next ? 'dark' : 'light'); } catch (_) {}
+    writePref(THEME_PREF_COOKIE, next ? 'dark' : 'light');
   }
 
   function toggleLanguage() {
@@ -148,6 +153,7 @@ export default function Shell({ children, active }) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <AppSwitcherButtons user={user} />
             <button onClick={toggleLanguage} className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
               <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
             </button>

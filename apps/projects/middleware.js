@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 const COOKIE_NAME = 'af_projects_session';
+const SSO_COOKIE_NAME = 'af_sso_session';
 
 async function verify(token) {
   try {
@@ -11,6 +12,27 @@ async function verify(token) {
   } catch (_) {
     return null;
   }
+}
+
+/* Cross-app SSO fallback (jose — Edge runtime). Accepted ONLY for admin
+   payloads carrying the sso flag, so no other role can cross apps.
+   Mirrors lib/sso.js verifySsoSession. */
+async function verifySso(token) {
+  try {
+    const secret = new TextEncoder().encode(process.env.SSO_JWT_SECRET || process.env.JWT_SECRET || '');
+    const { payload } = await jwtVerify(token, secret);
+    return payload && payload.sso === true && payload.role === 'admin' ? payload : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function readAnySession(req) {
+  const token = req.cookies.get(COOKIE_NAME)?.value;
+  const session = token ? await verify(token) : null;
+  if (session) return session;
+  const ssoToken = req.cookies.get(SSO_COOKIE_NAME)?.value;
+  return ssoToken ? await verifySso(ssoToken) : null;
 }
 
 const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/quotation-requests', '/users', '/orders', '/orders-deleted', '/quotes', '/quotes-deleted'];
@@ -26,8 +48,7 @@ function redirectTo(req, path) {
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
-  const token = req.cookies.get(COOKIE_NAME)?.value;
-  const session = token ? await verify(token) : null;
+  const session = await readAnySession(req);
 
   /* One login page (/login) with a switch between "User" (email-only
      OTP, view access — always the default) and "Admin" (email+
