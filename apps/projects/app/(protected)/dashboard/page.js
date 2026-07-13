@@ -297,11 +297,12 @@ function ExternalDashboard({ stats, error }) {
 }
 
 function ProjectListCard({ title, projects, dateKey, dateLabel, noneLabel }) {
+  const { t } = useLanguage();
   return (
     <div className="glass-card glass-card--pad">
       <h3 className="font-medium text-sm mb-3">{title}</h3>
       {projects.length === 0 ? (
-        <div className="text-sm text-[#8C8A80] py-6 text-center">{noneLabel || 'None yet.'}</div>
+        <div className="text-sm text-[#8C8A80] py-6 text-center">{noneLabel || t('dashboard.noneYet')}</div>
       ) : (
         <ul className="space-y-1">
           {projects.map(p => (
