@@ -157,15 +157,15 @@ export function ShopModal({ modal, onClose, onSaved }) {
       <form onSubmit={submit} className="space-y-4">
         {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
-          <Field label={t('shops.colName')} required className="col-span-2"><Input value={form.name} onChange={set('name')} required /></Field>
-          <Field label={t('shops.colContact')}><Input value={form.contact_person} onChange={set('contact_person')} /></Field>
-          <Field label={t('shops.colMobile')}><Input value={form.mobile} onChange={set('mobile')} /></Field>
-          <Field label={t('fields.telephone')}><Input value={form.telephone} onChange={set('telephone')} /></Field>
-          <Field label={t('fields.email')}><Input type="email" value={form.email} onChange={set('email')} /></Field>
-          <Field label={t('fields.address')} className="col-span-2"><Input value={form.address} onChange={set('address')} /></Field>
-          <Field label={t('shops.colCity')}><Input value={form.city} onChange={set('city')} /></Field>
-          <Field label={t('shops.colVat')}><Input value={form.vat_number} onChange={set('vat_number')} /></Field>
-          <Field label={t('fields.crNumber')}><Input value={form.cr_number} onChange={set('cr_number')} /></Field>
+          <Field label={t('shops.colName')} required className="col-span-2"><Input value={form.name || ''} onChange={set('name')} required /></Field>
+          <Field label={t('shops.colContact')}><Input value={form.contact_person || ''} onChange={set('contact_person')} /></Field>
+          <Field label={t('shops.colMobile')}><Input value={form.mobile || ''} onChange={set('mobile')} /></Field>
+          <Field label={t('fields.telephone')}><Input value={form.telephone || ''} onChange={set('telephone')} /></Field>
+          <Field label={t('fields.email')}><Input type="email" value={form.email || ''} onChange={set('email')} /></Field>
+          <Field label={t('fields.address')} className="col-span-2"><Input value={form.address || ''} onChange={set('address')} /></Field>
+          <Field label={t('shops.colCity')}><Input value={form.city || ''} onChange={set('city')} /></Field>
+          <Field label={t('shops.colVat')}><Input value={form.vat_number || ''} onChange={set('vat_number')} /></Field>
+          <Field label={t('fields.crNumber')}><Input value={form.cr_number || ''} onChange={set('cr_number')} /></Field>
           <Field label={t('fields.notes')} className="col-span-2"><Textarea rows={2} value={form.notes || ''} onChange={set('notes')} /></Field>
         </div>
         <div className="flex justify-end gap-2 pt-2">
