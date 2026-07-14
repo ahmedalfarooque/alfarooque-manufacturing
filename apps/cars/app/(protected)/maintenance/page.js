@@ -238,14 +238,14 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
                 options={[['', t('common.none')], ...drivers.map(d => [d.id, d.full_name])]} />
             </Field>
             <Field label={t('fields.maintenanceDate')} required>
-              <Input type="date" value={form.maintenance_date} onChange={set('maintenance_date')} required />
+              <Input type="date" value={form.maintenance_date ?? ''} onChange={set('maintenance_date')} required />
             </Field>
             <Field label={t('fields.category')}>
               <Dropdown value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} placeholder={t('maint.selectCategory')}
                 options={categories.map(c => [c.name, c.name])} />
             </Field>
             <Field label={t('fields.maintenanceType')}>
-              <Input value={form.maintenance_type} onChange={set('maintenance_type')} />
+              <Input value={form.maintenance_type ?? ''} onChange={set('maintenance_type')} />
             </Field>
             <Field label={t('fields.workshopShop')}>
               <div className="flex gap-1">
@@ -256,25 +256,25 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
               </div>
             </Field>
             <Field label={t('fields.odometerKm')}>
-              <Input type="number" value={form.odometer_km} onChange={set('odometer_km')} />
+              <Input type="number" value={form.odometer_km ?? ''} onChange={set('odometer_km')} />
             </Field>
             <Field label={t('fields.amount')}>
-              <Input type="number" value={form.amount} onChange={set('amount')} />
+              <Input type="number" value={form.amount ?? ''} onChange={set('amount')} />
             </Field>
             <Field label={t('fields.currency')}>
-              <Input value={form.currency} onChange={set('currency')} />
+              <Input value={form.currency ?? ''} onChange={set('currency')} />
             </Field>
             <Field label={t('fields.invoiceNumber')}>
-              <Input value={form.invoice_number} onChange={set('invoice_number')} />
+              <Input value={form.invoice_number ?? ''} onChange={set('invoice_number')} />
             </Field>
             <Field label={t('fields.paymentStatus')}>
               <Dropdown value={form.payment_status} onChange={v => setForm(f => ({ ...f, payment_status: v }))} options={['Unpaid', 'Paid', 'Partial'].map(p => [p, trEnum(t, 'payment', p)])} />
             </Field>
             <Field label={t('fields.technician')}>
-              <Input value={form.technician} onChange={set('technician')} />
+              <Input value={form.technician ?? ''} onChange={set('technician')} />
             </Field>
             <Field label={t('fields.warranty')}>
-              <Input value={form.warranty} onChange={set('warranty')} />
+              <Input value={form.warranty ?? ''} onChange={set('warranty')} />
             </Field>
           </div>
 

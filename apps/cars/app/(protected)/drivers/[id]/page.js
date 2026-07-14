@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { DriverModal } from '@/app/(protected)/drivers/page';
 import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
+import { Button } from '@/components/ui';
 
 const STATUS_BADGE = {
   Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -77,8 +78,8 @@ export default function DriverViewPage() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
-  if (error) return <Shell active="/drivers"><div className="text-red-500">{error}</div></Shell>;
-  if (!data) return <Shell active="/drivers"><div className="text-slate-400">{t('common.loading')}</div></Shell>;
+  if (error) return <Shell active="/drivers"><div className="text-[#BC6B4E]">{error}</div></Shell>;
+  if (!data) return <Shell active="/drivers"><div className="text-[#8C8A80]">{t('common.loading')}</div></Shell>;
 
   const { driver: d, activity } = data;
   const lic = expiryInfo(d.license_expiry_date);
@@ -93,29 +94,29 @@ export default function DriverViewPage() {
         <div>
           <a href="/drivers" className="text-xs text-brand-500 hover:underline">{t('driverView.back')}</a>
           <h2 className="text-lg font-semibold mt-1">{d.full_name}</h2>
-          <p className="text-xs text-slate-500">{t('driverView.breadcrumb', { name: d.full_name })}</p>
+          <p className="text-xs text-[#8C8A80]">{t('driverView.breadcrumb', { name: d.full_name })}</p>
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span>
-          <button onClick={() => window.print()} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
-          {isAdmin && <button onClick={() => setEditOpen(true)} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">✎ {t('common.edit')}</button>}
+          <Button variant="ghost" onClick={() => window.print()}>🖶 {t('common.print')}</Button>
+          {isAdmin && <Button onClick={() => setEditOpen(true)}>✎ {t('common.edit')}</Button>}
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 flex flex-col items-center text-center">
+        <div className="glass-card glass-card--pad flex flex-col items-center text-center">
           {d.profile_photo_url ? (
             <img src={d.profile_photo_url} alt="" className="h-24 w-24 rounded-full object-cover mb-3 cursor-pointer" onClick={() => setLightbox(d.profile_photo_url)} />
           ) : (
             <div className="h-24 w-24 rounded-full bg-slate-700 text-white flex items-center justify-center text-3xl font-medium mb-3">{d.full_name.slice(0, 1).toUpperCase()}</div>
           )}
           <div className="font-semibold">{d.full_name}</div>
-          {d.full_name_ar && <div className="text-sm text-slate-500">{d.full_name_ar}</div>}
-          <div className="text-xs text-slate-400 mt-1">{d.designation || '—'} {d.department ? '· ' + d.department : ''}</div>
-          <div className="text-xs text-slate-400 mt-1">{d.cars?.vehicle_number ? t('driverView.assigned', { vehicle: d.cars.vehicle_number }) : t('driverView.noVehicle')}</div>
+          {d.full_name_ar && <div className="text-sm text-[#8C8A80]">{d.full_name_ar}</div>}
+          <div className="text-xs text-[#8C8A80] mt-1">{d.designation || '—'} {d.department ? '· ' + d.department : ''}</div>
+          <div className="text-xs text-[#8C8A80] mt-1">{d.cars?.vehicle_number ? t('driverView.assigned', { vehicle: d.cars.vehicle_number }) : t('driverView.noVehicle')}</div>
         </div>
 
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 lg:col-span-2">
+        <div className="glass-card glass-card--pad lg:col-span-2">
           <h3 className="font-medium text-sm mb-3">{t('driverView.expiryStatus')}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <ExpiryBadge label={t('driverView.license')} info={lic} />
@@ -127,7 +128,7 @@ export default function DriverViewPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('driverView.personalInfo')}</h3>
           <dl className="space-y-2 text-sm">
             <Row label={t('fields.phone')} value={d.phone} /><Row label={t('fields.whatsapp')} value={d.whatsapp} /><Row label={t('fields.email')} value={d.email} />
@@ -136,7 +137,7 @@ export default function DriverViewPage() {
             <Row label={t('fields.emergencyContact')} value={d.emergency_contact} /><Row label={t('fields.emergencyPhone')} value={d.emergency_phone} />
           </dl>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('driverView.employmentLicense')}</h3>
           <dl className="space-y-2 text-sm">
             <Row label={t('fields.employeeId')} value={d.employee_id} /><Row label={t('fields.joiningDate')} value={d.joining_date} />
@@ -152,25 +153,25 @@ export default function DriverViewPage() {
       </div>
 
       {d.notes && (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
+        <div className="glass-card glass-card--pad mb-4">
           <h3 className="font-medium text-sm mb-2">{t('fields.notes')}</h3>
           <p className="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-300">{d.notes}</p>
         </div>
       )}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 print:hidden">
+      <div className="glass-card glass-card--pad mb-4 print:hidden">
         <h3 className="font-medium text-sm mb-3">{t('driverView.photosDocs')}</h3>
-        {uploadErr && <div className="text-red-500 text-sm mb-2">{uploadErr}</div>}
+        {uploadErr && <div className="text-[#BC6B4E] text-sm mb-2">{uploadErr}</div>}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {PHOTO_SLOTS.map(slot => {
             const url = d[slot.urlField];
             return (
               <div key={slot.key} className="text-center">
                 <div onClick={() => url && setLightbox(url)}
-                  className="aspect-square rounded-lg border border-black/10 dark:border-white/10 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer mb-1">
-                  {url ? <img src={url} alt={t(slot.labelKey)} className="w-full h-full object-cover" /> : <span className="text-2xl text-slate-400">📷</span>}
+                  className="aspect-square rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer mb-1">
+                  {url ? <img src={url} alt={t(slot.labelKey)} className="w-full h-full object-cover" /> : <span className="text-2xl text-[#8C8A80]">📷</span>}
                 </div>
-                <div className="text-[11px] text-slate-500">{t(slot.labelKey)}</div>
+                <div className="text-[11px] text-[#8C8A80]">{t(slot.labelKey)}</div>
                 {isAdmin && <button onClick={() => triggerUpload(slot.key)} className="text-[11px] text-brand-500 hover:underline">{url ? t('common.replace') : t('common.upload')}</button>}
               </div>
             );
@@ -179,13 +180,13 @@ export default function DriverViewPage() {
       </div>
 
       {activity.length > 0 && (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 print:hidden">
+        <div className="glass-card glass-card--pad print:hidden">
           <h3 className="font-medium text-sm mb-3">{t('driverView.timeline')}</h3>
           <ul className="space-y-2 text-sm">
             {activity.map(a => (
               <li key={a.id} className="flex justify-between text-slate-600 dark:text-slate-300">
                 <span>{a.activity}</span>
-                <span className="text-xs text-slate-400">{formatDateTime(a.created_at)}</span>
+                <span className="text-xs text-[#8C8A80]">{formatDateTime(a.created_at)}</span>
               </li>
             ))}
           </ul>
@@ -216,7 +217,7 @@ function Row({ label, value }) {
   if (!value) return null;
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-slate-500">{label}</dt>
+      <dt className="text-[#8C8A80]">{label}</dt>
       <dd className="font-medium text-right">{value}</dd>
     </div>
   );
