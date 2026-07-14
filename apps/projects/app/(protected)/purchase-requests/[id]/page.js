@@ -134,22 +134,21 @@ export default function PurchaseRequestDetailPage({ params }) {
 
         <div className="space-y-4">
           {isAdmin && (
-            <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+            <div className="glass-card glass-card--pad">
               <h3 className="font-medium text-sm mb-3">{t('prd.changeStatus')}</h3>
               <Dropdown value={r.status} onChange={changeStatus} options={ALL_STATUSES.map(s => [s, trEnum(t, 'status', s)])} disabled={busy} />
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {STATUS_ACTIONS.filter(to => to !== r.status).map(to => (
-                  <button key={to} disabled={busy} onClick={() => changeStatus(to)}
-                    className="text-xs px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-brand-500/40">{t('pd.act.' + to)}</button>
+                  <Button key={to} variant="ghost" disabled={busy} onClick={() => changeStatus(to)} className="text-xs px-2.5 py-1.5">{t('pd.act.' + to)}</Button>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.statusHistory')}</h3>
             {!data.statusHistory || data.statusHistory.length === 0 ? (
-              <div className="text-sm text-slate-400 py-4 text-center">{t('prd.noStatusChanges')}</div>
+              <div className="text-sm text-[#8C8A80] py-4 text-center">{t('prd.noStatusChanges')}</div>
             ) : (
               <ul className="space-y-3 text-sm">
                 {data.statusHistory.map(h => (
@@ -157,7 +156,7 @@ export default function PurchaseRequestDetailPage({ params }) {
                     <span className="h-2 w-2 rounded-full bg-brand-500 mt-1.5 shrink-0" />
                     <div>
                       <div>{h.from_status ? `${trEnum(t, 'status', h.from_status)} → ${trEnum(t, 'status', h.to_status)}` : trEnum(t, 'status', h.to_status)}</div>
-                      <div className="text-xs text-slate-400">{h.changed_by_name || ''} · {formatDate(h.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                      <div className="text-xs text-[#8C8A80]">{h.changed_by_name || ''} · {formatDate(h.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
                     </div>
                   </li>
                 ))}

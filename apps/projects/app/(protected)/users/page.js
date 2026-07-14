@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage } from '@/lib/i18n';
+import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const EMPTY_FORM = { full_name: '', email: '', position: '', role: 'viewer', phone: '', department: '', company: '', status: 'Active', otp_login_enabled: true };
 const ROLE_BADGE = {
@@ -72,58 +73,59 @@ export default function UsersPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('users.title')}</h2>
-          <p className="text-xs text-slate-500">{t('users.breadcrumb')}</p>
+          <p className="text-xs text-[#8C8A80]">{t('users.breadcrumb')}</p>
         </div>
-        <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">{t('users.addUser')}</button>
+        <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('users.addUser')}</Button>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
-        <input placeholder={t('users.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card p-4 mb-4">
+        <Input placeholder={t('users.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="w-full max-w-md" />
       </div>
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[950px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th onClick={() => toggleSort('full_name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.name')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('email')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.email')}<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('role')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('users.col.role')}<SortIndicator column="role" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('users.col.position')}</th>
-              <th>{t('users.col.department')}</th>
-              <th>{t('users.col.company')}</th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-            ) : users.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('users.noUsersYet')}</td></tr>
-            ) : users.map(u => (
-              <tr key={u.id} onClick={() => setModal({ mode: 'edit', data: u })}
-                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
-                <td className="py-3 px-4 font-medium">{u.full_name}</td>
-                <td>{u.email}</td>
-                <td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (ROLE_BADGE[u.role] || '')}>{t('role.' + u.role)}</span></td>
-                <td>{u.position || '—'}</td>
-                <td>{u.department || '—'}</td>
-                <td>{u.company || '—'}</td>
-                <td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (STATUS_BADGE[u.status || 'Active'] || '')}>{t('users.status.' + (u.status || 'Active').toLowerCase())}</span></td>
-                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => setModal({ mode: 'edit', data: u })} title={t('common.edit')} className="text-brand-500">✎</button>
-                  {me && me.id !== u.id && <button onClick={() => deleteUser(u)} title={t('common.delete')} className="text-red-500">🗑</button>}
-                </td>
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-auto max-h-[70vh]">
+          <table className="w-full text-sm min-w-[950px]">
+            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+              <tr>
+                <Th><span onClick={() => toggleSort('full_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.name')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('email')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.email')}<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('role')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('users.col.role')}<SortIndicator column="role" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th>{t('users.col.position')}</Th>
+                <Th>{t('users.col.department')}</Th>
+                <Th>{t('users.col.company')}</Th>
+                <Th><span onClick={() => toggleSort('status')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th className="text-end">{t('common.actions')}</Th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {!data ? (
+                <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+              ) : users.length === 0 ? (
+                <tr><td colSpan={8}><EmptyState text={t('users.noUsersYet')} /></td></tr>
+              ) : users.map(u => (
+                <tr key={u.id} onClick={() => setModal({ mode: 'edit', data: u })}
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  <Td className="font-medium">{u.full_name}</Td>
+                  <Td>{u.email}</Td>
+                  <Td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (ROLE_BADGE[u.role] || '')}>{t('role.' + u.role)}</span></Td>
+                  <Td>{u.position || '—'}</Td>
+                  <Td>{u.department || '—'}</Td>
+                  <Td>{u.company || '—'}</Td>
+                  <Td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (STATUS_BADGE[u.status || 'Active'] || '')}>{t('users.status.' + (u.status || 'Active').toLowerCase())}</span></Td>
+                  <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => setModal({ mode: 'edit', data: u })} title={t('common.edit')} className="text-brand-600 dark:text-brand-400 me-3">✎</button>
+                    {me && me.id !== u.id && <button onClick={() => deleteUser(u)} title={t('common.delete')} className="text-[#BC6B4E]">🗑</button>}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: users.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + users.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -132,9 +134,9 @@ export default function UsersPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</Button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</Button>
         </div>
       </div>
 
@@ -163,56 +165,44 @@ function UserModal({ modal, onClose, onSave }) {
 
   if (tempPassword) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-          <h3 className="font-semibold text-lg">{t('users.modal.userCreatedTitle')}</h3>
-          <p className="text-sm text-slate-500">{t('users.modal.userCreatedNote', { name: form.full_name })}</p>
-          <div className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-4 py-3 font-mono text-lg text-center select-all">{tempPassword}</div>
-          <div className="flex justify-end"><button onClick={onClose} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{t('common.done')}</button></div>
+      <Modal title={t('users.modal.userCreatedTitle')} onClose={onClose}>
+        <div className="space-y-4">
+          <p className="text-sm text-[#8C8A80]">{t('users.modal.userCreatedNote', { name: form.full_name })}</p>
+          <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-[#F1EEE7] dark:bg-white/5 px-4 py-3 font-mono text-lg text-center select-all">{tempPassword}</div>
+          <div className="flex justify-end"><Button onClick={onClose}>{t('common.done')}</Button></div>
         </div>
-      </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('users.modal.addTitle') : t('users.modal.editTitle')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
+    <Modal title={modal.mode === 'add' ? t('users.modal.addTitle') : t('users.modal.editTitle')} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
-          <Field label={t('users.modal.fullName')} value={form.full_name} onChange={set('full_name')} required />
-          <Field label={t('users.modal.email')} type="email" value={form.email || ''} onChange={set('email')} disabled={modal.mode === 'edit'} required={modal.mode === 'add'} />
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('users.modal.role')}</label>
+          <Field label={t('users.modal.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required /></Field>
+          <Field label={t('users.modal.email')} required={modal.mode === 'add'}><Input type="email" value={form.email || ''} onChange={set('email')} disabled={modal.mode === 'edit'} required={modal.mode === 'add'} className="disabled:opacity-70" /></Field>
+          <Field label={t('users.modal.role')}>
             <Dropdown value={form.role} onChange={v => setForm(f => ({ ...f, role: v }))}
               options={[['viewer', t('role.viewer')], ['external', t('role.external')], ['admin', t('role.admin')]]} />
-          </div>
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('users.modal.status')}</label>
+          </Field>
+          <Field label={t('users.modal.status')}>
             <Dropdown value={form.status || 'Active'} onChange={v => setForm(f => ({ ...f, status: v }))}
               options={[['Active', t('users.status.active')], ['Inactive', t('users.status.inactive')], ['Blocked', t('users.status.blocked')]]} />
-          </div>
-          <Field label={t('users.modal.phone')} value={form.phone || ''} onChange={set('phone')} />
-          <Field label={t('users.modal.position')} value={form.position || ''} onChange={set('position')} />
-          <Field label={t('users.modal.department')} value={form.department || ''} onChange={set('department')} />
-          <Field label={t('users.modal.company')} value={form.company || ''} onChange={set('company')} />
+          </Field>
+          <Field label={t('users.modal.phone')}><Input value={form.phone || ''} onChange={set('phone')} /></Field>
+          <Field label={t('users.modal.position')}><Input value={form.position || ''} onChange={set('position')} /></Field>
+          <Field label={t('users.modal.department')}><Input value={form.department || ''} onChange={set('department')} /></Field>
+          <Field label={t('users.modal.company')}><Input value={form.company || ''} onChange={set('company')} /></Field>
         </div>
         {modal.mode === 'add' && form.role !== 'admin' && (
-          <p className="text-xs text-slate-500">{t('users.modal.otpNote')}</p>
+          <p className="text-xs text-[#8C8A80]">{t('users.modal.otpNote')}</p>
         )}
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('common.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>
         </div>
       </form>
-    </div>
-  );
-}
-function Field({ label, ...props }) {
-  return (
-    <div>
-      <label className="block text-xs text-slate-500 mb-1">{label}</label>
-      <input {...props} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm disabled:opacity-70" />
-    </div>
+    </Modal>
   );
 }
