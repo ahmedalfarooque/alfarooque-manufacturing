@@ -140,39 +140,36 @@ export default function OrderDetailsModal({ orderId, onClose }) {
   const cancelled = order ? CANCELLED_STATUSES.includes(order.status) : false;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:p-8" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0f172a] border border-black/5 dark:border-white/10 shadow-2xl my-8">
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-4 border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#0f172a] rounded-t-2xl">
-          <h3 className="font-semibold text-base flex items-center gap-2 flex-wrap">
-            {order && (
-              <>
-                <span dir="ltr">{order.order_no || order.id.slice(0, 8)}</span>
-                <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{trEnum(t, 'status', order.status)}</span>
-                <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.payment_status] || 'bg-amber-500/10 text-amber-600')}>{trEnum(t, 'status', order.payment_status || 'pending')}</span>
-              </>
-            )}
-          </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl leading-none">&times;</button>
-        </div>
-
-        <div className="p-5 space-y-5">
+    <>
+      <Modal
+        title={order && (
+          <span className="flex items-center gap-2 flex-wrap">
+            <span dir="ltr">{order.order_no || order.id.slice(0, 8)}</span>
+            <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{trEnum(t, 'status', order.status)}</span>
+            <span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.payment_status] || 'bg-amber-500/10 text-amber-600')}>{trEnum(t, 'status', order.payment_status || 'pending')}</span>
+          </span>
+        )}
+        onClose={onClose}
+        wide
+      >
+        <div className="space-y-5">
           {error && <div className="text-red-500 text-sm">{error}</div>}
-          {!order && !error && <div className="text-slate-400 text-sm">{t('common.loading')}</div>}
+          {!order && !error && <div className="text-[#8C8A80] text-sm">{t('common.loading')}</div>}
 
           {order && (
             <>
               <div>
-                <div className="text-xs font-semibold text-slate-400 mb-2">{t('oq.productsCount', { n: items.length })}</div>
+                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.productsCount', { n: items.length })}</div>
                 {items.length ? (
                   <div className="space-y-2">{items.map((it, i) => <ItemCard key={i} item={it} t={t} lang={lang} onImageClick={(imgs, idx) => setLightbox({ images: imgs, idx })} />)}</div>
                 ) : (
-                  <p className="text-slate-400 text-sm">{t('oq.noItemDetails')}</p>
+                  <p className="text-[#8C8A80] text-sm">{t('oq.noItemDetails')}</p>
                 )}
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-slate-400 mb-2">{t('oq.customerInfo')}</div>
-                <div className="rounded-lg border border-black/5 dark:border-white/10 px-3">
+                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.customerInfo')}</div>
+                <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] px-3">
                   <Row label={t('oq.name')} value={custName} />
                   <Row label={t('common.email')} value={<span dir="ltr">{order.guest_email || order.customer_email || ''}</span>} />
                   <Row label={t('oq.phone')} value={<span dir="ltr">{order.guest_phone || ''}</span>} />
@@ -182,8 +179,8 @@ export default function OrderDetailsModal({ orderId, onClose }) {
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-slate-400 mb-2">{t('oq.orderInfo')}</div>
-                <div className="rounded-lg border border-black/5 dark:border-white/10 px-3">
+                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.orderInfo')}</div>
+                <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] px-3">
                   <Row label={t('oq.col.orderNo')} value={<span dir="ltr">{order.order_no || order.id}</span>} />
                   <Row label={t('oq.col.date')} value={formatDate(order.created_at, { dateStyle: 'medium', timeStyle: 'short' })} />
                   <Row label={t('oq.col.status')} value={<span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{trEnum(t, 'status', order.status)}</span>} />
@@ -204,10 +201,10 @@ export default function OrderDetailsModal({ orderId, onClose }) {
                     const done = ORDER_STATUSES.indexOf(s) <= statusIdx && statusIdx !== -1;
                     return (
                       <div key={s} className="flex flex-col items-center gap-1 shrink-0 w-16">
-                        <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (done ? 'bg-brand-600 text-white' : 'bg-black/10 dark:bg-white/10 text-slate-400')}>
+                        <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (done ? 'bg-brand-600 text-white' : 'bg-black/10 dark:bg-white/10 text-[#8C8A80]')}>
                           {done ? '✓' : ''}
                         </div>
-                        <div className="text-[10px] text-center text-slate-400 capitalize leading-tight">{trEnum(t, 'status', s)}</div>
+                        <div className="text-[10px] text-center text-[#8C8A80] capitalize leading-tight">{trEnum(t, 'status', s)}</div>
                       </div>
                     );
                   })}
@@ -215,8 +212,8 @@ export default function OrderDetailsModal({ orderId, onClose }) {
               )}
 
               <div>
-                <div className="text-xs font-semibold text-slate-400 mb-2">{t('oq.totals')}</div>
-                <div className="rounded-lg border border-black/5 dark:border-white/10 px-3">
+                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.totals')}</div>
+                <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] px-3">
                   <Row label={t('oq.subtotal')} value={<span dir="ltr">{money(order.subtotal)}</span>} />
                   <Row label={t('oq.vat')} value={<span dir="ltr">{money(order.vat)}</span>} />
                   <Row label={t('oq.shipping')} value={order.shipping_cost != null ? <span dir="ltr">{money(order.shipping_cost)}</span> : null} />
@@ -227,7 +224,7 @@ export default function OrderDetailsModal({ orderId, onClose }) {
             </>
           )}
         </div>
-      </div>
+      </Modal>
 
       {lightbox && (
         <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-6" onClick={() => setLightbox(null)}>
@@ -244,6 +241,6 @@ export default function OrderDetailsModal({ orderId, onClose }) {
           <button onClick={() => setLightbox(null)} className="absolute top-4 end-4 text-white text-2xl">&times;</button>
         </div>
       )}
-    </div>
+    </>
   );
 }
