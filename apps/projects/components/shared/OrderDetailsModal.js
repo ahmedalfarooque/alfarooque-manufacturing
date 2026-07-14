@@ -72,19 +72,19 @@ function ItemCard({ item, t, lang, onImageClick }) {
   const prodFinishes = p ? (ar && p.finishes_ar?.length ? p.finishes_ar : p.finishes) : [];
 
   return (
-    <div className="flex gap-3 rounded-lg border border-black/5 dark:border-white/10 p-3">
+    <div className="flex gap-3 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] p-3">
       <div className="shrink-0">
         {images.length ? (
-          <button type="button" onClick={() => onImageClick(images, 0)} className="block w-16 h-16 rounded-lg overflow-hidden border border-black/10 dark:border-white/10">
+          <button type="button" onClick={() => onImageClick(images, 0)} className="block w-16 h-16 rounded-lg overflow-hidden border border-[#E5E2DD] dark:border-white/[0.1]">
             <ImgWithFallback src={images[0]} className="w-full h-full" />
           </button>
         ) : (
-          <div className="w-16 h-16 rounded-lg border border-black/10 dark:border-white/10 flex items-center justify-center text-slate-400 text-xs">—</div>
+          <div className="w-16 h-16 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] flex items-center justify-center text-[#8C8A80] text-xs">—</div>
         )}
         {images.length > 1 && (
           <div className="flex gap-1 mt-1">
             {images.slice(1, 4).map((src, i) => (
-              <button key={i} type="button" onClick={() => onImageClick(images, i + 1)} className="w-4 h-4 rounded overflow-hidden border border-black/10 dark:border-white/10">
+              <button key={i} type="button" onClick={() => onImageClick(images, i + 1)} className="w-4 h-4 rounded overflow-hidden border border-[#E5E2DD] dark:border-white/[0.1]">
                 <ImgWithFallback src={src} className="w-full h-full" />
               </button>
             ))}
@@ -93,7 +93,7 @@ function ItemCard({ item, t, lang, onImageClick }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-medium text-sm truncate">{prodName || t('oq.item')}</div>
-        {prodDesc && <div className="text-xs text-slate-400 line-clamp-2 mt-0.5">{prodDesc}</div>}
+        {prodDesc && <div className="text-xs text-[#8C8A80] line-clamp-2 mt-0.5">{prodDesc}</div>}
         <div className="mt-1">
           {spec(t('oq.specCategory'), prodCategory)}
           {spec(t('oq.specSku'), p?.sku)}

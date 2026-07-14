@@ -192,7 +192,7 @@ export default function QuoteDetailPage() {
           ) : replies.length === 0 ? (
             <p className="text-[#8C8A80]">{t('oq.noRepliesYet')}</p>
           ) : replies.map(r => (
-            <div key={r.id} className="py-2 border-t first:border-0 border-[#E5E2DD]/70 dark:border-white/[0.06]">
+            <div key={r.id} className="py-2 border-b last:border-0 border-[#E5E2DD]/70 dark:border-white/[0.06]">
               <div className="flex justify-between items-center gap-2">
                 <strong>{r.subject}</strong>
                 <span className={'px-2 py-0.5 rounded-full text-xs ' + (r.status === 'failed' ? 'bg-red-500/10 text-red-600' : 'bg-emerald-500/10 text-emerald-600')}>
