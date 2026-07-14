@@ -138,7 +138,7 @@ export default function Shell({ children, active }) {
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/[0.08] bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-3 min-w-0">
-            <button className="lg:hidden text-xl shrink-0" onClick={() => setSidebarOpen(true)}>☰</button>
+            <button className="lg:hidden text-xl shrink-0" onClick={() => setSidebarOpen(true)} aria-label={t('shell.openMenu')}>☰</button>
             <h1 className="font-semibold text-lg capitalize truncate">{(() => {
               if (active === '/profile') return t('profile.title');
               const navItem = NAV.find(i => i.href === active);

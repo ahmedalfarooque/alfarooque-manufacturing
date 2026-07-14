@@ -184,7 +184,7 @@ export default function QuoteDetailPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center flex-wrap gap-2">
               <button disabled={sending} onClick={sendReply} className="text-sm px-3 py-2 rounded-lg bg-brand-600 text-white disabled:opacity-50">{sending ? t('oq.sending') : t('oq.send')}</button>
               <button disabled={sending} onClick={() => setReplyOpen(false)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">{t('oq.cancel')}</button>
             </div>

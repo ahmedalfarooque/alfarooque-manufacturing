@@ -163,7 +163,7 @@ export default function PurchaseRequestsPage() {
           <h2 className="text-lg font-semibold">{t('pr.title')}</h2>
           <p className="text-xs text-slate-500">{t('pr.breadcrumb')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('common.exportExcel')}</button>
           <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('common.exportPdf')}</button>
           <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>

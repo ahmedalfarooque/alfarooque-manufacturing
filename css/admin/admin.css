@@ -471,20 +471,39 @@ button, input, select, textarea { font-family: inherit; }
 /* ────────────────── RESPONSIVE ────────────────── */
 @media (max-width: 980px) {
   .ad-shell { grid-template-columns: 1fr; }
-  .ad-side { position: fixed; left: 0; top: 0; width: 258px; max-width: 82vw; z-index: 100; transform: translateX(-100%); transition: transform 0.25s; }
+  .ad-side {
+    position: fixed; left: 0; top: 0; width: 258px; max-width: 82vw; z-index: 100; transform: translateX(-100%); transition: transform 0.25s;
+    /* Off-canvas drawer's outer (screen) edge — protect its content from a
+       device notch / rounded corner in portrait when the drawer is open.
+       Logical padding-inline-start maps to the true left edge in LTR; the
+       RTL override below re-maps it to the right edge for that variant. */
+    padding-inline-start: env(safe-area-inset-left);
+  }
   .ad-side.is-open { transform: translateX(0); }
   .ad-side.is-open ~ .ad-backdrop, .ad-side.is-open + .ad-backdrop { display: block; }
   .ad-mobile-toggle { display: flex; }
   .ad-search-wrap { display: none; }
   /* RTL: the drawer lives on the right and slides in from the right */
-  html[dir="rtl"] .ad-side { left: auto; right: 0; transform: translateX(100%); }
+  html[dir="rtl"] .ad-side { left: auto; right: 0; transform: translateX(100%); padding-inline-start: 0; padding-inline-end: env(safe-area-inset-right); }
   html[dir="rtl"] .ad-side.is-open { transform: translateX(0); }
+  /* .ad-form-actions has no wrap rule by default (desktop rows fit on one
+     line) — several modals (customer editor: Save/Reset/Email/Delete;
+     quote detail: Save/Convert/Reply/Close) render 3-4 buttons in that row,
+     which overflows a 360-390px modal without this. */
+  .ad-form-actions { flex-wrap: wrap; }
 }
 @media (max-width: 640px) {
   .ad-content { padding: 18px 14px 50px; }
   .ad-form-grid, .ad-form-grid--3 { grid-template-columns: 1fr; }
   .ad-clock { display: none; }
-  .ad-topbar { padding: 10px 14px; }
+  .ad-topbar {
+    padding: 10px 14px;
+    /* Sticky, full-bleed header — pad its edges away from a landscape
+       notch/rounded corner without changing the visual padding on devices
+       with no cutout (env() resolves to 0 there, max() keeps the 14px). */
+    padding-inline-start: max(14px, env(safe-area-inset-left));
+    padding-inline-end: max(14px, env(safe-area-inset-right));
+  }
   .ad-view-grid { grid-template-columns: 1fr; }
   .ad-oi-card { flex-wrap: wrap; }
   .ad-oi-thumb { width: 68px; height: 68px; }
@@ -493,6 +512,11 @@ button, input, select, textarea { font-family: inherit; }
   .ad-lb-prev { left: 8px; }
   .ad-lb-next { right: 8px; }
   .ad-lb-btn { width: 36px; height: 36px; }
+  /* minmax(180px,1fr) leaves room for only one column once gap + content
+     padding are subtracted from a 360-390px viewport — drop the floor so
+     two stat cards still sit side by side instead of stacking to a single
+     tall column. */
+  .ad-stats-grid, .ad-skel-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 }
 
 /* ────────────────── RTL (Arabic) ──────────────────

@@ -123,18 +123,47 @@ export default function PrintPage() {
     function recalc() {
       const el = sheetRef.current;
       if (!el) return;
-      const available = (wrapRef.current ? wrapRef.current.clientWidth : window.innerWidth) - 16;
+      /* Prefer the wrap's own clientWidth (unaffected by iOS Safari's
+         dynamic toolbar), but clamp to whichever of window.innerWidth /
+         visualViewport.width is smallest — on iOS the layout viewport
+         (window.innerWidth) can momentarily report a stale, wider value
+         than the actual visual viewport while the address-bar chrome is
+         animating, which under-scales the sheet and lets it poke past
+         the real visible width for a frame (and, if the ResizeObserver/
+         resize listener don't fire again after the toolbar settles,
+         indefinitely). Taking the min of all three known widths is a
+         safe floor. */
+      const vv = typeof window !== 'undefined' && window.visualViewport ? window.visualViewport.width : Infinity;
+      const winW = typeof window !== 'undefined' ? window.innerWidth : Infinity;
+      const wrapW = wrapRef.current ? wrapRef.current.clientWidth : Infinity;
+      const available = Math.min(vv, winW, wrapW) - 16;
       setScale(Math.min(1, Math.max(0.32, available / SHEET_W)));
       setNatH(el.offsetHeight || 0);
     }
     recalc();
+    /* A second pass shortly after mount catches any late reflow (web
+       fonts finishing, images loading) that changes the sheet's natural
+       size after the first synchronous measurement. */
+    const t1 = setTimeout(recalc, 250);
     window.addEventListener('resize', recalc);
+    window.addEventListener('orientationchange', recalc);
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', recalc);
+    }
     let ro;
     if (typeof ResizeObserver !== 'undefined' && sheetRef.current) {
       ro = new ResizeObserver(recalc);
       ro.observe(sheetRef.current);
     }
-    return () => { window.removeEventListener('resize', recalc); if (ro) ro.disconnect(); };
+    return () => {
+      clearTimeout(t1);
+      window.removeEventListener('resize', recalc);
+      window.removeEventListener('orientationchange', recalc);
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', recalc);
+      }
+      if (ro) ro.disconnect();
+    };
   }, [data, lang, qrDataUrl]);
 
   /* The .qdoc element mounted below — literally the on-screen preview
@@ -216,7 +245,7 @@ export default function PrintPage() {
              footer" bug. Zero it all out for print. */
           .print-stage { min-height: 0 !important; padding: 0 !important; background: #fff !important; }
           .print-sheet { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; transform: none !important; }
-          .print-sheet-wrap { height: auto !important; overflow: visible !important; }
+          .print-sheet-wrap { height: auto !important; overflow: visible !important; transform: none !important; -webkit-transform: none !important; -webkit-mask-image: none !important; }
         }
         /* Zero browser page margin — the document itself supplies its
            own 32px/36px padding (~8.5mm) as the visible A4 margin, and
@@ -257,7 +286,34 @@ export default function PrintPage() {
             flex: 0 1 auto; font-size: 12px !important; padding: 7px 10px !important;
           }
         }
-        .print-sheet-wrap { display: flex; justify-content: center; overflow: hidden; }
+        /* .print-sheet-wrap clips the fixed-794px .print-sheet after it's
+           been shrunk with transform:scale(). transform does NOT shrink an
+           element's layout box, only its paint — so the 794px box is still
+           reserved at full width and would force page-level horizontal
+           scroll on phones if the wrap's overflow:hidden didn't clip it.
+           That clip is exactly what was failing on iOS Safari: WebKit has a
+           long-standing bug where overflow:hidden does not reliably clip a
+           transform-scaled descendant unless the clipping ancestor is
+           itself promoted to its own compositing layer. Forcing that layer
+           here (translateZ(0) + the -webkit- prefix) is the standard fix —
+           it does not change any visible layout, only makes the existing
+           overflow:hidden actually clip on WebKit like it already does
+           everywhere else. width/max-width are pinned to the viewport so
+           the wrap itself can never be wider than what's visible, and
+           the child's flexbox min-width:auto default (which would let
+           .print-sheet refuse to report less than its fixed 794px box) is
+           handled the same way it already was — via the scale transform,
+           not by shrinking the box — this just guarantees the shrink is
+           what actually gets painted. */
+        .print-sheet-wrap {
+          display: flex; justify-content: center; overflow: hidden;
+          width: 100%; max-width: 100vw;
+          transform: translateZ(0); -webkit-transform: translateZ(0);
+          -webkit-mask-image: -webkit-radial-gradient(white, black);
+        }
+        @media (max-width: 768px) {
+          .print-stage { overflow-x: hidden; }
+        }
       `}</style>
 
       <div className="no-print print-toolbar">

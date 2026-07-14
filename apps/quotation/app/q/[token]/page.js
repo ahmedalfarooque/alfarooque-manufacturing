@@ -55,7 +55,7 @@ export default async function PublicQuotationPage({ params }) {
   const qrDataUrl = await buildQuoteQrDataUrl(qrText).catch(() => null);
 
   return (
-    <div style={{ background: '#e9e6e0', minHeight: '100vh', padding: '24px 0' }}>
+    <div className="qv-stage" style={{ background: '#e9e6e0', minHeight: '100vh', padding: '24px 0' }}>
       {/* Server component, so no JS-measured scale — instead a few fixed
           breakpoint scale steps keep the 794px document from ever forcing
           horizontal scroll on a phone. Desktop (>850px) is untouched:
@@ -64,7 +64,18 @@ export default async function PublicQuotationPage({ params }) {
           acceptable trade-off for a static page — no overflow, no
           scrollbar, exact desktop appearance preserved above 850px. */}
       <style>{`
-        .qv-wrap { display: flex; justify-content: center; overflow: hidden; }
+        /* Same clip as the authenticated print viewer: transform:scale()
+           shrinks paint only, not the 794px layout box, so overflow:hidden
+           on the wrap is what actually prevents horizontal page scroll on
+           phones — and WebKit only honors that clip reliably once the
+           wrap is promoted to its own compositing layer. translateZ(0)
+           forces that layer without altering any visible layout. */
+        .qv-wrap {
+          display: flex; justify-content: center; overflow: hidden;
+          width: 100%; max-width: 100vw;
+          transform: translateZ(0); -webkit-transform: translateZ(0);
+          -webkit-mask-image: -webkit-radial-gradient(white, black);
+        }
         .qv-shell { width: 794px; flex: 0 0 auto; background: #fff; box-shadow: 0 8px 40px rgba(0,0,0,.18); border-radius: 4px; }
         @media (max-width: 850px) {
           .qv-shell { transform: scale(0.9); transform-origin: top center; margin-bottom: -10%; }
@@ -77,6 +88,9 @@ export default async function PublicQuotationPage({ params }) {
         }
         @media (max-width: 360px) {
           .qv-shell { transform: scale(0.4); transform-origin: top center; margin-bottom: -60%; }
+        }
+        @media (max-width: 768px) {
+          .qv-stage { overflow-x: hidden; }
         }
       `}</style>
       <div className="qv-wrap">
