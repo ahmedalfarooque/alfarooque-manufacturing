@@ -6,6 +6,7 @@ import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Input, EmptyState, Th, Td } from '@/components/ui';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
 export const QUOTE_STATUS_BADGE = {
@@ -53,51 +54,52 @@ export default function QuotesPage() {
     <Shell active="/quotes">
       <h2 className="text-lg font-semibold mb-4">{t('oq.quotesTitle')}</h2>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('oq.searchQuotesPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('oq.searchQuotesPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...QUOTE_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[900px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th className="py-3 px-4">{t('oq.col.name')}</th>
-              <th>{t('oq.col.contact')}</th>
-              <th>{t('oq.col.product')}</th>
-              <th>{t('oq.col.status')}</th>
-              <th>{t('oq.col.date')}</th>
-              <th className="text-right px-4">{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('oq.noQuotesFound')}</td></tr>
-            ) : filtered.map(r => (
-              <tr key={r.id} onClick={() => { window.location.href = '/quotes/' + r.id; }}
-                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
-                <td className="py-3 px-4">{r.name || '—'}</td>
-                <td className="max-w-[180px] truncate" dir="ltr">{r.email || r.phone || '—'}</td>
-                <td className="max-w-[160px] truncate">{r.product || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (QUOTE_STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
-                <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-2">
-                    <a href={'/quotes/' + r.id} className="text-xs px-2 py-1 rounded-lg border border-black/10 dark:border-white/10">{t('oq.view')}</a>
-                    {softDeleteEnabled && (
-                      <button disabled={busyId === r.id} onClick={() => deleteQuote(r.id)} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.delete')}</button>
-                    )}
-                  </div>
-                </td>
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-auto max-h-[70vh]">
+          <table className="w-full text-sm min-w-[900px]">
+            <thead className="sticky top-0 z-10 bg-white dark:bg-[#1B1B14] border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+              <tr>
+                <Th>{t('oq.col.name')}</Th>
+                <Th>{t('oq.col.contact')}</Th>
+                <Th>{t('oq.col.product')}</Th>
+                <Th>{t('oq.col.status')}</Th>
+                <Th>{t('oq.col.date')}</Th>
+                <Th className="text-end">{t('common.actions')}</Th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {!data ? (
+                <tr><td colSpan={6} className="px-3 py-8 text-center text-sm text-[#8C8A80]">{t('common.loading')}</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={6}><EmptyState text={t('oq.noQuotesFound')} /></td></tr>
+              ) : filtered.map(r => (
+                <tr key={r.id} onClick={() => { window.location.href = '/quotes/' + r.id; }}
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  <Td>{r.name || '—'}</Td>
+                  <Td className="max-w-[180px] truncate"><span dir="ltr">{r.email || r.phone || '—'}</span></Td>
+                  <Td className="max-w-[160px] truncate">{r.product || '—'}</Td>
+                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (QUOTE_STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
+                  <Td>{new Date(r.created_at).toLocaleDateString()}</Td>
+                  <Td className="text-end whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                      <a href={'/quotes/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm">{t('oq.view')}</a>
+                      {softDeleteEnabled && (
+                        <button disabled={busyId === r.id} onClick={() => deleteQuote(r.id)} className="text-[#BC6B4E] hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.delete')}</button>
+                      )}
+                    </div>
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </Shell>
   );

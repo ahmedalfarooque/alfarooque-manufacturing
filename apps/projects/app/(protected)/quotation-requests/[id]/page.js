@@ -78,7 +78,7 @@ export default function QuotationRequestDetailPage() {
             </>
           )}
           {['accepted', 'on_hold'].includes(row.status) && !row.project_id && (
-            <button disabled={busy} onClick={startProject} className="text-sm px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">{t('qr.projectStart')}</button>
+            <Button disabled={busy} onClick={startProject}>{t('qr.projectStart')}</Button>
           )}
           {row.project_id && (
             <a href={'/projects/' + row.project_id} className="text-sm px-3 py-2 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">↗ {t('qr.openProject')}</a>
