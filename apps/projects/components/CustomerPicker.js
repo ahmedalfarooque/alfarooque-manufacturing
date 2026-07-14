@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { CustomerModal } from '@/app/(protected)/customers/page';
 import { useLanguage } from '@/lib/i18n';
+import { Field, Input } from '@/components/ui';
 
 /* Searchable "choose existing customer, or add a new one inline"
    picker used by the Add/Edit Project form. Selecting or creating a

@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
+import { Button, Input, Th, Td } from '@/components/ui';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
 
@@ -164,9 +165,9 @@ export default function PurchaseRequestsPage() {
           <p className="text-xs text-slate-500">{t('pr.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('common.exportExcel')}</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('common.exportPdf')}</button>
-          <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
+          <Button variant="ghost" onClick={exportExcel}>⤓ {t('common.exportExcel')}</Button>
+          <Button variant="ghost" onClick={exportPdf}>⤓ {t('common.exportPdf')}</Button>
+          <Button variant="ghost" onClick={printReport}>🖶 {t('common.print')}</Button>
         </div>
       </div>
 
@@ -181,7 +182,7 @@ export default function PurchaseRequestsPage() {
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.requestsPerMonth')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={charts.perMonth}>
@@ -193,7 +194,7 @@ export default function PurchaseRequestsPage() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.bySupplier')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={charts.bySupplier}>
@@ -205,7 +206,7 @@ export default function PurchaseRequestsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.byProject')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={charts.byProject}>
