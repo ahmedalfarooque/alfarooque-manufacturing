@@ -1,9 +1,19 @@
 /* ═════════════════════════════════════════════════════════════════
-   AL FAROOQUE — Stacked / Centered Gallery
+   AL FAROOQUE — Home Page Gallery — Vision Pro–style immersive carousel
    gallery-stack.css
-   Replaces the old 3D rotating ring carousel (.gallery3d-*).
-   All animated states use ONLY transform / opacity / filter so every
-   transition stays GPU-accelerated — never left/top/margin.
+
+   Scope: ONLY #gallery-preview / .gstack-* on the home page. Nothing
+   else on the site uses these classes. All design tokens below
+   (--bg-2, --bd, --bd-teal, --pr, --r-lg, --sh-lg, --tx-3, --glass-2,
+   --border-2, --ease, --spring) are the SAME tokens already used
+   throughout the rest of the site (design-system.css / main.css) —
+   reused here on purpose so colors/branding/motion language stay
+   identical to the rest of the page, per "do not change branding".
+
+   Motion budget: every animated property is transform / opacity /
+   filter — nothing here ever animates left/top/width/height/margin,
+   so every frame stays on the compositor thread (GPU), never
+   triggering layout or paint on scroll/drag/resize.
    ═════════════════════════════════════════════════════════════════ */
 
 .gstack-wrap{
@@ -12,20 +22,76 @@
   display:flex;flex-direction:column;align-items:center;gap:20px;
 }
 
+/* Desktop/pointer:fine only — set by JS via [data-drag] so touch
+   devices (which never get this attribute) never show a mouse cursor. */
+.gstack-wrap[data-drag="idle"]{ cursor:grab; }
+.gstack-wrap[data-drag="active"]{ cursor:grabbing; }
+
 .gstack-stage{
   position:relative;width:100%;
-  height:clamp(230px,30vw,420px);
+  height:clamp(240px,32vw,440px);
   overflow:hidden; /* safety net — no card may ever force page overflow */
+  /* Perspective turns the cards' rotateY below into genuine foreshortened
+     3D depth (the "curved carousel" look) instead of a flat skew. */
+  perspective:1600px;
+}
+
+/* Ambient glow — a soft, brand-tinted bloom that always sits centered
+   behind the active card (which is itself always dead-center by
+   construction — see [data-pos="active"] below), giving the "subtle
+   glow" the active image needs without ever needing JS to reposition
+   it. Stays inside .gstack-stage's own overflow:hidden, so it can
+   never contribute to page overflow. Opacity-only pulse = compositor
+   only, effectively free. */
+.gstack-stage::before{
+  content:'';
+  position:absolute;top:50%;left:50%;z-index:1;
+  width:min(70%,460px);height:70%;
+  transform:translate3d(-50%,-50%,0);
+  background:radial-gradient(closest-side,rgba(140,160,91,0.32),rgba(140,160,91,0) 72%);
+  filter:blur(18px);
+  opacity:.55;
+  pointer-events:none;
+  animation:gstack-glow-pulse 4.5s ease-in-out infinite;
+}
+:is(html.light,body.light) .gstack-stage::before{ opacity:.4; }
+@keyframes gstack-glow-pulse{
+  0%,100%{ opacity:.4; }
+  50%{ opacity:.7; }
+}
+
+/* Glass "dock" surface — a floating translucent platform the carousel
+   appears to hover over/inside, matching the site's existing .glass
+   convention (same --glass-2/--border-2 tokens, same blur amount). */
+.gstack-stage::after{
+  content:'';
+  position:absolute;inset:6% 2%;z-index:0;
+  border-radius:var(--r-xl,32px);
+  background:var(--glass-2);
+  border:1px solid var(--border-2);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  pointer-events:none;
 }
 
 .gstack-track{
-  position:relative;width:100%;height:100%;
+  position:relative;width:100%;height:100%;z-index:2;
+  transform-style:preserve-3d;
 }
+
+/* Registering these as animatable <length>/<angle> custom properties
+   lets the browser interpolate them smoothly frame-by-frame (idle
+   float, live drag offset) instead of snapping. Purely a progressive
+   enhancement — browsers without @property support simply keep the
+   card static at 0 for these two, everything else still works. */
+@property --tx    { syntax:'<percentage>'; inherits:false; initial-value:0%; }
+@property --dragpx{ syntax:'<length>';     inherits:false; initial-value:0px; }
+@property --floaty{ syntax:'<length>';     inherits:false; initial-value:0px; }
+@property --ry    { syntax:'<angle>';      inherits:false; initial-value:0deg; }
 
 .gstack-card{
   position:absolute;
   top:50%;left:50%;
-  width:clamp(190px,24vw,300px);
+  width:clamp(200px,25vw,320px);
   aspect-ratio:1.46/1;
   border-radius:var(--r-lg,18px);
   overflow:hidden;
@@ -35,10 +101,17 @@
 
   /* base position (constant, never animated) + animated offset/scale */
   --tx:0%;
+  --tz:0px;
+  --ry:0deg;
   --sc:1;
   --op:1;
   --bl:0px;
-  transform:translate3d(calc(-50% + var(--tx)),-50%,0) scale(var(--sc));
+  --dragpx:0px;
+  --floaty:0px;
+  transform:
+    translate3d(calc(-50% + var(--tx) + var(--dragpx)), calc(-50% + var(--floaty)), var(--tz))
+    rotateY(var(--ry))
+    scale3d(var(--sc),var(--sc),1);
   opacity:var(--op);
   filter:blur(var(--bl));
   will-change:transform,opacity,filter;
@@ -46,7 +119,29 @@
   -webkit-backface-visibility:hidden;
 
   transition:
-    transform .5s cubic-bezier(.22,.9,.32,1),
+    transform .55s var(--ease,cubic-bezier(.25,.46,.45,.94)),
+    opacity .5s ease,
+    filter .5s ease,
+    box-shadow .4s ease,
+    border-color .4s ease;
+}
+/* The live drag offset (--dragpx) and the release snap-back use the
+   site's own bouncy "--spring" easing (same token used elsewhere on
+   the site) instead of the calmer default above — this is the one
+   place a genuine, physical spring-settle reads as premium rather
+   than gimmicky: it's the direct result of the user's own hand
+   gesture coming to rest, not a decorative flourish. */
+.gstack-wrap[data-drag="active"] .gstack-card{
+  transition:
+    transform .05s linear,
+    opacity .5s ease,
+    filter .5s ease,
+    box-shadow .4s ease,
+    border-color .4s ease;
+}
+.gstack-wrap[data-drag-settle] .gstack-card{
+  transition:
+    transform .6s var(--spring,cubic-bezier(.34,1.56,.64,1)),
     opacity .5s ease,
     filter .5s ease,
     box-shadow .4s ease,
@@ -59,21 +154,36 @@
   transition:transform .5s ease,filter .5s ease;
 }
 
-/* ── Position states (delta from active card) ── */
+/* ── Idle float — active card only, per spec ("slightly float").
+   Runs on a child-independent custom property so it never fights the
+   position-state transform above; disabled the instant the user is
+   actively dragging (data-drag="active") so the two motions never
+   visually fight each other. ── */
+@keyframes gstack-float{
+  0%,100%{ --floaty:0px; }
+  50%{ --floaty:-7px; }
+}
+.gstack-card[data-pos="active"]{ animation:gstack-float 4s ease-in-out infinite; }
+.gstack-wrap[data-drag="active"] .gstack-card[data-pos="active"]{ animation-play-state:paused; }
+
+/* ── Position states (delta from active card) — curved 3D layout:
+   translateX for left/right placement, translateZ pushes farther
+   cards back into the screen (genuine depth, not just a smaller
+   scale), rotateY tilts them to face the viewer along the curve. ── */
 .gstack-card[data-pos="active"]{
-  --tx:0%; --sc:1; --op:1; --bl:0px;
+  --tx:0%;  --tz:0px;    --ry:0deg;   --sc:1;   --op:1;   --bl:0px;
   z-index:50;
   border-color:var(--bd-teal,var(--pr));
-  box-shadow:var(--sh-lg),0 0 0 1px rgba(140,160,91,0.18);
+  box-shadow:var(--sh-lg),0 0 0 1px rgba(140,160,91,0.18),0 22px 60px rgba(140,160,91,0.20);
 }
 .gstack-card[data-pos="active"] img{ transform:scale(1.02); }
 
-.gstack-card[data-pos="r1"]{ --tx:78%;  --sc:.90; --op:.85; --bl:1px;   z-index:40; }
-.gstack-card[data-pos="l1"]{ --tx:-78%; --sc:.90; --op:.85; --bl:1px;   z-index:40; }
-.gstack-card[data-pos="r2"]{ --tx:148%; --sc:.82; --op:.55; --bl:2.5px; z-index:30; }
-.gstack-card[data-pos="l2"]{ --tx:-148%;--sc:.82; --op:.55; --bl:2.5px; z-index:30; }
-.gstack-card[data-pos="r3"]{ --tx:208%; --sc:.75; --op:.28; --bl:4px;   z-index:20; }
-.gstack-card[data-pos="l3"]{ --tx:-208%;--sc:.75; --op:.28; --bl:4px;   z-index:20; }
+.gstack-card[data-pos="r1"]{ --tx:76%;  --tz:-60px;  --ry:-28deg; --sc:.88; --op:.82; --bl:1px;   z-index:40; }
+.gstack-card[data-pos="l1"]{ --tx:-76%; --tz:-60px;  --ry:28deg;  --sc:.88; --op:.82; --bl:1px;   z-index:40; }
+.gstack-card[data-pos="r2"]{ --tx:138%; --tz:-140px; --ry:-40deg; --sc:.78; --op:.50; --bl:2.5px; z-index:30; }
+.gstack-card[data-pos="l2"]{ --tx:-138%;--tz:-140px; --ry:40deg;  --sc:.78; --op:.50; --bl:2.5px; z-index:30; }
+.gstack-card[data-pos="r3"]{ --tx:190%; --tz:-230px; --ry:-48deg; --sc:.68; --op:.22; --bl:4px;   z-index:20; }
+.gstack-card[data-pos="l3"]{ --tx:-190%;--tz:-230px; --ry:48deg;  --sc:.68; --op:.22; --bl:4px;   z-index:20; }
 
 .gstack-card[data-pos="hidden"]{
   display:none;
@@ -109,14 +219,16 @@
 
 /* ── Mobile: one centered card, swipe only ── */
 @media(max-width:767px){
-  .gstack-stage{ height:clamp(220px,68vw,320px); }
-  .gstack-card{ width:clamp(230px,78vw,340px); }
+  .gstack-stage{ height:clamp(230px,70vw,340px); perspective:1000px; }
+  .gstack-card{ width:clamp(240px,80vw,360px); }
   .gstack-card:not([data-pos="active"]){ display:none; }
   .gstack-hint{ display:none; }
 }
 
 @media(prefers-reduced-motion:reduce){
+  .gstack-stage::before{ animation:none; opacity:.45; }
   .gstack-card{
+    animation:none !important;
     transition:opacity .15s linear;
   }
   .gstack-card,

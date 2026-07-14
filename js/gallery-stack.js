@@ -170,14 +170,92 @@
 
     function step(dir) { setActive(active + dir); }
 
-    /* ── Hover-to-activate (desktop, pointer:fine only) with hover-intent debounce ── */
+    /* ── Mouse-drag (desktop, pointer:fine only) — a separate path from
+       the touch-swipe below, so touch behavior on phones is completely
+       untouched. Gives real-time visual feedback (the whole carousel
+       visibly follows the cursor via --dragpx) plus distance/velocity
+       -based inertia on release: a fast or long drag can jump several
+       cards at once, exactly like flicking the touch version, then the
+       live offset springs back to 0 as part of the same move that
+       snaps the new card to center. ── */
+    var suppressNextClick = false;
+    if (pointerFine) {
+      var dragging = false, dragStartX = 0, dragLastX = 0, dragLastT = 0, dragVelocity = 0, dragMoved = false;
+      var DRAG_CLICK_THRESHOLD = 6; // px of movement below which a mouseup is still just a click
+
+      wrap.setAttribute('data-drag', 'idle');
+
+      function setDragPx(px) { track.style.setProperty('--dragpx', px + 'px'); }
+
+      wrap.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return;
+        dragging = true; dragMoved = false;
+        dragStartX = dragLastX = e.clientX;
+        dragLastT = Date.now();
+        wrap.removeAttribute('data-drag-settle');
+        wrap.setAttribute('data-drag', 'active');
+        e.preventDefault(); // no native image-drag ghost / text selection while dragging
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        var now = Date.now();
+        var dt = Math.max(1, now - dragLastT);
+        dragVelocity = (e.clientX - dragLastX) / dt; // px/ms, most-recent segment only
+        dragLastX = e.clientX;
+        dragLastT = now;
+        var totalDx = e.clientX - dragStartX;
+        if (Math.abs(totalDx) > DRAG_CLICK_THRESHOLD) dragMoved = true;
+        /* Slightly damped (0.6x) so it reads as "held", not 1:1-glued to the cursor. */
+        setDragPx(totalDx * 0.6);
+      });
+
+      window.addEventListener('mouseup', function (e) {
+        if (!dragging) return;
+        dragging = false;
+        wrap.setAttribute('data-drag', 'idle');
+        wrap.setAttribute('data-drag-settle', '');
+        setDragPx(0);
+        setTimeout(function () { wrap.removeAttribute('data-drag-settle'); }, 650);
+
+        if (dragMoved) {
+          suppressNextClick = true;
+          var stageEl = wrap.querySelector('.gstack-stage');
+          var cardSpan = Math.max(60, (stageEl ? stageEl.clientWidth : 300) * 0.24);
+          var totalDx = e.clientX - dragStartX;
+          var stepsByDistance = Math.round(-totalDx / cardSpan);
+          var flick = Math.abs(dragVelocity) > 0.55 && stepsByDistance === 0;
+          var steps = flick ? (dragVelocity < 0 ? 1 : -1) : stepsByDistance;
+          if (IS_RTL) steps = -steps;
+          if (steps !== 0) step(steps);
+        }
+      });
+
+      /* If the mouse leaves the window mid-drag (e.g. released outside
+         the viewport), still settle cleanly instead of getting stuck
+         mid-drag with a dangling --dragpx offset. */
+      window.addEventListener('mouseleave', function () {
+        if (!dragging) return;
+        dragging = false;
+        wrap.setAttribute('data-drag', 'idle');
+        wrap.setAttribute('data-drag-settle', '');
+        setDragPx(0);
+        setTimeout(function () { wrap.removeAttribute('data-drag-settle'); }, 650);
+      });
+    }
+
+    /* ── Hover-to-activate (desktop, pointer:fine only) with hover-intent debounce ──
+       Skipped entirely while a mouse-drag is in progress (`dragging`,
+       declared above) — otherwise moving the cursor across cards mid-drag
+       would also fire hover-activate and fight the drag's own motion. */
     if (pointerFine) {
       var hoverTimer = null;
       cards.forEach(function (card, i) {
         card.addEventListener('mouseenter', function () {
+          if (dragging) return;
           clearTimeout(hoverTimer);
           if (i === active) return;
-          hoverTimer = setTimeout(function () { setActive(i); }, 150);
+          hoverTimer = setTimeout(function () { if (!dragging) setActive(i); }, 150);
         });
         card.addEventListener('mouseleave', function () {
           clearTimeout(hoverTimer);
@@ -185,9 +263,13 @@
       });
     }
 
-    /* ── Click / Enter / Space: activate, or open lightbox if already active ── */
+    /* ── Click / Enter / Space: activate, or open lightbox if already active ──
+       suppressNextClick swallows exactly one click right after a real
+       mouse-drag (see above), so dragging the carousel never also
+       re-triggers activate/open on whatever card the cursor lands on. */
     cards.forEach(function (card, i) {
       card.addEventListener('click', function () {
+        if (suppressNextClick) { suppressNextClick = false; return; }
         if (i === active) { if (lb) lb.open(imgData, i); }
         else setActive(i);
       });
