@@ -8,7 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -328,8 +328,7 @@ export function ProjectModal({ modal, onClose, onSave }) {
           </div>
           <div className="col-span-2">
             <Field label={t('projects.modal.projectDetails')}>
-              <textarea value={form.project_details || ''} onChange={set('project_details')} rows={4}
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.project_details || ''} onChange={set('project_details')} rows={4} />
             </Field>
           </div>
 

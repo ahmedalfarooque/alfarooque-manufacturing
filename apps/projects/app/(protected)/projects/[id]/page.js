@@ -7,7 +7,7 @@ import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { ProjectModal } from '@/app/(protected)/projects/page';
-import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -474,14 +474,12 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
           <Field label={t('pd.supplierOptional')}><Input value={form.supplier} onChange={set('supplier')} /></Field>
           <div className="col-span-2">
             <Field label={t('pd.materialDescription')}>
-              <textarea value={form.material_description} onChange={set('material_description')} rows={2} required
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.material_description} onChange={set('material_description')} rows={2} required />
             </Field>
           </div>
           <div className="col-span-2">
             <Field label={t('pd.materialListOptional')}>
-              <textarea value={form.material_list} onChange={set('material_list')} rows={3}
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.material_list} onChange={set('material_list')} rows={3} />
             </Field>
           </div>
           <Field label={t('pd.quantity')}><Input type="number" value={form.quantity} onChange={set('quantity')} /></Field>
@@ -494,8 +492,7 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
           </Field>
           <div className="col-span-2">
             <Field label={t('pd.remarksOptional')}>
-              <textarea value={form.remarks} onChange={set('remarks')} rows={2}
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.remarks} onChange={set('remarks')} rows={2} />
             </Field>
           </div>
           <div className="col-span-2">
@@ -724,32 +721,27 @@ function DailyUpdateModal({ projectId, onClose, onSaved }) {
           </div>
           <div className="col-span-2">
             <Field label={t('pd.duTodaysWork')}>
-              <textarea value={form.todays_work} onChange={set('todays_work')} rows={2} required
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.todays_work} onChange={set('todays_work')} rows={2} required />
             </Field>
           </div>
           <div className="col-span-2">
             <Field label={t('pd.duDetailedDescription')}>
-              <textarea value={form.description} onChange={set('description')} rows={3}
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.description} onChange={set('description')} rows={3} />
             </Field>
           </div>
           <div className="col-span-2">
             <Field label={t('pd.duIssuesOptional')}>
-              <textarea value={form.issues} onChange={set('issues')} rows={2}
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.issues} onChange={set('issues')} rows={2} />
             </Field>
           </div>
           <div className="col-span-2">
             <Field label={t('pd.duTomorrowPlanOptional')}>
-              <textarea value={form.tomorrow_plan} onChange={set('tomorrow_plan')} rows={2}
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.tomorrow_plan} onChange={set('tomorrow_plan')} rows={2} />
             </Field>
           </div>
           <div className="col-span-2">
             <Field label={t('pd.remarksOptional')}>
-              <textarea value={form.remarks} onChange={set('remarks')} rows={2}
-                className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors" />
+              <Textarea value={form.remarks} onChange={set('remarks')} rows={2} />
             </Field>
           </div>
           <div className="col-span-2">
