@@ -100,11 +100,11 @@ export default function PurchaseRequestDetailPage({ params }) {
           </div>
 
           {attachments.length > 0 && (
-            <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+            <div className="glass-card glass-card--pad">
               <h3 className="font-medium text-sm mb-3">{t('pd.attachments')}</h3>
               <div className="flex flex-wrap gap-2">
                 {attachments.map(a => (
-                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-brand-500/40">
+                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-3 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:border-brand-500/40">
                     📎 {a.file_name}{a.label ? ` (${a.label})` : ''}
                   </a>
                 ))}
@@ -112,23 +112,22 @@ export default function PurchaseRequestDetailPage({ params }) {
             </div>
           )}
 
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.comments')}</h3>
             <div className="space-y-3 mb-3 max-h-72 overflow-y-auto">
-              {comments.length === 0 ? <div className="text-sm text-slate-400 py-4 text-center">{t('prd.noCommentsYet')}</div> : comments.map(c => (
+              {comments.length === 0 ? <div className="text-sm text-[#8C8A80] py-4 text-center">{t('prd.noCommentsYet')}</div> : comments.map(c => (
                 <div key={c.id} className="text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{c.author_name || t('prd.unknown')}</span>
-                    <span className="text-xs text-slate-400">{formatDate(c.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                    <span className="text-xs text-[#8C8A80]">{formatDate(c.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</span>
                   </div>
                   <p className="text-slate-600 dark:text-slate-300">{c.comment}</p>
                 </div>
               ))}
             </div>
             <form onSubmit={postComment} className="flex gap-2">
-              <input value={comment} onChange={e => setComment(e.target.value)} placeholder={t('prd.addCommentPlaceholder')}
-                className="flex-1 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-              <button disabled={posting} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{posting ? '…' : t('prd.post')}</button>
+              <Input value={comment} onChange={e => setComment(e.target.value)} placeholder={t('prd.addCommentPlaceholder')} className="flex-1" />
+              <Button type="submit" disabled={posting}>{posting ? '…' : t('prd.post')}</Button>
             </form>
           </div>
         </div>
