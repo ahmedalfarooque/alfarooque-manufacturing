@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
+import { Button, Input } from '@/components/ui';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { STATUS_BADGE } from '../page';
 
@@ -72,7 +73,7 @@ export default function PurchaseRequestDetailPage({ params }) {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.requestDetails')}</h3>
             <dl className="grid grid-cols-2 gap-y-2 text-sm">
               <Row label={t('pd.requestedBy')} value={r.requested_by_name} />

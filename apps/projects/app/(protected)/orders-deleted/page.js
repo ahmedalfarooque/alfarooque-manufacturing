@@ -74,60 +74,58 @@ export default function DeletedOrdersPage() {
     <Shell active="/orders-deleted">
       <h2 className="text-lg font-semibold mb-4">{t('oq.ordersDeletedTitle')}</h2>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('oq.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('oq.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
+          className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ORDER_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         <Dropdown value={recovery} onChange={setRecovery}
           options={RECOVERY_OPTIONS.map(r => [r, r === 'All' ? t('oq.allRecovery') : t('oq.recovery' + r.charAt(0).toUpperCase() + r.slice(1))])} />
       </div>
 
       {!softDeleteEnabled ? (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-8 text-center text-slate-400">
+        <div className="glass-card p-8 text-center text-[#8C8A80]">
           🔒 {t('oq.softDeleteNotEnabled')}
         </div>
       ) : (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+        <div className="glass-card overflow-auto max-h-[70vh]">
           <table className="w-full text-sm min-w-[900px]">
-            <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+            <thead className="text-left text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
               <tr>
-                <th className="py-3 px-4">{t('oq.col.orderNo')}</th>
-                <th>{t('oq.col.customer')}</th>
-                <th>{t('oq.col.email')}</th>
-                <th>{t('oq.col.total')}</th>
-                <th>{t('oq.col.status')}</th>
-                <th>{t('oq.col.deletedBy')}</th>
-                <th>{t('oq.col.deletedDate')}</th>
-                <th>{t('oq.col.daysRemaining')}</th>
-                <th className="text-right px-4">{t('common.actions')}</th>
+                <th className="py-3 px-4 whitespace-nowrap">{t('oq.col.orderNo')}</th>
+                <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.customer')}</th>
+                <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.email')}</th>
+                <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.total')}</th>
+                <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.status')}</th>
+                <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.deletedBy')}</th>
+                <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.deletedDate')}</th>
+                <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.daysRemaining')}</th>
+                <th className="text-right px-4 whitespace-nowrap">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {rows === null ? (
-                <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('oq.noDeletedOrdersFound')}</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#8C8A80]">{t('oq.noDeletedOrdersFound')}</td></tr>
               ) : filtered.map(r => {
                 const name = r.guest_name || r.customer_name || '—';
                 const email = r.guest_email || r.customer_email || '—';
                 const daysText = r.days_remaining <= 0 ? t('oq.expiresToday') : t('oq.daysLeft', { n: r.days_remaining });
                 return (
-                  <tr key={r.id} className="border-b border-black/5 dark:border-white/5">
+                  <tr key={r.id} className="border-t border-[#E5E2DD]/70 dark:border-white/[0.06]">
                     <td className="py-3 px-4" dir="ltr">{r.order_no || r.id.slice(0, 8)}</td>
-                    <td className="max-w-[160px] truncate">{name}</td>
-                    <td className="max-w-[180px] truncate" dir="ltr">{email}</td>
-                    <td dir="ltr">{money(r.grand_total)}</td>
-                    <td className="capitalize">{trEnum(t, 'status', r.status)}</td>
-                    <td>{r.deleted_by_name || '—'}</td>
-                    <td>{r.deleted_at ? new Date(r.deleted_at).toLocaleDateString() : '—'}</td>
-                    <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></td>
-                    <td className="text-right px-4 whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
-                        <button disabled={busyId === r.id} onClick={() => recover(r.id)} className="text-xs px-2 py-1 rounded-lg bg-brand-600 text-white disabled:opacity-50">{t('oq.recover')}</button>
-                        {isSuperAdmin && (
-                          <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.deletePermanently')}</button>
-                        )}
-                      </div>
+                    <td className="px-3 py-2.5 max-w-[160px] truncate">{name}</td>
+                    <td className="px-3 py-2.5 max-w-[180px] truncate" dir="ltr">{email}</td>
+                    <td className="px-3 py-2.5" dir="ltr">{money(r.grand_total)}</td>
+                    <td className="px-3 py-2.5 capitalize">{trEnum(t, 'status', r.status)}</td>
+                    <td className="px-3 py-2.5">{r.deleted_by_name || '—'}</td>
+                    <td className="px-3 py-2.5">{r.deleted_at ? new Date(r.deleted_at).toLocaleDateString() : '—'}</td>
+                    <td className="px-3 py-2.5"><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></td>
+                    <td className="text-right px-4 py-2.5 whitespace-nowrap">
+                      <button disabled={busyId === r.id} onClick={() => recover(r.id)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3 disabled:opacity-50">{t('oq.recover')}</button>
+                      {isSuperAdmin && (
+                        <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-[#BC6B4E] hover:underline text-sm disabled:opacity-50">{t('oq.deletePermanently')}</button>
+                      )}
                     </td>
                   </tr>
                 );

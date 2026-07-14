@@ -239,39 +239,39 @@ export default function PurchaseRequestsPage() {
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+      <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="sticky top-0 z-10 bg-[#F7F5F1] dark:bg-[#1B1B14]">
             <tr>
-              <th className="py-3 px-4">#</th>
-              <th onClick={() => toggleSort('request_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.date')}<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('project_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('pr.col.materials')}</th>
-              <th onClick={() => toggleSort('priority')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.priority')}<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('pr.col.requestedBy')}</th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
+              <Th>#</Th>
+              <th onClick={() => toggleSort('request_date')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('pr.col.date')}<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('project_name')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('pr.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th>{t('pr.col.materials')}</Th>
+              <th onClick={() => toggleSort('priority')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('pr.col.priority')}<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th>{t('pr.col.requestedBy')}</Th>
+              <th onClick={() => toggleSort('status')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th className="text-end">{t('common.actions')}</Th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('pr.noMatch')}</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[#8C8A80]">{t('pr.noMatch')}</td></tr>
             ) : pageRows.map((r, i) => (
               <tr key={r.id} onClick={() => { window.location.href = '/purchase-requests/' + r.id; }}
-                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
-                <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
-                <td>{r.request_date}</td>
-                <td className="max-w-[160px] truncate">{r.project_name}</td>
-                <td className="max-w-[220px] truncate">{r.material_description}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></td>
-                <td>{r.requested_by_name || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
-                <td className="text-right px-4 space-x-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-slate-400">{'\u{1F441}'}</a>
-                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-500">↗</a>
-                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-red-500">🗑</button>
+                className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors duration-150">
+                <Td>{(page - 1) * pageSize + i + 1}</Td>
+                <Td>{r.request_date}</Td>
+                <Td className="max-w-[160px] truncate">{r.project_name}</Td>
+                <Td className="max-w-[220px] truncate">{r.material_description}</Td>
+                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></Td>
+                <Td>{r.requested_by_name || '—'}</Td>
+                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
+                <td className="px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
+                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-[#8C8A80] hover:text-[#1A1A18] dark:hover:text-[#F5F3EE]">{'\u{1F441}'}</a>
+                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-600 dark:text-brand-400 hover:underline">↗</a>
+                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#BC6B4E] hover:underline">🗑</button>
                 </td>
               </tr>
             ))}
@@ -279,7 +279,7 @@ export default function PurchaseRequestsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -287,10 +287,10 @@ export default function PurchaseRequestsPage() {
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+        <div className="flex gap-1 items-center">
+          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</Button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</Button>
         </div>
       </div>
 
