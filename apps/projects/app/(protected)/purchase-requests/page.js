@@ -218,7 +218,7 @@ export default function PurchaseRequestsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.byStatus')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
@@ -231,9 +231,8 @@ export default function PurchaseRequestsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('pr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('pr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         <Dropdown value={priority} onChange={setPriority} options={['All', 'Normal', 'Urgent', 'Critical'].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>

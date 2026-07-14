@@ -55,28 +55,28 @@ export default function CustomerPicker({ value, onChange }) {
 
   return (
     <div ref={boxRef} className="relative">
-      <label className="block text-xs text-slate-500 mb-1">{t('cust.picker.label')}</label>
-      <input
-        value={query}
-        onChange={e => { setQuery(e.target.value); setOpen(true); onChange({ customer_id: null, customer_name: e.target.value, company_name: value?.company_name || '' }); }}
-        onFocus={() => setOpen(true)}
-        placeholder={t('cust.picker.placeholder')}
-        required
-        className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm"
-      />
+      <Field label={t('cust.picker.label')}>
+        <Input
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); onChange({ customer_id: null, customer_name: e.target.value, company_name: value?.company_name || '' }); }}
+          onFocus={() => setOpen(true)}
+          placeholder={t('cust.picker.placeholder')}
+          required
+        />
+      </Field>
       {open && (
-        <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0f172a] shadow-lg">
+        <div className="glass-card absolute z-10 mt-1 w-full max-h-56 overflow-y-auto p-1.5">
           <button type="button" onClick={() => { setAddOpen(true); setOpen(false); }}
-            className="w-full text-left px-3 py-2 text-sm text-brand-500 hover:bg-brand-500/10 border-b border-black/5 dark:border-white/10">
+            className="w-full text-start rounded-lg px-3 py-2 text-sm text-brand-600 dark:text-brand-400 hover:bg-[#F1EEE7] dark:hover:bg-white/5 border-b border-[#E5E2DD]/60 dark:border-white/[0.06]">
             {t('cust.picker.addNew')}
           </button>
           {filtered.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-slate-400">{t('cust.picker.noMatch')}</div>
+            <div className="px-3 py-2 text-xs text-[#8C8A80]">{t('cust.picker.noMatch')}</div>
           ) : filtered.map(c => (
             <button type="button" key={c.id} onClick={() => select(c)}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5">
+              className="w-full text-start rounded-lg px-3 py-2 text-sm hover:bg-[#F1EEE7] dark:hover:bg-white/5">
               <div className="font-medium">{c.full_name}</div>
-              {c.company_name && <div className="text-xs text-slate-500">{c.company_name}</div>}
+              {c.company_name && <div className="text-xs text-[#8C8A80]">{c.company_name}</div>}
             </button>
           ))}
         </div>

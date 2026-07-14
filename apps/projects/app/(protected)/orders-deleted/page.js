@@ -5,6 +5,7 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Input } from '@/components/ui';
 
 function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
 function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
