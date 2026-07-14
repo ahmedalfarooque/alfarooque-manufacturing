@@ -317,3 +317,18 @@ html.dark .glass-card:hover {
   }
   .glass-ctrl.app-switch-btn .ctrl-label { display: inline; font-size: 11px; }
 }
+
+/* ═══ Language toggle — text-only .glass-ctrl (EN / ع / عربي, no icon).
+   The generic mobile rule above collapses every .glass-ctrl to a 44px
+   icon circle and hides .ctrl-label; icon buttons (theme, logout) still
+   show their icon, but this button has no icon at all, so it rendered
+   as a blank circle on mobile (login page + in-app header). Keep it a
+   pill with the label visible, same recipe as .app-switch-btn. ═══ */
+@media (max-width: 768px) {
+  .glass-ctrl.lang-toggle-btn {
+    width: auto; height: 44px;
+    padding: 0 14px; border-radius: 40px;
+    font-size: 13px; gap: 0;
+  }
+  .glass-ctrl.lang-toggle-btn .ctrl-label { display: inline; font-size: 12px; }
+}

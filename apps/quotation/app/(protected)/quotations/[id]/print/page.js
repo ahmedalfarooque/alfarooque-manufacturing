@@ -23,6 +23,16 @@ import QuoteDocument, { money, dateStr } from '@/components/QuoteDocument';
 import { downloadQuotePdf, printQuotePdf } from '@/lib/pdf/buildQuotePdf';
 import { buildQuoteQrText, buildQuoteQrDataUrl } from '@/lib/qr';
 
+/* Mobile viewport fix only — the actual PDF/print output is untouched:
+   both the server route (renderPdfServer.js, Puppeteer @900px viewport)
+   and the html2canvas fallback below capture the document at its real
+   794px size regardless of what the visitor's phone screen looks like.
+   This is purely a "shrink the on-screen preview to fit the phone"
+   transform so nothing overflows the viewport or requires horizontal
+   scrolling — desktop (where 794px already fits) renders at scale(1),
+   i.e. pixel-identical to before. */
+const SHEET_W = 794;
+
 async function fetchServerPdfBlob(id, lang) {
   const res = await fetch(`/api/quotations/${id}/pdf?lang=${lang}`, { credentials: 'same-origin' });
   if (!res.ok) throw new Error('Server-side PDF generation unavailable');
@@ -37,6 +47,9 @@ export default function PrintPage() {
   const [printing, setPrinting] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const sheetRef = useRef(null);
+  const wrapRef = useRef(null);
+  const [scale, setScale] = useState(1);
+  const [natH, setNatH] = useState(0);
   /* read ?lang= without useSearchParams — avoids the Suspense-boundary
      requirement next build enforces for that hook */
   const [lang, setLang] = useState(null);
@@ -101,10 +114,52 @@ export default function PrintPage() {
     return () => { cancelled = true; };
   }, [data, lang]);
 
+  /* Shrink-to-fit the fixed-width (794px) sheet on narrow screens so it
+     never forces horizontal scrolling. Recomputed on resize and whenever
+     the document's own height changes (language toggle can reflow it,
+     e.g. Arabic line-wrapping). Desktop viewports (>= ~810px available)
+     always resolve to scale 1 — pixel-identical to the un-scaled page. */
+  useEffect(() => {
+    function recalc() {
+      const el = sheetRef.current;
+      if (!el) return;
+      const available = (wrapRef.current ? wrapRef.current.clientWidth : window.innerWidth) - 16;
+      setScale(Math.min(1, Math.max(0.32, available / SHEET_W)));
+      setNatH(el.offsetHeight || 0);
+    }
+    recalc();
+    window.addEventListener('resize', recalc);
+    let ro;
+    if (typeof ResizeObserver !== 'undefined' && sheetRef.current) {
+      ro = new ResizeObserver(recalc);
+      ro.observe(sheetRef.current);
+    }
+    return () => { window.removeEventListener('resize', recalc); if (ro) ro.disconnect(); };
+  }, [data, lang, qrDataUrl]);
+
   /* The .qdoc element mounted below — literally the on-screen preview
-     — is what gets captured. Not data passed to a second renderer. */
+     — is what gets captured. Not data passed to a second renderer. The
+     capture always happens at scale(1): the mobile shrink-to-fit above
+     is a pure preview convenience and must never leak into the actual
+     PDF/print output, so it's forced back to 1 for the instant of
+     capture (the server route ignores it entirely — it renders the URL
+     in its own fixed-size headless Chrome tab — this only matters for
+     the client-side html2canvas fallback path). */
   function getDocEl() {
     return sheetRef.current && sheetRef.current.querySelector('.qdoc');
+  }
+
+  async function withUnscaledCapture(fn) {
+    const prevScale = scale;
+    if (prevScale !== 1) {
+      setScale(1);
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    }
+    try {
+      return await fn();
+    } finally {
+      if (prevScale !== 1) setScale(prevScale);
+    }
   }
 
   async function downloadPdf() {
@@ -119,7 +174,7 @@ export default function PrintPage() {
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch (_) {
       try {
-        await downloadQuotePdf(getDocEl(), filename);
+        await withUnscaledCapture(() => downloadQuotePdf(getDocEl(), filename));
       } catch (_) {
         window.print();
       }
@@ -136,7 +191,7 @@ export default function PrintPage() {
       window.open(url, '_blank');
     } catch (_) {
       try {
-        await printQuotePdf(getDocEl());
+        await withUnscaledCapture(() => printQuotePdf(getDocEl()));
       } catch (_) {
         window.print();
       }
@@ -160,7 +215,8 @@ export default function PrintPage() {
              page — the "oversized page with blank space after the
              footer" bug. Zero it all out for print. */
           .print-stage { min-height: 0 !important; padding: 0 !important; background: #fff !important; }
-          .print-sheet { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; }
+          .print-sheet { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; transform: none !important; }
+          .print-sheet-wrap { height: auto !important; overflow: visible !important; }
         }
         /* Zero browser page margin — the document itself supplies its
            own 32px/36px padding (~8.5mm) as the visible A4 margin, and
@@ -179,12 +235,32 @@ export default function PrintPage() {
            correctly-oriented PDF with this size:A4 declaration removed,
            and a swapped one with it present. */
         @page { margin: 0; }
+
+        /* ═══ Mobile toolbar — desktop keeps the original fixed
+           top-right cluster untouched; below 640px it becomes a
+           sticky, full-width, wrapping row instead of floating over
+           the document (which is what caused the QR/header overlap
+           and oversized buttons on phones). ═══ */
+        .print-toolbar {
+          position: fixed; top: 12px; inset-inline-end: 16px; z-index: 50;
+          display: flex; gap: 8px; font-family: sans-serif;
+        }
+        @media (max-width: 640px) {
+          .print-toolbar {
+            position: sticky; top: 0; inset-inline-end: auto; inset-inline-start: 0;
+            width: 100%; margin: 0 0 12px; z-index: 60;
+            flex-wrap: wrap; justify-content: center;
+            padding: 8px 10px; background: #e9e6e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+          }
+          .print-toolbar button, .print-toolbar a {
+            flex: 0 1 auto; font-size: 12px !important; padding: 7px 10px !important;
+          }
+        }
+        .print-sheet-wrap { display: flex; justify-content: center; overflow: hidden; }
       `}</style>
 
-      <div className="no-print" style={{
-        position: 'fixed', top: 12, insetInlineEnd: 16, zIndex: 50, display: 'flex', gap: 8,
-        fontFamily: 'sans-serif',
-      }}>
+      <div className="no-print print-toolbar">
         <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
           style={btn()}>{lang === 'ar' ? 'English' : 'عربي'}</button>
         <button onClick={downloadPdf} disabled={downloading} style={btn(true)}>
@@ -196,16 +272,22 @@ export default function PrintPage() {
         <a href={'/quotations/' + id} style={{ ...btn(), textDecoration: 'none', display: 'inline-block' }}>✕</a>
       </div>
 
-      <div ref={sheetRef} className="print-sheet" style={{ background: '#fff', maxWidth: 794, margin: '0 auto', boxShadow: '0 8px 40px rgba(0,0,0,.18)', borderRadius: 4 }}>
-        <QuoteDocument
-          doc={data.row}
-          products={data.products}
-          entity={data.row.entity_full || data.row.entity}
-          customer={data.row.customer}
-          terms={terms}
-          lang={lang || 'en'}
-          qrDataUrl={qrDataUrl}
-        />
+      <div ref={wrapRef} className="print-sheet-wrap no-print-wrap" style={{ height: natH ? natH * scale : 'auto' }}>
+        <div ref={sheetRef} className="print-sheet" style={{
+          background: '#fff', width: SHEET_W, flex: '0 0 auto',
+          boxShadow: '0 8px 40px rgba(0,0,0,.18)', borderRadius: 4,
+          transform: `scale(${scale})`, transformOrigin: 'top center',
+        }}>
+          <QuoteDocument
+            doc={data.row}
+            products={data.products}
+            entity={data.row.entity_full || data.row.entity}
+            customer={data.row.customer}
+            terms={terms}
+            lang={lang || 'en'}
+            qrDataUrl={qrDataUrl}
+          />
+        </div>
       </div>
     </div>
   );

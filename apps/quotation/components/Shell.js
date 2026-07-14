@@ -136,16 +136,16 @@ export default function Shell({ children, active }) {
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/[0.08] bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden text-xl" onClick={() => setSidebarOpen(true)}>☰</button>
-            <h1 className="font-semibold text-lg capitalize">{(() => {
+        <header className="min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/[0.08] bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center gap-3 min-w-0">
+            <button className="lg:hidden text-xl shrink-0" onClick={() => setSidebarOpen(true)}>☰</button>
+            <h1 className="font-semibold text-lg capitalize truncate">{(() => {
               if (active === '/profile') return t('profile.title');
               const navItem = NAV.find(i => i.href === active);
               return navItem ? t(navItem.labelKey) : String(active || '').replace('/', '');
             })()}</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap justify-end gap-2 sm:gap-3">
             <AppSwitcherButtons user={user} />
             <div className="relative">
               <button onClick={() => setNotifOpen(o => !o)} className="relative h-9 w-9 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-sm transition-colors duration-200 hover:bg-[#F1EEE7] dark:hover:bg-white/5" aria-label={t('shell.notifications')}>
@@ -155,7 +155,7 @@ export default function Shell({ children, active }) {
               {notifOpen && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
-                  <div className="glass-card absolute end-0 mt-2 w-80 max-h-96 overflow-y-auto z-40">
+                  <div className="glass-card absolute end-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[70vh] overflow-y-auto z-40">
                     <div className="px-4 py-3 border-b border-[#E5E2DD] dark:border-white/[0.08] font-medium text-sm">{t('shell.notifications')}</div>
                     {notifications.length === 0 ? (
                       <div className="px-4 py-6 text-center text-sm text-[#8C8A80]">{t('shell.noNotificationsYet')}</div>
@@ -177,7 +177,7 @@ export default function Shell({ children, active }) {
                 </>
               )}
             </div>
-            <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
+            <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="glass-ctrl lang-toggle-btn" aria-label={t('shell.toggleLanguage')}>
               <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
             </button>
             <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>

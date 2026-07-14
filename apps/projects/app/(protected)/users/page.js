@@ -164,7 +164,7 @@ function UserModal({ modal, onClose, onSave }) {
   if (tempPassword) {
     return (
       <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4">
+        <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
           <h3 className="font-semibold text-lg">{t('users.modal.userCreatedTitle')}</h3>
           <p className="text-sm text-slate-500">{t('users.modal.userCreatedNote', { name: form.full_name })}</p>
           <div className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-4 py-3 font-mono text-lg text-center select-all">{tempPassword}</div>

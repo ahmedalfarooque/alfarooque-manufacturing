@@ -56,16 +56,41 @@ export default async function PublicQuotationPage({ params }) {
 
   return (
     <div style={{ background: '#e9e6e0', minHeight: '100vh', padding: '24px 0' }}>
-      <div style={{ background: '#fff', maxWidth: 794, margin: '0 auto', boxShadow: '0 8px 40px rgba(0,0,0,.18)', borderRadius: 4 }}>
-        <QuoteDocument
-          doc={doc}
-          products={products || []}
-          entity={doc.entity}
-          customer={doc.customer}
-          terms={terms}
-          lang={lang}
-          qrDataUrl={qrDataUrl}
-        />
+      {/* Server component, so no JS-measured scale — instead a few fixed
+          breakpoint scale steps keep the 794px document from ever forcing
+          horizontal scroll on a phone. Desktop (>850px) is untouched:
+          scale(1), identical to before. Any leftover vertical whitespace
+          below the shrunk sheet on very small screens is a deliberate,
+          acceptable trade-off for a static page — no overflow, no
+          scrollbar, exact desktop appearance preserved above 850px. */}
+      <style>{`
+        .qv-wrap { display: flex; justify-content: center; overflow: hidden; }
+        .qv-shell { width: 794px; flex: 0 0 auto; background: #fff; box-shadow: 0 8px 40px rgba(0,0,0,.18); border-radius: 4px; }
+        @media (max-width: 850px) {
+          .qv-shell { transform: scale(0.9); transform-origin: top center; margin-bottom: -10%; }
+        }
+        @media (max-width: 700px) {
+          .qv-shell { transform: scale(0.72); transform-origin: top center; margin-bottom: -28%; }
+        }
+        @media (max-width: 480px) {
+          .qv-shell { transform: scale(0.46); transform-origin: top center; margin-bottom: -54%; }
+        }
+        @media (max-width: 360px) {
+          .qv-shell { transform: scale(0.4); transform-origin: top center; margin-bottom: -60%; }
+        }
+      `}</style>
+      <div className="qv-wrap">
+        <div className="qv-shell">
+          <QuoteDocument
+            doc={doc}
+            products={products || []}
+            entity={doc.entity}
+            customer={doc.customer}
+            terms={terms}
+            lang={lang}
+            qrDataUrl={qrDataUrl}
+          />
+        </div>
       </div>
       <div style={{ textAlign: 'center', padding: 16, fontFamily: 'sans-serif', fontSize: 12, color: '#8c8a80' }}>
         AL FAROOQUE — alfarooque.com

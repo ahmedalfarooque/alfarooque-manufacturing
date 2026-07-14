@@ -121,18 +121,18 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F7F5F1] dark:bg-[#14140F] px-4 transition-colors duration-200">
-      <div className="w-full max-w-md rounded-2xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] shadow-[0_2px_6px_rgba(26,26,24,0.05),0_20px_50px_rgba(26,26,24,0.10)] dark:shadow-none p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+      <div className="w-full max-w-md rounded-2xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] shadow-[0_2px_6px_rgba(26,26,24,0.05),0_20px_50px_rgba(26,26,24,0.10)] dark:shadow-none p-5 sm:p-8">
+        <div className="flex items-center justify-between gap-2 mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <img src="/logo.png" alt="AL FAROOQUE" className="h-11 w-11 object-contain shrink-0" />
-            <div>
-              <div className="text-[#1A1A18] dark:text-white font-semibold text-lg leading-tight">{t('shell.appName')}</div>
-              <div className="text-[#8C8A80] dark:text-slate-400 text-xs">{t('login.tagline')}</div>
+            <div className="min-w-0">
+              <div className="text-[#1A1A18] dark:text-white font-semibold text-lg leading-tight truncate">{t('shell.appName')}</div>
+              <div className="text-[#8C8A80] dark:text-slate-400 text-xs truncate">{t('login.tagline')}</div>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button type="button" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-              className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
+              className="glass-ctrl lang-toggle-btn" aria-label={t('shell.toggleLanguage')}>
               <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'ع'}</span>
             </button>
             <button type="button" onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
