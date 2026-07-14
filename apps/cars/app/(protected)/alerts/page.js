@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
+import { EmptyState } from '@/components/ui';
 
 export default function AlertsPage() {
   const { t, formatDateTime } = useLanguage();
@@ -30,21 +31,25 @@ export default function AlertsPage() {
   return (
     <Shell active="/alerts">
       <h2 className="text-lg font-semibold mb-4">{t('nav.alerts')}</h2>
-      {error && <div className="text-red-500 text-sm">{error}</div>}
+      {error && <div className="text-[#BC6B4E] text-sm">{error}</div>}
       {!alerts ? (
-        <div className="text-slate-400 text-sm">{t('common.loading')}</div>
+        <div className="text-[#8C8A80] text-sm">{t('common.loading')}</div>
       ) : alerts.length === 0 ? (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-8 text-center text-slate-400 text-sm">{t('dash.noAlertsYet')}</div>
+        <div className="glass-card glass-card--pad">
+          <EmptyState text={t('dash.noAlertsYet')} />
+        </div>
       ) : (
         <div className="space-y-2">
           {alerts.map(a => (
-            <div key={a.id} className={'rounded-xl border p-4 flex items-start justify-between gap-3 ' + (a.is_read ? 'border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] opacity-60' : 'border-red-500/30 bg-red-500/5')}>
+            <div key={a.id} className={a.is_read
+              ? 'glass-card glass-card--pad flex items-start justify-between gap-3 opacity-60'
+              : 'rounded-2xl border border-[#BC6B4E]/30 bg-[#BC6B4E]/5 p-4 flex items-start justify-between gap-3'}>
               <div>
-                <div className="font-medium text-sm">{a.title} {a.cars?.vehicle_number && <span className="text-slate-400">— {a.cars.vehicle_number}</span>}</div>
-                <div className="text-xs text-slate-500 mt-1">{a.body}</div>
-                <div className="text-[11px] text-slate-400 mt-1">{formatDateTime(a.created_at)}</div>
+                <div className="font-medium text-sm">{a.title} {a.cars?.vehicle_number && <span className="text-[#8C8A80]">— {a.cars.vehicle_number}</span>}</div>
+                <div className="text-xs text-[#8C8A80] mt-1">{a.body}</div>
+                <div className="text-[11px] text-[#8C8A80]/80 mt-1">{formatDateTime(a.created_at)}</div>
               </div>
-              {isAdmin && !a.is_read && <button onClick={() => markRead(a.id)} className="text-xs px-2 py-1 rounded border border-black/10 dark:border-white/10 shrink-0">{t('alerts.markRead')}</button>}
+              {isAdmin && !a.is_read && <button onClick={() => markRead(a.id)} className="text-xs px-2 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors shrink-0">{t('alerts.markRead')}</button>}
             </div>
           ))}
         </div>
