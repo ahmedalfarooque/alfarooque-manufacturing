@@ -1277,6 +1277,123 @@ html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
 @media(max-width:599px){.gallery-masonry{grid-template-columns:repeat(2,1fr);}}
 
 /* ═════════════════════════════════════════════════════════════════
+   GALLERY PAGE — LUXURY PORTFOLIO REDESIGN (pages/gallery.html only)
+   Scoped entirely under .gallery-masonry--premium, an ADDITIONAL class
+   on the same .gallery-masonry element gallery3d.js already binds to —
+   the base .gallery-masonry/.gal-item rules above stay exactly as they
+   were for pages/services.html's embedded teaser grid, which shares
+   the same class names but never gets this modifier. Equal-specificity
+   selectors here simply win by appearing later in the cascade.
+   Every card size is fixed via grid-auto-rows (not image aspect-ratio),
+   so the grid's footprint is known before any image loads — required
+   for the "no layout shift / no flicker" requirement regardless of
+   each photo's real dimensions. ═══════════════════════════════════ */
+.gallery-masonry--premium{
+  grid-template-columns:repeat(5,1fr);
+  grid-auto-rows:250px;
+  grid-auto-flow:dense;
+  gap:22px;
+}
+.gallery-masonry--premium .gal-item{
+  aspect-ratio:auto;
+  border-radius:20px;
+  background:var(--bg-dark);
+  transition:transform 0.45s var(--ease),box-shadow 0.45s var(--ease);
+}
+.gallery-masonry--premium .gal-item img{
+  position:relative;z-index:1;
+  width:100%;height:100%;object-fit:cover;
+  opacity:0;transform:scale(1.04);
+  transition:opacity 0.5s var(--ease),transform 0.6s var(--ease);
+}
+.gallery-masonry--premium .gal-item.gi-loaded img{ opacity:1;transform:scale(1); }
+/* Skeleton shimmer stands in for a blurred placeholder (no low-res
+   source is generated for these images) — same idea, same purpose:
+   something calm to look at in the exact reserved space while the
+   real photo streams in, then a clean cross-fade, never a flash. */
+.gallery-masonry--premium .gal-item::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background:linear-gradient(100deg,var(--glass-2) 8%,var(--glass-3) 18%,var(--glass-2) 33%);
+  background-size:200% 100%;
+  animation:gi-shimmer 1.6s ease-in-out infinite;
+  opacity:1;transition:opacity 0.4s ease;
+}
+.gallery-masonry--premium .gal-item.gi-loaded::before{ opacity:0; }
+@keyframes gi-shimmer{ 0%{background-position:150% 0;} 100%{background-position:-50% 0;} }
+@media(prefers-reduced-motion:reduce){
+  .gallery-masonry--premium .gal-item::before{ animation:none; }
+}
+/* Hover: the card lifts and its shadow deepens; the IMAGE (not the
+   whole card) does the zoom, cropped by the card's own overflow —
+   avoids the old whole-card scale(1.03), which let neighboring cards
+   visually overlap in a tight-gapped grid. Desktop/pointer devices
+   only, per spec.
+   The lift uses `top` (the item is already position:relative), not
+   transform: the scroll-reveal system ([data-reveal="zoom"], shared
+   sitewide) animates this same element via GSAP and leaves its OWN
+   inline transform sitting on it after the reveal finishes — a
+   transform-based hover here would silently lose to that inline
+   style. `top` is untouched by that system, so the lift is unaffected
+   either way, and never interacts with the grid's own track sizing. */
+@media(hover:hover) and (pointer:fine){
+  .gallery-masonry--premium .gal-item{ transition:top 0.45s var(--ease),box-shadow 0.45s var(--ease); }
+  .gallery-masonry--premium .gal-item:hover{
+    top:-6px;
+    box-shadow:0 28px 64px rgba(0,0,0,0.38),0 0 0 1px var(--border-2);
+    z-index:1;
+  }
+  .gallery-masonry--premium .gal-item:hover img{ transform:scale(1.06); }
+}
+.gallery-masonry--premium .gal-item:focus-visible{
+  outline:2px solid var(--pr,#8CA05B);outline-offset:3px;
+}
+/* Minimal hover overlay — expand icon + label only, per spec ("do not
+   clutter"); fades and lifts in together, slightly staggered so the
+   icon settles a beat before the label. */
+.gallery-masonry--premium .gal-overlay{
+  z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(to top,rgba(8,10,14,0.55) 0%,rgba(8,10,14,0.10) 55%,transparent 75%);
+  opacity:0;transition:opacity 0.4s var(--ease);
+}
+.gallery-masonry--premium .gal-item:hover .gal-overlay{ opacity:1; }
+.gallery-masonry--premium .gal-expand{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.12);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.24);
+  color:#fff;
+  transform:translateY(10px) scale(0.9);opacity:0;
+  transition:transform 0.4s var(--ease),opacity 0.4s var(--ease);
+}
+.gallery-masonry--premium .gal-item:hover .gal-expand{ transform:translateY(0) scale(1);opacity:1; }
+.gallery-masonry--premium .gal-view-text{
+  font-family:var(--font-body,inherit);
+  font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  color:#fff;
+  opacity:0;transform:translateY(8px);
+  transition:opacity 0.4s var(--ease) 0.05s,transform 0.4s var(--ease) 0.05s;
+}
+.gallery-masonry--premium .gal-item:hover .gal-view-text{ opacity:0.92;transform:translateY(0); }
+/* Bento rhythm — a handful of cards read as larger "feature" tiles
+   (2x2) for masonry-style visual variety, desktop/laptop only where
+   there's room; tablet/mobile stay a clean uniform grid (reset below,
+   since min-width:900px here simply doesn't match at those sizes). */
+@media(min-width:900px){
+  .gallery-masonry--premium .gal-item:nth-child(7n+3){ grid-column:span 2;grid-row:span 2; }
+}
+@media(max-width:1199px){
+  .gallery-masonry--premium{ grid-template-columns:repeat(4,1fr);grid-auto-rows:220px;gap:20px; }
+}
+@media(max-width:899px){
+  .gallery-masonry--premium{ grid-template-columns:repeat(3,1fr);grid-auto-rows:190px;gap:16px; }
+}
+@media(max-width:599px){
+  .gallery-masonry--premium{ grid-template-columns:repeat(2,1fr);grid-auto-rows:170px;gap:12px; }
+  .gallery-masonry--premium .gal-item{ border-radius:16px; }
+}
+
+/* ═════════════════════════════════════════════════════════════════
    PREMIUM LIGHTBOX (.glb)
    ═════════════════════════════════════════════════════════════════ */
 .glb{
@@ -1284,6 +1401,7 @@ html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
   display:flex;align-items:center;justify-content:center;
   opacity:0;pointer-events:none;
   transition:opacity 0.3s ease;
+  touch-action:none;
 }
 .glb--open{opacity:1;pointer-events:all;}
 .glb-bg{
@@ -1305,6 +1423,8 @@ html[dir="rtl"] .nav-icon-badge { right: auto; left: -1px; }
   transition:opacity 0.35s ease,transform 0.35s ease;
 }
 .glb-img--in{opacity:1;transform:scale(1);}
+.glb-img{cursor:zoom-in;touch-action:none;}
+.glb-img--zoomed{cursor:zoom-out;}
 .glb-close,.glb-prev,.glb-next{
   position:fixed;
   display:flex;align-items:center;justify-content:center;

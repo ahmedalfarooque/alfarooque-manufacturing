@@ -37,6 +37,36 @@
     var images = [];
     var idx = 0;
     var touchX = 0;
+    var touchStartCount = 0;
+
+    /* ── Zoom state ── double-click/double-tap toggles a fixed 2.2x
+       centered zoom; pinch (two-finger touch) gives a real, live scale
+       between 1x and 3x. Both are intentionally simple (no panning) —
+       enough to inspect detail on a photo without turning the viewer
+       into a full pan-and-zoom widget. Always reset when the image
+       changes or the viewer closes, so nothing carries over. */
+    var scale = 1;
+    var pinching = false;
+    var pinchStartDist = 0;
+    var pinchStartScale = 1;
+    var lastTapTime = 0;
+    var lastTapX = 0, lastTapY = 0;
+
+    function applyZoom(next, animate) {
+      scale = Math.max(1, Math.min(3, next));
+      var img = document.getElementById('glb-img');
+      if (!img) return;
+      img.style.transition = animate ? '' : 'none';
+      img.style.transform = scale > 1 ? 'scale(' + scale + ')' : '';
+      img.classList.toggle('glb-img--zoomed', scale > 1.02);
+      if (!animate) {
+        // force reflow so the next transform change (e.g. pinch release) re-enables transition cleanly
+        void img.offsetHeight;
+        img.style.transition = '';
+      }
+    }
+    function resetZoom() { applyZoom(1, true); }
+    function toggleZoom() { applyZoom(scale > 1 ? 1 : 2.2, true); }
 
     function open(imgArr, startIdx) {
       images = imgArr;
@@ -53,6 +83,7 @@
     function close() {
       lb.classList.remove('glb--open');
       document.body.classList.remove('no-scroll');
+      resetZoom();
     }
 
     function render() {
@@ -60,6 +91,7 @@
       var counter = document.getElementById('glb-counter');
       if (!img || !images.length) return;
 
+      resetZoom();
       img.classList.remove('glb-img--in');
 
       var entry = images[idx];
@@ -86,6 +118,9 @@
     lb.querySelector('.glb-prev').addEventListener('click', IS_RTL ? next : prev);
     lb.querySelector('.glb-next').addEventListener('click', IS_RTL ? prev : next);
 
+    var glbImgEl = document.getElementById('glb-img');
+    if (glbImgEl) glbImgEl.addEventListener('dblclick', function (e) { e.preventDefault(); toggleZoom(); });
+
     document.addEventListener('keydown', function (e) {
       if (!lb.classList.contains('glb--open')) return;
       if (e.key === 'Escape') { e.preventDefault(); close(); }
@@ -93,11 +128,53 @@
       else if (e.key === 'ArrowRight') { e.preventDefault(); IS_RTL ? prev() : next(); }
     });
 
+    function touchDist(touches) {
+      var dx = touches[0].clientX - touches[1].clientX;
+      var dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
     lb.addEventListener('touchstart', function (e) {
-      touchX = e.touches[0].clientX;
+      touchStartCount = e.touches.length;
+      if (e.touches.length === 2) {
+        pinching = true;
+        pinchStartDist = touchDist(e.touches);
+        pinchStartScale = scale;
+      } else if (e.touches.length === 1) {
+        touchX = e.touches[0].clientX;
+        /* Manual double-tap detection (dblclick doesn't reliably fire
+           on touch): two quick taps close together in place toggle zoom. */
+        var now = Date.now();
+        var dx = Math.abs(e.touches[0].clientX - lastTapX);
+        var dy = Math.abs(e.touches[0].clientY - lastTapY);
+        if (now - lastTapTime < 320 && dx < 30 && dy < 30) {
+          toggleZoom();
+          lastTapTime = 0;
+        } else {
+          lastTapTime = now;
+          lastTapX = e.touches[0].clientX;
+          lastTapY = e.touches[0].clientY;
+        }
+      }
     }, { passive: true });
 
+    lb.addEventListener('touchmove', function (e) {
+      if (pinching && e.touches.length === 2) {
+        e.preventDefault();
+        var ratio = touchDist(e.touches) / (pinchStartDist || 1);
+        applyZoom(pinchStartScale * ratio, false);
+      }
+    }, { passive: false });
+
     lb.addEventListener('touchend', function (e) {
+      var wasPinching = pinching;
+      pinching = false;
+      if (wasPinching) {
+        if (scale < 1.15) resetZoom(); else applyZoom(scale, true);
+        return;
+      }
+      // Never swipe-navigate mid-pinch, while zoomed in, or after a multi-touch gesture.
+      if (touchStartCount > 1 || scale > 1) return;
       var dx = e.changedTouches[0].clientX - touchX;
       if (Math.abs(dx) > 50) {
         IS_RTL ? (dx < 0 ? prev() : next()) : (dx < 0 ? next() : prev());
@@ -281,6 +358,7 @@
     if (!container || !lb) return;
     var items = Array.prototype.slice.call(container.querySelectorAll('.gal-item'));
     if (!items.length) return;
+    var isPremium = container.classList.contains('gallery-masonry--premium');
 
     var imgData = items.map(function (item) {
       var img = item.querySelector('img');
@@ -289,6 +367,35 @@
 
     items.forEach(function (item, i) {
       item.addEventListener('click', function () { lb.open(imgData, i); });
+
+      if (!isPremium) return;
+
+      /* Keyboard access: these tiles are plain <div>s (not links/
+         buttons), so make them real interactive controls — same
+         open-on-activate behavior as a click, exposed to keyboard and
+         assistive tech. Doesn't touch any other page's .gal-item. */
+      item.tabIndex = 0;
+      item.setAttribute('role', 'button');
+      item.setAttribute('aria-label', imgData[i].alt || 'View image');
+      item.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          lb.open(imgData, i);
+        }
+      });
+
+      /* Fade-in once the real photo is actually decoded, not just
+         requested — img.complete is already true instantly for
+         browser-cached images, so this covers both the fresh-lazy-load
+         case and the warm-cache case without ever getting stuck. */
+      var img = item.querySelector('img');
+      if (!img) return;
+      var markLoaded = function () { item.classList.add('gi-loaded'); };
+      if (img.complete && img.naturalWidth) markLoaded();
+      else {
+        img.addEventListener('load', markLoaded, { once: true });
+        img.addEventListener('error', markLoaded, { once: true });
+      }
     });
   }
 
