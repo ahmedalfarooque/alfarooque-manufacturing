@@ -38,14 +38,14 @@ function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
    is swallowed here so it never reaches the console. */
 function ImgWithFallback({ src, className }) {
   const [failed, setFailed] = useState(false);
-  if (failed || !src) return <div className={className + ' flex items-center justify-center text-slate-400 text-xs'}>—</div>;
+  if (failed || !src) return <div className={className + ' flex items-center justify-center text-[#8C8A80] text-xs'}>—</div>;
   return <img src={src} alt="" className={className + ' object-cover'} loading="lazy" onError={() => setFailed(true)} />;
 }
 
 function Row({ label, value }) {
   return (
-    <div className="flex justify-between gap-4 py-1.5 border-b last:border-0 border-black/5 dark:border-white/5 text-sm">
-      <span className="text-slate-400 shrink-0">{label}</span>
+    <div className="flex justify-between gap-4 py-1.5 border-b last:border-0 border-[#E5E2DD]/70 dark:border-white/[0.06] text-sm">
+      <span className="text-[#8C8A80] shrink-0">{label}</span>
       <span className="text-end min-w-0 break-words">{value === null || value === undefined || value === '' ? '—' : value}</span>
     </div>
   );
@@ -58,7 +58,7 @@ function ItemCard({ item, t, lang, onImageClick }) {
   const unit = item.price != null ? Number(item.price) : 0;
   const total = unit * qty;
   const spec = (lbl, val) => val ? (
-    <div className="flex justify-between text-xs py-0.5"><span className="text-slate-400">{lbl}</span><span>{val}</span></div>
+    <div className="flex justify-between text-xs py-0.5"><span className="text-[#8C8A80]">{lbl}</span><span>{val}</span></div>
   ) : null;
   /* Display follows the CURRENT UI language, not the language the order/
      product was originally entered in — Arabic product fields ride along
