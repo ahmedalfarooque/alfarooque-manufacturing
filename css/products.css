@@ -1514,37 +1514,42 @@
   margin: 4px 0 0;
 }
 .new-arrival-title .accent { color: var(--pr, #8CA05B); }
+/* Desktop/laptop/tablet: an actual CSS Grid using the IDENTICAL
+   grid-template-columns + gap as .prod-grid at every breakpoint (both
+   sections sit in the same .container, so column widths come out
+   pixel-identical — same component, same layout, not a scaled copy).
+   That also means NO horizontal scrolling at these sizes: with only
+   NEW_ARRIVAL_LIMIT (3) cards rendered, a 4-column grid simply leaves
+   the 4th cell empty (normal "teaser row" behavior, same as any
+   Products section row that isn't fully populated) rather than
+   stretching or shrinking the cards to fill the row.
+   Mobile (≤700px) is untouched below — still the original horizontal
+   swipe strip, exactly as the Home page has always shown it. */
 .new-arrival-track {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scroll-snap-type: x proximity;
-}
-.new-arrival-track::-webkit-scrollbar { height: 5px; }
-.new-arrival-track::-webkit-scrollbar-thumb { background: var(--bd-teal, rgba(107,122,79,0.32)); border-radius: 4px; }
-/* Cards sized to EXACTLY match the main catalog grid's columns at each
-   breakpoint (.prod-grid: 4 cols/24px gap, then 3/20px ≤1280 and
-   2/18px ≤1024 — both sections live inside the same .container, so
-   100% here equals the grid's width; flex-basis = one column width).
-   The strip still scrolls horizontally when more cards than fit, and
-   flex's default align-items:stretch keeps every card equal height.
-   Mobile (≤700px) keeps the original compact swipe strip. */
-.new-arrival-track .prod-card {
-  flex: 0 0 calc((100% - 72px) / 4);
-  scroll-snap-align: start;
 }
 @media (max-width: 1280px) {
-  .new-arrival-track { gap: 20px; }
-  .new-arrival-track .prod-card { flex: 0 0 calc((100% - 40px) / 3); }
+  .new-arrival-track { grid-template-columns: repeat(3, 1fr); gap: 20px; }
 }
 @media (max-width: 1024px) {
-  .new-arrival-track { gap: 18px; }
-  .new-arrival-track .prod-card { flex: 0 0 calc((100% - 18px) / 2); }
+  .new-arrival-track { grid-template-columns: repeat(2, 1fr); gap: 18px; }
 }
 @media (max-width: 700px) {
-  .new-arrival-track { gap: 16px; }
-  .new-arrival-track .prod-card { flex: 0 0 260px; }
+  .new-arrival-track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+  }
+  .new-arrival-track::-webkit-scrollbar { height: 5px; }
+  .new-arrival-track::-webkit-scrollbar-thumb { background: var(--bd-teal, rgba(107,122,79,0.32)); border-radius: 4px; }
+  .new-arrival-track .prod-card {
+    flex: 0 0 260px;
+    scroll-snap-align: start;
+  }
 }
 
 /* ── Featured Collection Banner ──────────────────────────── */
