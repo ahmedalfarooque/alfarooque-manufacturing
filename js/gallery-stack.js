@@ -123,6 +123,12 @@
     if (!wrap) return;
     var track = wrap.querySelector('.gstack-track');
     if (!track) return;
+    /* Scroll/drag/swipe capture is bound to the STAGE (the ~70% centered
+       image area) rather than the full-width wrap, so the page only ever
+       stops scrolling while the pointer is directly over the gallery
+       images — never in the empty margins beside them, and never as a
+       global page-scroll lock. */
+    var stage = wrap.querySelector('.gstack-stage') || wrap;
     var cards = Array.prototype.slice.call(track.querySelectorAll('.gstack-card'));
     if (!cards.length) return;
 
@@ -187,7 +193,7 @@
 
       function setDragPx(px) { track.style.setProperty('--dragpx', px + 'px'); }
 
-      wrap.addEventListener('mousedown', function (e) {
+      stage.addEventListener('mousedown', function (e) {
         if (e.button !== 0) return;
         dragging = true; dragMoved = false;
         dragStartX = dragLastX = e.clientX;
@@ -220,8 +226,7 @@
 
         if (dragMoved) {
           suppressNextClick = true;
-          var stageEl = wrap.querySelector('.gstack-stage');
-          var cardSpan = Math.max(60, (stageEl ? stageEl.clientWidth : 300) * 0.24);
+          var cardSpan = Math.max(60, stage.clientWidth * 0.24);
           var totalDx = e.clientX - dragStartX;
           var stepsByDistance = Math.round(-totalDx / cardSpan);
           var flick = Math.abs(dragVelocity) > 0.55 && stepsByDistance === 0;
@@ -282,14 +287,19 @@
       });
     });
 
-    /* ── Wheel navigation, scoped to the widget only — never fights the
-       page's Lenis-driven scroll, which is untouched outside these bounds. ── */
+    /* ── Wheel navigation, bound to the STAGE only. Because the listener
+       lives on the image area (not the full-width wrap and not the
+       document), the page scrolls normally everywhere else, and the
+       instant the pointer leaves the stage the browser handles the wheel
+       again — no global scroll lock, no page freeze while the section is
+       merely on screen. preventDefault (needs passive:false) keeps the
+       page stationary only while the wheel is actually over the images. ── */
     var wheelAccum = 0;
     var wheelCooldown = false;
     var WHEEL_THRESHOLD = 40;
     var WHEEL_COOLDOWN_MS = 450;
 
-    wrap.addEventListener('wheel', function (e) {
+    stage.addEventListener('wheel', function (e) {
       e.preventDefault();
       if (wheelCooldown) return;
       wheelAccum += e.deltaY;
@@ -301,20 +311,24 @@
       }
     }, { passive: false });
 
-    /* ── Touch swipe with simple velocity-based snap ── */
+    /* ── Touch swipe with simple velocity-based snap. Bound to the STAGE
+       and all three listeners are passive (never call preventDefault), so
+       a vertical swipe anywhere — including directly on the gallery —
+       still scrolls the page normally; only a horizontal swipe on the
+       images changes the active panel. ── */
     var tStartX = 0, tStartT = 0, tLastX = 0, tLastT = 0;
 
-    wrap.addEventListener('touchstart', function (e) {
+    stage.addEventListener('touchstart', function (e) {
       tStartX = tLastX = e.touches[0].clientX;
       tStartT = tLastT = Date.now();
     }, { passive: true });
 
-    wrap.addEventListener('touchmove', function (e) {
+    stage.addEventListener('touchmove', function (e) {
       tLastX = e.touches[0].clientX;
       tLastT = Date.now();
     }, { passive: true });
 
-    wrap.addEventListener('touchend', function () {
+    stage.addEventListener('touchend', function () {
       var dx = tLastX - tStartX;
       var dt = Math.max(1, tLastT - tStartT);
       var velocity = dx / dt; // px/ms

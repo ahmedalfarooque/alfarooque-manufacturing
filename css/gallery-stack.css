@@ -33,9 +33,12 @@
 }
 
 /* Desktop/pointer:fine only — set by JS via [data-drag] so touch
-   devices (which never get this attribute) never show a mouse cursor. */
-.gstack-wrap[data-drag="idle"]{ cursor:grab; }
-.gstack-wrap[data-drag="active"]{ cursor:grabbing; }
+   devices (which never get this attribute) never show a mouse cursor.
+   Scoped to the stage (the image area) so the grab affordance only
+   appears over the interactive gallery, matching where drag/scroll
+   are actually captured. */
+.gstack-wrap[data-drag="idle"] .gstack-stage{ cursor:grab; }
+.gstack-wrap[data-drag="active"] .gstack-stage{ cursor:grabbing; }
 
 /* The floating stage — NOT full width, centered, no background/box.
    Panels are absolutely centered within it; the constrained width +
@@ -208,13 +211,6 @@
   outline:2px solid var(--pr);outline-offset:4px;
 }
 
-.gstack-hint{
-  font-size:10px;color:var(--tx-3);
-  letter-spacing:0.14em;text-transform:uppercase;
-  text-align:center;margin:0;
-  pointer-events:none;user-select:none;
-}
-
 /* ── Laptop / small desktop: keep the coverflow but pull rings tighter
    so nothing clips awkwardly. ── */
 @media(max-width:1200px){
@@ -234,7 +230,6 @@
   .gstack-stage{ width:94%; height:clamp(240px,72vw,360px); perspective:1000px; }
   .gstack-card{ width:clamp(240px,82vw,360px); }
   .gstack-card:not([data-pos="active"]){ display:none; }
-  .gstack-hint{ display:none; }
 }
 
 @media(prefers-reduced-motion:reduce){
