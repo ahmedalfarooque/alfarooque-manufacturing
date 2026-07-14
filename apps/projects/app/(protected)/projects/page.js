@@ -8,6 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -125,19 +126,18 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('projects.title')}</h2>
-          <p className="text-xs text-slate-500">{t('projects.breadcrumb')}</p>
+          <p className="text-xs text-[#8C8A80]">{t('projects.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('common.exportExcel')}</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('common.exportPdf')}</button>
-          <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
-          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">{t('projects.addProject')}</button>}
+          <Button variant="ghost" onClick={exportExcel}>⤓ {t('common.exportExcel')}</Button>
+          <Button variant="ghost" onClick={exportPdf}>⤓ {t('common.exportPdf')}</Button>
+          <Button variant="ghost" onClick={printReport}>🖶 {t('common.print')}</Button>
+          {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('projects.addProject')}</Button>}
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('projects.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('projects.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }}
           options={['All', 'Running', 'Completed', 'Upcoming', 'On Hold'].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         {me?.role !== 'external' && (
@@ -147,58 +147,60 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[950px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th className="py-3 px-4">#</th>
-              <th onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('company_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('project_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('projects.col.assignedUsers')}</th>
-              <th onClick={() => toggleSort('start_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.start')}<SortIndicator column="start_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('end_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.end')}<SortIndicator column="end_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('progress')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.progress')}<SortIndicator column="progress" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={10} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={10} className="py-8 text-center text-slate-400">{t('projects.noMatch')}</td></tr>
-            ) : rows.map((p, i) => (
-              <tr key={p.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
-                onClick={() => { window.location.href = '/projects/' + p.id; }}>
-                <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
-                <td className="font-medium">{p.customer_name}</td>
-                <td>{p.company_name || '—'}</td>
-                <td className="max-w-[220px] truncate">{p.project_name}</td>
-                <td><AssigneeChips assignees={p.assignees} /></td>
-                <td>{p.start_date || '—'}</td>
-                <td>{p.end_date || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span></td>
-                <td>
-                  <div className="w-24 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
-                    <div className="h-full bg-brand-500" style={{ width: p.progress + '%' }} />
-                  </div>
-                  <span className="text-xs text-slate-500">{p.progress}%</span>
-                </td>
-                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/projects/' + p.id; }} title={t('common.view')} className="text-slate-400">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: p })} title={t('common.edit')} className="text-brand-500">✎</button>}
-                  {isAdmin && <button onClick={() => deleteProject(p.id)} title={t('common.delete')} className="text-red-500">🗑</button>}
-                </td>
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-auto max-h-[70vh]">
+          <table className="w-full text-sm min-w-[950px]">
+            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+              <tr>
+                <Th>#</Th>
+                <Th><span onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('company_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('project_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th>{t('projects.col.assignedUsers')}</Th>
+                <Th><span onClick={() => toggleSort('start_date')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.start')}<SortIndicator column="start_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('end_date')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.end')}<SortIndicator column="end_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('status')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('progress')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.progress')}<SortIndicator column="progress" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th className="text-end">{t('common.actions')}</Th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {!data ? (
+                <tr><td colSpan={10} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+              ) : rows.length === 0 ? (
+                <tr><td colSpan={10}><EmptyState text={t('projects.noMatch')} /></td></tr>
+              ) : rows.map((p, i) => (
+                <tr key={p.id} className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]"
+                  onClick={() => { window.location.href = '/projects/' + p.id; }}>
+                  <Td>{(page - 1) * pageSize + i + 1}</Td>
+                  <Td className="font-medium">{p.customer_name}</Td>
+                  <Td>{p.company_name || '—'}</Td>
+                  <Td className="max-w-[220px] truncate">{p.project_name}</Td>
+                  <Td><AssigneeChips assignees={p.assignees} /></Td>
+                  <Td>{p.start_date || '—'}</Td>
+                  <Td>{p.end_date || '—'}</Td>
+                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span></Td>
+                  <Td>
+                    <div className="w-24 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                      <div className="h-full bg-brand-500" style={{ width: p.progress + '%' }} />
+                    </div>
+                    <span className="text-xs text-[#8C8A80]">{p.progress}%</span>
+                  </Td>
+                  <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => { window.location.href = '/projects/' + p.id; }} title={t('common.view')} className="text-[#8C8A80] me-3">{'\u{1F441}'}</button>
+                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: p })} title={t('common.edit')} className="text-brand-600 dark:text-brand-400 me-3">✎</button>}
+                    {isAdmin && <button onClick={() => deleteProject(p.id)} title={t('common.delete')} className="text-[#BC6B4E]">🗑</button>}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: rows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + rows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -207,9 +209,9 @@ export default function ProjectsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</Button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</Button>
         </div>
       </div>
 
@@ -219,7 +221,7 @@ export default function ProjectsPage() {
 }
 
 function AssigneeChips({ assignees }) {
-  if (!assignees || assignees.length === 0) return <span className="text-slate-400 text-xs">—</span>;
+  if (!assignees || assignees.length === 0) return <span className="text-[#8C8A80] text-xs">—</span>;
   const shown = assignees.slice(0, 3);
   const extra = assignees.length - shown.length;
   return (
@@ -301,10 +303,9 @@ export function ProjectModal({ modal, onClose, onSave }) {
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('projects.modal.addTitle') : t('projects.modal.editTitle')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
+    <Modal title={modal.mode === 'add' ? t('projects.modal.addTitle') : t('projects.modal.editTitle')} onClose={onClose} wide>
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
@@ -313,40 +314,38 @@ export function ProjectModal({ modal, onClose, onSave }) {
               onChange={patch => setForm(f => ({ ...f, ...patch }))}
             />
           </div>
-          <Field label={t('projects.modal.companyName')} value={form.company_name || ''} onChange={set('company_name')} />
-          <Field label={t('projects.modal.contactPerson')} value={form.contact_person || ''} onChange={set('contact_person')} />
-          <Field label={t('projects.modal.contactEmail')} type="email" value={form.contact_email || ''} onChange={set('contact_email')} />
-          <Field label={t('projects.modal.contactPhone')} value={form.contact_phone || ''} onChange={set('contact_phone')} />
-          <div className="col-span-2"><Field label={t('projects.modal.projectAddress')} value={form.address || ''} onChange={set('address')} /></div>
+          <Field label={t('projects.modal.companyName')}><Input value={form.company_name || ''} onChange={set('company_name')} /></Field>
+          <Field label={t('projects.modal.contactPerson')}><Input value={form.contact_person || ''} onChange={set('contact_person')} /></Field>
+          <Field label={t('projects.modal.contactEmail')}><Input type="email" value={form.contact_email || ''} onChange={set('contact_email')} /></Field>
+          <Field label={t('projects.modal.contactPhone')}><Input value={form.contact_phone || ''} onChange={set('contact_phone')} /></Field>
+          <div className="col-span-2"><Field label={t('projects.modal.projectAddress')}><Input value={form.address || ''} onChange={set('address')} /></Field></div>
 
           <div className="col-span-2">
-            <Field label={t('projects.modal.projectName')} value={form.project_name} onChange={set('project_name')} />
+            <Field label={t('projects.modal.projectName')}><Input value={form.project_name} onChange={set('project_name')} /></Field>
           </div>
           <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">{t('projects.modal.shortSummary')}</label>
-            <input value={form.short_summary || ''} onChange={set('short_summary')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+            <Field label={t('projects.modal.shortSummary')}><Input value={form.short_summary || ''} onChange={set('short_summary')} /></Field>
           </div>
           <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">{t('projects.modal.projectDetails')}</label>
-            <textarea value={form.project_details || ''} onChange={set('project_details')} rows={4}
-              className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+            <Field label={t('projects.modal.projectDetails')}>
+              <Textarea value={form.project_details || ''} onChange={set('project_details')} rows={4} />
+            </Field>
           </div>
 
-          <Field label={t('projects.modal.totalValue')} value={form.value ?? ''} onChange={set('value')} type="number" />
-          <Field label={t('projects.modal.startDate')} value={form.start_date || ''} onChange={set('start_date')} type="date" />
-          <Field label={t('projects.modal.endDate')} value={form.end_date || ''} onChange={set('end_date')} type="date" />
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('common.status')}</label>
+          <Field label={t('projects.modal.totalValue')}><Input type="number" value={form.value ?? ''} onChange={set('value')} /></Field>
+          <Field label={t('projects.modal.startDate')}><Input type="date" value={form.start_date || ''} onChange={set('start_date')} /></Field>
+          <Field label={t('projects.modal.endDate')}><Input type="date" value={form.end_date || ''} onChange={set('end_date')} /></Field>
+          <Field label={t('common.status')}>
             <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))}
               options={['Running', 'Completed', 'Upcoming', 'On Hold'].map(s => [s, trEnum(t, 'status', s)])} />
-          </div>
-          <Field label={t('projects.modal.progressPct')} value={form.progress ?? 0} onChange={set('progress')} type="number" min={0} max={100} />
+          </Field>
+          <Field label={t('projects.modal.progressPct')}><Input type="number" min={0} max={100} value={form.progress ?? 0} onChange={set('progress')} /></Field>
         </div>
 
-        <div className="pt-2 border-t border-black/5 dark:border-white/10">
+        <div className="pt-2 border-t border-[#E5E2DD]/70 dark:border-white/[0.08]">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-semibold">{t('projects.modal.assignedUsers')}</h4>
-            <button type="button" onClick={() => setAddUserOpen(true)} className="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white">{t('projects.modal.addUser')}</button>
+            <Button type="button" variant="ghost" onClick={() => setAddUserOpen(true)}>{t('projects.modal.addUser')}</Button>
           </div>
           {newUserInfo && (
             <div className="mb-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs space-y-1">
@@ -354,28 +353,28 @@ export function ProjectModal({ modal, onClose, onSave }) {
                 {t('projects.modal.userCreated', { name: newUserInfo.name })}
               </div>
               <div className="font-mono text-sm select-all">{newUserInfo.email} / {newUserInfo.password}</div>
-              <button type="button" onClick={() => setNewUserInfo(null)} className="text-slate-500 underline">{t('common.dismiss')}</button>
+              <button type="button" onClick={() => setNewUserInfo(null)} className="text-[#8C8A80] underline">{t('common.dismiss')}</button>
             </div>
           )}
-          <div className="rounded-lg border border-black/10 dark:border-white/10 max-h-48 overflow-y-auto">
+          <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] max-h-48 overflow-y-auto">
             <table className="w-full text-xs">
-              <thead className="text-left text-slate-400 sticky top-0 bg-white dark:bg-[#0f172a]">
+              <thead className="sticky top-0 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
                 <tr>
-                  <th className="py-2 px-3 w-8"></th>
-                  <th className="py-2 px-3">{t('common.name')}</th>
-                  <th className="py-2 px-3">{t('common.email')}</th>
-                  <th className="py-2 px-3">{t('projects.modal.position')}</th>
+                  <Th className="w-8"></Th>
+                  <Th>{t('common.name')}</Th>
+                  <Th>{t('common.email')}</Th>
+                  <Th>{t('projects.modal.position')}</Th>
                 </tr>
               </thead>
               <tbody>
                 {allUsers.length === 0 ? (
-                  <tr><td colSpan={4} className="py-4 text-center text-slate-400">{t('projects.modal.noUsersYet')}</td></tr>
+                  <tr><td colSpan={4} className="py-4 text-center text-[#8C8A80]">{t('projects.modal.noUsersYet')}</td></tr>
                 ) : allUsers.map(u => (
-                  <tr key={u.id} className="border-t border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]" onClick={() => toggleAssignee(u.id)}>
-                    <td className="px-3"><input type="checkbox" checked={assigneeIds.has(u.id)} onChange={() => toggleAssignee(u.id)} onClick={e => e.stopPropagation()} /></td>
-                    <td className="py-2 px-3 font-medium">{u.full_name}{u.role === 'admin' && <span className="ms-1.5 text-[10px] px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">{t('role.admin')}</span>}</td>
-                    <td>{u.email}</td>
-                    <td>{u.position || '—'}</td>
+                  <tr key={u.id} className="border-t border-[#E5E2DD]/70 dark:border-white/[0.06] cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]" onClick={() => toggleAssignee(u.id)}>
+                    <Td><input type="checkbox" checked={assigneeIds.has(u.id)} onChange={() => toggleAssignee(u.id)} onClick={e => e.stopPropagation()} /></Td>
+                    <Td className="font-medium">{u.full_name}{u.role === 'admin' && <span className="ms-1.5 text-[10px] px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">{t('role.admin')}</span>}</Td>
+                    <Td>{u.email}</Td>
+                    <Td>{u.position || '—'}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -384,12 +383,12 @@ export function ProjectModal({ modal, onClose, onSave }) {
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('common.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>
         </div>
       </form>
       {addUserOpen && <AddUserModal onClose={() => setAddUserOpen(false)} onSave={submitNewUser} />}
-    </div>
+    </Modal>
   );
 }
 
@@ -409,26 +408,17 @@ function AddUserModal({ onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-3">
-        <h3 className="font-semibold text-lg">{t('projects.addUserModal.title')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
-        <Field label={t('projects.addUserModal.fullName')} value={form.full_name} onChange={set('full_name')} required autoFocus />
-        <Field label={t('projects.addUserModal.email')} type="email" value={form.email} onChange={set('email')} required />
-        <Field label={t('projects.addUserModal.position')} value={form.position} onChange={set('position')} placeholder={t('projects.addUserModal.positionPlaceholder')} />
+    <Modal title={t('projects.addUserModal.title')} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-3">
+        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+        <Field label={t('projects.addUserModal.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required autoFocus /></Field>
+        <Field label={t('projects.addUserModal.email')} required><Input type="email" value={form.email} onChange={set('email')} required /></Field>
+        <Field label={t('projects.addUserModal.position')}><Input value={form.position} onChange={set('position')} placeholder={t('projects.addUserModal.positionPlaceholder')} /></Field>
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('common.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>
         </div>
       </form>
-    </div>
-  );
-}
-function Field({ label, ...props }) {
-  return (
-    <div>
-      <label className="block text-xs text-slate-500 mb-1">{label}</label>
-      <input {...props} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-    </div>
+    </Modal>
   );
 }

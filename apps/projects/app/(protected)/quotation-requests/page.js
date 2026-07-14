@@ -8,6 +8,7 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Input, Th, Td, EmptyState } from '@/components/ui';
 
 export const STATUS_BADGE = {
   pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -17,6 +18,9 @@ export const STATUS_BADGE = {
 };
 const ALL_STATUSES = ['pending', 'accepted', 'on_hold', 'rejected'];
 const REFRESH_MS = 15000;
+
+const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition-colors';
+const ACTION_TD = 'px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] text-end whitespace-nowrap';
 
 function money(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }); }
 
@@ -93,14 +97,14 @@ export default function QuotationRequestsPage() {
     if (res.ok) refresh();
   }
 
-  if (!isAdmin && me) return <Shell active="/quotation-requests"><div className="text-red-500 text-sm">{t('qr.adminOnly')}</div></Shell>;
+  if (!isAdmin && me) return <Shell active="/quotation-requests"><div className="text-[#BC6B4E] text-sm">{t('qr.adminOnly')}</div></Shell>;
 
   return (
     <Shell active="/quotation-requests">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('qr.title')}</h2>
-          <p className="text-xs text-slate-500">{t('qr.breadcrumb')}</p>
+          <p className="text-xs text-[#8C8A80]">{t('qr.breadcrumb')}</p>
         </div>
       </div>
 
@@ -111,59 +115,58 @@ export default function QuotationRequestsPage() {
         <StatCard icon="x" tone="red" label={t('qr.kpi.rejected')} value={kpis.rejected} onClick={() => setStatus('rejected')} />
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('qr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('qr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+      <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur-sm">
             <tr>
-              <th className="py-3 px-4">#</th>
-              <th onClick={() => toggleSort('quote_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('qr.col.quoteNumber')}<SortIndicator column="quote_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('qr.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('amount')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('qr.col.amount')}<SortIndicator column="amount" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('quote_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('qr.col.date')}<SortIndicator column="quote_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('qr.col.currentStatus')}</th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('qr.col.projectStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
+              <Th className="w-10">#</Th>
+              <th onClick={() => toggleSort('quote_number')} className={SORT_TH}>{t('qr.col.quoteNumber')}<SortIndicator column="quote_number" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('customer_name')} className={SORT_TH}>{t('qr.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('amount')} className={SORT_TH}>{t('qr.col.amount')}<SortIndicator column="amount" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('quote_date')} className={SORT_TH}>{t('qr.col.date')}<SortIndicator column="quote_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th>{t('qr.col.currentStatus')}</Th>
+              <th onClick={() => toggleSort('status')} className={SORT_TH}>{t('qr.col.projectStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th className="text-end">{t('common.actions')}</Th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
+              <tr><Td colSpan={8} className="text-center text-[#8C8A80]">{t('common.loading')}</Td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('qr.noMatch')}</td></tr>
+              <tr><td colSpan={8}><EmptyState text={t('qr.noMatch')} /></td></tr>
             ) : pageRows.map((r, i) => (
               <tr key={r.id} onClick={() => { window.location.href = '/quotation-requests/' + r.id; }}
-                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
-                <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
-                <td dir="ltr">{r.quote_number}</td>
-                <td className="max-w-[160px] truncate">{r.customer_name || '—'}</td>
-                <td dir="ltr">{money(r.amount)}</td>
-                <td>{r.quote_date || '—'}</td>
-                <td className="capitalize">{(r.quotation_status || '—').replace(/_/g, ' ')}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
-                <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors duration-150">
+                <Td>{(page - 1) * pageSize + i + 1}</Td>
+                <Td dir="ltr">{r.quote_number}</Td>
+                <Td className="max-w-[160px] truncate">{r.customer_name || '—'}</Td>
+                <Td dir="ltr">{money(r.amount)}</Td>
+                <Td>{r.quote_date || '—'}</Td>
+                <Td className="capitalize">{(r.quotation_status || '—').replace(/_/g, ' ')}</Td>
+                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
+                <td className={ACTION_TD} onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2 flex-wrap">
                     {r.status === 'pending' && (
                       <>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')} className="text-xs px-2 py-1 rounded-lg bg-emerald-600 text-white disabled:opacity-50">{t('qr.accept')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')} className="text-xs px-2 py-1 rounded-lg bg-amber-600 text-white disabled:opacity-50">{t('qr.hold')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('qr.reject')}</button>
+                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')} className="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.accept')}</button>
+                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')} className="text-xs px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.hold')}</button>
+                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.reject')}</button>
                       </>
                     )}
                     {['accepted', 'on_hold'].includes(r.status) && !r.project_id && (
-                      <button disabled={busyId === r.id} onClick={() => startProject(r.id)} className="text-xs px-2 py-1 rounded-lg bg-brand-600 text-white disabled:opacity-50">{t('qr.projectStart')}</button>
+                      <button disabled={busyId === r.id} onClick={() => startProject(r.id)} className="text-xs px-2.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.projectStart')}</button>
                     )}
                     {r.project_id && (
-                      <a href={'/projects/' + r.project_id} className="text-xs px-2 py-1 rounded-lg border border-black/10 dark:border-white/10">↗ {t('qr.openProject')}</a>
+                      <a href={'/projects/' + r.project_id} className="text-xs px-2.5 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">↗ {t('qr.openProject')}</a>
                     )}
-                    <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-red-500">🗑</button>
+                    <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#BC6B4E] hover:opacity-70 transition-opacity">🗑</button>
                   </div>
                 </td>
               </tr>
@@ -172,7 +175,7 @@ export default function QuotationRequestsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -181,9 +184,9 @@ export default function QuotationRequestsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">‹</button>
+          <span className="px-3 py-1.5">{page} / {totalPages}</span>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">›</button>
         </div>
       </div>
     </Shell>

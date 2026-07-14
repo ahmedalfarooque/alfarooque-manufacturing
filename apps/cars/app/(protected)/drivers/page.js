@@ -8,6 +8,7 @@ import { expiryInfo } from '@/lib/expiry';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
+import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const STATUS_BADGE = {
   Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -15,6 +16,8 @@ const STATUS_BADGE = {
   'On Leave': 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Terminated: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
+
+const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition-colors';
 
 const EMPTY_FORM = {
   full_name: '', full_name_ar: '', employee_id: '', phone: '', whatsapp: '', email: '', nationality: '',
@@ -108,65 +111,64 @@ export default function DriversPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('drivers.title')}</h2>
-          <p className="text-xs text-slate-500">{t('drivers.breadcrumb')}</p>
+          <p className="text-xs text-[#8C8A80]">{t('drivers.breadcrumb')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('drivers.exportExcel')}</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('drivers.exportPdf')}</button>
-          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('drivers.addDriver')}</button>}
+          <Button variant="ghost" onClick={exportExcel}>⤓ {t('drivers.exportExcel')}</Button>
+          <Button variant="ghost" onClick={exportPdf}>⤓ {t('drivers.exportPdf')}</Button>
+          {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('drivers.addDriver')}</Button>}
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('drivers.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('drivers.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={[['All', t('common.all')], ...['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])]} />
       </div>
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+      <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[900px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="sticky top-0 z-10 bg-[#F7F5F1] dark:bg-[#1B1B14]">
             <tr>
-              <th className="py-3 px-4">{t('drivers.colPhoto')}</th>
-              <th onClick={() => toggleSort('full_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('phone')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colPhone')}<SortIndicator column="phone" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('cars')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colVehicle')}<SortIndicator column="cars" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('license_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colLicenseExpiry')}<SortIndicator column="license_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('iqama_expiry_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colIqamaExpiry')}<SortIndicator column="iqama_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('drivers.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('drivers.colActions')}</th>
+              <Th>{t('drivers.colPhoto')}</Th>
+              <th onClick={() => toggleSort('full_name')} className={SORT_TH}>{t('drivers.colName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('phone')} className={SORT_TH}>{t('drivers.colPhone')}<SortIndicator column="phone" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('cars')} className={SORT_TH}>{t('drivers.colVehicle')}<SortIndicator column="cars" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('license_expiry_date')} className={SORT_TH}>{t('drivers.colLicenseExpiry')}<SortIndicator column="license_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('iqama_expiry_date')} className={SORT_TH}>{t('drivers.colIqamaExpiry')}<SortIndicator column="iqama_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className={SORT_TH}>{t('drivers.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th className="text-end">{t('drivers.colActions')}</Th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('drivers.loading')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('drivers.loading')}</td></tr>
             ) : drivers.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('drivers.noneYet')}</td></tr>
+              <tr><td colSpan={8}><EmptyState text={t('drivers.noneYet')} /></td></tr>
             ) : drivers.map(d => {
               const lic = expiryInfo(d.license_expiry_date);
               const iqama = expiryInfo(d.iqama_expiry_date);
               return (
-                <tr key={d.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                <tr key={d.id} className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors"
                   onClick={() => { window.location.href = '/drivers/' + d.id; }}>
-                  <td className="py-2 px-4">
+                  <Td>
                     {d.profile_photo_url ? (
                       <img src={d.profile_photo_url} alt="" className="h-9 w-9 rounded-full object-cover" />
                     ) : (
                       <div className="h-9 w-9 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-medium">{d.full_name.slice(0, 1).toUpperCase()}</div>
                     )}
-                  </td>
-                  <td className="font-medium">{d.full_name}</td>
-                  <td>{d.phone || '—'}</td>
-                  <td>{d.cars?.vehicle_number || '—'}</td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + lic.className}>{lic.dot} {trExpiry(t, lic)}</span></td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {trExpiry(t, iqama)}</span></td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span></td>
-                  <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-slate-400">{'\u{1F441}'}</button>
-                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} className="text-brand-500">✎</button>}
-                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} className="text-red-500">🗑</button>}
+                  </Td>
+                  <Td className="font-medium">{d.full_name}</Td>
+                  <Td>{d.phone || '—'}</Td>
+                  <Td>{d.cars?.vehicle_number || '—'}</Td>
+                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + lic.className}>{lic.dot} {trExpiry(t, lic)}</span></Td>
+                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {trExpiry(t, iqama)}</span></Td>
+                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span></Td>
+                  <td className="px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-[#8C8A80] hover:text-[#1A1A18] dark:hover:text-white">{'\u{1F441}'}</button>
+                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} className="text-brand-500 hover:text-brand-600">✎</button>}
+                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} className="text-[#BC6B4E] hover:text-[#a85a3f]">🗑</button>}
                   </td>
                 </tr>
               );
@@ -175,7 +177,7 @@ export default function DriversPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('drivers.showingEntries', { from: drivers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + drivers.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -184,9 +186,9 @@ export default function DriversPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors">›</button>
         </div>
       </div>
 
@@ -211,85 +213,73 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-3xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('drivers.addModalTitle') : t('drivers.editModalTitle')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
+    <Modal title={modal.mode === 'add' ? t('drivers.addModalTitle') : t('drivers.editModalTitle')} onClose={onClose} wide>
+      <form onSubmit={submit} className="space-y-5 max-h-[75vh] overflow-y-auto -mx-1 px-1">
+        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
 
         <Section title={t('drivers.sectionPersonal')}>
-          <Field label={t('fields.fullName')} value={form.full_name} onChange={set('full_name')} required />
-          <Field label={t('fields.fullNameAr')} value={form.full_name_ar || ''} onChange={set('full_name_ar')} />
-          <Field label={t('fields.employeeId')} value={form.employee_id || ''} onChange={set('employee_id')} />
-          <Field label={t('fields.phone')} value={form.phone || ''} onChange={set('phone')} />
-          <Field label={t('fields.whatsapp')} value={form.whatsapp || ''} onChange={set('whatsapp')} />
-          <Field label={t('fields.email')} type="email" value={form.email || ''} onChange={set('email')} />
-          <Field label={t('fields.nationality')} value={form.nationality || ''} onChange={set('nationality')} />
-          <Field label={t('fields.dateOfBirth')} type="date" value={form.date_of_birth || ''} onChange={set('date_of_birth')} />
-          <Field label={t('fields.bloodGroup')} value={form.blood_group || ''} onChange={set('blood_group')} />
-          <div className="col-span-2"><Field label={t('fields.address')} value={form.address || ''} onChange={set('address')} /></div>
-          <Field label={t('fields.emergencyContact')} value={form.emergency_contact || ''} onChange={set('emergency_contact')} />
-          <Field label={t('fields.emergencyPhone')} value={form.emergency_phone || ''} onChange={set('emergency_phone')} />
+          <Field label={t('fields.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required /></Field>
+          <Field label={t('fields.fullNameAr')}><Input value={form.full_name_ar || ''} onChange={set('full_name_ar')} /></Field>
+          <Field label={t('fields.employeeId')}><Input value={form.employee_id || ''} onChange={set('employee_id')} /></Field>
+          <Field label={t('fields.phone')}><Input value={form.phone || ''} onChange={set('phone')} /></Field>
+          <Field label={t('fields.whatsapp')}><Input value={form.whatsapp || ''} onChange={set('whatsapp')} /></Field>
+          <Field label={t('fields.email')}><Input type="email" value={form.email || ''} onChange={set('email')} /></Field>
+          <Field label={t('fields.nationality')}><Input value={form.nationality || ''} onChange={set('nationality')} /></Field>
+          <Field label={t('fields.dateOfBirth')}><Input type="date" value={form.date_of_birth || ''} onChange={set('date_of_birth')} /></Field>
+          <Field label={t('fields.bloodGroup')}><Input value={form.blood_group || ''} onChange={set('blood_group')} /></Field>
+          <div className="col-span-2"><Field label={t('fields.address')}><Input value={form.address || ''} onChange={set('address')} /></Field></div>
+          <Field label={t('fields.emergencyContact')}><Input value={form.emergency_contact || ''} onChange={set('emergency_contact')} /></Field>
+          <Field label={t('fields.emergencyPhone')}><Input value={form.emergency_phone || ''} onChange={set('emergency_phone')} /></Field>
         </Section>
 
         <Section title={t('drivers.sectionEmployment')}>
-          <Field label={t('fields.department')} value={form.department || ''} onChange={set('department')} />
-          <Field label={t('fields.designation')} value={form.designation || ''} onChange={set('designation')} />
-          <Field label={t('fields.joiningDate')} type="date" value={form.joining_date || ''} onChange={set('joining_date')} />
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('fields.status')}</label>
+          <Field label={t('fields.department')}><Input value={form.department || ''} onChange={set('department')} /></Field>
+          <Field label={t('fields.designation')}><Input value={form.designation || ''} onChange={set('designation')} /></Field>
+          <Field label={t('fields.joiningDate')}><Input type="date" value={form.joining_date || ''} onChange={set('joining_date')} /></Field>
+          <Field label={t('fields.status')}>
             <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])} />
-          </div>
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('fields.assignedVehicle')}</label>
+          </Field>
+          <Field label={t('fields.assignedVehicle')}>
             <Dropdown value={form.assigned_car_id || ''} onChange={v => setForm(f => ({ ...f, assigned_car_id: v }))} placeholder={t('common.none')}
               options={[['', t('common.none')], ...cars.map(c => [c.id, c.vehicle_number + ' — ' + c.name])]} />
-          </div>
-          <Field label={t('fields.experienceYears')} type="number" value={form.experience_years ?? ''} onChange={set('experience_years')} />
-          <Field label={t('fields.drivingCategory')} value={form.driving_category || ''} onChange={set('driving_category')} />
+          </Field>
+          <Field label={t('fields.experienceYears')}><Input type="number" value={form.experience_years ?? ''} onChange={set('experience_years')} /></Field>
+          <Field label={t('fields.drivingCategory')}><Input value={form.driving_category || ''} onChange={set('driving_category')} /></Field>
         </Section>
 
         <Section title={t('drivers.sectionLicense')}>
-          <Field label={t('fields.licenseNumber')} value={form.license_number || ''} onChange={set('license_number')} />
-          <Field label={t('fields.licenseType')} value={form.license_type || ''} onChange={set('license_type')} />
-          <Field label={t('fields.issueDate')} type="date" value={form.license_issue_date || ''} onChange={set('license_issue_date')} />
-          <Field label={t('fields.expiryDate')} type="date" value={form.license_expiry_date || ''} onChange={set('license_expiry_date')} />
+          <Field label={t('fields.licenseNumber')}><Input value={form.license_number || ''} onChange={set('license_number')} /></Field>
+          <Field label={t('fields.licenseType')}><Input value={form.license_type || ''} onChange={set('license_type')} /></Field>
+          <Field label={t('fields.issueDate')}><Input type="date" value={form.license_issue_date || ''} onChange={set('license_issue_date')} /></Field>
+          <Field label={t('fields.expiryDate')}><Input type="date" value={form.license_expiry_date || ''} onChange={set('license_expiry_date')} /></Field>
         </Section>
 
         <Section title={t('drivers.sectionIqama')}>
-          <Field label={t('fields.iqamaNumber')} value={form.iqama_number || ''} onChange={set('iqama_number')} />
-          <Field label={t('fields.iqamaExpiry')} type="date" value={form.iqama_expiry_date || ''} onChange={set('iqama_expiry_date')} />
-          <Field label={t('fields.passportNumber')} value={form.passport_number || ''} onChange={set('passport_number')} />
-          <Field label={t('fields.passportExpiry')} type="date" value={form.passport_expiry_date || ''} onChange={set('passport_expiry_date')} />
-          <Field label={t('fields.medicalExpiry')} type="date" value={form.medical_expiry_date || ''} onChange={set('medical_expiry_date')} />
+          <Field label={t('fields.iqamaNumber')}><Input value={form.iqama_number || ''} onChange={set('iqama_number')} /></Field>
+          <Field label={t('fields.iqamaExpiry')}><Input type="date" value={form.iqama_expiry_date || ''} onChange={set('iqama_expiry_date')} /></Field>
+          <Field label={t('fields.passportNumber')}><Input value={form.passport_number || ''} onChange={set('passport_number')} /></Field>
+          <Field label={t('fields.passportExpiry')}><Input type="date" value={form.passport_expiry_date || ''} onChange={set('passport_expiry_date')} /></Field>
+          <Field label={t('fields.medicalExpiry')}><Input type="date" value={form.medical_expiry_date || ''} onChange={set('medical_expiry_date')} /></Field>
         </Section>
 
-        <div>
-          <label className="block text-xs text-slate-500 mb-1">{t('drivers.notes')}</label>
-          <textarea value={form.notes || ''} onChange={set('notes')} rows={2} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        </div>
+        <Field label={t('drivers.notes')}>
+          <Textarea value={form.notes || ''} onChange={set('notes')} rows={2} />
+        </Field>
 
-        <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-white dark:bg-[#0f172a] pb-1">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('drivers.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('drivers.saving') : t('drivers.save')}</button>
+        <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-white dark:bg-[#1B1B14] pb-1">
+          <Button type="button" variant="ghost" onClick={onClose}>{t('drivers.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('drivers.saving') : t('drivers.save')}</Button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
 
 function Section({ title, children }) {
   return (
-    <fieldset className="border border-black/10 dark:border-white/10 rounded-xl p-4">
-      <legend className="text-xs font-semibold text-slate-500 px-1">{title}</legend>
+    <fieldset className="border border-[#E5E2DD] dark:border-white/[0.08] rounded-xl p-4">
+      <legend className="text-xs font-semibold text-[#8C8A80] px-1">{title}</legend>
       <div className="grid grid-cols-2 gap-3 mt-1">{children}</div>
     </fieldset>
-  );
-}
-function Field({ label, ...props }) {
-  return (
-    <div>
-      <label className="block text-xs text-slate-500 mb-1">{label}</label>
-      <input {...props} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-    </div>
   );
 }

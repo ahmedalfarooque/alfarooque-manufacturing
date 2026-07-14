@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage } from '@/lib/i18n';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const EMPTY_FORM = { full_name: '', company_name: '', email: '', mobile_number: '', vat_number: '', cr_number: '', address: '', city: '', country: '', notes: '' };
 const REFRESH_MS = 15000;
@@ -59,61 +60,62 @@ export default function CustomersPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('cust.title')}</h2>
-          <p className="text-xs text-slate-500">{t('cust.breadcrumb')}</p>
+          <p className="text-xs text-[#8C8A80]">{t('cust.breadcrumb')}</p>
         </div>
-        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">{t('cust.addCustomer')}</button>}
+        {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('cust.addCustomer')}</Button>}
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
-        <input placeholder={t('cust.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card p-4 mb-4">
+        <Input placeholder={t('cust.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="w-full max-w-md" />
       </div>
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[950px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th onClick={() => toggleSort('full_name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.fullName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('company_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('email')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.email')}<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('mobile_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.mobile')}<SortIndicator column="mobile_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.vatNumber')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('cr_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.crNumber')}<SortIndicator column="cr_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.city')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('created_at')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.created')}<SortIndicator column="created_at" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-            ) : customers.length === 0 ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('cust.noCustomersYet')}</td></tr>
-            ) : customers.map(c => (
-              <tr key={c.id} onClick={() => setModal({ mode: 'view', data: c })}
-                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
-                <td className="py-3 px-4 font-medium">{c.full_name}</td>
-                <td>{c.company_name || '—'}</td>
-                <td>{c.email || '—'}</td>
-                <td>{c.mobile_number || '—'}</td>
-                <td>{c.vat_number || '—'}</td>
-                <td>{c.cr_number || '—'}</td>
-                <td>{c.city || '—'}</td>
-                <td>{formatDate(c.created_at)}</td>
-                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => setModal({ mode: 'view', data: c })} title={t('common.view')} className="text-slate-400">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: c })} title={t('common.edit')} className="text-brand-500">✎</button>}
-                  {isAdmin && <button onClick={() => deleteCustomer(c.id)} title={t('common.delete')} className="text-red-500">🗑</button>}
-                </td>
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-auto max-h-[70vh]">
+          <table className="w-full text-sm min-w-[950px]">
+            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+              <tr>
+                <Th><span onClick={() => toggleSort('full_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.fullName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('company_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('email')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.email')}<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('mobile_number')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.mobile')}<SortIndicator column="mobile_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.vatNumber')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('cr_number')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.crNumber')}<SortIndicator column="cr_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('city')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.city')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('created_at')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.created')}<SortIndicator column="created_at" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th className="text-end">{t('common.actions')}</Th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {!data ? (
+                <tr><td colSpan={9} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+              ) : customers.length === 0 ? (
+                <tr><td colSpan={9}><EmptyState text={t('cust.noCustomersYet')} /></td></tr>
+              ) : customers.map(c => (
+                <tr key={c.id} onClick={() => setModal({ mode: 'view', data: c })}
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  <Td className="font-medium">{c.full_name}</Td>
+                  <Td>{c.company_name || '—'}</Td>
+                  <Td>{c.email || '—'}</Td>
+                  <Td>{c.mobile_number || '—'}</Td>
+                  <Td>{c.vat_number || '—'}</Td>
+                  <Td>{c.cr_number || '—'}</Td>
+                  <Td>{c.city || '—'}</Td>
+                  <Td>{formatDate(c.created_at)}</Td>
+                  <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => setModal({ mode: 'view', data: c })} title={t('common.view')} className="text-[#8C8A80] me-3">{'\u{1F441}'}</button>
+                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: c })} title={t('common.edit')} className="text-brand-600 dark:text-brand-400 me-3">✎</button>}
+                    {isAdmin && <button onClick={() => deleteCustomer(c.id)} title={t('common.delete')} className="text-[#BC6B4E]">🗑</button>}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: customers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + customers.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -122,9 +124,9 @@ export default function CustomersPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</Button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</Button>
         </div>
       </div>
 
@@ -151,42 +153,31 @@ export function CustomerModal({ modal, isAdmin, onClose, onSave }) {
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('cust.modal.addTitle') : modal.mode === 'edit' ? t('cust.modal.editTitle') : t('cust.modal.viewTitle')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
+    <Modal title={modal.mode === 'add' ? t('cust.modal.addTitle') : modal.mode === 'edit' ? t('cust.modal.editTitle') : t('cust.modal.viewTitle')} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
-          <Field label={t('cust.f.fullName')} value={form.full_name} onChange={set('full_name')} required disabled={readOnly} />
-          <Field label={t('cust.f.companyName')} value={form.company_name || ''} onChange={set('company_name')} disabled={readOnly} />
-          <Field label={t('common.email')} type="email" value={form.email || ''} onChange={set('email')} disabled={readOnly} />
-          <Field label={t('cust.f.mobileNumber')} value={form.mobile_number || ''} onChange={set('mobile_number')} disabled={readOnly} />
-          <Field label={t('cust.col.vatNumber')} value={form.vat_number || ''} onChange={set('vat_number')} disabled={readOnly} />
-          <Field label={t('cust.col.crNumber')} value={form.cr_number || ''} onChange={set('cr_number')} disabled={readOnly} />
-          <Field label={t('cust.f.city')} value={form.city || ''} onChange={set('city')} disabled={readOnly} />
-          <Field label={t('cust.f.country')} value={form.country || ''} onChange={set('country')} disabled={readOnly} />
-          <div className="col-span-2"><Field label={t('cust.f.address')} value={form.address || ''} onChange={set('address')} disabled={readOnly} /></div>
+          <Field label={t('cust.f.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <Field label={t('cust.f.companyName')}><Input value={form.company_name || ''} onChange={set('company_name')} disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <Field label={t('common.email')}><Input type="email" value={form.email || ''} onChange={set('email')} disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <Field label={t('cust.f.mobileNumber')}><Input value={form.mobile_number || ''} onChange={set('mobile_number')} disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <Field label={t('cust.col.vatNumber')}><Input value={form.vat_number || ''} onChange={set('vat_number')} disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <Field label={t('cust.col.crNumber')}><Input value={form.cr_number || ''} onChange={set('cr_number')} disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <Field label={t('cust.f.city')}><Input value={form.city || ''} onChange={set('city')} disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <Field label={t('cust.f.country')}><Input value={form.country || ''} onChange={set('country')} disabled={readOnly} className="disabled:opacity-70" /></Field>
+          <div className="col-span-2"><Field label={t('cust.f.address')}><Input value={form.address || ''} onChange={set('address')} disabled={readOnly} className="disabled:opacity-70" /></Field></div>
           <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">{t('cust.f.notes')}</label>
-            <textarea value={form.notes || ''} onChange={set('notes')} disabled={readOnly} rows={3}
-              className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm disabled:opacity-70" />
+            <Field label={t('cust.f.notes')}><Textarea value={form.notes || ''} onChange={set('notes')} disabled={readOnly} className="disabled:opacity-70" /></Field>
           </div>
           {modal.data.created_at && (
-            <div className="col-span-2 text-xs text-slate-500">{t('cust.dateCreated', { date: formatDate(modal.data.created_at, { dateStyle: 'medium', timeStyle: 'short' }) })}</div>
+            <div className="col-span-2 text-xs text-[#8C8A80]">{t('cust.dateCreated', { date: formatDate(modal.data.created_at, { dateStyle: 'medium', timeStyle: 'short' }) })}</div>
           )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{readOnly ? t('common.close') : t('common.cancel')}</button>
-          {!readOnly && <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>}
+          <Button type="button" variant="ghost" onClick={onClose}>{readOnly ? t('common.close') : t('common.cancel')}</Button>
+          {!readOnly && <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>}
         </div>
       </form>
-    </div>
-  );
-}
-function Field({ label, ...props }) {
-  return (
-    <div>
-      <label className="block text-xs text-slate-500 mb-1">{label}</label>
-      <input {...props} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm disabled:opacity-70" />
-    </div>
+    </Modal>
   );
 }

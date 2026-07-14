@@ -3,20 +3,9 @@
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import StatusBadge from '@/components/StatusBadge';
+import StatCard from '@/components/StatCard';
 import { useLanguage } from '@/lib/i18n';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-
-function StatCard({ label, value, sub, href }) {
-  const Tag = href ? 'a' : 'div';
-  return (
-    <Tag {...(href ? { href } : {})}
-      className={'glass-card p-3.5 block transition-colors duration-200' + (href ? ' cursor-pointer hover:bg-[#F1EEE7] dark:hover:bg-white/5' : '')}>
-      <div className="text-[12px] text-[#8C8A80]">{label}</div>
-      <div className="text-2xl font-semibold mt-0.5">{value}</div>
-      {sub && <div className="text-[10px] text-[#8C8A80] mt-1">{sub}</div>}
-    </Tag>
-  );
-}
 
 function QuickLink({ href, label }) {
   return (
@@ -44,17 +33,19 @@ export default function DashboardPage() {
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-            <StatCard href="/quotations" label={t('dashboard.totalQuotations')} value={formatNumber(stats.total || 0)} sub={t('dashboard.allTime')} />
-            <StatCard href="/quotations?status=draft" label={t('dashboard.draft')} value={formatNumber(stats.draft || 0)} />
-            <StatCard href="/quotations?status=pending_approval" label={t('dashboard.pendingApproval')} value={formatNumber(stats.pending || 0)} />
-            <StatCard href="/quotations?status=sent" label={t('dashboard.sent')} value={formatNumber(stats.sent || 0)} />
-            <StatCard href="/quotations?status=accepted" label={t('dashboard.accepted')} value={formatNumber(stats.accepted || 0)} />
-            <StatCard href="/quotations?status=approved" label={t('dashboard.expiringSoon')} value={formatNumber(stats.expiring || 0)} />
+            <StatCard icon="chart" tone="brand" href="/quotations" label={t('dashboard.totalQuotations')} value={formatNumber(stats.total || 0)} sub={t('dashboard.allTime')}
+              bars={{ values: [stats.draft || 0, stats.pending || 0, stats.sent || 0, stats.accepted || 0], colors: ['#E0A238', '#3B82F6', '#6B7A4F', '#10B981'] }} />
+            <StatCard icon="folder" tone="amber" href="/quotations?status=draft" label={t('dashboard.draft')} value={formatNumber(stats.draft || 0)} ringPct={pct(stats.draft, stats.total)} />
+            <StatCard icon="clock" tone="blue" href="/quotations?status=pending_approval" label={t('dashboard.pendingApproval')} value={formatNumber(stats.pending || 0)} ringPct={pct(stats.pending, stats.total)} />
+            <StatCard icon="mail" tone="brand" href="/quotations?status=sent" label={t('dashboard.sent')} value={formatNumber(stats.sent || 0)} />
+            <StatCard icon="shield" tone="emerald" href="/quotations?status=accepted" label={t('dashboard.accepted')} value={formatNumber(stats.accepted || 0)} ringPct={pct(stats.accepted, stats.total)} />
+            <StatCard icon="bell" tone="red" href="/quotations?status=approved" label={t('dashboard.expiringSoon')} value={formatNumber(stats.expiring || 0)} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard href="/reports" label={t('dashboard.quotedValueMonth')} value={formatNumber(stats.quotedMonth || 0, { minimumFractionDigits: 2 })} sub={t('dashboard.thisMonth')} />
-            <StatCard href="/customers" label={t('dashboard.customers')} value={formatNumber(stats.customers || 0)} />
-            <StatCard href="/materials" label={t('dashboard.materials')} value={formatNumber(stats.materials || 0)} />
+            <StatCard icon="receipt" tone="slate" href="/reports" label={t('dashboard.quotedValueMonth')} value={formatNumber(stats.quotedMonth || 0, { minimumFractionDigits: 2 })} sub={t('dashboard.thisMonth')}
+              trend={stats.monthly} trendKey="quoted" trendLabelKey="month" />
+            <StatCard icon="users" tone="blue" href="/customers" label={t('dashboard.customers')} value={formatNumber(stats.customers || 0)} />
+            <StatCard icon="box" tone="slate" href="/materials" label={t('dashboard.materials')} value={formatNumber(stats.materials || 0)} />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
             <QuickLink href="/catalogue" label={t('nav.catalogue')} />
@@ -105,3 +96,5 @@ export default function DashboardPage() {
     </Shell>
   );
 }
+
+function pct(n, total) { return total ? Math.round((n / total) * 1000) / 10 : 0; }

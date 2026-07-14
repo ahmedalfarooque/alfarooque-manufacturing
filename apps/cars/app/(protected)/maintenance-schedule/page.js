@@ -6,12 +6,15 @@ import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const STATUS_BADGE = {
   Healthy: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   Upcoming: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Overdue: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
+
+const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#3d3d33] dark:hover:text-white/90 transition-colors';
 
 export default function MaintenanceSchedulePage() {
   const { t } = useLanguage();
@@ -66,43 +69,44 @@ export default function MaintenanceSchedulePage() {
   return (
     <Shell active="/maintenance-schedule">
       <h2 className="text-lg font-semibold mb-1">{t('maintSchedule.title')}</h2>
-      <p className="text-xs text-slate-500 mb-4">{t('maintSchedule.subtitle')}</p>
-      <input placeholder={t('maintSchedule.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-        className="w-full max-w-sm rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm mb-4" />
-      {error && <div className="text-red-500 text-sm">{error}</div>}
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+      <p className="text-xs text-[#8C8A80] mb-4">{t('maintSchedule.subtitle')}</p>
+      <Input placeholder={t('maintSchedule.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm mb-4" />
+      {error && <div className="text-[#BC6B4E] text-sm">{error}</div>}
+      <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur-sm border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
             <tr>
-              <th onClick={() => toggleSort('vehicle_number')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maintSchedule.colVehicle')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('maintenance_type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maintSchedule.colType')}<SortIndicator column="maintenance_type" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('last_service_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maintSchedule.colLastService')}<SortIndicator column="last_service_km" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('interval_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maintSchedule.colInterval')}<SortIndicator column="interval_km" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('next_due_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maintSchedule.colNextDue')}<SortIndicator column="next_due_km" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('remaining_km')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maintSchedule.colRemaining')}<SortIndicator column="remaining_km" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('maintSchedule.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              {isAdmin && <th className="text-right px-4">{t('maintSchedule.colActions')}</th>}
+              <Th><span onClick={() => toggleSort('vehicle_number')} className={sortHeaderCls}>{t('maintSchedule.colVehicle')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('maintenance_type')} className={sortHeaderCls}>{t('maintSchedule.colType')}<SortIndicator column="maintenance_type" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('last_service_km')} className={sortHeaderCls}>{t('maintSchedule.colLastService')}<SortIndicator column="last_service_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('interval_km')} className={sortHeaderCls}>{t('maintSchedule.colInterval')}<SortIndicator column="interval_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('next_due_km')} className={sortHeaderCls}>{t('maintSchedule.colNextDue')}<SortIndicator column="next_due_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('remaining_km')} className={sortHeaderCls}>{t('maintSchedule.colRemaining')}<SortIndicator column="remaining_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('status')} className={sortHeaderCls}>{t('maintSchedule.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              {isAdmin && <Th className="text-end">{t('maintSchedule.colActions')}</Th>}
             </tr>
           </thead>
           <tbody>
             {!items ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('maintSchedule.loading')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('maintSchedule.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('maintSchedule.noMatch')}</td></tr>
+              <tr><td colSpan={8}><EmptyState text={t('maintSchedule.noMatch')} /></td></tr>
             ) : pageRows.map(m => (
-              <tr key={m.id} className="border-b border-black/5 dark:border-white/5">
-                <td className="py-3 px-4 font-medium">{m.vehicle_number}</td>
-                <td>{m.maintenance_type}</td>
-                <td>{fmt(m.last_service_km)}</td>
-                <td>{fmt(m.interval_km)}</td>
-                <td>{fmt(m.next_due_km)}</td>
-                <td className={m.remaining_km < 0 ? 'text-red-500' : ''}>{fmt(m.remaining_km)} {t('common.km')}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{trEnum(t, 'status', m.status)}</span></td>
+              <tr key={m.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                <Td className="font-medium">{m.vehicle_number}</Td>
+                <Td>{m.maintenance_type}</Td>
+                <Td>{fmt(m.last_service_km)}</Td>
+                <Td>{fmt(m.interval_km)}</Td>
+                <Td>{fmt(m.next_due_km)}</Td>
+                <Td className={m.remaining_km < 0 ? 'text-[#BC6B4E]' : ''}>{fmt(m.remaining_km)} {t('common.km')}</Td>
+                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{trEnum(t, 'status', m.status)}</span></Td>
                 {isAdmin && (
-                  <td className="text-right px-4 space-x-2">
-                    <button onClick={() => setModal(m)} title={t('maintSchedule.edit')} className="text-brand-500">✎ {t('maintSchedule.edit')}</button>
-                    <button onClick={() => deleteItem(m.id)} title={t('maintSchedule.delete')} className="text-red-500">🗑 {t('maintSchedule.delete')}</button>
-                  </td>
+                  <Td className="text-end">
+                    <div className="flex items-center justify-end gap-3">
+                      <button onClick={() => setModal(m)} title={t('maintSchedule.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎ {t('maintSchedule.edit')}</button>
+                      <button onClick={() => deleteItem(m.id)} title={t('maintSchedule.delete')} className="text-[#BC6B4E] hover:underline">🗑 {t('maintSchedule.delete')}</button>
+                    </div>
+                  </Td>
                 )}
               </tr>
             ))}
@@ -110,7 +114,7 @@ export default function MaintenanceSchedulePage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('maintSchedule.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -119,9 +123,9 @@ export default function MaintenanceSchedulePage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">›</button>
         </div>
       </div>
 
@@ -151,34 +155,29 @@ function ScheduleModal({ item, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4">
-        <h3 className="font-semibold text-lg">{t('maintSchedule.editTitle', { vehicle: item.vehicle_number })}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
+    <Modal title={t('maintSchedule.editTitle', { vehicle: item.vehicle_number })} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">{t('maintSchedule.type')}</label>
-            <input value={form.maintenance_type} onChange={set('maintenance_type')} required className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('maintSchedule.lastServiceKm')}</label>
-            <input type="number" value={form.last_service_km} onChange={set('last_service_km')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('maintSchedule.intervalKm')}</label>
-            <input type="number" value={form.interval_km} onChange={set('interval_km')} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-          </div>
-          <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">{t('maintSchedule.notes')}</label>
-            <textarea value={form.notes} onChange={set('notes')} rows={2} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-          </div>
+          <Field label={t('maintSchedule.type')} required className="col-span-2">
+            <Input value={form.maintenance_type} onChange={set('maintenance_type')} required />
+          </Field>
+          <Field label={t('maintSchedule.lastServiceKm')}>
+            <Input type="number" value={form.last_service_km} onChange={set('last_service_km')} />
+          </Field>
+          <Field label={t('maintSchedule.intervalKm')}>
+            <Input type="number" value={form.interval_km} onChange={set('interval_km')} />
+          </Field>
+          <Field label={t('maintSchedule.notes')} className="col-span-2">
+            <Textarea rows={2} value={form.notes} onChange={set('notes')} />
+          </Field>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('maintSchedule.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('maintSchedule.saving') : t('maintSchedule.save')}</button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('maintSchedule.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('maintSchedule.saving') : t('maintSchedule.save')}</Button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
 

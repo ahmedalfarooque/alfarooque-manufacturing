@@ -8,6 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Input } from '@/components/ui';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected'];
 export const STATUS_BADGE = {
@@ -75,54 +76,52 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('oq.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('oq.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
+          className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ORDER_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+      <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[900px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="text-left text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
             <tr>
-              <th onClick={() => toggleSort('order_no')} className="py-3 px-4 cursor-pointer select-none">{t('oq.col.orderNo')}<SortIndicator column="order_no" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('oq.col.customer')}</th>
-              <th>{t('oq.col.email')}</th>
-              <th onClick={() => toggleSort('grand_total')} className="cursor-pointer select-none">{t('oq.col.total')}<SortIndicator column="grand_total" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('oq.col.status')}</th>
-              <th>{t('oq.col.payment')}</th>
-              <th onClick={() => toggleSort('created_at')} className="cursor-pointer select-none">{t('oq.col.date')}<SortIndicator column="created_at" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
+              <th onClick={() => toggleSort('order_no')} className="py-3 px-4 cursor-pointer select-none whitespace-nowrap">{t('oq.col.orderNo')}<SortIndicator column="order_no" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.customer')}</th>
+              <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.email')}</th>
+              <th onClick={() => toggleSort('grand_total')} className="px-3 py-2.5 cursor-pointer select-none whitespace-nowrap">{t('oq.col.total')}<SortIndicator column="grand_total" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.status')}</th>
+              <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.payment')}</th>
+              <th onClick={() => toggleSort('created_at')} className="px-3 py-2.5 cursor-pointer select-none whitespace-nowrap">{t('oq.col.date')}<SortIndicator column="created_at" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4 whitespace-nowrap">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('oq.noOrdersFound')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('oq.noOrdersFound')}</td></tr>
             ) : pageRows.map(r => {
               const name = r.guest_name || r.customer_name || '—';
               const email = r.guest_email || r.customer_email || '—';
               return (
                 <tr key={r.id} onClick={() => setViewOrderId(r.id)}
-                  className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+                  className="border-t border-[#E5E2DD]/70 dark:border-white/[0.06] cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors duration-150">
                   <td className="py-3 px-4" dir="ltr">{r.order_no || r.id.slice(0, 8)}</td>
-                  <td className="max-w-[160px] truncate">{name}</td>
-                  <td className="max-w-[180px] truncate" dir="ltr">{email}</td>
-                  <td dir="ltr">{money(r.grand_total)}</td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
-                  <td className="capitalize">{trEnum(t, 'status', r.payment_status || 'pending')}</td>
-                  <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                  <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setViewOrderId(r.id)} className="text-xs px-2 py-1 rounded-lg border border-black/10 dark:border-white/10">{t('oq.view')}</button>
-                      <a href={'/orders/' + r.id} className="text-xs px-2 py-1 rounded-lg bg-brand-600 text-white">{t('oq.edit')}</a>
-                      {softDeleteEnabled && (
-                        <button disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.delete')}</button>
-                      )}
-                    </div>
+                  <td className="px-3 py-2.5 max-w-[160px] truncate">{name}</td>
+                  <td className="px-3 py-2.5 max-w-[180px] truncate" dir="ltr">{email}</td>
+                  <td className="px-3 py-2.5" dir="ltr">{money(r.grand_total)}</td>
+                  <td className="px-3 py-2.5"><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
+                  <td className="px-3 py-2.5 capitalize">{trEnum(t, 'status', r.payment_status || 'pending')}</td>
+                  <td className="px-3 py-2.5">{new Date(r.created_at).toLocaleDateString()}</td>
+                  <td className="text-right px-4 py-2.5 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => setViewOrderId(r.id)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('oq.view')}</button>
+                    <a href={'/orders/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('oq.edit')}</a>
+                    {softDeleteEnabled && (
+                      <button disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="text-[#BC6B4E] hover:underline text-sm disabled:opacity-50">{t('oq.delete')}</button>
+                    )}
                   </td>
                 </tr>
               );
@@ -131,12 +130,12 @@ export default function OrdersPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40">›</button>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Button, Input, Textarea, Select, Field } from '@/components/ui';
 import { QUOTE_STATUS_BADGE } from '../page';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
@@ -121,94 +122,87 @@ export default function QuoteDetailPage() {
           <span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (QUOTE_STATUS_BADGE[quote.status] || '')}>{trEnum(t, 'status', quote.status)}</span>
         </div>
 
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-slate-400">{t('common.email')}</span><span dir="ltr">{quote.email || '—'}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Phone</span><span dir="ltr">{quote.phone || '—'}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">{t('oq.col.product')}</span><span>{quote.product || '—'}</span></div>
-          {quote.message && <div><span className="text-slate-400 block mb-1">Message</span><p>{quote.message}</p></div>}
+        <div className="glass-card p-4 space-y-2 text-sm">
+          <div className="flex justify-between"><span className="text-[#8C8A80]">{t('common.email')}</span><span dir="ltr">{quote.email || '—'}</span></div>
+          <div className="flex justify-between"><span className="text-[#8C8A80]">Phone</span><span dir="ltr">{quote.phone || '—'}</span></div>
+          <div className="flex justify-between"><span className="text-[#8C8A80]">{t('oq.col.product')}</span><span>{quote.product || '—'}</span></div>
+          {quote.message && <div><span className="text-[#8C8A80] block mb-1">Message</span><p>{quote.message}</p></div>}
         </div>
 
         {!replyOpen ? (
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 space-y-3 text-sm">
-            <div>
-              <label className="text-xs text-slate-400 block mb-1">{t('oq.col.status')}</label>
-              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2">
-                {QUOTE_STATUSES.map(s => <option key={s} value={s}>{trEnum(t, 'status', s)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-slate-400 block mb-1">{t('oq.adminNotes')}</label>
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-                className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2" />
-            </div>
+          <div className="glass-card p-4 space-y-3 text-sm">
+            <Field label={t('oq.col.status')}>
+              <Select value={status} onChange={e => setStatus(e.target.value)}
+                options={QUOTE_STATUSES.map(s => ({ value: s, label: trEnum(t, 'status', s) }))} />
+            </Field>
+            <Field label={t('oq.adminNotes')}>
+              <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
+            </Field>
             <div className="flex flex-wrap items-center gap-2">
-              <button disabled={busy} onClick={save} className="text-sm px-3 py-2 rounded-lg bg-brand-600 text-white disabled:opacity-50">{t('oq.save')}</button>
+              <Button disabled={busy} onClick={save}>{t('oq.save')}</Button>
               {!quote.order_id && (
-                <button disabled={busy} onClick={convertToOrder} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">{t('oq.convertToOrder')}</button>
+                <Button variant="ghost" disabled={busy} onClick={convertToOrder}>{t('oq.convertToOrder')}</Button>
               )}
               {quote.email && (
-                <button disabled={busy} onClick={() => setReplyOpen(true)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">{t('oq.replyToCustomer')}</button>
+                <Button variant="ghost" disabled={busy} onClick={() => setReplyOpen(true)}>{t('oq.replyToCustomer')}</Button>
               )}
-              <button disabled={busy} onClick={deleteQuote} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.delete')}</button>
-              <a href="/quotes" className="text-sm text-slate-400 hover:underline ms-auto">‹ {t('oq.quotesTitle')}</a>
+              <Button variant="danger" disabled={busy} onClick={deleteQuote}>{t('oq.delete')}</Button>
+              <a href="/quotes" className="text-sm text-[#8C8A80] hover:underline ms-auto">‹ {t('oq.quotesTitle')}</a>
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 space-y-3 text-sm">
+          <div className="glass-card p-4 space-y-3 text-sm">
             <h3 className="font-medium">{t('oq.replyToCustomer')}</h3>
+            <Field label={t('oq.to')}>
+              <Input value={quote.email} disabled className="opacity-60" />
+            </Field>
+            <Field label={t('oq.subject')}>
+              <Input value={subject} onChange={e => setSubject(e.target.value)} />
+            </Field>
+            <Field label={t('oq.message')}>
+              <Textarea value={message} onChange={e => setMessage(e.target.value)} rows={6} />
+            </Field>
             <div>
-              <label className="text-xs text-slate-400 block mb-1">{t('oq.to')}</label>
-              <input value={quote.email} disabled className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 opacity-60" />
-            </div>
-            <div>
-              <label className="text-xs text-slate-400 block mb-1">{t('oq.subject')}</label>
-              <input value={subject} onChange={e => setSubject(e.target.value)} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2" />
-            </div>
-            <div>
-              <label className="text-xs text-slate-400 block mb-1">{t('oq.message')}</label>
-              <textarea value={message} onChange={e => setMessage(e.target.value)} rows={6} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2" />
-            </div>
-            <div>
-              <label className="text-xs text-slate-400 block mb-1">{t('oq.attachments')}</label>
+              <label className="text-xs text-[#8C8A80] block mb-1">{t('oq.attachments')}</label>
               <input type="file" multiple onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
               {attachments.length === 0 ? (
-                <p className="text-slate-400 text-xs mt-2">{t('oq.noAttachments')}</p>
+                <p className="text-[#8C8A80] text-xs mt-2">{t('oq.noAttachments')}</p>
               ) : (
                 <div className="mt-2 space-y-1">
                   {attachments.map((f, i) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span>{f.name} ({Math.round(f.size / 1024)} KB)</span>
-                      <button onClick={() => removeAttachment(i)} className="text-red-500">✕</button>
+                      <button onClick={() => removeAttachment(i)} className="text-[#BC6B4E]">✕</button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
             <div className="flex items-center flex-wrap gap-2">
-              <button disabled={sending} onClick={sendReply} className="text-sm px-3 py-2 rounded-lg bg-brand-600 text-white disabled:opacity-50">{sending ? t('oq.sending') : t('oq.send')}</button>
-              <button disabled={sending} onClick={() => setReplyOpen(false)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">{t('oq.cancel')}</button>
+              <Button disabled={sending} onClick={sendReply}>{sending ? t('oq.sending') : t('oq.send')}</Button>
+              <Button variant="ghost" disabled={sending} onClick={() => setReplyOpen(false)}>{t('oq.cancel')}</Button>
             </div>
           </div>
         )}
 
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 text-sm">
+        <div className="glass-card p-4 text-sm">
           <h3 className="font-medium mb-2">{t('oq.communicationHistory')}</h3>
           {replies === null ? (
-            <p className="text-slate-400">{t('common.loading')}</p>
+            <p className="text-[#8C8A80]">{t('common.loading')}</p>
           ) : replies.length === 0 ? (
-            <p className="text-slate-400">{t('oq.noRepliesYet')}</p>
+            <p className="text-[#8C8A80]">{t('oq.noRepliesYet')}</p>
           ) : replies.map(r => (
-            <div key={r.id} className="py-2 border-b last:border-0 border-black/5 dark:border-white/5">
+            <div key={r.id} className="py-2 border-b last:border-0 border-[#E5E2DD]/70 dark:border-white/[0.06]">
               <div className="flex justify-between items-center gap-2">
                 <strong>{r.subject}</strong>
                 <span className={'px-2 py-0.5 rounded-full text-xs ' + (r.status === 'failed' ? 'bg-red-500/10 text-red-600' : 'bg-emerald-500/10 text-emerald-600')}>
                   {r.status === 'failed' ? t('oq.replyStatusFailed') : t('oq.replyStatusSent')}
                 </span>
               </div>
-              <div className="text-xs text-slate-400 mb-1">{r.admin_name} — {new Date(r.created_at).toLocaleString()}</div>
+              <div className="text-xs text-[#8C8A80] mb-1">{r.admin_name} — {new Date(r.created_at).toLocaleString()}</div>
               <p>{r.message}</p>
               {r.attachments?.length > 0 && (
-                <div className="text-xs text-slate-400 mt-1">📎 {r.attachments.map(a => a.name).join(', ')}</div>
+                <div className="text-xs text-[#8C8A80] mt-1">📎 {r.attachments.map(a => a.name).join(', ')}</div>
               )}
             </div>
           ))}

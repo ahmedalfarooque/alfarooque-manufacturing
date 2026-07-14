@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
+import { Button, Input } from '@/components/ui';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { STATUS_BADGE } from '../page';
 
@@ -72,7 +73,7 @@ export default function PurchaseRequestDetailPage({ params }) {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.requestDetails')}</h3>
             <dl className="grid grid-cols-2 gap-y-2 text-sm">
               <Row label={t('pd.requestedBy')} value={r.requested_by_name} />
@@ -99,11 +100,11 @@ export default function PurchaseRequestDetailPage({ params }) {
           </div>
 
           {attachments.length > 0 && (
-            <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+            <div className="glass-card glass-card--pad">
               <h3 className="font-medium text-sm mb-3">{t('pd.attachments')}</h3>
               <div className="flex flex-wrap gap-2">
                 {attachments.map(a => (
-                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-brand-500/40">
+                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-3 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:border-brand-500/40">
                     📎 {a.file_name}{a.label ? ` (${a.label})` : ''}
                   </a>
                 ))}
@@ -111,45 +112,43 @@ export default function PurchaseRequestDetailPage({ params }) {
             </div>
           )}
 
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.comments')}</h3>
             <div className="space-y-3 mb-3 max-h-72 overflow-y-auto">
-              {comments.length === 0 ? <div className="text-sm text-slate-400 py-4 text-center">{t('prd.noCommentsYet')}</div> : comments.map(c => (
+              {comments.length === 0 ? <div className="text-sm text-[#8C8A80] py-4 text-center">{t('prd.noCommentsYet')}</div> : comments.map(c => (
                 <div key={c.id} className="text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{c.author_name || t('prd.unknown')}</span>
-                    <span className="text-xs text-slate-400">{formatDate(c.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                    <span className="text-xs text-[#8C8A80]">{formatDate(c.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</span>
                   </div>
                   <p className="text-slate-600 dark:text-slate-300">{c.comment}</p>
                 </div>
               ))}
             </div>
             <form onSubmit={postComment} className="flex gap-2">
-              <input value={comment} onChange={e => setComment(e.target.value)} placeholder={t('prd.addCommentPlaceholder')}
-                className="flex-1 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-              <button disabled={posting} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{posting ? '…' : t('prd.post')}</button>
+              <Input value={comment} onChange={e => setComment(e.target.value)} placeholder={t('prd.addCommentPlaceholder')} className="flex-1" />
+              <Button type="submit" disabled={posting}>{posting ? '…' : t('prd.post')}</Button>
             </form>
           </div>
         </div>
 
         <div className="space-y-4">
           {isAdmin && (
-            <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+            <div className="glass-card glass-card--pad">
               <h3 className="font-medium text-sm mb-3">{t('prd.changeStatus')}</h3>
               <Dropdown value={r.status} onChange={changeStatus} options={ALL_STATUSES.map(s => [s, trEnum(t, 'status', s)])} disabled={busy} />
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {STATUS_ACTIONS.filter(to => to !== r.status).map(to => (
-                  <button key={to} disabled={busy} onClick={() => changeStatus(to)}
-                    className="text-xs px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-brand-500/40">{t('pd.act.' + to)}</button>
+                  <Button key={to} variant="ghost" disabled={busy} onClick={() => changeStatus(to)} className="text-xs px-2.5 py-1.5">{t('pd.act.' + to)}</Button>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+          <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.statusHistory')}</h3>
             {!data.statusHistory || data.statusHistory.length === 0 ? (
-              <div className="text-sm text-slate-400 py-4 text-center">{t('prd.noStatusChanges')}</div>
+              <div className="text-sm text-[#8C8A80] py-4 text-center">{t('prd.noStatusChanges')}</div>
             ) : (
               <ul className="space-y-3 text-sm">
                 {data.statusHistory.map(h => (
@@ -157,7 +156,7 @@ export default function PurchaseRequestDetailPage({ params }) {
                     <span className="h-2 w-2 rounded-full bg-brand-500 mt-1.5 shrink-0" />
                     <div>
                       <div>{h.from_status ? `${trEnum(t, 'status', h.from_status)} → ${trEnum(t, 'status', h.to_status)}` : trEnum(t, 'status', h.to_status)}</div>
-                      <div className="text-xs text-slate-400">{h.changed_by_name || ''} · {formatDate(h.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                      <div className="text-xs text-[#8C8A80]">{h.changed_by_name || ''} · {formatDate(h.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
                     </div>
                   </li>
                 ))}

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { Button } from '@/components/ui';
 
 const PAYMENT_BADGE = {
   Paid: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -75,29 +76,29 @@ export default function MaintenanceRecordViewPage() {
   }
 
   if (error) return <Shell active="/maintenance"><div className="text-red-500">{error}</div></Shell>;
-  if (!data) return <Shell active="/maintenance"><div className="text-slate-400">{t('common.loading')}</div></Shell>;
+  if (!data) return <Shell active="/maintenance"><div className="text-[#8C8A80]">{t('common.loading')}</div></Shell>;
 
   const { record: r, attachments } = data;
 
   return (
     <Shell active="/maintenance">
       <input ref={fileRef} type="file" className="hidden" onChange={handleFile} />
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3 print:hidden sticky top-16 z-10 bg-[#f3f5f7]/90 dark:bg-[#0b1220]/90 backdrop-blur py-2">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3 print:hidden sticky top-16 z-10 bg-[#F7F5F1]/90 dark:bg-[#1B1B14]/90 backdrop-blur py-2">
         <div>
-          <a href="/maintenance" className="text-xs text-brand-500 hover:underline">{t('maintView.back')}</a>
+          <a href="/maintenance" className="text-xs text-brand-600 dark:text-brand-400 hover:underline">{t('maintView.back')}</a>
           <h2 className="text-lg font-semibold mt-1">{r.cars?.vehicle_number} — {r.category}</h2>
-          <p className="text-xs text-slate-500">{t('maintView.breadcrumb', { name: r.category })}</p>
+          <p className="text-xs text-[#8C8A80]">{t('maintView.breadcrumb', { name: r.category })}</p>
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{trEnum(t, 'payment', r.payment_status)}</span>
-          <button onClick={() => window.print()} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
-          {isAdmin && <button onClick={() => setEditOpen(true)} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">✎ {t('common.edit')}</button>}
-          {isAdmin && <button onClick={deleteRecord} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">🗑 {t('common.delete')}</button>}
+          <Button variant="ghost" onClick={() => window.print()}>🖶 {t('common.print')}</Button>
+          {isAdmin && <Button onClick={() => setEditOpen(true)}>✎ {t('common.edit')}</Button>}
+          {isAdmin && <Button variant="danger" onClick={deleteRecord}>🗑 {t('common.delete')}</Button>}
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('maintView.vehicleInfo')}</h3>
           <dl className="space-y-2 text-sm">
             <Row label={t('maintView.plateNumber')} value={r.cars?.vehicle_number} />
@@ -105,7 +106,7 @@ export default function MaintenanceRecordViewPage() {
             <Row label={t('fields.currentKm')} value={r.cars?.current_km} />
           </dl>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('maintView.driverInfo')}</h3>
           {r.drivers ? (
             <dl className="space-y-2 text-sm">
@@ -113,9 +114,9 @@ export default function MaintenanceRecordViewPage() {
               <Row label={t('fields.phone')} value={r.drivers.phone} />
               <Row label={t('fields.licenseNumber')} value={r.drivers.license_number} />
             </dl>
-          ) : <div className="text-sm text-slate-400">{t('maintView.noDriver')}</div>}
+          ) : <div className="text-sm text-[#8C8A80]">{t('maintView.noDriver')}</div>}
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('maintView.workshopInfo')}</h3>
           {r.maintenance_shops ? (
             <dl className="space-y-2 text-sm">
@@ -127,11 +128,11 @@ export default function MaintenanceRecordViewPage() {
               <Row label={t('maintView.vat')} value={r.maintenance_shops.vat_number} />
               <Row label={t('maintView.cr')} value={r.maintenance_shops.cr_number} />
             </dl>
-          ) : <div className="text-sm text-slate-400">{t('maintView.noWorkshop')}</div>}
+          ) : <div className="text-sm text-[#8C8A80]">{t('maintView.noWorkshop')}</div>}
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
+      <div className="glass-card glass-card--pad mb-4">
         <h3 className="font-medium text-sm mb-3">{t('maintView.maintInfo')}</h3>
         <div className="grid md:grid-cols-2 gap-x-8 gap-y-2 text-sm mb-3">
           <Row label={t('fields.category')} value={r.category} /><Row label={t('fields.maintenanceType')} value={r.maintenance_type} />
@@ -146,41 +147,41 @@ export default function MaintenanceRecordViewPage() {
       </div>
 
       {r.notes && (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
+        <div className="glass-card glass-card--pad mb-4">
           <h3 className="font-medium text-sm mb-2">{t('fields.notes')}</h3>
-          <p className="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-300">{r.notes}</p>
+          <p className="text-sm whitespace-pre-wrap">{r.notes}</p>
         </div>
       )}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 print:hidden">
+      <div className="glass-card glass-card--pad mb-4 print:hidden">
         <h3 className="font-medium text-sm mb-3">{t('maintView.attachments')}</h3>
-        {uploadErr && <div className="text-red-500 text-sm mb-2">{uploadErr}</div>}
+        {uploadErr && <div className="text-[#BC6B4E] text-sm mb-2">{uploadErr}</div>}
         {isAdmin && (
           <div className="flex flex-wrap gap-2 mb-4">
             {SLOTS.map(slot => (
-              <button key={slot.key} onClick={() => triggerUpload(slot.key)} className="text-xs px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-brand-500/40">
+              <Button key={slot.key} type="button" variant="ghost" onClick={() => triggerUpload(slot.key)} className="text-xs">
                 + {t(slot.labelKey)}
-              </button>
+              </Button>
             ))}
           </div>
         )}
         {attachments.length === 0 ? (
-          <div className="text-sm text-slate-400">{t('maintView.noAttachments')}</div>
+          <div className="text-sm text-[#8C8A80]">{t('maintView.noAttachments')}</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {attachments.map(a => (
               <div key={a.id} className="text-center">
                 {a.file_name.toLowerCase().endsWith('.pdf') ? (
-                  <a href={a.url} target="_blank" rel="noreferrer" className="aspect-square rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-center text-3xl mb-1">📄</a>
+                  <a href={a.url} target="_blank" rel="noreferrer" className="aspect-square rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] bg-black/5 dark:bg-white/5 flex items-center justify-center text-3xl mb-1">📄</a>
                 ) : (
-                  <div onClick={() => setLightbox(a.url)} className="aspect-square rounded-lg border border-black/10 dark:border-white/10 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer mb-1">
+                  <div onClick={() => setLightbox(a.url)} className="aspect-square rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer mb-1">
                     <img src={a.url} alt={a.file_name} className="w-full h-full object-cover" />
                   </div>
                 )}
-                <div className="text-[11px] text-slate-500 truncate">{SLOT_LABEL_KEYS[a.slot] ? t(SLOT_LABEL_KEYS[a.slot]) : a.slot}</div>
+                <div className="text-[11px] text-[#8C8A80] truncate">{SLOT_LABEL_KEYS[a.slot] ? t(SLOT_LABEL_KEYS[a.slot]) : a.slot}</div>
                 <div className="flex justify-center gap-2 mt-0.5">
-                  <a href={a.url} download target="_blank" rel="noreferrer" className="text-[11px] text-brand-500 hover:underline">{t('common.download')}</a>
-                  {isAdmin && <button onClick={() => deleteAttachment(a.id)} className="text-[11px] text-red-500 hover:underline">{t('common.delete')}</button>}
+                  <a href={a.url} download target="_blank" rel="noreferrer" className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline">{t('common.download')}</a>
+                  {isAdmin && <button onClick={() => deleteAttachment(a.id)} className="text-[11px] text-[#BC6B4E] hover:underline">{t('common.delete')}</button>}
                 </div>
               </div>
             ))}
@@ -188,7 +189,7 @@ export default function MaintenanceRecordViewPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 print:hidden">
+      <div className="glass-card glass-card--pad print:hidden">
         <h3 className="font-medium text-sm mb-3">{t('maintView.history')}</h3>
         <dl className="space-y-2 text-sm">
           <Row label={t('maintView.createdDate')} value={formatDateTime(r.created_at)} />
@@ -239,7 +240,7 @@ function Row({ label, value }) {
   if (value === null || value === undefined || value === '') return null;
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-slate-500">{label}</dt>
+      <dt className="text-[#8C8A80]">{label}</dt>
       <dd className="font-medium text-right">{value}</dd>
     </div>
   );
@@ -247,8 +248,8 @@ function Row({ label, value }) {
 function Block({ label, text }) {
   return (
     <div className="mb-3">
-      <div className="text-xs text-slate-500 mb-1">{label}</div>
-      <p className="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-300">{text}</p>
+      <div className="text-xs text-[#8C8A80] mb-1">{label}</div>
+      <p className="text-sm whitespace-pre-wrap">{text}</p>
     </div>
   );
 }

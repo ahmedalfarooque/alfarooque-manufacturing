@@ -6,6 +6,9 @@ import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage } from '@/lib/i18n';
+import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
+
+const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#3d3d33] dark:hover:text-white/90 transition-colors';
 
 export default function MaintenanceShopsPage() {
   const { t } = useLanguage();
@@ -56,45 +59,46 @@ export default function MaintenanceShopsPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('shops.title')}</h2>
-          <p className="text-xs text-slate-500">{t('shops.breadcrumb')}</p>
+          <p className="text-xs text-[#8C8A80]">{t('shops.breadcrumb')}</p>
         </div>
-        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('shops.addShop')}</button>}
+        {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('shops.addShop')}</Button>}
       </div>
 
-      <input placeholder={t('shops.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-        className="w-full max-w-sm rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm mb-4" />
+      <Input placeholder={t('shops.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm mb-4" />
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+      <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur-sm border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
             <tr>
-              <th onClick={() => toggleSort('name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('contact_person')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colContact')}<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('mobile')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colMobile')}<SortIndicator column="mobile" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colCity')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colVat')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              {isAdmin && <th className="text-right px-4">{t('shops.colActions')}</th>}
+              <Th><span onClick={() => toggleSort('name')} className={sortHeaderCls}>{t('shops.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('contact_person')} className={sortHeaderCls}>{t('shops.colContact')}<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('mobile')} className={sortHeaderCls}>{t('shops.colMobile')}<SortIndicator column="mobile" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('city')} className={sortHeaderCls}>{t('shops.colCity')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              <Th><span onClick={() => toggleSort('vat_number')} className={sortHeaderCls}>{t('shops.colVat')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+              {isAdmin && <Th className="text-end">{t('shops.colActions')}</Th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('shops.loading')}</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-[#8C8A80]">{t('shops.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('shops.noneYet')}</td></tr>
+              <tr><td colSpan={6}><EmptyState text={t('shops.noneYet')} /></td></tr>
             ) : pageRows.map(s => (
-              <tr key={s.id} className="border-b border-black/5 dark:border-white/5">
-                <td className="py-3 px-4 font-medium">{s.name}</td>
-                <td>{s.contact_person || '—'}</td>
-                <td>{s.mobile || '—'}</td>
-                <td>{s.city || '—'}</td>
-                <td>{s.vat_number || '—'}</td>
+              <tr key={s.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                <Td className="font-medium">{s.name}</Td>
+                <Td>{s.contact_person || '—'}</Td>
+                <Td>{s.mobile || '—'}</Td>
+                <Td>{s.city || '—'}</Td>
+                <Td>{s.vat_number || '—'}</Td>
                 {isAdmin && (
-                  <td className="text-right px-4 space-x-2">
-                    <button onClick={() => setModal({ mode: 'edit', data: s })} title={t('shops.edit')} className="text-brand-500">✎</button>
-                    <button onClick={() => deleteShop(s.id)} title={t('shops.delete')} className="text-red-500">🗑</button>
-                  </td>
+                  <Td className="text-end">
+                    <div className="flex items-center justify-end gap-3">
+                      <button onClick={() => setModal({ mode: 'edit', data: s })} title={t('shops.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎</button>
+                      <button onClick={() => deleteShop(s.id)} title={t('shops.delete')} className="text-[#BC6B4E] hover:underline">🗑</button>
+                    </div>
+                  </Td>
                 )}
               </tr>
             ))}
@@ -102,7 +106,7 @@ export default function MaintenanceShopsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('shops.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -111,9 +115,9 @@ export default function MaintenanceShopsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">›</button>
         </div>
       </div>
 
@@ -149,39 +153,26 @@ export function ShopModal({ modal, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('shops.addModalTitle') : t('shops.editModalTitle')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
+    <Modal title={modal.mode === 'add' ? t('shops.addModalTitle') : t('shops.editModalTitle')} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
-          <Field label={t('shops.colName')} value={form.name} onChange={set('name')} required className="col-span-2" />
-          <Field label={t('shops.colContact')} value={form.contact_person} onChange={set('contact_person')} />
-          <Field label={t('shops.colMobile')} value={form.mobile} onChange={set('mobile')} />
-          <Field label={t('fields.telephone')} value={form.telephone} onChange={set('telephone')} />
-          <Field label={t('fields.email')} value={form.email} onChange={set('email')} type="email" />
-          <Field label={t('fields.address')} value={form.address} onChange={set('address')} className="col-span-2" />
-          <Field label={t('shops.colCity')} value={form.city} onChange={set('city')} />
-          <Field label={t('shops.colVat')} value={form.vat_number} onChange={set('vat_number')} />
-          <Field label={t('fields.crNumber')} value={form.cr_number} onChange={set('cr_number')} />
-          <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">{t('fields.notes')}</label>
-            <textarea value={form.notes || ''} onChange={set('notes')} rows={2} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-          </div>
+          <Field label={t('shops.colName')} required className="col-span-2"><Input value={form.name || ''} onChange={set('name')} required /></Field>
+          <Field label={t('shops.colContact')}><Input value={form.contact_person || ''} onChange={set('contact_person')} /></Field>
+          <Field label={t('shops.colMobile')}><Input value={form.mobile || ''} onChange={set('mobile')} /></Field>
+          <Field label={t('fields.telephone')}><Input value={form.telephone || ''} onChange={set('telephone')} /></Field>
+          <Field label={t('fields.email')}><Input type="email" value={form.email || ''} onChange={set('email')} /></Field>
+          <Field label={t('fields.address')} className="col-span-2"><Input value={form.address || ''} onChange={set('address')} /></Field>
+          <Field label={t('shops.colCity')}><Input value={form.city || ''} onChange={set('city')} /></Field>
+          <Field label={t('shops.colVat')}><Input value={form.vat_number || ''} onChange={set('vat_number')} /></Field>
+          <Field label={t('fields.crNumber')}><Input value={form.cr_number || ''} onChange={set('cr_number')} /></Field>
+          <Field label={t('fields.notes')} className="col-span-2"><Textarea rows={2} value={form.notes || ''} onChange={set('notes')} /></Field>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('shops.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('shops.saving') : t('shops.save')}</button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('shops.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('shops.saving') : t('shops.save')}</Button>
         </div>
       </form>
-    </div>
-  );
-}
-
-function Field({ label, className, ...props }) {
-  return (
-    <div className={className}>
-      <label className="block text-xs text-slate-500 mb-1">{label}</label>
-      <input {...props} value={props.value || ''} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-    </div>
+    </Modal>
   );
 }
