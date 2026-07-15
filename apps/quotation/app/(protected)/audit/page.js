@@ -45,16 +45,16 @@ export default function AuditPage() {
             </tr></thead>
             <tbody>
               {rows === null ? (
-                <tr><Td colSpan={6} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                <tr><Td colSpan={6} className="text-center text-[color:var(--tx-3)]">{t('shell.loading')}</Td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(r => (
-                <tr key={r.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                <tr key={r.id} className="hover:bg-[color:var(--pr-soft)]">
                   <Td className="whitespace-nowrap text-[12px]">{formatDate(r.created_at, { dateStyle: 'short', timeStyle: 'medium' })}</Td>
                   <Td dir="ltr" className="text-[12px]">{r.table_name}</Td>
                   <Td><span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-600/10">{r.action}</span></Td>
                   <Td dir="ltr" className="text-[12px]">{r.actor_email || '—'}</Td>
-                  <Td dir="ltr" className="text-[11px] text-[#8C8A80]">{r.record_id ? String(r.record_id).slice(0, 8) : '—'}</Td>
+                  <Td dir="ltr" className="text-[11px] text-[color:var(--tx-3)]">{r.record_id ? String(r.record_id).slice(0, 8) : '—'}</Td>
                   <Td className="text-end">
                     <button onClick={() => setDetail(r)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm">{t('audit.view')}</button>
                   </Td>
@@ -71,11 +71,11 @@ export default function AuditPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[12px]">
             <div>
               <div className="font-medium mb-1">{t('audit.before')}</div>
-              <pre dir="ltr" className="rounded-lg bg-[#F1EEE7] dark:bg-black/30 p-3 overflow-auto max-h-72 whitespace-pre-wrap">{detail.old_data ? JSON.stringify(detail.old_data, null, 2) : '—'}</pre>
+              <pre dir="ltr" className="rounded-lg bg-[color:var(--bg-2)] p-3 overflow-auto max-h-72 whitespace-pre-wrap">{detail.old_data ? JSON.stringify(detail.old_data, null, 2) : '—'}</pre>
             </div>
             <div>
               <div className="font-medium mb-1">{t('audit.after')}</div>
-              <pre dir="ltr" className="rounded-lg bg-[#F1EEE7] dark:bg-black/30 p-3 overflow-auto max-h-72 whitespace-pre-wrap">{detail.new_data ? JSON.stringify(detail.new_data, null, 2) : '—'}</pre>
+              <pre dir="ltr" className="rounded-lg bg-[color:var(--bg-2)] p-3 overflow-auto max-h-72 whitespace-pre-wrap">{detail.new_data ? JSON.stringify(detail.new_data, null, 2) : '—'}</pre>
             </div>
           </div>
         </Modal>

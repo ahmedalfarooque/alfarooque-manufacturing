@@ -126,7 +126,7 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('projects.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('projects.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('projects.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
           <Button variant="ghost" onClick={exportExcel}>⤓ {t('common.exportExcel')}</Button>
@@ -147,12 +147,12 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
 
       <div className="glass-card overflow-hidden">
         <div className="overflow-auto max-h-[70vh]">
           <table className="w-full text-sm min-w-[950px]">
-            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
               <tr>
                 <Th>#</Th>
                 <Th><span onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
@@ -168,11 +168,11 @@ export default function ProjectsPage() {
             </thead>
             <tbody>
               {!data ? (
-                <tr><td colSpan={10} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={10} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={10}><EmptyState text={t('projects.noMatch')} /></td></tr>
               ) : rows.map((p, i) => (
-                <tr key={p.id} className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]"
+                <tr key={p.id} className="cursor-pointer transition-colors duration-150 hover:bg-[color:var(--pr-soft)]"
                   onClick={() => { window.location.href = '/projects/' + p.id; }}>
                   <Td>{(page - 1) * pageSize + i + 1}</Td>
                   <Td className="font-medium">{p.customer_name}</Td>
@@ -186,12 +186,12 @@ export default function ProjectsPage() {
                     <div className="w-24 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
                       <div className="h-full bg-brand-500" style={{ width: p.progress + '%' }} />
                     </div>
-                    <span className="text-xs text-[#8C8A80]">{p.progress}%</span>
+                    <span className="text-xs text-[color:var(--tx-3)]">{p.progress}%</span>
                   </Td>
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/projects/' + p.id; }} title={t('common.view')} className="text-[#8C8A80] me-3">{'\u{1F441}'}</button>
+                    <button onClick={() => { window.location.href = '/projects/' + p.id; }} title={t('common.view')} className="text-[color:var(--tx-3)] me-3">{'\u{1F441}'}</button>
                     {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: p })} title={t('common.edit')} className="text-brand-600 dark:text-brand-400 me-3">✎</button>}
-                    {isAdmin && <button onClick={() => deleteProject(p.id)} title={t('common.delete')} className="text-[#BC6B4E]">🗑</button>}
+                    {isAdmin && <button onClick={() => deleteProject(p.id)} title={t('common.delete')} className="text-[#ef4444]">🗑</button>}
                   </Td>
                 </tr>
               ))}
@@ -200,7 +200,7 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: rows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + rows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -221,7 +221,7 @@ export default function ProjectsPage() {
 }
 
 function AssigneeChips({ assignees }) {
-  if (!assignees || assignees.length === 0) return <span className="text-[#8C8A80] text-xs">—</span>;
+  if (!assignees || assignees.length === 0) return <span className="text-[color:var(--tx-3)] text-xs">—</span>;
   const shown = assignees.slice(0, 3);
   const extra = assignees.length - shown.length;
   return (
@@ -305,7 +305,7 @@ export function ProjectModal({ modal, onClose, onSave }) {
   return (
     <Modal title={modal.mode === 'add' ? t('projects.modal.addTitle') : t('projects.modal.editTitle')} onClose={onClose} wide>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+        {err && <div className="text-sm text-[#ef4444]">{err}</div>}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
@@ -342,7 +342,7 @@ export function ProjectModal({ modal, onClose, onSave }) {
           <Field label={t('projects.modal.progressPct')}><Input type="number" min={0} max={100} value={form.progress ?? 0} onChange={set('progress')} /></Field>
         </div>
 
-        <div className="pt-2 border-t border-[#E5E2DD]/70 dark:border-white/[0.08]">
+        <div className="pt-2 border-t border-[color:var(--bd)]">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-semibold">{t('projects.modal.assignedUsers')}</h4>
             <Button type="button" variant="ghost" onClick={() => setAddUserOpen(true)}>{t('projects.modal.addUser')}</Button>
@@ -353,12 +353,12 @@ export function ProjectModal({ modal, onClose, onSave }) {
                 {t('projects.modal.userCreated', { name: newUserInfo.name })}
               </div>
               <div className="font-mono text-sm select-all">{newUserInfo.email} / {newUserInfo.password}</div>
-              <button type="button" onClick={() => setNewUserInfo(null)} className="text-[#8C8A80] underline">{t('common.dismiss')}</button>
+              <button type="button" onClick={() => setNewUserInfo(null)} className="text-[color:var(--tx-3)] underline">{t('common.dismiss')}</button>
             </div>
           )}
-          <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] max-h-48 overflow-y-auto">
+          <div className="rounded-lg border border-[color:var(--bd)] max-h-48 overflow-y-auto">
             <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+              <thead className="sticky top-0 bg-[color:var(--nav-bg)] backdrop-blur-xl">
                 <tr>
                   <Th className="w-8"></Th>
                   <Th>{t('common.name')}</Th>
@@ -368,9 +368,9 @@ export function ProjectModal({ modal, onClose, onSave }) {
               </thead>
               <tbody>
                 {allUsers.length === 0 ? (
-                  <tr><td colSpan={4} className="py-4 text-center text-[#8C8A80]">{t('projects.modal.noUsersYet')}</td></tr>
+                  <tr><td colSpan={4} className="py-4 text-center text-[color:var(--tx-3)]">{t('projects.modal.noUsersYet')}</td></tr>
                 ) : allUsers.map(u => (
-                  <tr key={u.id} className="border-t border-[#E5E2DD]/70 dark:border-white/[0.06] cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]" onClick={() => toggleAssignee(u.id)}>
+                  <tr key={u.id} className="border-t border-[color:var(--bd)] cursor-pointer hover:bg-[color:var(--pr-soft)]" onClick={() => toggleAssignee(u.id)}>
                     <Td><input type="checkbox" checked={assigneeIds.has(u.id)} onChange={() => toggleAssignee(u.id)} onClick={e => e.stopPropagation()} /></Td>
                     <Td className="font-medium">{u.full_name}{u.role === 'admin' && <span className="ms-1.5 text-[10px] px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">{t('role.admin')}</span>}</Td>
                     <Td>{u.email}</Td>
@@ -410,7 +410,7 @@ function AddUserModal({ onClose, onSave }) {
   return (
     <Modal title={t('projects.addUserModal.title')} onClose={onClose}>
       <form onSubmit={submit} className="space-y-3">
-        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+        {err && <div className="text-sm text-[#ef4444]">{err}</div>}
         <Field label={t('projects.addUserModal.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required autoFocus /></Field>
         <Field label={t('projects.addUserModal.email')} required><Input type="email" value={form.email} onChange={set('email')} required /></Field>
         <Field label={t('projects.addUserModal.position')}><Input value={form.position} onChange={set('position')} placeholder={t('projects.addUserModal.positionPlaceholder')} /></Field>

@@ -12,12 +12,12 @@ import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/com
 
 const STATUS_BADGE = {
   Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  Inactive: 'bg-slate-500/10 text-slate-500',
+  Inactive: 'bg-slate-500/10 text-[color:var(--tx-3)]',
   'On Leave': 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Terminated: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
 
-const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition-colors';
+const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition-colors';
 
 const EMPTY_FORM = {
   full_name: '', full_name_ar: '', employee_id: '', phone: '', whatsapp: '', email: '', nationality: '',
@@ -111,7 +111,7 @@ export default function DriversPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('drivers.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('drivers.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('drivers.breadcrumb')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" onClick={exportExcel}>⤓ {t('drivers.exportExcel')}</Button>
@@ -125,11 +125,11 @@ export default function DriversPage() {
         <Dropdown value={status} onChange={setStatus} options={[['All', t('common.all')], ...['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])]} />
       </div>
 
-      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#ef4444] text-sm mb-3">{error}</div>}
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[900px]">
-          <thead className="sticky top-0 z-10 bg-[#F7F5F1] dark:bg-[#1B1B14]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
               <Th>{t('drivers.colPhoto')}</Th>
               <th onClick={() => toggleSort('full_name')} className={SORT_TH}>{t('drivers.colName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
@@ -143,14 +143,14 @@ export default function DriversPage() {
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('drivers.loading')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('drivers.loading')}</td></tr>
             ) : drivers.length === 0 ? (
               <tr><td colSpan={8}><EmptyState text={t('drivers.noneYet')} /></td></tr>
             ) : drivers.map(d => {
               const lic = expiryInfo(d.license_expiry_date);
               const iqama = expiryInfo(d.iqama_expiry_date);
               return (
-                <tr key={d.id} className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors"
+                <tr key={d.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors"
                   onClick={() => { window.location.href = '/drivers/' + d.id; }}>
                   <Td>
                     {d.profile_photo_url ? (
@@ -165,10 +165,10 @@ export default function DriversPage() {
                   <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + lic.className}>{lic.dot} {trExpiry(t, lic)}</span></Td>
                   <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {trExpiry(t, iqama)}</span></Td>
                   <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span></Td>
-                  <td className="px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-[#8C8A80] hover:text-[#1A1A18] dark:hover:text-white">{'\u{1F441}'}</button>
+                  <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
                     {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} className="text-brand-500 hover:text-brand-600">✎</button>}
-                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} className="text-[#BC6B4E] hover:text-[#a85a3f]">🗑</button>}
+                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
                   </td>
                 </tr>
               );
@@ -177,7 +177,7 @@ export default function DriversPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('drivers.showingEntries', { from: drivers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + drivers.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -186,9 +186,9 @@ export default function DriversPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">›</button>
         </div>
       </div>
 
@@ -215,7 +215,7 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
   return (
     <Modal title={modal.mode === 'add' ? t('drivers.addModalTitle') : t('drivers.editModalTitle')} onClose={onClose} wide>
       <form onSubmit={submit} className="space-y-5 max-h-[75vh] overflow-y-auto -mx-1 px-1">
-        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
+        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
 
         <Section title={t('drivers.sectionPersonal')}>
           <Field label={t('fields.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required /></Field>
@@ -266,7 +266,7 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
           <Textarea value={form.notes || ''} onChange={set('notes')} rows={2} />
         </Field>
 
-        <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-white dark:bg-[#1B1B14] pb-1">
+        <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-[color:var(--nav-bg)] backdrop-blur-xl pb-1">
           <Button type="button" variant="ghost" onClick={onClose}>{t('drivers.cancel')}</Button>
           <Button type="submit" disabled={busy}>{busy ? t('drivers.saving') : t('drivers.save')}</Button>
         </div>
@@ -277,8 +277,8 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
 
 function Section({ title, children }) {
   return (
-    <fieldset className="border border-[#E5E2DD] dark:border-white/[0.08] rounded-xl p-4">
-      <legend className="text-xs font-semibold text-[#8C8A80] px-1">{title}</legend>
+    <fieldset className="border border-[color:var(--bd)] rounded-xl p-4">
+      <legend className="text-xs font-semibold text-[color:var(--tx-3)] px-1">{title}</legend>
       <div className="grid grid-cols-2 gap-3 mt-1">{children}</div>
     </fieldset>
   );

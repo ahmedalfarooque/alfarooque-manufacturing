@@ -128,7 +128,7 @@ export default function ReportsPage() {
                 {/* header cells mirror <Th> exactly but wrap instead of
                     nowrap, so long headers never widen the table */}
                 <thead><tr>{data.columns.map(c => (
-                  <th key={c.key} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium align-top break-words whitespace-normal">{c.header}</th>
+                  <th key={c.key} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium align-top break-words whitespace-normal">{c.header}</th>
                 ))}</tr></thead>
                 <tbody>
                   {data.rows.map((r, i) => {
@@ -136,14 +136,14 @@ export default function ReportsPage() {
                     return (
                       <tr key={i}
                         onClick={clickable ? () => { window.location.href = '/quotations/' + r.id; } : undefined}
-                        className={'transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] ' + (clickable ? 'cursor-pointer' : '')}>
+                        className={'transition-colors duration-150 hover:bg-[color:var(--pr-soft)] ' + (clickable ? 'cursor-pointer' : '')}>
                         {data.columns.map(c => <Td key={c.key} dir="auto" className="align-top break-words whitespace-normal">{cell(r[c.key])}</Td>)}
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
-              <div className="px-4 py-2 text-[12px] text-[#8C8A80]">{data.rows.length} {t('reports.rows')}</div>
+              <div className="px-4 py-2 text-[12px] text-[color:var(--tx-3)]">{data.rows.length} {t('reports.rows')}</div>
             </div>
           )}
         </div>

@@ -55,16 +55,16 @@ export default function PurchaseRequestDetailPage({ params }) {
   }
 
   if (error) return <Shell active="/purchase-requests"><div className="text-red-500 text-sm">{error}</div></Shell>;
-  if (!data) return <Shell active="/purchase-requests"><div className="text-slate-400 text-sm">{t('common.loading')}</div></Shell>;
+  if (!data) return <Shell active="/purchase-requests"><div className="text-[color:var(--tx-3)] text-sm">{t('common.loading')}</div></Shell>;
   if (!r) return <Shell active="/purchase-requests"><div className="text-red-500 text-sm">{t('prd.notFound')}</div></Shell>;
 
   return (
     <Shell active="/purchase-requests">
       <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
         <div>
-          <p className="text-xs text-slate-500 mb-1"><a href="/purchase-requests" className="hover:underline">{t('pr.title')}</a> &gt; {t('prd.breadcrumbDetails')}</p>
+          <p className="text-xs text-[color:var(--tx-3)] mb-1"><a href="/purchase-requests" className="hover:underline">{t('pr.title')}</a> &gt; {t('prd.breadcrumbDetails')}</p>
           <h2 className="text-lg font-semibold">{r.material_description}</h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[color:var(--tx-3)]">
             <a href={'/projects/' + r.project_id} className="hover:underline">{r.project_name}</a> · {r.customer_name}
           </p>
         </div>
@@ -87,13 +87,13 @@ export default function PurchaseRequestDetailPage({ params }) {
             </dl>
             {r.material_list && (
               <div className="mt-3">
-                <div className="text-xs text-slate-500 mb-1">{t('pd.materialList')}</div>
+                <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.materialList')}</div>
                 <p className="text-sm whitespace-pre-wrap">{r.material_list}</p>
               </div>
             )}
             {r.remarks && (
               <div className="mt-3">
-                <div className="text-xs text-slate-500 mb-1">{t('prd.otherNotes')}</div>
+                <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('prd.otherNotes')}</div>
                 <p className="text-sm whitespace-pre-wrap">{r.remarks}</p>
               </div>
             )}
@@ -104,7 +104,7 @@ export default function PurchaseRequestDetailPage({ params }) {
               <h3 className="font-medium text-sm mb-3">{t('pd.attachments')}</h3>
               <div className="flex flex-wrap gap-2">
                 {attachments.map(a => (
-                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-3 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:border-brand-500/40">
+                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-3 py-1.5 rounded-lg border border-[color:var(--bd)] hover:border-brand-500/40">
                     📎 {a.file_name}{a.label ? ` (${a.label})` : ''}
                   </a>
                 ))}
@@ -115,13 +115,13 @@ export default function PurchaseRequestDetailPage({ params }) {
           <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.comments')}</h3>
             <div className="space-y-3 mb-3 max-h-72 overflow-y-auto">
-              {comments.length === 0 ? <div className="text-sm text-[#8C8A80] py-4 text-center">{t('prd.noCommentsYet')}</div> : comments.map(c => (
+              {comments.length === 0 ? <div className="text-sm text-[color:var(--tx-3)] py-4 text-center">{t('prd.noCommentsYet')}</div> : comments.map(c => (
                 <div key={c.id} className="text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{c.author_name || t('prd.unknown')}</span>
-                    <span className="text-xs text-[#8C8A80]">{formatDate(c.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                    <span className="text-xs text-[color:var(--tx-3)]">{formatDate(c.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</span>
                   </div>
-                  <p className="text-slate-600 dark:text-slate-300">{c.comment}</p>
+                  <p className="text-[color:var(--tx)]">{c.comment}</p>
                 </div>
               ))}
             </div>
@@ -148,7 +148,7 @@ export default function PurchaseRequestDetailPage({ params }) {
           <div className="glass-card glass-card--pad">
             <h3 className="font-medium text-sm mb-3">{t('prd.statusHistory')}</h3>
             {!data.statusHistory || data.statusHistory.length === 0 ? (
-              <div className="text-sm text-[#8C8A80] py-4 text-center">{t('prd.noStatusChanges')}</div>
+              <div className="text-sm text-[color:var(--tx-3)] py-4 text-center">{t('prd.noStatusChanges')}</div>
             ) : (
               <ul className="space-y-3 text-sm">
                 {data.statusHistory.map(h => (
@@ -156,7 +156,7 @@ export default function PurchaseRequestDetailPage({ params }) {
                     <span className="h-2 w-2 rounded-full bg-brand-500 mt-1.5 shrink-0" />
                     <div>
                       <div>{h.from_status ? `${trEnum(t, 'status', h.from_status)} → ${trEnum(t, 'status', h.to_status)}` : trEnum(t, 'status', h.to_status)}</div>
-                      <div className="text-xs text-[#8C8A80]">{h.changed_by_name || ''} · {formatDate(h.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                      <div className="text-xs text-[color:var(--tx-3)]">{h.changed_by_name || ''} · {formatDate(h.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
                     </div>
                   </li>
                 ))}
@@ -173,7 +173,7 @@ function Row({ label, value }) {
   if (!value) return null;
   return (
     <>
-      <dt className="text-slate-500">{label}</dt>
+      <dt className="text-[color:var(--tx-3)]">{label}</dt>
       <dd className="font-medium text-right">{value}</dd>
     </>
   );

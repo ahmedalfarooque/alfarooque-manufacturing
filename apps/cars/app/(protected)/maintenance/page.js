@@ -15,7 +15,7 @@ const PAYMENT_BADGE = {
   Partial: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
 };
 
-const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#3d3d33] dark:hover:text-white/90 transition-colors';
+const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[color:var(--tx)] transition-colors';
 
 export const EMPTY_FORM = {
   car_id: '', driver_id: '', maintenance_date: new Date().toISOString().slice(0, 10), category: '', maintenance_type: '',
@@ -97,7 +97,7 @@ export default function MaintenanceRecordsPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('maint.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('maint.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('maint.breadcrumb')}</p>
         </div>
         {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('maint.addRecord')}</Button>}
       </div>
@@ -111,21 +111,21 @@ export default function MaintenanceRecordsPage() {
         <Dropdown value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder={t('maint.allPaymentStatus')} options={['Paid', 'Unpaid', 'Partial'].map(p => [p, trEnum(t, 'payment', p)])} />
         <div className="flex items-center gap-1">
           <Input type="date" value={dateFrom} onChange={e => { setPage(1); setDateFrom(e.target.value); }} />
-          <span className="text-[#8C8A80] text-xs">{t('maint.to')}</span>
+          <span className="text-[color:var(--tx-3)] text-xs">{t('maint.to')}</span>
           <Input type="date" value={dateTo} onChange={e => { setPage(1); setDateTo(e.target.value); }} />
         </div>
         <div className="flex items-center gap-1">
           <Input type="number" placeholder={t('maint.minCost')} value={costMin} onChange={e => { setPage(1); setCostMin(e.target.value); }} />
-          <span className="text-[#8C8A80] text-xs">–</span>
+          <span className="text-[color:var(--tx-3)] text-xs">–</span>
           <Input type="number" placeholder={t('maint.maxCost')} value={costMax} onChange={e => { setPage(1); setCostMax(e.target.value); }} />
         </div>
       </div>
 
-      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#ef4444] text-sm mb-3">{error}</div>}
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur-sm border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
             <tr>
               <Th><span onClick={() => toggleSort('maintenance_date')} className={sortHeaderCls}>{t('maint.colDate')}<SortIndicator column="maintenance_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
               <Th><span onClick={() => toggleSort('vehicle')} className={sortHeaderCls}>{t('maint.colVehicle')}<SortIndicator column="vehicle" sortKey={sortKey} sortDir={sortDir} /></span></Th>
@@ -142,11 +142,11 @@ export default function MaintenanceRecordsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={11} className="py-8 text-center text-[#8C8A80]">{t('maint.loading')}</td></tr>
+              <tr><td colSpan={11} className="py-8 text-center text-[color:var(--tx-3)]">{t('maint.loading')}</td></tr>
             ) : sorted.length === 0 ? (
               <tr><td colSpan={11}><EmptyState text={t('maint.noMatch')} /></td></tr>
             ) : sorted.map(r => (
-              <tr key={r.id} className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]"
+              <tr key={r.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)]"
                 onClick={() => { window.location.href = '/maintenance/' + r.id; }}>
                 <Td>{r.maintenance_date}</Td>
                 <Td className="font-medium">{r.cars?.vehicle_number || '—'}</Td>
@@ -160,9 +160,9 @@ export default function MaintenanceRecordsPage() {
                 <Td>{r.platform_users?.full_name || r.platform_users?.email || '—'}</Td>
                 <Td className="text-end">
                   <div className="flex items-center justify-end gap-3" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title={t('maint.view')} className="text-[#8C8A80] hover:text-[#3d3d33] dark:hover:text-white transition-colors">{'\u{1F441}'}</button>
+                    <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title={t('maint.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)] transition-colors">{'\u{1F441}'}</button>
                     {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: r })} title={t('maint.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎</button>}
-                    {isAdmin && <button onClick={() => deleteRecord(r.id)} title={t('maint.delete')} className="text-[#BC6B4E] hover:underline">🗑</button>}
+                    {isAdmin && <button onClick={() => deleteRecord(r.id)} title={t('maint.delete')} className="text-[#ef4444] hover:underline">🗑</button>}
                   </div>
                 </Td>
               </tr>
@@ -171,7 +171,7 @@ export default function MaintenanceRecordsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('maint.showingEntries', { from: records.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + records.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -180,9 +180,9 @@ export default function MaintenanceRecordsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">›</button>
         </div>
       </div>
 
@@ -225,9 +225,9 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
     <>
       <Modal title={modal.mode === 'add' ? t('maint.addModalTitle') : t('maint.editModalTitle')} onClose={onClose} wide>
         <form onSubmit={submit} className="space-y-4">
-          {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
+          {err && <div className="text-[#ef4444] text-sm">{err}</div>}
 
-          <div className="text-xs font-semibold text-[#8C8A80] uppercase tracking-wide">{t('maint.sectionBasic')}</div>
+          <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide">{t('maint.sectionBasic')}</div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <Field label={t('fields.vehicle')}>
               <Dropdown value={form.car_id} onChange={v => setForm(f => ({ ...f, car_id: v }))} placeholder={t('maint.selectVehicle')}
@@ -252,7 +252,7 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
                 <Dropdown className="flex-1" value={form.shop_id || ''} onChange={v => setForm(f => ({ ...f, shop_id: v }))} placeholder={t('common.none')}
                   options={[['', t('common.none')], ...shops.map(s => [s.id, s.name])]} />
                 <button type="button" onClick={() => setAddShopOpen(true)} title={t('maint.addNewShop')}
-                  className="px-2 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 text-sm shrink-0 transition-colors">+</button>
+                  className="px-2 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] text-sm shrink-0 transition-colors">+</button>
               </div>
             </Field>
             <Field label={t('fields.odometerKm')}>
@@ -278,14 +278,14 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
             </Field>
           </div>
 
-          <div className="text-xs font-semibold text-[#8C8A80] uppercase tracking-wide pt-2">{t('maint.sectionDetails')}</div>
+          <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide pt-2">{t('maint.sectionDetails')}</div>
           <div className="grid gap-3">
             <Field label={t('fields.workPerformed')}><Textarea rows={2} value={form.work_performed || ''} onChange={set('work_performed')} /></Field>
             <Field label={t('fields.partsChanged')}><Textarea rows={2} value={form.parts_changed || ''} onChange={set('parts_changed')} /></Field>
             <Field label={t('fields.laborDetails')}><Textarea rows={2} value={form.labor_details || ''} onChange={set('labor_details')} /></Field>
             <Field label={t('fields.additionalNotes')}><Textarea rows={2} value={form.notes || ''} onChange={set('notes')} /></Field>
           </div>
-          {modal.mode === 'add' && <p className="text-xs text-[#8C8A80]">{t('maint.attachmentsHint')}</p>}
+          {modal.mode === 'add' && <p className="text-xs text-[color:var(--tx-3)]">{t('maint.attachmentsHint')}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={onClose}>{t('maint.cancel')}</Button>

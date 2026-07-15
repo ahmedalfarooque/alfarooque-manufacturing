@@ -31,9 +31,9 @@ export default function AlertsPage() {
   return (
     <Shell active="/alerts">
       <h2 className="text-lg font-semibold mb-4">{t('nav.alerts')}</h2>
-      {error && <div className="text-[#BC6B4E] text-sm">{error}</div>}
+      {error && <div className="text-[#ef4444] text-sm">{error}</div>}
       {!alerts ? (
-        <div className="text-[#8C8A80] text-sm">{t('common.loading')}</div>
+        <div className="text-[color:var(--tx-3)] text-sm">{t('common.loading')}</div>
       ) : alerts.length === 0 ? (
         <div className="glass-card glass-card--pad">
           <EmptyState text={t('dash.noAlertsYet')} />
@@ -43,13 +43,13 @@ export default function AlertsPage() {
           {alerts.map(a => (
             <div key={a.id} className={a.is_read
               ? 'glass-card glass-card--pad flex items-start justify-between gap-3 opacity-60'
-              : 'rounded-2xl border border-[#BC6B4E]/30 bg-[#BC6B4E]/5 p-4 flex items-start justify-between gap-3'}>
+              : 'rounded-2xl border border-[#ef4444]/30 bg-[#ef4444]/5 p-4 flex items-start justify-between gap-3'}>
               <div>
-                <div className="font-medium text-sm">{a.title} {a.cars?.vehicle_number && <span className="text-[#8C8A80]">— {a.cars.vehicle_number}</span>}</div>
-                <div className="text-xs text-[#8C8A80] mt-1">{a.body}</div>
-                <div className="text-[11px] text-[#8C8A80]/80 mt-1">{formatDateTime(a.created_at)}</div>
+                <div className="font-medium text-sm">{a.title} {a.cars?.vehicle_number && <span className="text-[color:var(--tx-3)]">— {a.cars.vehicle_number}</span>}</div>
+                <div className="text-xs text-[color:var(--tx-3)] mt-1">{a.body}</div>
+                <div className="text-[11px] text-[color:var(--tx-4)] mt-1">{formatDateTime(a.created_at)}</div>
               </div>
-              {isAdmin && !a.is_read && <button onClick={() => markRead(a.id)} className="text-xs px-2 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors shrink-0">{t('alerts.markRead')}</button>}
+              {isAdmin && !a.is_read && <button onClick={() => markRead(a.id)} className="text-xs px-2 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors shrink-0">{t('alerts.markRead')}</button>}
             </div>
           ))}
         </div>

@@ -83,13 +83,13 @@ export default function DeletedOrdersPage() {
       </div>
 
       {!softDeleteEnabled ? (
-        <div className="glass-card p-8 text-center text-[#8C8A80]">
+        <div className="glass-card p-8 text-center text-[color:var(--tx-3)]">
           🔒 {t('oq.softDeleteNotEnabled')}
         </div>
       ) : (
         <div className="glass-card overflow-auto max-h-[70vh]">
           <table className="w-full text-sm min-w-[900px]">
-            <thead className="text-left text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+            <thead className="text-left text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
               <tr>
                 <th className="py-3 px-4 whitespace-nowrap">{t('oq.col.orderNo')}</th>
                 <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.customer')}</th>
@@ -104,15 +104,15 @@ export default function DeletedOrdersPage() {
             </thead>
             <tbody>
               {rows === null ? (
-                <tr><td colSpan={9} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="py-8 text-center text-[#8C8A80]">{t('oq.noDeletedOrdersFound')}</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[color:var(--tx-3)]">{t('oq.noDeletedOrdersFound')}</td></tr>
               ) : filtered.map(r => {
                 const name = r.guest_name || r.customer_name || '—';
                 const email = r.guest_email || r.customer_email || '—';
                 const daysText = r.days_remaining <= 0 ? t('oq.expiresToday') : t('oq.daysLeft', { n: r.days_remaining });
                 return (
-                  <tr key={r.id} className="border-t border-[#E5E2DD]/70 dark:border-white/[0.06]">
+                  <tr key={r.id} className="border-t border-[color:var(--bd)]">
                     <td className="py-3 px-4" dir="ltr">{r.order_no || r.id.slice(0, 8)}</td>
                     <td className="px-3 py-2.5 max-w-[160px] truncate">{name}</td>
                     <td className="px-3 py-2.5 max-w-[180px] truncate" dir="ltr">{email}</td>
@@ -124,7 +124,7 @@ export default function DeletedOrdersPage() {
                     <td className="text-right px-4 py-2.5 whitespace-nowrap">
                       <button disabled={busyId === r.id} onClick={() => recover(r.id)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3 disabled:opacity-50">{t('oq.recover')}</button>
                       {isSuperAdmin && (
-                        <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-[#BC6B4E] hover:underline text-sm disabled:opacity-50">{t('oq.deletePermanently')}</button>
+                        <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-[#ef4444] hover:underline text-sm disabled:opacity-50">{t('oq.deletePermanently')}</button>
                       )}
                     </td>
                   </tr>

@@ -1,35 +1,72 @@
 'use client';
 
-/* Small shared UI primitives, styled with the same tokens Shell uses. */
+/* ═══════════════════════════════════════════════════════════════════════
+   Shared UI primitives — premium enterprise glass.
+   Every button is TRANSPARENT tinted glass (never a solid fill); text and
+   icons stay clearly readable in both themes. Styling is driven by the
+   token layer + .gbtn/.ginput/.gmodal classes in globals.css, so these
+   primitives re-theme automatically with the design system.
+   Signatures are backward-compatible with the previous primitives
+   (Button/Input/Textarea/Select/Field/Modal/EmptyState/Th/Td/Pagination);
+   new optional props (loading, icon, size, block) are additive.
+   Mirrored file: apps/quotation/components/ui.js ·
+   apps/projects/components/ui.js · apps/cars/components/ui.js.
+   ═══════════════════════════════════════════════════════════════════════ */
 
-export function Button({ children, onClick, type = 'button', variant = 'primary', disabled, className = '' }) {
-  const styles = {
-    primary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
-    ghost: 'border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5',
-    danger: 'bg-[#BC6B4E]/10 text-[#BC6B4E] border border-[#BC6B4E]/30 hover:bg-[#BC6B4E]/20',
-  };
+const VARIANT_CLASS = {
+  primary: 'gbtn-primary',
+  secondary: 'gbtn-secondary',
+  ghost: 'gbtn-secondary',   // legacy "ghost" was a bordered secondary
+  minimal: 'gbtn-ghost',     // truly borderless
+  success: 'gbtn-success',
+  warning: 'gbtn-warning',
+  danger: 'gbtn-danger',
+};
+
+export function Button({
+  children, onClick, type = 'button', variant = 'primary',
+  disabled, loading, icon, size, block, className = '', ...rest
+}) {
+  const cls = [
+    'gbtn',
+    VARIANT_CLASS[variant] || VARIANT_CLASS.primary,
+    size === 'sm' ? 'gbtn--sm' : size === 'lg' ? 'gbtn--lg' : '',
+    block ? 'gbtn--block' : '',
+    className,
+  ].filter(Boolean).join(' ');
   return (
-    <button type={type} onClick={onClick} disabled={disabled}
-      className={'rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ' + (styles[variant] || styles.primary) + ' ' + className}>
+    <button type={type} onClick={onClick} disabled={disabled || loading}
+      data-loading={loading ? 'true' : undefined} className={cls} {...rest}>
+      {loading && <span className="gbtn-spin" aria-hidden="true" />}
+      {!loading && icon}
       {children}
     </button>
   );
 }
 
-const inputCls = 'w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-600 dark:focus:border-brand-400 transition-colors';
+/* Square icon-only glass button. */
+export function IconButton({ children, onClick, type = 'button', variant = 'secondary', size, disabled, className = '', ...rest }) {
+  const cls = [
+    'gbtn', VARIANT_CLASS[variant] || VARIANT_CLASS.secondary,
+    'gbtn--icon', size === 'sm' ? 'gbtn--sm' : '', className,
+  ].filter(Boolean).join(' ');
+  return <button type={type} onClick={onClick} disabled={disabled} className={cls} {...rest}>{children}</button>;
+}
 
 export function Input(props) {
-  return <input {...props} className={inputCls + ' ' + (props.className || '')} />;
+  const { className = '', ...rest } = props;
+  return <input {...rest} className={'ginput ' + className} />;
 }
 
 export function Textarea(props) {
-  return <textarea rows={3} {...props} className={inputCls + ' ' + (props.className || '')} />;
+  const { className = '', rows = 3, ...rest } = props;
+  return <textarea rows={rows} {...rest} className={'ginput ' + className} />;
 }
 
-export function Select({ options = [], ...props }) {
+export function Select({ options = [], className = '', children, ...props }) {
   return (
-    <select {...props} className={inputCls + ' ' + (props.className || '')}>
-      {options.map(o => <option key={String(o.value)} value={o.value}>{o.label}</option>)}
+    <select {...props} className={'ginput ' + className}>
+      {children || options.map(o => <option key={String(o.value)} value={o.value}>{o.label}</option>)}
     </select>
   );
 }
@@ -37,49 +74,73 @@ export function Select({ options = [], ...props }) {
 export function Field({ label, required, children, className = '' }) {
   return (
     <label className={'block ' + className}>
-      <span className="block text-[12px] text-[#8C8A80] mb-1">{label}{required && <span className="text-[#BC6B4E]"> *</span>}</span>
+      <span className="block text-[12px] font-medium text-[color:var(--tx-3)] mb-1.5">
+        {label}{required && <span className="text-[#e0574f]"> *</span>}
+      </span>
       {children}
     </label>
   );
 }
 
-export function Modal({ title, children, onClose, wide }) {
+export function Modal({ title, children, onClose, wide, footer }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 lg:p-10">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className={'glass-card relative w-full bg-white dark:bg-[#1B1B14] p-5 lg:p-6 shadow-2xl ' + (wide ? 'max-w-3xl' : 'max-w-xl')}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="font-semibold">{title}</div>
-          <button onClick={onClose} className="h-8 w-8 rounded-lg hover:bg-[#F1EEE7] dark:hover:bg-white/5 text-lg leading-none">×</button>
+      <div className="gmodal-backdrop" onClick={onClose} />
+      <div className={'gmodal-panel relative w-full ' + (wide ? 'max-w-3xl' : 'max-w-xl')}>
+        <div className="flex items-center justify-between gap-4 px-5 lg:px-6 py-4 border-b border-[color:var(--bd)]">
+          <div className="font-semibold text-[15px] text-[color:var(--tx)]">{title}</div>
+          <button onClick={onClose} aria-label="Close"
+            className="gbtn gbtn-ghost gbtn--icon gbtn--sm text-lg leading-none">×</button>
         </div>
-        {children}
+        <div className="px-5 lg:px-6 py-5">{children}</div>
+        {footer && (
+          <div className="sticky bottom-0 px-5 lg:px-6 py-3.5 border-t border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-xl rounded-b-[22px] flex items-center justify-end gap-2">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-export function EmptyState({ text }) {
-  return <div className="py-12 text-center text-sm text-[#8C8A80]">{text}</div>;
+export function EmptyState({ text, icon, action }) {
+  return (
+    <div className="py-14 flex flex-col items-center justify-center text-center gap-3">
+      <span className="icon-tile icon-tile--lg opacity-80">{icon || <span className="text-2xl">✳</span>}</span>
+      <div className="text-sm text-[color:var(--tx-3)]">{text}</div>
+      {action}
+    </div>
+  );
 }
 
-export function Th({ children, className = '' }) {
-  return <th className={'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap ' + className}>{children}</th>;
+export function Th({ children, className = '', ...rest }) {
+  return (
+    <th {...rest} className={'text-start px-3.5 py-3 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-semibold whitespace-nowrap ' + className}>
+      {children}
+    </th>
+  );
 }
 
-export function Td({ children, className = '' }) {
-  return <td className={'px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] ' + className}>{children}</td>;
+export function Td({ children, className = '', ...rest }) {
+  return (
+    <td {...rest} className={'px-3.5 py-3 text-[13px] text-[color:var(--tx)] border-t border-[color:var(--bd)] ' + className}>
+      {children}
+    </td>
+  );
 }
 
 export function Pagination({ page, pageSize, total, onPage }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   if (pages <= 1) return null;
   return (
-    <div className="flex items-center justify-between px-3 py-2 text-sm text-[#8C8A80]">
+    <div className="flex items-center justify-between px-4 py-3 text-sm text-[color:var(--tx-3)] border-t border-[color:var(--bd)]">
       <span>{total}</span>
       <div className="flex items-center gap-2">
-        <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">‹</button>
-        <span>{page} / {pages}</span>
-        <button disabled={page >= pages} onClick={() => onPage(page + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">›</button>
+        <button disabled={page <= 1} onClick={() => onPage(page - 1)}
+          className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40">‹</button>
+        <span className="tabular-nums">{page} / {pages}</span>
+        <button disabled={page >= pages} onClick={() => onPage(page + 1)}
+          className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40">›</button>
       </div>
     </div>
   );

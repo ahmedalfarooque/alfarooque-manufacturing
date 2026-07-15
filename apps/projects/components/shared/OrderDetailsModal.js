@@ -38,14 +38,14 @@ function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
    is swallowed here so it never reaches the console. */
 function ImgWithFallback({ src, className }) {
   const [failed, setFailed] = useState(false);
-  if (failed || !src) return <div className={className + ' flex items-center justify-center text-[#8C8A80] text-xs'}>—</div>;
+  if (failed || !src) return <div className={className + ' flex items-center justify-center text-[color:var(--tx-3)] text-xs'}>—</div>;
   return <img src={src} alt="" className={className + ' object-cover'} loading="lazy" onError={() => setFailed(true)} />;
 }
 
 function Row({ label, value }) {
   return (
-    <div className="flex justify-between gap-4 py-1.5 border-b last:border-0 border-[#E5E2DD]/70 dark:border-white/[0.06] text-sm">
-      <span className="text-[#8C8A80] shrink-0">{label}</span>
+    <div className="flex justify-between gap-4 py-1.5 border-b last:border-0 border-[color:var(--bd)] text-sm">
+      <span className="text-[color:var(--tx-3)] shrink-0">{label}</span>
       <span className="text-end min-w-0 break-words">{value === null || value === undefined || value === '' ? '—' : value}</span>
     </div>
   );
@@ -58,7 +58,7 @@ function ItemCard({ item, t, lang, onImageClick }) {
   const unit = item.price != null ? Number(item.price) : 0;
   const total = unit * qty;
   const spec = (lbl, val) => val ? (
-    <div className="flex justify-between text-xs py-0.5"><span className="text-[#8C8A80]">{lbl}</span><span>{val}</span></div>
+    <div className="flex justify-between text-xs py-0.5"><span className="text-[color:var(--tx-3)]">{lbl}</span><span>{val}</span></div>
   ) : null;
   /* Display follows the CURRENT UI language, not the language the order/
      product was originally entered in — Arabic product fields ride along
@@ -72,19 +72,19 @@ function ItemCard({ item, t, lang, onImageClick }) {
   const prodFinishes = p ? (ar && p.finishes_ar?.length ? p.finishes_ar : p.finishes) : [];
 
   return (
-    <div className="flex gap-3 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] p-3">
+    <div className="flex gap-3 rounded-lg border border-[color:var(--bd)] p-3">
       <div className="shrink-0">
         {images.length ? (
-          <button type="button" onClick={() => onImageClick(images, 0)} className="block w-16 h-16 rounded-lg overflow-hidden border border-[#E5E2DD] dark:border-white/[0.1]">
+          <button type="button" onClick={() => onImageClick(images, 0)} className="block w-16 h-16 rounded-lg overflow-hidden border border-[color:var(--bd)]">
             <ImgWithFallback src={images[0]} className="w-full h-full" />
           </button>
         ) : (
-          <div className="w-16 h-16 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] flex items-center justify-center text-[#8C8A80] text-xs">—</div>
+          <div className="w-16 h-16 rounded-lg border border-[color:var(--bd)] flex items-center justify-center text-[color:var(--tx-3)] text-xs">—</div>
         )}
         {images.length > 1 && (
           <div className="flex gap-1 mt-1">
             {images.slice(1, 4).map((src, i) => (
-              <button key={i} type="button" onClick={() => onImageClick(images, i + 1)} className="w-4 h-4 rounded overflow-hidden border border-[#E5E2DD] dark:border-white/[0.1]">
+              <button key={i} type="button" onClick={() => onImageClick(images, i + 1)} className="w-4 h-4 rounded overflow-hidden border border-[color:var(--bd)]">
                 <ImgWithFallback src={src} className="w-full h-full" />
               </button>
             ))}
@@ -93,7 +93,7 @@ function ItemCard({ item, t, lang, onImageClick }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-medium text-sm truncate">{prodName || t('oq.item')}</div>
-        {prodDesc && <div className="text-xs text-[#8C8A80] line-clamp-2 mt-0.5">{prodDesc}</div>}
+        {prodDesc && <div className="text-xs text-[color:var(--tx-3)] line-clamp-2 mt-0.5">{prodDesc}</div>}
         <div className="mt-1">
           {spec(t('oq.specCategory'), prodCategory)}
           {spec(t('oq.specSku'), p?.sku)}
@@ -154,22 +154,22 @@ export default function OrderDetailsModal({ orderId, onClose }) {
       >
         <div className="space-y-5">
           {error && <div className="text-red-500 text-sm">{error}</div>}
-          {!order && !error && <div className="text-[#8C8A80] text-sm">{t('common.loading')}</div>}
+          {!order && !error && <div className="text-[color:var(--tx-3)] text-sm">{t('common.loading')}</div>}
 
           {order && (
             <>
               <div>
-                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.productsCount', { n: items.length })}</div>
+                <div className="text-xs font-semibold text-[color:var(--tx-3)] mb-2">{t('oq.productsCount', { n: items.length })}</div>
                 {items.length ? (
                   <div className="space-y-2">{items.map((it, i) => <ItemCard key={i} item={it} t={t} lang={lang} onImageClick={(imgs, idx) => setLightbox({ images: imgs, idx })} />)}</div>
                 ) : (
-                  <p className="text-[#8C8A80] text-sm">{t('oq.noItemDetails')}</p>
+                  <p className="text-[color:var(--tx-3)] text-sm">{t('oq.noItemDetails')}</p>
                 )}
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.customerInfo')}</div>
-                <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] px-3">
+                <div className="text-xs font-semibold text-[color:var(--tx-3)] mb-2">{t('oq.customerInfo')}</div>
+                <div className="rounded-lg border border-[color:var(--bd)] px-3">
                   <Row label={t('oq.name')} value={custName} />
                   <Row label={t('common.email')} value={<span dir="ltr">{order.guest_email || order.customer_email || ''}</span>} />
                   <Row label={t('oq.phone')} value={<span dir="ltr">{order.guest_phone || ''}</span>} />
@@ -179,8 +179,8 @@ export default function OrderDetailsModal({ orderId, onClose }) {
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.orderInfo')}</div>
-                <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] px-3">
+                <div className="text-xs font-semibold text-[color:var(--tx-3)] mb-2">{t('oq.orderInfo')}</div>
+                <div className="rounded-lg border border-[color:var(--bd)] px-3">
                   <Row label={t('oq.col.orderNo')} value={<span dir="ltr">{order.order_no || order.id}</span>} />
                   <Row label={t('oq.col.date')} value={formatDate(order.created_at, { dateStyle: 'medium', timeStyle: 'short' })} />
                   <Row label={t('oq.col.status')} value={<span className={'px-2 py-0.5 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[order.status] || '')}>{trEnum(t, 'status', order.status)}</span>} />
@@ -201,10 +201,10 @@ export default function OrderDetailsModal({ orderId, onClose }) {
                     const done = ORDER_STATUSES.indexOf(s) <= statusIdx && statusIdx !== -1;
                     return (
                       <div key={s} className="flex flex-col items-center gap-1 shrink-0 w-16">
-                        <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (done ? 'bg-brand-600 text-white' : 'bg-black/10 dark:bg-white/10 text-[#8C8A80]')}>
+                        <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (done ? 'bg-[color:var(--pr)] text-white' : 'bg-black/10 dark:bg-white/10 text-[color:var(--tx-3)]')}>
                           {done ? '✓' : ''}
                         </div>
-                        <div className="text-[10px] text-center text-[#8C8A80] capitalize leading-tight">{trEnum(t, 'status', s)}</div>
+                        <div className="text-[10px] text-center text-[color:var(--tx-3)] capitalize leading-tight">{trEnum(t, 'status', s)}</div>
                       </div>
                     );
                   })}
@@ -212,8 +212,8 @@ export default function OrderDetailsModal({ orderId, onClose }) {
               )}
 
               <div>
-                <div className="text-xs font-semibold text-[#8C8A80] mb-2">{t('oq.totals')}</div>
-                <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] px-3">
+                <div className="text-xs font-semibold text-[color:var(--tx-3)] mb-2">{t('oq.totals')}</div>
+                <div className="rounded-lg border border-[color:var(--bd)] px-3">
                   <Row label={t('oq.subtotal')} value={<span dir="ltr">{money(order.subtotal)}</span>} />
                   <Row label={t('oq.vat')} value={<span dir="ltr">{money(order.vat)}</span>} />
                   <Row label={t('oq.shipping')} value={order.shipping_cost != null ? <span dir="ltr">{money(order.shipping_cost)}</span> : null} />

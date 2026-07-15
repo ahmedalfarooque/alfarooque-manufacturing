@@ -81,14 +81,14 @@ export default function DeletedQuotesPage() {
       </div>
 
       {!softDeleteEnabled ? (
-        <div className="glass-card p-8 text-center text-[#8C8A80]">
+        <div className="glass-card p-8 text-center text-[color:var(--tx-3)]">
           🔒 {t('oq.softDeleteNotEnabled')}
         </div>
       ) : (
         <div className="glass-card overflow-hidden">
           <div className="overflow-auto max-h-[70vh]">
             <table className="w-full text-sm min-w-[900px]">
-              <thead className="sticky top-0 z-10 bg-white dark:bg-[#1B1B14] border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+              <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
                 <tr>
                   <Th>{t('oq.col.name')}</Th>
                   <Th>{t('oq.col.contact')}</Th>
@@ -102,9 +102,9 @@ export default function DeletedQuotesPage() {
               </thead>
               <tbody>
                 {rows === null ? (
-                  <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[#8C8A80]">{t('common.loading')}</td></tr>
+                  <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[#8C8A80]">{t('oq.noDeletedQuotesFound')}</td></tr>
+                  <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('oq.noDeletedQuotesFound')}</td></tr>
                 ) : filtered.map(r => {
                   const daysText = r.days_remaining <= 0 ? t('oq.expiresToday') : t('oq.daysLeft', { n: r.days_remaining });
                   return (
@@ -120,7 +120,7 @@ export default function DeletedQuotesPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button disabled={busyId === r.id} onClick={() => recover(r.id)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.recover')}</button>
                           {isSuperAdmin && (
-                            <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-[#BC6B4E] hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.deletePermanently')}</button>
+                            <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-[#ef4444] hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.deletePermanently')}</button>
                           )}
                         </div>
                       </Td>

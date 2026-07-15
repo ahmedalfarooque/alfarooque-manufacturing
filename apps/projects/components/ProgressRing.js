@@ -4,7 +4,7 @@
    of total"). Sweeps from 0 to the real percentage on mount via an SVG
    stroke-dashoffset animation — only render where a genuine percentage is
    already being shown as text elsewhere on the card. */
-export default function ProgressRing({ pct, color = '#6B7A4F', size = 60 }) {
+export default function ProgressRing({ pct, color = '#06B6D4', size = 60 }) {
   if (pct == null || isNaN(pct)) return null;
   const clamped = Math.max(0, Math.min(100, pct));
   const r = size / 2 - 5;

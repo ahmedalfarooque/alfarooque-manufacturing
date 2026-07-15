@@ -45,7 +45,7 @@ export default function SettingsPage() {
         <div className="glass-card p-2 flex flex-wrap gap-1">
           {TABS.map(s => (
             <button key={s} onClick={() => setTab(s)}
-              className={'px-3.5 py-2 rounded-lg text-sm transition-colors ' + (tab === s ? 'bg-brand-600 text-white' : 'hover:bg-[#F1EEE7] dark:hover:bg-white/5')}>
+              className={'px-3.5 py-2 rounded-lg text-sm transition-colors ' + (tab === s ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] font-medium' : 'text-[color:var(--tx-3)] hover:bg-[color:var(--pr-soft)]')}>
               {t('settings.' + s)}
             </button>
           ))}
@@ -129,21 +129,21 @@ export default function SettingsPage() {
               <Input dir="ltr" value={num((settings.numbering || {}).product_prefix) || 'P-'}
                 onChange={e => patchSetting('numbering', 'product_prefix', e.target.value)} />
             </Field>
-            <div className="md:col-span-3 text-[12px] text-[#8C8A80]">{t('settings.numberingNote')}</div>
+            <div className="md:col-span-3 text-[12px] text-[color:var(--tx-3)]">{t('settings.numberingNote')}</div>
           </div>
         )}
 
         {tab === 'system' && (
           <div className="glass-card p-4 text-sm space-y-2">
             <div className="font-semibold">{t('settings.system')}</div>
-            <p className="text-[#8C8A80]">{t('settings.systemNote')}</p>
-            <ul className="text-[13px] space-y-1 text-[#8C8A80]">
+            <p className="text-[color:var(--tx-3)]">{t('settings.systemNote')}</p>
+            <ul className="text-[13px] space-y-1 text-[color:var(--tx-3)]">
               <li>• Email (Resend): <code>RESEND_API_KEY</code>, <code>EMAIL_FROM</code></li>
               <li>• Expiry cron secret: <code>CRON_SECRET</code></li>
               <li>• Database & storage: <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code></li>
               <li>• Sessions: <code>JWT_SECRET</code></li>
             </ul>
-            <p className="text-[#8C8A80]">{t('settings.backupNote')}</p>
+            <p className="text-[color:var(--tx-3)]">{t('settings.backupNote')}</p>
           </div>
         )}
       </div>

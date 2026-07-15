@@ -170,7 +170,7 @@ export default function CataloguePage() {
         {stale && (
           <div className="mx-4 mb-2 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-sm flex flex-wrap items-center gap-3">
             <span>⚠ {t('catalogue.staleCount', { n: stale.count })}</span>
-            <span className="text-[11px] text-[#8C8A80] truncate max-w-[40ch]">
+            <span className="text-[11px] text-[color:var(--tx-3)] truncate max-w-[40ch]">
               {stale.products.slice(0, 5).map(p => trL(p, 'name')).join(' · ')}{stale.count > 5 ? ' …' : ''}
             </span>
             <span className="flex-1" />
@@ -188,18 +188,18 @@ export default function CataloguePage() {
             </tr></thead>
             <tbody>
               {rows === null ? (
-                <tr><Td colSpan={10} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                <tr><Td colSpan={10} className="text-center text-[color:var(--tx-3)]">{t('shell.loading')}</Td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={10}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(r => {
                 const m = marginOf(r);
                 return (
-                  <tr key={r.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] cursor-pointer"
+                  <tr key={r.id} className="hover:bg-[color:var(--pr-soft)] cursor-pointer"
                     onClick={() => { window.location.href = '/catalogue/' + r.id; }}>
                     <Td>
                       {r.image_path
                         ? <img src={r.image_path} alt="" loading="lazy" className="h-9 w-9 rounded object-cover" />
-                        : <div className="h-9 w-9 rounded bg-[#F1EEE7] dark:bg-white/5" />}
+                        : <div className="h-9 w-9 rounded bg-[color:var(--pr-soft)]" />}
                     </Td>
                     <Td dir="ltr" className="whitespace-nowrap">{r.code}</Td>
                     <Td>
@@ -218,21 +218,21 @@ export default function CataloguePage() {
                     <Td className="whitespace-nowrap" dir="ltr">{r.last_calculated_cost != null ? formatNumber(r.last_calculated_cost, { minimumFractionDigits: 2 }) : '—'}</Td>
                     <Td>
                       {m === null ? '—' : (
-                        <span className={'text-[12px] px-2 py-0.5 rounded-full ' + (m < 15 ? 'bg-[#BC6B4E]/15 text-[#BC6B4E]' : 'bg-brand-600/15 text-brand-700 dark:text-brand-300')}>
+                        <span className={'text-[12px] px-2 py-0.5 rounded-full ' + (m < 15 ? 'bg-[#ef4444]/15 text-[#ef4444]' : 'bg-brand-600/15 text-brand-700 dark:text-brand-300')}>
                           {formatNumber(m, { maximumFractionDigits: 1 })}%
                         </span>
                       )}
                     </Td>
-                    <Td className="text-[12px] text-[#8C8A80] whitespace-nowrap">{r.updated_at ? formatDate(r.updated_at) : '—'}</Td>
+                    <Td className="text-[12px] text-[color:var(--tx-3)] whitespace-nowrap">{r.updated_at ? formatDate(r.updated_at) : '—'}</Td>
                     <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
                       <a href={'/catalogue/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</a>
-                      <button onClick={() => duplicateRow(r)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('catalogue.duplicate')}</button>
+                      <button onClick={() => duplicateRow(r)} className="text-[color:var(--tx-3)] hover:underline text-sm me-3">{t('catalogue.duplicate')}</button>
                       {r.status === 'archived' ? (
                         <button onClick={() => setArchived(r, false)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.restore')}</button>
                       ) : (
-                        <button onClick={() => setArchived(r, true)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('common.archive')}</button>
+                        <button onClick={() => setArchived(r, true)} className="text-[color:var(--tx-3)] hover:underline text-sm me-3">{t('common.archive')}</button>
                       )}
-                      <button onClick={() => removeRow(r)} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                      <button onClick={() => removeRow(r)} className="text-[#ef4444] hover:underline text-sm">{t('common.delete')}</button>
                     </Td>
                   </tr>
                 );
@@ -267,8 +267,8 @@ export default function CataloguePage() {
             <Field label={t('catalogue.descriptionAr')} className="md:col-span-2">
               <Textarea dir="rtl" value={form.description_ar ?? ''} onChange={e => setForm(s => ({ ...s, description_ar: e.target.value }))} />
             </Field>
-            <div className="md:col-span-2 text-[11px] text-[#8C8A80]">{t('catalogue.translateNote')}</div>
-            {err && <div className="md:col-span-2 text-sm text-[#BC6B4E]">{err}</div>}
+            <div className="md:col-span-2 text-[11px] text-[color:var(--tx-3)]">{t('catalogue.translateNote')}</div>
+            {err && <div className="md:col-span-2 text-sm text-[#ef4444]">{err}</div>}
             <div className="md:col-span-2 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setModal(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={busy || !(form.name_en || form.name_ar)}>{busy ? t('common.saving') : t('common.save')}</Button>

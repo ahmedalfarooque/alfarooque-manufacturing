@@ -67,16 +67,16 @@ export default function CustomerPicker({ value, onChange }) {
       {open && (
         <div className="glass-card absolute z-10 mt-1 w-full max-h-56 overflow-y-auto p-1.5">
           <button type="button" onClick={() => { setAddOpen(true); setOpen(false); }}
-            className="w-full text-start rounded-lg px-3 py-2 text-sm text-brand-600 dark:text-brand-400 hover:bg-[#F1EEE7] dark:hover:bg-white/5 border-b border-[#E5E2DD]/60 dark:border-white/[0.06]">
+            className="w-full text-start rounded-lg px-3 py-2 text-sm text-brand-600 dark:text-brand-400 hover:bg-[color:var(--pr-soft)] border-b border-[color:var(--bd)]">
             {t('cust.picker.addNew')}
           </button>
           {filtered.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-[#8C8A80]">{t('cust.picker.noMatch')}</div>
+            <div className="px-3 py-2 text-xs text-[color:var(--tx-3)]">{t('cust.picker.noMatch')}</div>
           ) : filtered.map(c => (
             <button type="button" key={c.id} onClick={() => select(c)}
-              className="w-full text-start rounded-lg px-3 py-2 text-sm hover:bg-[#F1EEE7] dark:hover:bg-white/5">
+              className="w-full text-start rounded-lg px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)]">
               <div className="font-medium">{c.full_name}</div>
-              {c.company_name && <div className="text-xs text-[#8C8A80]">{c.company_name}</div>}
+              {c.company_name && <div className="text-xs text-[color:var(--tx-3)]">{c.company_name}</div>}
             </button>
           ))}
         </div>

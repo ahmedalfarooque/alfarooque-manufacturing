@@ -12,10 +12,10 @@ const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   Idle: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Stopped: 'bg-red-500/10 text-red-600 dark:text-red-400',
-  Offline: 'bg-slate-500/10 text-slate-500',
+  Offline: 'bg-slate-500/10 text-[color:var(--tx-3)]',
 };
 
-const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition-colors';
+const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition-colors';
 
 const EMPTY_FORM = {
   vehicle_number: '', name: '', type: 'Truck', fuel_type: 'Diesel', driver: '', status: 'Idle', location: '', current_km: '',
@@ -135,7 +135,7 @@ export default function VehiclesPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('vehicles.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('vehicles.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('vehicles.breadcrumb')}</p>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && <Button variant="ghost" onClick={() => setImportOpen(true)}>⇪ {t('vehicles.importExcel')}</Button>}
@@ -152,11 +152,11 @@ export default function VehiclesPage() {
         <Dropdown value={assignment} onChange={v => { setPage(1); setAssignment(v); }} options={[['All', t('common.all')], ...['Assigned', 'Unassigned'].map(a => [a, trEnum(t, 'assignment', a)])]} />
       </div>
 
-      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#ef4444] text-sm mb-3">{error}</div>}
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[900px]">
-          <thead className="sticky top-0 z-10 bg-[#F7F5F1] dark:bg-[#1B1B14]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
               <Th>{t('vehicles.colNumber')}</Th>
               <th onClick={() => toggleSort('vehicle_number')} className={SORT_TH}>{t('vehicles.colVehicleNumber')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
@@ -171,11 +171,11 @@ export default function VehiclesPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} className="py-8 text-center text-[#8C8A80]">{t('vehicles.loading')}</td></tr>
+              <tr><td colSpan={9} className="py-8 text-center text-[color:var(--tx-3)]">{t('vehicles.loading')}</td></tr>
             ) : sorted.length === 0 ? (
               <tr><td colSpan={9}><EmptyState text={t('vehicles.noMatch')} /></td></tr>
             ) : sorted.map((v, i) => (
-              <tr key={v.id} className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors"
+              <tr key={v.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors"
                 onClick={() => { window.location.href = '/vehicles/' + v.id; }}>
                 <Td>{(page - 1) * pageSize + i + 1}</Td>
                 <Td className="font-medium">{v.vehicle_number}</Td>
@@ -185,10 +185,10 @@ export default function VehiclesPage() {
                 <Td>{v.driver || '—'}</Td>
                 <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span></Td>
                 <Td>{v.location || '—'}</Td>
-                <td className="px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} className="text-[#8C8A80] hover:text-[#1A1A18] dark:hover:text-white">{'\u{1F441}'}</button>
+                <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
                   {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title={t('vehicles.edit')} className="text-brand-500 hover:text-brand-600">✎</button>}
-                  {isAdmin && <button onClick={() => deleteVehicle(v.id)} title={t('vehicles.delete')} className="text-[#BC6B4E] hover:text-[#a85a3f]">🗑</button>}
+                  {isAdmin && <button onClick={() => deleteVehicle(v.id)} title={t('vehicles.delete')} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
                 </td>
               </tr>
             ))}
@@ -196,7 +196,7 @@ export default function VehiclesPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('vehicles.showingEntries', { from: vehicles.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + vehicles.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -205,9 +205,9 @@ export default function VehiclesPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">›</button>
         </div>
       </div>
 
@@ -236,9 +236,9 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
   return (
     <Modal title={modal.mode === 'add' ? t('vehicles.addModalTitle') : t('vehicles.editModalTitle')} onClose={onClose} wide>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
+        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
 
-        <div className="text-xs font-semibold text-[#8C8A80] uppercase tracking-wide">{t('vehicles.sectionBasic')}</div>
+        <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide">{t('vehicles.sectionBasic')}</div>
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('fields.vehicleNumber')} required><Input value={form.vehicle_number} onChange={set('vehicle_number')} required /></Field>
           <Field label={t('fields.name')}><Input value={form.name || ''} onChange={set('name')} /></Field>
@@ -256,7 +256,7 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
           </Field>
         </div>
 
-        <div className="text-xs font-semibold text-[#8C8A80] uppercase tracking-wide pt-2">{t('vehicles.sectionInsurance')}</div>
+        <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide pt-2">{t('vehicles.sectionInsurance')}</div>
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('fields.insuranceCompany')}><Input value={form.insurance_company || ''} onChange={set('insurance_company')} /></Field>
           <Field label={t('fields.insuranceNumber')}><Input value={form.insurance_number || ''} onChange={set('insurance_number')} /></Field>
@@ -266,7 +266,7 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
           <Field label={t('fields.engineNumber')}><Input value={form.engine_number || ''} onChange={set('engine_number')} /></Field>
         </div>
 
-        <div className="text-xs font-semibold text-[#8C8A80] uppercase tracking-wide pt-2">{t('vehicles.sectionService')}</div>
+        <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide pt-2">{t('vehicles.sectionService')}</div>
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('fields.lastServiceDate')}><Input value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" /></Field>
           <Field label={t('fields.nextServiceDate')}><Input value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" /></Field>
@@ -308,8 +308,8 @@ function ImportModal({ onClose, onDone }) {
   return (
     <Modal title={t('vehicles.importTitle')} onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-xs text-[#8C8A80]">{t('vehicles.importDesc')}</p>
-        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
+        <p className="text-xs text-[color:var(--tx-3)]">{t('vehicles.importDesc')}</p>
+        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
         {result ? (
           <div className="text-sm space-y-1">
             <div className="text-emerald-500 font-medium">{t('vehicles.importComplete')}</div>

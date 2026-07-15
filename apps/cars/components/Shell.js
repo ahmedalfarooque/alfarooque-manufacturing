@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
+import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
 
 const NAV = [
@@ -67,54 +68,60 @@ export default function Shell({ children, active }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#FFFFFF] dark:bg-[#14140F] text-[#1A1A18] dark:text-[#F5F3EE] transition-colors duration-300">
+    <div className="min-h-screen flex text-[color:var(--tx)]">
       {/* Sidebar */}
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-[#F7F5F1]/85 dark:bg-[#1B1B14]/75 backdrop-blur-2xl backdrop-saturate-150 border-e border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform shadow-[4px_0_24px_rgba(26,26,24,0.04)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)] ' +
+        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
+        'bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 border-e border-[color:var(--bd)] ' +
+        'shadow-[8px_0_40px_rgba(11,27,41,0.06)] dark:shadow-[8px_0_40px_rgba(0,0,0,0.4)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/10">
-          <img src="/logo.png" alt="AL FAROOQUE" className="h-9 w-9 object-contain shrink-0" />
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-[color:var(--bd)]">
+          <span className="icon-tile icon-tile--sm !p-0 overflow-hidden">
+            <img src="/logo.png" alt="AL FAROOQUE" className="h-6 w-6 object-contain" />
+          </span>
           <div>
-            <div className="text-[#1A1A18] dark:text-[#F5F3EE] font-semibold text-sm leading-tight">TrackFleet</div>
-            <div className="text-[11px] text-[#8C8A80]">{t('shell.tagline')}</div>
+            <div className="font-semibold text-sm leading-tight">TrackFleet</div>
+            <div className="text-[11px] text-[color:var(--tx-4)]">{t('shell.tagline')}</div>
           </div>
         </div>
-        <div className="px-5 py-3 text-[11px] uppercase tracking-wider text-[#8C8A80]">{user?.role ? trEnum(t, 'role', user.role) : ' '}</div>
-        <div className="px-5 pb-3 flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-[#6B7A4F]/15 flex items-center justify-center text-xs font-medium text-[#566440] dark:text-brand-300">
+        <div className="px-5 pt-3 pb-1 text-[11px] uppercase tracking-wider text-[color:var(--tx-4)]">{user?.role ? trEnum(t, 'role', user.role) : ' '}</div>
+        <div className="mx-3 mb-1 flex items-center gap-2.5 rounded-xl px-3 py-2.5 border border-[color:var(--bd)] bg-[color:var(--bg-card)]">
+          <span className="h-8 w-8 rounded-full grid place-items-center text-xs font-semibold text-[color:var(--pr)] bg-[color:var(--pr-soft)] border border-[rgba(6,182,212,0.3)] shrink-0">
             {(user?.full_name || user?.email || '?').slice(0, 1).toUpperCase()}
-          </div>
+          </span>
           <div className="min-w-0">
-            <div className="text-sm text-[#1A1A18] dark:text-[#F5F3EE] truncate">{user?.full_name || t('shell.loading')}</div>
-            <div className="text-[11px] text-[#8C8A80] capitalize truncate">{user?.role ? trEnum(t, 'role', user.role) : ''}</div>
+            <div className="text-sm truncate">{user?.full_name || t('shell.loading')}</div>
+            <div className="text-[11px] text-[color:var(--tx-4)] capitalize truncate">{user?.role ? trEnum(t, 'role', user.role) : ''}</div>
           </div>
         </div>
-        <nav className="flex-1 px-3 space-y-1 mt-2">
+        <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
           {NAV.map(item => (
             <a key={item.href} href={item.href}
               className={
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ' +
-                (active === item.href ? 'bg-brand-600 text-white shadow-sm' : 'hover:bg-[#6B7A4F]/8 dark:hover:bg-white/5 text-[#4A4A45] dark:text-[#A8A497]')
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ' +
+                (active === item.href
+                  ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] shadow-[inset_0_0_0_1px_rgba(6,182,212,0.28)]'
+                  : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
               }>
               <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.key)}
             </a>
           ))}
         </nav>
         <div className="p-3">
-          <button onClick={logout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[#4A4A45] dark:text-[#A8A497] hover:bg-[#6B7A4F]/8 dark:hover:bg-white/5 transition">
-            <GlassIcon name="logout" size={20} className="shrink-0" />{t('shell.logout')}
+          <button onClick={logout} className="w-full gbtn gbtn-ghost justify-start">
+            <GlassIcon name="logout" size={18} className="shrink-0" />{t('shell.logout')}
           </button>
         </div>
       </aside>
 
-      {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/10 bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
+        <header className="h-16 flex items-center justify-between gap-3 px-4 lg:px-6 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <button className="lg:hidden text-xl" onClick={() => setSidebarOpen(true)}>☰</button>
+            <button className="lg:hidden gbtn gbtn-ghost gbtn--icon gbtn--sm text-xl" onClick={() => setSidebarOpen(true)} aria-label="Menu">☰</button>
             <h1 className="font-semibold text-lg hidden sm:block">{t(NAV.find(n => n.href === active)?.key) || active.replace('/', '')}</h1>
           </div>
           <div className="flex items-center gap-3 flex-1 max-w-md relative">
@@ -123,28 +130,28 @@ export default function Shell({ children, active }) {
               onChange={e => setQ(e.target.value)}
               onBlur={() => setTimeout(() => setResults(null), 150)}
               placeholder={t('shell.searchPlaceholder')}
-              className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/10 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#6B7A4F]/40 focus:border-[#6B7A4F]/40 transition"
+              className="ginput"
             />
             {results && (results.vehicles.length > 0 || results.drivers.length > 0) && (
               <div className="glass-card absolute top-full mt-1 start-0 end-0 max-h-80 overflow-y-auto z-30">
                 {results.vehicles.length > 0 && (
                   <div>
-                    <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[#8C8A80]">{t('shell.searchVehicles')}</div>
+                    <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">{t('shell.searchVehicles')}</div>
                     {results.vehicles.map(v => (
-                      <a key={v.id} href={'/vehicles/' + v.id} className="block px-3 py-2 text-sm hover:bg-[#6B7A4F]/8 dark:hover:bg-white/[0.05]">
+                      <a key={v.id} href={'/vehicles/' + v.id} className="block px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)]">
                         <div className="font-medium">{v.vehicle_number}</div>
-                        <div className="text-xs text-[#8C8A80]">{v.name || '—'}</div>
+                        <div className="text-xs text-[color:var(--tx-4)]">{v.name || '—'}</div>
                       </a>
                     ))}
                   </div>
                 )}
                 {results.drivers.length > 0 && (
                   <div>
-                    <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[#8C8A80]">{t('shell.searchDrivers')}</div>
+                    <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">{t('shell.searchDrivers')}</div>
                     {results.drivers.map(d => (
-                      <a key={d.id} href={'/drivers/' + d.id} className="block px-3 py-2 text-sm hover:bg-[#6B7A4F]/8 dark:hover:bg-white/[0.05]">
+                      <a key={d.id} href={'/drivers/' + d.id} className="block px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)]">
                         <div className="font-medium">{d.full_name}</div>
-                        <div className="text-xs text-[#8C8A80]">{d.phone || d.license_number || '—'}</div>
+                        <div className="text-xs text-[color:var(--tx-4)]">{d.phone || d.license_number || '—'}</div>
                       </a>
                     ))}
                   </div>
@@ -162,8 +169,9 @@ export default function Shell({ children, active }) {
             </button>
           </div>
         </header>
-        <main className="flex-1 p-4 lg:p-6 min-w-0"><div className="max-w-[1800px] mx-auto">{children}</div></main>
+        <main className="flex-1 p-4 lg:p-6 min-w-0"><div className="max-w-[1800px] mx-auto gfade-up">{children}</div></main>
       </div>
+      <GlassToastHost />
     </div>
   );
 }

@@ -96,13 +96,13 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
     <div className="grid grid-cols-1 xl:grid-cols-[1fr,340px] gap-4 items-start">
       {/* ── Left: tabs + section table ── */}
       <div className="glass-card overflow-hidden">
-        <div className="flex flex-wrap border-b border-[#E5E2DD] dark:border-white/[0.08]">
+        <div className="flex flex-wrap border-b border-[color:var(--bd)]">
           {SECTIONS.map(s => {
             const n = lines.filter(l => l.section === s).length;
             return (
               <button key={s} type="button" onClick={() => setTab(s)}
                 className={'px-3.5 py-2.5 text-sm transition-colors ' +
-                  (tab === s ? 'border-b-2 border-brand-600 text-brand-700 dark:text-brand-300 font-medium' : 'text-[#8C8A80] hover:text-inherit')}>
+                  (tab === s ? 'border-b-2 border-brand-600 text-brand-700 dark:text-brand-300 font-medium' : 'text-[color:var(--tx-3)] hover:text-inherit')}>
                 {t('sec.' + s)}{n > 0 && <span className="ms-1.5 text-[10px] rounded-full bg-brand-600/15 px-1.5 py-0.5">{n}</span>}
               </button>
             );
@@ -120,7 +120,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wider text-[#8C8A80]">
+              <tr className="text-[11px] uppercase tracking-wider text-[color:var(--tx-3)]">
                 <th className="text-start px-3 py-1.5">{t('f.name')}</th>
                 <th className="text-start px-2 py-1.5">{t('f.unit')}</th>
                 <th className="text-start px-2 py-1.5 w-24">{t('cost.qty')}</th>
@@ -134,9 +134,9 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
             </thead>
             <tbody>
               {sectionLines.length === 0 ? (
-                <tr><td colSpan={9} className="px-3 py-8 text-center text-[#8C8A80]">{t('cost.emptySection')}</td></tr>
+                <tr><td colSpan={9} className="px-3 py-8 text-center text-[color:var(--tx-3)]">{t('cost.emptySection')}</td></tr>
               ) : sectionLines.map(l => (
-                <tr key={l._i} className="border-t border-[#E5E2DD]/70 dark:border-white/[0.06] align-top">
+                <tr key={l._i} className="border-t border-[color:var(--bd)] align-top">
                   <td className="px-3 py-2">
                     {l.section === 'other' || !l.source_id ? (
                       <Input value={l.name || ''} placeholder={t('f.name')}
@@ -148,10 +148,10 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
                           {(l.section === 'material' || l.section === 'hardware') && (
                             <button type="button" title={t('matdlg.editMaterial')}
                               onClick={() => setMatEdit({ index: l._i, sourceId: l.source_id })}
-                              className="ms-1.5 text-[#8C8A80] hover:text-brand-600 dark:hover:text-brand-400 text-[13px] align-middle">✎</button>
+                              className="ms-1.5 text-[color:var(--tx-3)] hover:text-[color:var(--pr)] text-[13px] align-middle">✎</button>
                           )}
                         </div>
-                        {l.spec_text && <div className="text-[11px] text-[#8C8A80]" dir="ltr">{l.spec_text}</div>}
+                        {l.spec_text && <div className="text-[11px] text-[color:var(--tx-3)]" dir="ltr">{l.spec_text}</div>}
                         {l.extra && l.extra.material_override && (
                           <span className="inline-block mt-0.5 text-[10px] px-1.5 rounded-full bg-brand-600/15 text-brand-700 dark:text-brand-300">
                             {t('matdlg.localOverride')}
@@ -169,7 +169,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
                         }}
                         options={['hour', 'day', 'month'].map(u => ({ value: u, label: t('unit.' + u) }))} />
                     ) : (
-                      <span className="text-[#8C8A80]">{l.section === 'expense' ? t('expunit.' + (l.unit || 'fixed')) : (l.unit || '—')}</span>
+                      <span className="text-[color:var(--tx-3)]">{l.section === 'expense' ? t('expunit.' + (l.unit || 'fixed')) : (l.unit || '—')}</span>
                     )}
                   </td>
                   <td className="px-2 py-2">
@@ -189,14 +189,14 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
                         value={(l.extra && l.extra.scale_basis) || (l.section === 'hardware' ? 'fixed' : 'auto')}
                         onChange={e => patchLine(l._i, { extra: { ...(l.extra || {}), scale_basis: e.target.value } })}
                         title={t('cost.scaleBasisHint')}
-                        className="mt-0.5 block w-24 text-[10px] bg-transparent text-[#8C8A80] border border-[#E5E2DD] dark:border-white/[0.1] rounded px-1 py-0.5">
+                        className="mt-0.5 block w-24 text-[10px] bg-transparent text-[color:var(--tx-3)] border border-[color:var(--bd)] rounded px-1 py-0.5">
                         {BASIS_OPTIONS.map(b => <option key={b} value={b}>{t('basis.' + b)}</option>)}
                       </select>
                     )}
                   </td>
                   <td className="px-2 py-2">
                     {(l.section === 'expense' && l.extra && l.extra.pct_of_production) ? (
-                      <span className="text-[#8C8A80]">—</span>
+                      <span className="text-[color:var(--tx-3)]">—</span>
                     ) : (
                       <Input type="number" step="0.01" value={l.unit_cost}
                         onChange={e => patchLine(l._i, { unit_cost: e.target.value })} className="w-28" />
@@ -219,21 +219,21 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
                       {l.extra && l.extra.pct_of_production !== undefined ? (
                         <Input type="number" step="0.1" value={l.extra.pct_of_production}
                           onChange={e => patchLine(l._i, { extra: { ...l.extra, pct_of_production: Number(e.target.value) || 0 } })} className="w-24" />
-                      ) : <span className="text-[#8C8A80]">—</span>}
+                      ) : <span className="text-[color:var(--tx-3)]">—</span>}
                     </td>
                   )}
                   <td className="px-3 py-2 text-end font-medium whitespace-nowrap">
                     {money((l.section === 'expense' && l.extra && l.extra.pct_of_production) ? costLineTotal(l, summary.productionCost) : costLineTotal(l))}
                   </td>
                   <td className="px-1 py-2">
-                    <button type="button" onClick={() => removeLine(l._i)} className="text-[#BC6B4E] hover:opacity-70">×</button>
+                    <button type="button" onClick={() => removeLine(l._i)} className="text-[#ef4444] hover:opacity-70">×</button>
                   </td>
                 </tr>
               ))}
             </tbody>
             {sectionLines.length > 0 && (
-              <tfoot><tr className="border-t border-[#E5E2DD] dark:border-white/[0.08]">
-                <td colSpan={7} className="px-3 py-2 text-end text-[12px] text-[#8C8A80]">{t('sec.' + tab)} — {t('cost.sectionTotal')}</td>
+              <tfoot><tr className="border-t border-[color:var(--bd)]">
+                <td colSpan={7} className="px-3 py-2 text-end text-[12px] text-[color:var(--tx-3)]">{t('sec.' + tab)} — {t('cost.sectionTotal')}</td>
                 <td className="px-3 py-2 text-end font-semibold">{money(sectionTotal)}</td><td />
               </tr></tfoot>
             )}
@@ -271,7 +271,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
 
         <Row label={t('cost.productionCost')} value={money(summary.productionCost)} />
         <div className="flex items-center justify-between gap-2 text-sm">
-          <span className="text-[#8C8A80]">{t('cost.overhead')}</span>
+          <span className="text-[color:var(--tx-3)]">{t('cost.overhead')}</span>
           <span className="flex items-center gap-2">
             <Input type="number" step="0.1" value={params.overheadPct}
               onChange={e => setParams(p => ({ ...p, overheadPct: e.target.value }))} className="w-16 !py-1 text-end" />%
@@ -279,7 +279,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
           </span>
         </div>
         <div className="flex items-center justify-between gap-2 text-sm">
-          <span className="text-[#8C8A80]">{t('cost.risk')}</span>
+          <span className="text-[color:var(--tx-3)]">{t('cost.risk')}</span>
           <span className="flex items-center gap-2">
             <Input type="number" step="0.1" value={params.riskPct}
               onChange={e => setParams(p => ({ ...p, riskPct: e.target.value }))} className="w-16 !py-1 text-end" />%
@@ -288,9 +288,9 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
         </div>
         <Row label={t('cost.totalCost')} value={money(summary.totalCost)} strong />
 
-        <div className="border-t border-[#E5E2DD] dark:border-white/[0.08] pt-3 space-y-2">
+        <div className="border-t border-[color:var(--bd)] pt-3 space-y-2">
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="text-[#8C8A80]">{t('cost.profit')}</span>
+            <span className="text-[color:var(--tx-3)]">{t('cost.profit')}</span>
             <span className="flex items-center gap-2">
               <Select value={params.profitMode}
                 onChange={e => setParams(p => ({ ...p, profitMode: e.target.value }))} className="w-28 !py-1"
@@ -309,7 +309,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
             </span>
           </div>
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="text-[#8C8A80]">{t('cost.rounding')}</span>
+            <span className="text-[color:var(--tx-3)]">{t('cost.rounding')}</span>
             <Select value={params.rounding}
               onChange={e => setParams(p => ({ ...p, rounding: e.target.value }))} className="w-28 !py-1"
               options={[{ value: 0, label: '—' }, { value: 1, label: '1 ' + t('common.currencyUnit') }, { value: 5, label: '5 ' + t('common.currencyUnit') }, { value: 10, label: '10 ' + t('common.currencyUnit') }]} />
@@ -318,14 +318,14 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
 
         <div className="rounded-xl bg-brand-600/10 border border-brand-600/25 p-3 space-y-1">
           <Row label={t('cost.sellingPrice')} value={money(summary.unitPrice) + ' ' + t('common.currencyUnit')} big />
-          <div className="flex justify-between text-[12px] text-[#8C8A80]">
+          <div className="flex justify-between text-[12px] text-[color:var(--tx-3)]">
             <span>{t('cost.profitAmount')}: {money(summary.profitAmount)}</span>
-            <span className={Number(summary.marginPct) < 15 ? 'text-[#BC6B4E] font-medium' : ''}>
+            <span className={Number(summary.marginPct) < 15 ? 'text-[#ef4444] font-medium' : ''}>
               {t('cost.margin')}: {formatNumber(summary.marginPct)}%
             </span>
           </div>
           {Number(summary.marginPct) < 15 && summary.totalCost > 0 && (
-            <div className="text-[11px] text-[#BC6B4E]">{t('cost.lowMarginWarning')}</div>
+            <div className="text-[11px] text-[#ef4444]">{t('cost.lowMarginWarning')}</div>
           )}
         </div>
       </div>
@@ -336,7 +336,7 @@ export default function CostModelEditor({ lines, setLines, params, setParams, ta
 function Row({ label, value, strong, big }) {
   return (
     <div className={'flex items-center justify-between text-sm ' + (big ? 'text-base font-semibold' : '')}>
-      <span className={strong ? 'font-medium' : 'text-[#8C8A80]'}>{label}</span>
+      <span className={strong ? 'font-medium' : 'text-[color:var(--tx-3)]'}>{label}</span>
       <span className={strong ? 'font-semibold' : ''} dir="ltr">{value}</span>
     </div>
   );

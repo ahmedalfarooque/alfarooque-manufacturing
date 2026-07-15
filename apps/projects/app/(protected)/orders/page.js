@@ -86,7 +86,7 @@ export default function OrdersPage() {
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[900px]">
-          <thead className="text-left text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+          <thead className="text-left text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
             <tr>
               <th onClick={() => toggleSort('order_no')} className="py-3 px-4 cursor-pointer select-none whitespace-nowrap">{t('oq.col.orderNo')}<SortIndicator column="order_no" sortKey={sortKey} sortDir={sortDir} /></th>
               <th className="px-3 py-2.5 whitespace-nowrap">{t('oq.col.customer')}</th>
@@ -100,15 +100,15 @@ export default function OrdersPage() {
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('oq.noOrdersFound')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('oq.noOrdersFound')}</td></tr>
             ) : pageRows.map(r => {
               const name = r.guest_name || r.customer_name || '—';
               const email = r.guest_email || r.customer_email || '—';
               return (
                 <tr key={r.id} onClick={() => setViewOrderId(r.id)}
-                  className="border-t border-[#E5E2DD]/70 dark:border-white/[0.06] cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors duration-150">
+                  className="border-t border-[color:var(--bd)] cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors duration-150">
                   <td className="py-3 px-4" dir="ltr">{r.order_no || r.id.slice(0, 8)}</td>
                   <td className="px-3 py-2.5 max-w-[160px] truncate">{name}</td>
                   <td className="px-3 py-2.5 max-w-[180px] truncate" dir="ltr">{email}</td>
@@ -117,10 +117,10 @@ export default function OrdersPage() {
                   <td className="px-3 py-2.5 capitalize">{trEnum(t, 'status', r.payment_status || 'pending')}</td>
                   <td className="px-3 py-2.5">{new Date(r.created_at).toLocaleDateString()}</td>
                   <td className="text-right px-4 py-2.5 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => setViewOrderId(r.id)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('oq.view')}</button>
+                    <button onClick={() => setViewOrderId(r.id)} className="text-[color:var(--tx-3)] hover:underline text-sm me-3">{t('oq.view')}</button>
                     <a href={'/orders/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('oq.edit')}</a>
                     {softDeleteEnabled && (
-                      <button disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="text-[#BC6B4E] hover:underline text-sm disabled:opacity-50">{t('oq.delete')}</button>
+                      <button disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="text-[#ef4444] hover:underline text-sm disabled:opacity-50">{t('oq.delete')}</button>
                     )}
                   </td>
                 </tr>
@@ -130,12 +130,12 @@ export default function OrdersPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40">›</button>
         </div>
       </div>
 

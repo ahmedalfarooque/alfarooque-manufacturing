@@ -5,6 +5,8 @@ import Shell from '@/components/Shell';
 import StatCard from '@/components/StatCard';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { GlassIcon } from '@/components/GlassIcons';
+import { CHART_COLORS, chartTheme } from '@/components/glass';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, RadialBarChart, RadialBar } from 'recharts';
 
 const COLORS = { Running: '#3b82f6', Completed: '#10b981', Upcoming: '#f59e0b', 'On Hold': '#ef4444' };
@@ -40,12 +42,12 @@ export default function DashboardPage() {
   const { data: stats, error } = useLiveData(me?.role === 'external' ? null : '/api/stats', REFRESH_MS);
   const { data: myStats, error: myStatsError } = useLiveData(me?.role === 'external' ? '/api/my-stats' : null, REFRESH_MS);
 
-  if (!me) return <Shell active="/dashboard"><div className="text-[#8C8A80]">{t('dashboard.loading')}</div></Shell>;
+  if (!me) return <Shell active="/dashboard"><div className="text-[color:var(--tx-3)]">{t('dashboard.loading')}</div></Shell>;
 
   if (me.role === 'external') return <ExternalDashboard stats={myStats} error={myStatsError} t={t} />;
 
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
-  if (!stats) return <Shell active="/dashboard"><div className="text-[#8C8A80]">{t('dashboard.loading')}</div></Shell>;
+  if (!stats) return <Shell active="/dashboard"><div className="text-[color:var(--tx-3)]">{t('dashboard.loading')}</div></Shell>;
 
   /* Slice/legend labels display translated; fill colors stay keyed on the raw status. */
   const pieData = Object.entries(stats.statusBreakdown).map(([name, value]) => ({ name: trEnum(t, 'status', name), rawName: name, value }));
@@ -57,16 +59,77 @@ export default function DashboardPage() {
   const upcomingPct = pct(stats.upcomingCount, stats.totalProjects);
   const onHoldPct = pct(stats.onHoldCount, stats.totalProjects);
 
+  const dark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const ct = chartTheme(dark);
+
   return (
     <Shell active="/dashboard">
       {/* Total Project Value card intentionally removed — project value
           is only ever shown on a project's own View page, and only
           when it's actually set (see the brief: never show $0/SAR 0). */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="folder" tone="brand" label={t('dashboard.totalProjects')} value={stats.totalProjects} sub={t('dashboard.allProjects')} href="/projects"
-          bars={{ values: [stats.running, stats.completedCount, stats.upcomingCount, stats.onHoldCount], colors: [COLORS.Running, COLORS.Completed, COLORS.Upcoming, COLORS['On Hold']] }} />
+
+      {/* Quick actions — one-click shortcuts to the pages with a "+ New"
+          button (admin-only, matching the gating on those buttons themselves). */}
+      {me.role === 'admin' && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6 gfade-up">
+          <a href="/projects" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
+            <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="folder" size={20} bare /></span>
+            <span className="text-sm font-medium truncate">{t('projects.addProject')}</span>
+          </a>
+          <a href="/customers" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
+            <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="users" size={20} bare /></span>
+            <span className="text-sm font-medium truncate">{t('cust.addCustomer')}</span>
+          </a>
+          <a href="/users" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
+            <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="user" size={20} bare /></span>
+            <span className="text-sm font-medium truncate">{t('users.addUser')}</span>
+          </a>
+        </div>
+      )}
+
+      {/* ── Hero KPI + top project metrics ── */}
+      <div className="grid lg:grid-cols-4 gap-4 mb-6 gfade-up">
+        <a href="/projects" className="glass-card glass-card--pad lg:col-span-2 flex flex-col sm:flex-row sm:items-center gap-5 cursor-pointer">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="icon-tile relative" aria-hidden="true">
+                <span className="absolute inset-0.5 rounded-[11px]" style={{ background: 'radial-gradient(circle at 35% 25%, #06B6D438, transparent 72%)' }} />
+                <GlassIcon name="folder" size={38} bare className="relative" />
+              </span>
+              <span className="text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-semibold">{t('dashboard.totalProjects')}</span>
+            </div>
+            <div className="text-5xl font-bold tracking-tight leading-none text-[color:var(--tx)]">{stats.totalProjects}</div>
+            <div className="text-xs text-[color:var(--tx-3)] mt-2">{t('dashboard.allProjects')}</div>
+            <div className="flex flex-wrap gap-2 mt-4">
+              {pieData.map(d => (
+                <span key={d.rawName} className="gbadge inline-flex items-center gap-1.5 text-[color:var(--tx-2)] border-[color:var(--bd-2)] bg-[color:var(--bg-card)]">
+                  <span className="h-2 w-2 rounded-full" style={{ background: COLORS[d.rawName] || '#94a3b8' }} />
+                  {d.name} <b className="text-[color:var(--tx)]">{d.value}</b>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="relative w-[160px] h-[160px] shrink-0 self-center mx-auto sm:mx-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={74} paddingAngle={2} stroke="none">
+                  {pieData.map(d => <Cell key={d.rawName} fill={COLORS[d.rawName] || '#94a3b8'} />)}
+                </Pie>
+                <Tooltip contentStyle={ct.tooltip} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <div className="text-2xl font-bold leading-none text-[color:var(--tx)]">{stats.completionPct}%</div>
+              <div className="text-[10px] text-[color:var(--tx-3)] mt-1">{t('dashboard.overallCompletion')}</div>
+            </div>
+          </div>
+        </a>
         <StatCard icon="flag" tone="blue" label={t('dashboard.runningProjects')} value={stats.running} sub={`${runningPct}% ${t('dashboard.ofTotal')}`} href="/projects?status=Running" ringPct={runningPct} />
         <StatCard icon="target" tone="emerald" label={t('dashboard.completedProjects')} value={stats.completedCount} sub={`${completedPct}% ${t('dashboard.ofTotal')}`} href="/projects?status=Completed" ringPct={completedPct} />
+      </div>
+
+      {/* ── Secondary project + team KPIs ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 gfade-up">
         <StatCard icon="clock" tone="amber" label={t('dashboard.upcomingProjects')} value={stats.upcomingCount} sub={`${upcomingPct}% ${t('dashboard.ofTotal')}`} href="/projects?status=Upcoming" ringPct={upcomingPct} />
         <StatCard icon="x" tone="red" label={t('dashboard.onHoldProjects')} value={stats.onHoldCount} sub={`${onHoldPct}% ${t('dashboard.ofTotal')}`} href={'/projects?status=' + encodeURIComponent('On Hold')} ringPct={onHoldPct} />
         <StatCard icon="users" tone="brand" label={t('dashboard.teamMembers')} value={users.length} sub={t('dashboard.internalExternalUsers')} href="/users" typewriter />
@@ -75,97 +138,80 @@ export default function DashboardPage() {
         <StatCard icon="shield" tone="blue" label={t('dashboard.prApproved')} value={stats.purchaseRequests.approved} sub={t('dashboard.approvedRequests')} href="/purchase-requests?status=Approved" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      {/* ── Purchase requests + daily update activity ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 gfade-up">
         <StatCard icon="bell" tone="red" label={t('dashboard.prUrgent')} value={stats.purchaseRequests.urgent} sub={t('dashboard.urgentCriticalPending')} href="/purchase-requests?status=Pending" />
-        <StatCard icon="receipt" tone="brand" label={t('dashboard.prAllRequests')} value={stats.purchaseRequests.recent.length ? stats.purchaseRequests.pending + stats.purchaseRequests.approved : 0} sub={t('dashboard.viewAll')} href="/purchase-requests"
-          bars={{ values: [stats.purchaseRequests.pending, stats.purchaseRequests.approved, stats.purchaseRequests.urgent], colors: ['#f59e0b', '#3b82f6', '#ef4444'] }} />
+        <div className="lg:col-span-2">
+          <StatCard icon="receipt" tone="brand" label={t('dashboard.prAllRequests')} value={stats.purchaseRequests.recent.length ? stats.purchaseRequests.pending + stats.purchaseRequests.approved : 0} sub={t('dashboard.viewAll')} href="/purchase-requests"
+            bars={{ values: [stats.purchaseRequests.pending, stats.purchaseRequests.approved, stats.purchaseRequests.urgent], colors: ['#f59e0b', '#0EA5E9', '#ef4444'] }} />
+        </div>
         <StatCard icon="chart" tone="emerald" label={t('dashboard.updatesToday')} value={stats.dailyUpdates.today} sub={t('dashboard.submittedToday')} href="/projects" typewriter />
         <StatCard icon="clock" tone="slate" label={t('dashboard.updatesYesterday')} value={stats.dailyUpdates.yesterday} sub={t('dashboard.submittedYesterday')} href="/projects" />
         <StatCard icon="chart" tone="blue" label={t('dashboard.thisWeek')} value={stats.dailyUpdates.thisWeek} sub={t('dashboard.last7Days')} href="/projects" />
         <StatCard icon="bell" tone="red" label={t('dashboard.missingUpdates')} value={stats.dailyUpdates.missing} sub={t('dashboard.assignedNoUpdate')} href="/projects" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* ── Quotation request KPIs ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 gfade-up">
         <StatCard icon="clock" tone="amber" label={t('qr.kpi.pending')} value={stats.quotationRequests.pending} href="/quotation-requests?status=pending" />
         <StatCard icon="target" tone="emerald" label={t('qr.kpi.accepted')} value={stats.quotationRequests.accepted} href="/quotation-requests?status=accepted" />
         <StatCard icon="clock" tone="amber" label={t('qr.kpi.onHold')} value={stats.quotationRequests.onHold} href="/quotation-requests?status=on_hold" />
         <StatCard icon="x" tone="red" label={t('qr.kpi.rejected')} value={stats.quotationRequests.rejected} href="/quotation-requests?status=rejected" />
       </div>
 
-      <div className="grid lg:grid-cols-4 gap-4 mb-6">
+      {/* ── Trend charts ── */}
+      <div className="grid lg:grid-cols-2 gap-4 mb-6 gfade-up">
         <div className="glass-card glass-card--pad">
-          <h3 className="font-medium text-sm mb-3">{t('dashboard.projectStatus')}</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2}>
-                {pieData.map(d => <Cell key={d.rawName} fill={COLORS[d.rawName] || '#94a3b8'} />)}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="glass-card glass-card--pad">
-          <h3 className="font-medium text-sm mb-3">{t('dashboard.projectsStartedMonthly')}</h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <h3 className="font-medium text-sm mb-3 text-[color:var(--tx)]">{t('dashboard.projectsStartedMonthly')}</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={stats.projectsStartedMonthly}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#6B7A4F" strokeWidth={2} dot={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: ct.axis }} stroke={ct.grid} />
+              <YAxis tick={{ fontSize: 10, fill: ct.axis }} stroke={ct.grid} />
+              <Tooltip contentStyle={ct.tooltip} />
+              <Line type="monotone" dataKey="count" stroke={CHART_COLORS[0]} strokeWidth={2.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         <div className="glass-card glass-card--pad">
-          <h3 className="font-medium text-sm mb-3">{t('dashboard.projectValueMonthly')}</h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <h3 className="font-medium text-sm mb-3 text-[color:var(--tx)]">{t('dashboard.projectValueMonthly')}</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={stats.projectValueMonthly}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip formatter={v => '$' + fmtCompact(v)} />
-              <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: ct.axis }} stroke={ct.grid} />
+              <YAxis tick={{ fontSize: 10, fill: ct.axis }} stroke={ct.grid} />
+              <Tooltip contentStyle={ct.tooltip} formatter={v => '$' + fmtCompact(v)} />
+              <Bar dataKey="value" fill={CHART_COLORS[1]} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-        <div className="glass-card glass-card--pad flex flex-col items-center justify-center">
-          <h3 className="font-medium text-sm mb-3 self-start">{t('dashboard.completionProgress')}</h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: 'done', value: stats.completionPct, fill: '#6B7A4F' }]} startAngle={90} endAngle={-270}>
-              <RadialBar dataKey="value" cornerRadius={10} background clockWise />
-            </RadialBarChart>
-          </ResponsiveContainer>
-          <div className="text-2xl font-semibold -mt-16">{stats.completionPct}%</div>
-          <div className="text-xs text-[#6B6B63] mt-14">{t('dashboard.overallCompletion')}</div>
-        </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4 mb-6">
+      {/* ── Recent project lists ── */}
+      <div className="grid lg:grid-cols-3 gap-4 mb-6 gfade-up">
         <ProjectListCard title={t('dashboard.runningProjectsList')} projects={stats.runningProjects} dateKey="end_date" dateLabel={t('dashboard.end')} noneLabel={t('dashboard.noneYet')} />
         <ProjectListCard title={t('dashboard.recentlyCompleted')} projects={stats.recentlyCompleted} dateKey="end_date" dateLabel={t('dashboard.end')} noneLabel={t('dashboard.noneYet')} />
         <ProjectListCard title={t('dashboard.upcomingProjectsList')} projects={stats.upcomingProjects} dateKey="start_date" dateLabel={t('dashboard.start')} noneLabel={t('dashboard.noneYet')} />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      {/* ── Latest purchase requests + activity feed ── */}
+      <div className="grid lg:grid-cols-2 gap-4 gfade-up">
         <div className="glass-card glass-card--pad">
-          <h3 className="font-medium text-sm mb-3">{t('dashboard.latestPurchaseRequests')}</h3>
+          <h3 className="font-medium text-sm mb-3 text-[color:var(--tx)]">{t('dashboard.latestPurchaseRequests')}</h3>
           {stats.purchaseRequests.recent.length === 0 ? (
-            <div className="text-sm text-[#8C8A80] py-6 text-center">{t('dashboard.noPurchaseRequestsYet')}</div>
+            <div className="text-sm text-[color:var(--tx-3)] py-6 text-center">{t('dashboard.noPurchaseRequestsYet')}</div>
           ) : (
             <ul className="space-y-1">
               {stats.purchaseRequests.recent.map(r => (
                 <li key={r.id}>
                   <button type="button" onClick={() => { window.location.href = '/projects/' + r.project_id + '?tab=purchase-requests'; }}
-                    className="w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                    className="w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-[color:var(--pr-soft)] transition">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium truncate">{r.material_description}</span>
+                      <span className="font-medium truncate text-[color:var(--tx)]">{r.material_description}</span>
                       <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (PR_STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span>
                     </div>
-                    <div className="text-xs text-[#6B6B63]">{r.project_name} · {trEnum(t, 'status', r.priority)} · {formatDate(r.created_at)}</div>
+                    <div className="text-xs text-[color:var(--tx-3)]">{r.project_name} · {trEnum(t, 'status', r.priority)} · {formatDate(r.created_at)}</div>
                   </button>
                 </li>
               ))}
@@ -194,21 +240,21 @@ function RecentNotificationsCard({ t, formatDate }) {
 
   return (
     <div className="glass-card glass-card--pad">
-      <h3 className="font-medium text-sm mb-3">{t('dashboard.recentNotifications')}</h3>
+      <h3 className="font-medium text-sm mb-3 text-[color:var(--tx)]">{t('dashboard.recentNotifications')}</h3>
       {notifications.length === 0 ? (
-        <div className="text-sm text-[#8C8A80] py-6 text-center">{t('shell.noNotificationsYet')}</div>
+        <div className="text-sm text-[color:var(--tx-3)] py-6 text-center">{t('shell.noNotificationsYet')}</div>
       ) : (
         <ul className="space-y-1">
           {notifications.map(n => (
             <li key={n.id}>
               <button type="button" onClick={() => open(n)}
-                className={'w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition ' + (n.is_read ? 'opacity-60' : '')}>
+                className={'w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-[color:var(--pr-soft)] transition ' + (n.is_read ? 'opacity-60' : '')}>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium truncate">{n.title}</span>
+                  <span className="font-medium truncate text-[color:var(--tx)]">{n.title}</span>
                   {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />}
                 </div>
-                {n.body && <div className="text-xs text-[#6B6B63] truncate">{n.body}</div>}
-                <div className="text-[11px] text-[#8C8A80]">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                {n.body && <div className="text-xs text-[color:var(--tx-3)] truncate">{n.body}</div>}
+                <div className="text-[11px] text-[color:var(--tx-4)]">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
               </button>
             </li>
           ))}
@@ -221,11 +267,11 @@ function RecentNotificationsCard({ t, formatDate }) {
 function ExternalDashboard({ stats, error }) {
   const { t, formatDate } = useLanguage();
   if (error) return <Shell active="/dashboard"><div className="text-red-500">{error}</div></Shell>;
-  if (!stats) return <Shell active="/dashboard"><div className="text-[#8C8A80]">{t('dashboard.loading')}</div></Shell>;
+  if (!stats) return <Shell active="/dashboard"><div className="text-[color:var(--tx-3)]">{t('dashboard.loading')}</div></Shell>;
 
   return (
     <Shell active="/dashboard">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 gfade-up">
         <StatCard icon="folder" tone="brand" label={t('dashboard.myProjects')} value={stats.totalProjects} href="/projects" />
         <StatCard icon="flag" tone="blue" label={t('dashboard.running')} value={stats.running} href="/projects" />
         <StatCard icon="target" tone="emerald" label={t('dashboard.completed')} value={stats.completed} href="/projects" />
@@ -234,35 +280,35 @@ function ExternalDashboard({ stats, error }) {
         <StatCard icon="bell" tone="red" label={t('dashboard.notifications')} value={stats.notifications.unread} sub={t('dashboard.unread')} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid lg:grid-cols-3 gap-4 mb-6 gfade-up">
         {stats.projects.map(p => (
           <a key={p.id} href={'/projects/' + p.id} className="glass-card glass-card--pad hover:border-brand-600/40 transition">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-medium truncate">{p.project_name}</span>
+              <span className="font-medium truncate text-[color:var(--tx)]">{p.project_name}</span>
               <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span>
             </div>
-            <div className="text-xs text-[#6B6B63]">{p.customer_name}</div>
+            <div className="text-xs text-[color:var(--tx-3)]">{p.customer_name}</div>
             <div className="h-1.5 rounded-full bg-black/10 dark:bg-white/10 mt-3 overflow-hidden">
               <div className="h-full bg-brand-600" style={{ width: `${p.progress || 0}%` }} />
             </div>
           </a>
         ))}
-        {stats.projects.length === 0 && <div className="text-sm text-[#8C8A80] py-6 text-center col-span-3">{t('dashboard.noProjectsAssigned')}</div>}
+        {stats.projects.length === 0 && <div className="text-sm text-[color:var(--tx-3)] py-6 text-center col-span-3">{t('dashboard.noProjectsAssigned')}</div>}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-4 gfade-up">
         <div className="glass-card glass-card--pad">
-          <h3 className="font-medium text-sm mb-3">{t('dashboard.myRecentPurchaseRequests')}</h3>
-          {stats.purchaseRequests.recent.length === 0 ? <div className="text-sm text-[#8C8A80] py-6 text-center">{t('dashboard.noneYet')}</div> : (
+          <h3 className="font-medium text-sm mb-3 text-[color:var(--tx)]">{t('dashboard.myRecentPurchaseRequests')}</h3>
+          {stats.purchaseRequests.recent.length === 0 ? <div className="text-sm text-[color:var(--tx-3)] py-6 text-center">{t('dashboard.noneYet')}</div> : (
             <ul className="space-y-1">
               {stats.purchaseRequests.recent.map(r => (
                 <li key={r.id}>
-                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-[color:var(--pr-soft)] transition">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium truncate">{r.material_description}</span>
-                      <span className="text-xs text-[#8C8A80] shrink-0">{trEnum(t, 'status', r.status)}</span>
+                      <span className="font-medium truncate text-[color:var(--tx)]">{r.material_description}</span>
+                      <span className="text-xs text-[color:var(--tx-3)] shrink-0">{trEnum(t, 'status', r.status)}</span>
                     </div>
-                    <div className="text-xs text-[#6B6B63]">{r.project_name}</div>
+                    <div className="text-xs text-[color:var(--tx-3)]">{r.project_name}</div>
                   </a>
                 </li>
               ))}
@@ -270,17 +316,17 @@ function ExternalDashboard({ stats, error }) {
           )}
         </div>
         <div className="glass-card glass-card--pad">
-          <h3 className="font-medium text-sm mb-3">{t('dashboard.myRecentDailyUpdates')}</h3>
-          {stats.dailyUpdates.recent.length === 0 ? <div className="text-sm text-[#8C8A80] py-6 text-center">{t('dashboard.noneYet')}</div> : (
+          <h3 className="font-medium text-sm mb-3 text-[color:var(--tx)]">{t('dashboard.myRecentDailyUpdates')}</h3>
+          {stats.dailyUpdates.recent.length === 0 ? <div className="text-sm text-[color:var(--tx-3)] py-6 text-center">{t('dashboard.noneYet')}</div> : (
             <ul className="space-y-1">
               {stats.dailyUpdates.recent.map(u => (
                 <li key={u.id}>
-                  <a href={'/projects/' + u.project_id + '?tab=daily-updates'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                  <a href={'/projects/' + u.project_id + '?tab=daily-updates'} className="block text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-[color:var(--pr-soft)] transition">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium truncate">{u.project_name}</span>
-                      <span className="text-xs text-[#8C8A80] shrink-0">{trEnum(t, 'status', u.status)}</span>
+                      <span className="font-medium truncate text-[color:var(--tx)]">{u.project_name}</span>
+                      <span className="text-xs text-[color:var(--tx-3)] shrink-0">{trEnum(t, 'status', u.status)}</span>
                     </div>
-                    <div className="text-xs text-[#6B6B63]">{u.update_date}</div>
+                    <div className="text-xs text-[color:var(--tx-3)]">{u.update_date}</div>
                   </a>
                 </li>
               ))}
@@ -300,20 +346,20 @@ function ProjectListCard({ title, projects, dateKey, dateLabel, noneLabel }) {
   const { t } = useLanguage();
   return (
     <div className="glass-card glass-card--pad">
-      <h3 className="font-medium text-sm mb-3">{title}</h3>
+      <h3 className="font-medium text-sm mb-3 text-[color:var(--tx)]">{title}</h3>
       {projects.length === 0 ? (
-        <div className="text-sm text-[#8C8A80] py-6 text-center">{noneLabel || t('dashboard.noneYet')}</div>
+        <div className="text-sm text-[color:var(--tx-3)] py-6 text-center">{noneLabel || t('dashboard.noneYet')}</div>
       ) : (
         <ul className="space-y-1">
           {projects.map(p => (
             <li key={p.id}>
               <button type="button" onClick={() => { window.location.href = '/projects/' + p.id; }}
-                className="w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                className="w-full text-start text-sm rounded-lg -mx-2 px-2 py-2 hover:bg-[color:var(--pr-soft)] transition">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium truncate">{p.project_name}</span>
+                  <span className="font-medium truncate text-[color:var(--tx)]">{p.project_name}</span>
                   <span className={'px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span>
                 </div>
-                <div className="text-xs text-[#6B6B63]">{p.customer_name} · {dateLabel} {p[dateKey] || '—'}</div>
+                <div className="text-xs text-[color:var(--tx-3)]">{p.customer_name} · {dateLabel} {p[dateKey] || '—'}</div>
               </button>
             </li>
           ))}

@@ -64,7 +64,7 @@ export default function QuotesPage() {
       <div className="glass-card overflow-hidden">
         <div className="overflow-auto max-h-[70vh]">
           <table className="w-full text-sm min-w-[900px]">
-            <thead className="sticky top-0 z-10 bg-white dark:bg-[#1B1B14] border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
               <tr>
                 <Th>{t('oq.col.name')}</Th>
                 <Th>{t('oq.col.contact')}</Th>
@@ -76,12 +76,12 @@ export default function QuotesPage() {
             </thead>
             <tbody>
               {!data ? (
-                <tr><td colSpan={6} className="px-3 py-8 text-center text-sm text-[#8C8A80]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={6} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState text={t('oq.noQuotesFound')} /></td></tr>
               ) : filtered.map(r => (
                 <tr key={r.id} onClick={() => { window.location.href = '/quotes/' + r.id; }}
-                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[color:var(--pr-soft)]">
                   <Td>{r.name || '—'}</Td>
                   <Td className="max-w-[180px] truncate"><span dir="ltr">{r.email || r.phone || '—'}</span></Td>
                   <Td className="max-w-[160px] truncate">{r.product || '—'}</Td>
@@ -91,7 +91,7 @@ export default function QuotesPage() {
                     <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
                       <a href={'/quotes/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm">{t('oq.view')}</a>
                       {softDeleteEnabled && (
-                        <button disabled={busyId === r.id} onClick={() => deleteQuote(r.id)} className="text-[#BC6B4E] hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.delete')}</button>
+                        <button disabled={busyId === r.id} onClick={() => deleteQuote(r.id)} className="text-[#ef4444] hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.delete')}</button>
                       )}
                     </div>
                   </Td>

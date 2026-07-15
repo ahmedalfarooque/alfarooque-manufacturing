@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  /* Barrel-optimize heavy UI packages (recharts): Next rewrites the barrel
+     import to direct deep imports at compile time — faster dev compile and
+     a smaller dashboard bundle, no code change. */
+  experimental: { optimizePackageImports: ['recharts'] },
   /* Local Windows quirk: a stale dev server can hold an exclusive lock
      on .next/trace, aborting every subsequent `next build` with EPERM.
      NEXT_DIST_DIR lets local builds/starts target a fresh dir without

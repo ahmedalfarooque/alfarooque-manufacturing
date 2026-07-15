@@ -136,7 +136,7 @@ export default function MaterialEditDialog({ material, materialId, context = 'ma
   if (!form) {
     return (
       <Modal title={t('matdlg.title')} onClose={() => onDone({ action: 'cancel' })} wide>
-        <div className="text-sm text-[#8C8A80]">{err || t('shell.loading')}</div>
+        <div className="text-sm text-[color:var(--tx-3)]">{err || t('shell.loading')}</div>
       </Modal>
     );
   }
@@ -177,8 +177,8 @@ export default function MaterialEditDialog({ material, materialId, context = 'ma
         <Field label={t('f.wastePct')}><Input type="number" step="0.01" dir="ltr" value={form.default_waste_pct} onChange={set('default_waste_pct')} /></Field>
         <Field label={t('f.notes')} className="md:col-span-3"><Textarea value={form.notes} onChange={set('notes')} /></Field>
 
-        <div className="md:col-span-3 text-[12px] text-[#8C8A80]">{t('materials.priceEditNote')}</div>
-        {err && <div className="md:col-span-3 text-sm text-[#BC6B4E]">{err}</div>}
+        <div className="md:col-span-3 text-[12px] text-[color:var(--tx-3)]">{t('materials.priceEditNote')}</div>
+        {err && <div className="md:col-span-3 text-sm text-[#ef4444]">{err}</div>}
 
         {confirming && dirty && (
           <div className="md:col-span-3 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-sm">
@@ -192,17 +192,17 @@ export default function MaterialEditDialog({ material, materialId, context = 'ma
             <Button disabled={busy || !dirty || !(form.name_en || form.name_ar)} onClick={doSave}>
               {busy ? t('common.saving') : t('common.save')}
             </Button>
-            <span className="text-[11px] text-[#8C8A80] leading-snug">{t('matdlg.saveHint')}</span>
+            <span className="text-[11px] text-[color:var(--tx-3)] leading-snug">{t('matdlg.saveHint')}</span>
           </div>
           <div className="flex flex-col gap-1">
             <Button variant="ghost" disabled={busy || !(form.name_en || form.name_ar)} onClick={doSaveAsNew}>
               {t('matdlg.saveAsNew')}
             </Button>
-            <span className="text-[11px] text-[#8C8A80] leading-snug">{t('matdlg.saveAsNewHint')}</span>
+            <span className="text-[11px] text-[color:var(--tx-3)] leading-snug">{t('matdlg.saveAsNewHint')}</span>
           </div>
           <div className="flex flex-col gap-1">
             <Button variant="ghost" disabled={busy} onClick={doClose}>{t('common.close')}</Button>
-            <span className="text-[11px] text-[#8C8A80] leading-snug">
+            <span className="text-[11px] text-[color:var(--tx-3)] leading-snug">
               {context === 'document' ? t('matdlg.closeHintDoc') : t('matdlg.closeHintMaster')}
             </span>
           </div>

@@ -14,7 +14,7 @@ const STATUS_BADGE = {
   Overdue: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
 
-const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#3d3d33] dark:hover:text-white/90 transition-colors';
+const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[color:var(--tx)] transition-colors';
 
 export default function MaintenanceSchedulePage() {
   const { t } = useLanguage();
@@ -69,12 +69,12 @@ export default function MaintenanceSchedulePage() {
   return (
     <Shell active="/maintenance-schedule">
       <h2 className="text-lg font-semibold mb-1">{t('maintSchedule.title')}</h2>
-      <p className="text-xs text-[#8C8A80] mb-4">{t('maintSchedule.subtitle')}</p>
+      <p className="text-xs text-[color:var(--tx-3)] mb-4">{t('maintSchedule.subtitle')}</p>
       <Input placeholder={t('maintSchedule.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm mb-4" />
-      {error && <div className="text-[#BC6B4E] text-sm">{error}</div>}
+      {error && <div className="text-[#ef4444] text-sm">{error}</div>}
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur-sm border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
             <tr>
               <Th><span onClick={() => toggleSort('vehicle_number')} className={sortHeaderCls}>{t('maintSchedule.colVehicle')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
               <Th><span onClick={() => toggleSort('maintenance_type')} className={sortHeaderCls}>{t('maintSchedule.colType')}<SortIndicator column="maintenance_type" sortKey={sortKey} sortDir={sortDir} /></span></Th>
@@ -88,23 +88,23 @@ export default function MaintenanceSchedulePage() {
           </thead>
           <tbody>
             {!items ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('maintSchedule.loading')}</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('maintSchedule.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
               <tr><td colSpan={8}><EmptyState text={t('maintSchedule.noMatch')} /></td></tr>
             ) : pageRows.map(m => (
-              <tr key={m.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+              <tr key={m.id} className="hover:bg-[color:var(--pr-soft)]">
                 <Td className="font-medium">{m.vehicle_number}</Td>
                 <Td>{m.maintenance_type}</Td>
                 <Td>{fmt(m.last_service_km)}</Td>
                 <Td>{fmt(m.interval_km)}</Td>
                 <Td>{fmt(m.next_due_km)}</Td>
-                <Td className={m.remaining_km < 0 ? 'text-[#BC6B4E]' : ''}>{fmt(m.remaining_km)} {t('common.km')}</Td>
+                <Td className={m.remaining_km < 0 ? 'text-[#ef4444]' : ''}>{fmt(m.remaining_km)} {t('common.km')}</Td>
                 <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{trEnum(t, 'status', m.status)}</span></Td>
                 {isAdmin && (
                   <Td className="text-end">
                     <div className="flex items-center justify-end gap-3">
                       <button onClick={() => setModal(m)} title={t('maintSchedule.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎ {t('maintSchedule.edit')}</button>
-                      <button onClick={() => deleteItem(m.id)} title={t('maintSchedule.delete')} className="text-[#BC6B4E] hover:underline">🗑 {t('maintSchedule.delete')}</button>
+                      <button onClick={() => deleteItem(m.id)} title={t('maintSchedule.delete')} className="text-[#ef4444] hover:underline">🗑 {t('maintSchedule.delete')}</button>
                     </div>
                   </Td>
                 )}
@@ -114,7 +114,7 @@ export default function MaintenanceSchedulePage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('maintSchedule.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -123,9 +123,9 @@ export default function MaintenanceSchedulePage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">›</button>
         </div>
       </div>
 
@@ -157,7 +157,7 @@ function ScheduleModal({ item, onClose, onSave }) {
   return (
     <Modal title={t('maintSchedule.editTitle', { vehicle: item.vehicle_number })} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
+        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('maintSchedule.type')} required className="col-span-2">
             <Input value={form.maintenance_type} onChange={set('maintenance_type')} required />

@@ -105,16 +105,16 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
             </tr></thead>
             <tbody>
               {rows === null ? (
-                <tr><Td colSpan={columns.length + 1} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                <tr><Td colSpan={columns.length + 1} className="text-center text-[color:var(--tx-3)]">{t('shell.loading')}</Td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={columns.length + 1}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(row => (
                 <tr key={row.id} onClick={() => open(row)}
-                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[color:var(--pr-soft)]">
                   {columns.map(c => <Td key={c.key}>{display(row, c)}</Td>)}
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
                     <button onClick={() => open(row)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</button>
-                    <button onClick={() => remove(row)} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                    <button onClick={() => remove(row)} className="text-[#ef4444] hover:underline text-sm">{t('common.delete')}</button>
                   </Td>
                 </tr>
               ))}
@@ -144,7 +144,7 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
                 )}
               </Field>
             ))}
-            {err && <div className="md:col-span-2 text-sm text-[#BC6B4E]">{err}</div>}
+            {err && <div className="md:col-span-2 text-sm text-[#ef4444]">{err}</div>}
             <div className="md:col-span-2 flex justify-end gap-2 pt-1">
               <Button variant="ghost" onClick={() => setModal(null)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>

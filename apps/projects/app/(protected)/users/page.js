@@ -73,7 +73,7 @@ export default function UsersPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('users.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('users.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('users.breadcrumb')}</p>
         </div>
         <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('users.addUser')}</Button>
       </div>
@@ -82,12 +82,12 @@ export default function UsersPage() {
         <Input placeholder={t('users.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="w-full max-w-md" />
       </div>
 
-      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
 
       <div className="glass-card overflow-hidden">
         <div className="overflow-auto max-h-[70vh]">
           <table className="w-full text-sm min-w-[950px]">
-            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
               <tr>
                 <Th><span onClick={() => toggleSort('full_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.name')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
                 <Th><span onClick={() => toggleSort('email')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.email')}<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></span></Th>
@@ -101,12 +101,12 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {!data ? (
-                <tr><td colSpan={8} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : users.length === 0 ? (
                 <tr><td colSpan={8}><EmptyState text={t('users.noUsersYet')} /></td></tr>
               ) : users.map(u => (
                 <tr key={u.id} onClick={() => setModal({ mode: 'edit', data: u })}
-                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[color:var(--pr-soft)]">
                   <Td className="font-medium">{u.full_name}</Td>
                   <Td>{u.email}</Td>
                   <Td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (ROLE_BADGE[u.role] || '')}>{t('role.' + u.role)}</span></Td>
@@ -116,7 +116,7 @@ export default function UsersPage() {
                   <Td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (STATUS_BADGE[u.status || 'Active'] || '')}>{t('users.status.' + (u.status || 'Active').toLowerCase())}</span></Td>
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
                     <button onClick={() => setModal({ mode: 'edit', data: u })} title={t('common.edit')} className="text-brand-600 dark:text-brand-400 me-3">✎</button>
-                    {me && me.id !== u.id && <button onClick={() => deleteUser(u)} title={t('common.delete')} className="text-[#BC6B4E]">🗑</button>}
+                    {me && me.id !== u.id && <button onClick={() => deleteUser(u)} title={t('common.delete')} className="text-[#ef4444]">🗑</button>}
                   </Td>
                 </tr>
               ))}
@@ -125,7 +125,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: users.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + users.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -167,8 +167,8 @@ function UserModal({ modal, onClose, onSave }) {
     return (
       <Modal title={t('users.modal.userCreatedTitle')} onClose={onClose}>
         <div className="space-y-4">
-          <p className="text-sm text-[#8C8A80]">{t('users.modal.userCreatedNote', { name: form.full_name })}</p>
-          <div className="rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-[#F1EEE7] dark:bg-white/5 px-4 py-3 font-mono text-lg text-center select-all">{tempPassword}</div>
+          <p className="text-sm text-[color:var(--tx-3)]">{t('users.modal.userCreatedNote', { name: form.full_name })}</p>
+          <div className="rounded-lg border border-[color:var(--bd)] bg-[color:var(--pr-soft)] px-4 py-3 font-mono text-lg text-center select-all">{tempPassword}</div>
           <div className="flex justify-end"><Button onClick={onClose}>{t('common.done')}</Button></div>
         </div>
       </Modal>
@@ -178,7 +178,7 @@ function UserModal({ modal, onClose, onSave }) {
   return (
     <Modal title={modal.mode === 'add' ? t('users.modal.addTitle') : t('users.modal.editTitle')} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+        {err && <div className="text-sm text-[#ef4444]">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('users.modal.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required /></Field>
           <Field label={t('users.modal.email')} required={modal.mode === 'add'}><Input type="email" value={form.email || ''} onChange={set('email')} disabled={modal.mode === 'edit'} required={modal.mode === 'add'} className="disabled:opacity-70" /></Field>
@@ -196,7 +196,7 @@ function UserModal({ modal, onClose, onSave }) {
           <Field label={t('users.modal.company')}><Input value={form.company || ''} onChange={set('company')} /></Field>
         </div>
         {modal.mode === 'add' && form.role !== 'admin' && (
-          <p className="text-xs text-[#8C8A80]">{t('users.modal.otpNote')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('users.modal.otpNote')}</p>
         )}
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>

@@ -19,8 +19,8 @@ export const STATUS_BADGE = {
 const ALL_STATUSES = ['pending', 'accepted', 'on_hold', 'rejected'];
 const REFRESH_MS = 15000;
 
-const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition-colors';
-const ACTION_TD = 'px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] text-end whitespace-nowrap';
+const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition-colors';
+const ACTION_TD = 'px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap';
 
 function money(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }); }
 
@@ -97,14 +97,14 @@ export default function QuotationRequestsPage() {
     if (res.ok) refresh();
   }
 
-  if (!isAdmin && me) return <Shell active="/quotation-requests"><div className="text-[#BC6B4E] text-sm">{t('qr.adminOnly')}</div></Shell>;
+  if (!isAdmin && me) return <Shell active="/quotation-requests"><div className="text-[#ef4444] text-sm">{t('qr.adminOnly')}</div></Shell>;
 
   return (
     <Shell active="/quotation-requests">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('qr.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('qr.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('qr.breadcrumb')}</p>
         </div>
       </div>
 
@@ -120,11 +120,11 @@ export default function QuotationRequestsPage() {
         <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
-      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#ef4444] text-sm mb-3">{error}</div>}
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur-sm">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
               <Th className="w-10">#</Th>
               <th onClick={() => toggleSort('quote_number')} className={SORT_TH}>{t('qr.col.quoteNumber')}<SortIndicator column="quote_number" sortKey={sortKey} sortDir={sortDir} /></th>
@@ -138,12 +138,12 @@ export default function QuotationRequestsPage() {
           </thead>
           <tbody>
             {!data ? (
-              <tr><Td colSpan={8} className="text-center text-[#8C8A80]">{t('common.loading')}</Td></tr>
+              <tr><Td colSpan={8} className="text-center text-[color:var(--tx-3)]">{t('common.loading')}</Td></tr>
             ) : pageRows.length === 0 ? (
               <tr><td colSpan={8}><EmptyState text={t('qr.noMatch')} /></td></tr>
             ) : pageRows.map((r, i) => (
               <tr key={r.id} onClick={() => { window.location.href = '/quotation-requests/' + r.id; }}
-                className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors duration-150">
+                className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors duration-150">
                 <Td>{(page - 1) * pageSize + i + 1}</Td>
                 <Td dir="ltr">{r.quote_number}</Td>
                 <Td className="max-w-[160px] truncate">{r.customer_name || '—'}</Td>
@@ -155,18 +155,18 @@ export default function QuotationRequestsPage() {
                   <div className="flex items-center justify-end gap-2 flex-wrap">
                     {r.status === 'pending' && (
                       <>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')} className="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.accept')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')} className="text-xs px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.hold')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.reject')}</button>
+                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
+                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')} className="gbtn gbtn-warning gbtn--sm disabled:opacity-50">{t('qr.hold')}</button>
+                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
                       </>
                     )}
                     {['accepted', 'on_hold'].includes(r.status) && !r.project_id && (
-                      <button disabled={busyId === r.id} onClick={() => startProject(r.id)} className="text-xs px-2.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium transition-colors duration-200 disabled:opacity-50">{t('qr.projectStart')}</button>
+                      <button disabled={busyId === r.id} onClick={() => startProject(r.id)} className="gbtn gbtn-primary gbtn--sm disabled:opacity-50">{t('qr.projectStart')}</button>
                     )}
                     {r.project_id && (
-                      <a href={'/projects/' + r.project_id} className="text-xs px-2.5 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">↗ {t('qr.openProject')}</a>
+                      <a href={'/projects/' + r.project_id} className="text-xs px-2.5 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors duration-200">↗ {t('qr.openProject')}</a>
                     )}
-                    <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#BC6B4E] hover:opacity-70 transition-opacity">🗑</button>
+                    <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#ef4444] hover:opacity-70 transition-opacity">🗑</button>
                   </div>
                 </td>
               </tr>
@@ -175,7 +175,7 @@ export default function QuotationRequestsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -184,9 +184,9 @@ export default function QuotationRequestsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">‹</button>
           <span className="px-3 py-1.5">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">›</button>
         </div>
       </div>
     </Shell>

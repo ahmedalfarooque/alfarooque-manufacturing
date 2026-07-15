@@ -20,8 +20,8 @@ function emailHtml({ qn, customerName, link, isAr }) {
     ? { title: 'طلب مشروع جديد', intro: 'تم استلام عرض سعر جاهز للتحويل إلى المشاريع.', number: 'رقم العرض', customer: 'العميل', amount: 'القيمة', btn: 'عرض الطلب' }
     : { title: 'New Project Request', intro: 'A quotation has been received, ready to be transferred to Projects.', number: 'Quotation', customer: 'Customer', amount: 'Value', btn: 'View Request' };
   return `
-  <div dir="${isAr ? 'rtl' : 'ltr'}" style="font-family:Segoe UI,Tahoma,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e5e2dd;border-radius:12px;overflow:hidden">
-    <div style="background:#46512F;color:#fff;padding:18px 22px;font-size:17px;font-weight:700">${L.title}</div>
+  <div dir="${isAr ? 'rtl' : 'ltr'}" style="font-family:Segoe UI,Tahoma,sans-serif;max-width:560px;margin:0 auto;border:1px solid #d6e7ec;border-radius:12px;overflow:hidden">
+    <div style="background:#0E7490;color:#fff;padding:18px 22px;font-size:17px;font-weight:700">${L.title}</div>
     <div style="padding:22px;color:#333;font-size:14px;line-height:1.7">
       <p>${L.intro}</p>
       <table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0">
@@ -30,7 +30,7 @@ function emailHtml({ qn, customerName, link, isAr }) {
         <tr><td style="padding:6px 0;color:#777">${L.amount}</td><td style="text-align:${isAr ? 'left' : 'right'};font-weight:700" dir="ltr">${money(qn.grand_total)} SAR</td></tr>
       </table>
       <p style="text-align:center;margin:22px 0">
-        <a href="${link}" style="background:#6B7A4F;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600;display:inline-block">${L.btn}</a>
+        <a href="${link}" style="background:#0891B2;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600;display:inline-block">${L.btn}</a>
       </p>
     </div>
   </div>`;

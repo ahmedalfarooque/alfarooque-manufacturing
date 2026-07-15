@@ -162,7 +162,7 @@ export default function PurchaseRequestsPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('pr.title')}</h2>
-          <p className="text-xs text-slate-500">{t('pr.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('pr.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
           <Button variant="ghost" onClick={exportExcel}>⤓ {t('common.exportExcel')}</Button>
@@ -190,7 +190,7 @@ export default function PurchaseRequestsPage() {
               <XAxis dataKey="month" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#6B7A4F" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="count" stroke="#06B6D4" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -241,26 +241,26 @@ export default function PurchaseRequestsPage() {
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="sticky top-0 z-10 bg-[#F7F5F1] dark:bg-[#1B1B14]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
               <Th>#</Th>
-              <th onClick={() => toggleSort('request_date')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('pr.col.date')}<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('project_name')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('pr.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('request_date')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('pr.col.date')}<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('project_name')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('pr.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
               <Th>{t('pr.col.materials')}</Th>
-              <th onClick={() => toggleSort('priority')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('pr.col.priority')}<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('priority')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('pr.col.priority')}<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
               <Th>{t('pr.col.requestedBy')}</Th>
-              <th onClick={() => toggleSort('status')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[#1A1A18] dark:hover:text-[#F5F3EE] transition">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
               <Th className="text-end">{t('common.actions')}</Th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[#8C8A80]">{t('pr.noMatch')}</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[color:var(--tx-3)]">{t('pr.noMatch')}</td></tr>
             ) : pageRows.map((r, i) => (
               <tr key={r.id} onClick={() => { window.location.href = '/purchase-requests/' + r.id; }}
-                className="cursor-pointer hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] transition-colors duration-150">
+                className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors duration-150">
                 <Td>{(page - 1) * pageSize + i + 1}</Td>
                 <Td>{r.request_date}</Td>
                 <Td className="max-w-[160px] truncate">{r.project_name}</Td>
@@ -268,10 +268,10 @@ export default function PurchaseRequestsPage() {
                 <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></Td>
                 <Td>{r.requested_by_name || '—'}</Td>
                 <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
-                <td className="px-3 py-2.5 text-sm border-t border-[#E5E2DD]/70 dark:border-white/[0.06] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
-                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-[#8C8A80] hover:text-[#1A1A18] dark:hover:text-[#F5F3EE]">{'\u{1F441}'}</a>
+                <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
+                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</a>
                   <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-600 dark:text-brand-400 hover:underline">↗</a>
-                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#BC6B4E] hover:underline">🗑</button>
+                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#ef4444] hover:underline">🗑</button>
                 </td>
               </tr>
             ))}
@@ -279,7 +279,7 @@ export default function PurchaseRequestsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">

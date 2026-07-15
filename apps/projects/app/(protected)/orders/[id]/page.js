@@ -59,7 +59,7 @@ export default function OrderDetailPage() {
   }
 
   if (error) return <Shell active="/orders"><div className="text-red-500">{error}</div></Shell>;
-  if (!order) return <Shell active="/orders"><div className="text-[#8C8A80]">{t('common.loading')}</div></Shell>;
+  if (!order) return <Shell active="/orders"><div className="text-[color:var(--tx-3)]">{t('common.loading')}</div></Shell>;
 
   const name = order.guest_name || order.customer_name || '—';
   const email = order.guest_email || order.customer_email || '—';
@@ -75,18 +75,18 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="glass-card p-4 space-y-2 text-sm">
-          <div className="font-medium text-[#8C8A80] text-xs mb-1">{t('oq.customerInfo')}</div>
-          <div className="flex justify-between"><span className="text-[#8C8A80]">{t('oq.col.customer')}</span><span>{name}</span></div>
-          <div className="flex justify-between"><span className="text-[#8C8A80]">{t('oq.col.email')}</span><span dir="ltr">{email}</span></div>
-          <div className="flex justify-between"><span className="text-[#8C8A80]">{t('oq.col.total')}</span><span dir="ltr">{money(order.grand_total)}</span></div>
-          {order.delivery_address && <div className="flex justify-between"><span className="text-[#8C8A80]">{t('oq.deliveryAddress')}</span><span className="max-w-[60%] text-end">{order.delivery_address}</span></div>}
+          <div className="font-medium text-[color:var(--tx-3)] text-xs mb-1">{t('oq.customerInfo')}</div>
+          <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('oq.col.customer')}</span><span>{name}</span></div>
+          <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('oq.col.email')}</span><span dir="ltr">{email}</span></div>
+          <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('oq.col.total')}</span><span dir="ltr">{money(order.grand_total)}</span></div>
+          {order.delivery_address && <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('oq.deliveryAddress')}</span><span className="max-w-[60%] text-end">{order.delivery_address}</span></div>}
         </div>
 
         {Array.isArray(order.items) && order.items.length > 0 && (
           <div className="glass-card p-4 text-sm">
-            <div className="font-medium text-[#8C8A80] text-xs mb-2">{t('oq.items')}</div>
+            <div className="font-medium text-[color:var(--tx-3)] text-xs mb-2">{t('oq.items')}</div>
             {order.items.map((it, i) => (
-              <div key={i} className="flex justify-between py-1 border-b last:border-0 border-[#E5E2DD]/70 dark:border-white/[0.06]">
+              <div key={i} className="flex justify-between py-1 border-b last:border-0 border-[color:var(--bd)]">
                 <span>{(lang === 'ar' && (it.product?.name_ar || it.name_ar)) || it.name} × {it.qty}</span><span dir="ltr">{money(it.price * it.qty)}</span>
               </div>
             ))}
@@ -113,7 +113,7 @@ export default function OrderDetailPage() {
         <div className="glass-card p-4 flex flex-wrap items-center gap-2">
           <Button disabled={busy} onClick={save}>{t('oq.save')}</Button>
           <Button variant="danger" disabled={busy} onClick={deleteOrder}>{t('oq.delete')}</Button>
-          <a href="/orders" className="text-sm text-[#8C8A80] hover:underline ms-auto">‹ {t('oq.ordersTitle')}</a>
+          <a href="/orders" className="text-sm text-[color:var(--tx-3)] hover:underline ms-auto">‹ {t('oq.ordersTitle')}</a>
         </div>
       </div>
     </Shell>

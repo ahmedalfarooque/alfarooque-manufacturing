@@ -60,7 +60,7 @@ export default function CustomersPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('cust.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('cust.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('cust.breadcrumb')}</p>
         </div>
         {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('cust.addCustomer')}</Button>}
       </div>
@@ -69,12 +69,12 @@ export default function CustomersPage() {
         <Input placeholder={t('cust.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="w-full max-w-md" />
       </div>
 
-      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
 
       <div className="glass-card overflow-hidden">
         <div className="overflow-auto max-h-[70vh]">
           <table className="w-full text-sm min-w-[950px]">
-            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
               <tr>
                 <Th><span onClick={() => toggleSort('full_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.fullName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
                 <Th><span onClick={() => toggleSort('company_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
@@ -89,12 +89,12 @@ export default function CustomersPage() {
             </thead>
             <tbody>
               {!data ? (
-                <tr><td colSpan={9} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : customers.length === 0 ? (
                 <tr><td colSpan={9}><EmptyState text={t('cust.noCustomersYet')} /></td></tr>
               ) : customers.map(c => (
                 <tr key={c.id} onClick={() => setModal({ mode: 'view', data: c })}
-                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[color:var(--pr-soft)]">
                   <Td className="font-medium">{c.full_name}</Td>
                   <Td>{c.company_name || '—'}</Td>
                   <Td>{c.email || '—'}</Td>
@@ -104,9 +104,9 @@ export default function CustomersPage() {
                   <Td>{c.city || '—'}</Td>
                   <Td>{formatDate(c.created_at)}</Td>
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => setModal({ mode: 'view', data: c })} title={t('common.view')} className="text-[#8C8A80] me-3">{'\u{1F441}'}</button>
+                    <button onClick={() => setModal({ mode: 'view', data: c })} title={t('common.view')} className="text-[color:var(--tx-3)] me-3">{'\u{1F441}'}</button>
                     {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: c })} title={t('common.edit')} className="text-brand-600 dark:text-brand-400 me-3">✎</button>}
-                    {isAdmin && <button onClick={() => deleteCustomer(c.id)} title={t('common.delete')} className="text-[#BC6B4E]">🗑</button>}
+                    {isAdmin && <button onClick={() => deleteCustomer(c.id)} title={t('common.delete')} className="text-[#ef4444]">🗑</button>}
                   </Td>
                 </tr>
               ))}
@@ -115,7 +115,7 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: customers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + customers.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -155,7 +155,7 @@ export function CustomerModal({ modal, isAdmin, onClose, onSave }) {
   return (
     <Modal title={modal.mode === 'add' ? t('cust.modal.addTitle') : modal.mode === 'edit' ? t('cust.modal.editTitle') : t('cust.modal.viewTitle')} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+        {err && <div className="text-sm text-[#ef4444]">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('cust.f.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required disabled={readOnly} className="disabled:opacity-70" /></Field>
           <Field label={t('cust.f.companyName')}><Input value={form.company_name || ''} onChange={set('company_name')} disabled={readOnly} className="disabled:opacity-70" /></Field>
@@ -170,7 +170,7 @@ export function CustomerModal({ modal, isAdmin, onClose, onSave }) {
             <Field label={t('cust.f.notes')}><Textarea value={form.notes || ''} onChange={set('notes')} disabled={readOnly} className="disabled:opacity-70" /></Field>
           </div>
           {modal.data.created_at && (
-            <div className="col-span-2 text-xs text-[#8C8A80]">{t('cust.dateCreated', { date: formatDate(modal.data.created_at, { dateStyle: 'medium', timeStyle: 'short' }) })}</div>
+            <div className="col-span-2 text-xs text-[color:var(--tx-3)]">{t('cust.dateCreated', { date: formatDate(modal.data.created_at, { dateStyle: 'medium', timeStyle: 'short' }) })}</div>
           )}
         </div>
         <div className="flex justify-end gap-2 pt-2">

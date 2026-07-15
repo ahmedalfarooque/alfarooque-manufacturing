@@ -84,7 +84,7 @@ export default function AppSwitcherButtons({ user }) {
             title={L[id]}
             className={
               'glass-ctrl app-switch-btn' +
-              (isActive ? ' !bg-brand-600 !text-white !border-transparent' : '')
+              (isActive ? ' !bg-[color:var(--pr-soft)] !text-[color:var(--pr)] !border-[rgba(6,182,212,0.4)]' : '')
             }
           >
             <span className="ctrl-label whitespace-nowrap">

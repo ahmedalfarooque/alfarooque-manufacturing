@@ -40,7 +40,7 @@ export default function SuppliersPage() {
     <>
       {msg && (
         <div className="fixed top-20 inset-x-0 z-50 flex justify-center px-4">
-          <div className="glass-card bg-white dark:bg-[#1B1B14] px-4 py-2 text-sm shadow-xl" onClick={() => setMsg(null)}>{msg}</div>
+          <div className="glass-card px-4 py-2 text-sm shadow-xl" onClick={() => setMsg(null)}>{msg}</div>
         </div>
       )}
       <MasterList active="/suppliers" api="/api/suppliers" titleKey="nav.suppliers"

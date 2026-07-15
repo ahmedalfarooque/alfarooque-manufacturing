@@ -43,7 +43,7 @@ function DimensionsCard({ product, setProduct, t }) {
           </Field>
         ))}
       </div>
-      <div className="text-[11px] text-[#8C8A80] mt-2">{t('catalogue.dimensionsNote')}</div>
+      <div className="text-[11px] text-[color:var(--tx-3)] mt-2">{t('catalogue.dimensionsNote')}</div>
     </div>
   );
 }
@@ -90,7 +90,7 @@ function ImagesCard({ product, setProduct, id, t }) {
         onDrop={e => { e.preventDefault(); setDrag(false); upload(e.dataTransfer.files); }}
         onClick={() => inputRef.current && inputRef.current.click()}
         className={'cursor-pointer rounded-xl border-2 border-dashed p-4 text-center text-sm transition-colors ' +
-          (drag ? 'border-brand-600 bg-brand-600/10' : 'border-[#E5E2DD] dark:border-white/[0.1] text-[#8C8A80]')}>
+          (drag ? 'border-brand-600 bg-brand-600/10' : 'border-[color:var(--bd)] text-[color:var(--tx-3)]')}>
         {busy ? t('common.importing') : t('catalogue.dropImages')}
         <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => upload(e.target.files)} />
       </div>
@@ -104,9 +104,9 @@ function ImagesCard({ product, setProduct, id, t }) {
                 {product.image_path !== img.url && (
                   <button onClick={() => setPrimary(img.url)} className="bg-white/90 rounded px-1.5 py-0.5 text-[#1a1a18]">★</button>
                 )}
-                <button onClick={() => remove(img.url)} className="bg-white/90 rounded px-1.5 py-0.5 text-[#BC6B4E]">✕</button>
+                <button onClick={() => remove(img.url)} className="bg-white/90 rounded px-1.5 py-0.5 text-[#ef4444]">✕</button>
               </div>
-              {product.image_path === img.url && <span className="absolute top-1 start-1 text-[9px] bg-brand-600 text-white rounded px-1">{t('catalogue.primary')}</span>}
+              {product.image_path === img.url && <span className="absolute top-1 start-1 text-[9px] bg-[color:var(--pr)] text-white rounded px-1">{t('catalogue.primary')}</span>}
             </div>
           ))}
         </div>
@@ -202,7 +202,7 @@ export default function ProductDetailPage() {
   }
 
   if (!product) {
-    return <Shell active="/catalogue"><div className="text-sm text-[#8C8A80]">{t('shell.loading')}</div></Shell>;
+    return <Shell active="/catalogue"><div className="text-sm text-[color:var(--tx-3)]">{t('shell.loading')}</div></Shell>;
   }
 
   const name = trL(product, 'name');
@@ -214,12 +214,12 @@ export default function ProductDetailPage() {
         <div className="glass-card p-4 flex flex-wrap items-center gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <a href="/catalogue" className="text-[#8C8A80] hover:underline text-sm">‹</a>
-              <span className="text-[11px] text-[#8C8A80]" dir="ltr">{product.code}</span>
+              <a href="/catalogue" className="text-[color:var(--tx-3)] hover:underline text-sm">‹</a>
+              <span className="text-[11px] text-[color:var(--tx-3)]" dir="ltr">{product.code}</span>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-600/10 border border-brand-600/25">{codeLabel(t, 'cat', product.category)}</span>
             </div>
             <div className="font-semibold text-lg truncate">{name}</div>
-            <div className="text-[12px] text-[#8C8A80]">
+            <div className="text-[12px] text-[color:var(--tx-3)]">
               {t('catalogue.standardPrice')}: <b dir="ltr">{formatNumber(product.standard_price, { minimumFractionDigits: 2 })} {t('common.currencyUnit')}</b>
               {' · '}{t('catalogue.lastCost')}: <span dir="ltr">{product.last_calculated_cost != null ? formatNumber(product.last_calculated_cost, { minimumFractionDigits: 2 }) : '—'}</span>
               {' / '}{codeLabel(t, 'u', product.unit)}
@@ -230,12 +230,12 @@ export default function ProductDetailPage() {
             <Button variant="ghost" onClick={duplicate}>{t('catalogue.duplicate')}</Button>
             <Button variant="ghost" onClick={() => runRecost(false)}>{t('cost.recost')}</Button>
             <Button disabled={saving} onClick={() => save(false)}>{saving ? t('common.saving') : t('cost.saveModel')}</Button>
-            <Button disabled={saving} onClick={() => save(true)} className="!bg-brand-700">{t('cost.setStandard')}</Button>
+            <Button variant="success" disabled={saving} onClick={() => save(true)}>{t('cost.setStandard')}</Button>
           </div>
         </div>
 
         {msg && <div className="rounded-lg bg-brand-600/10 border border-brand-600/25 px-3 py-2 text-sm">{msg}</div>}
-        {dirty && <div className="text-[12px] text-[#8C8A80]">{t('cost.unsavedChanges')}</div>}
+        {dirty && <div className="text-[12px] text-[color:var(--tx-3)]">{t('cost.unsavedChanges')}</div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <DimensionsCard product={product} setProduct={setProduct} t={t} />
@@ -253,7 +253,7 @@ export default function ProductDetailPage() {
       {recost && (
         <Modal title={t('cost.recostTitle')} onClose={() => setRecost(null)} wide>
           {recost.changes.length === 0 ? (
-            <div className="text-sm text-[#8C8A80] py-6 text-center">{t('cost.noChanges')}</div>
+            <div className="text-sm text-[color:var(--tx-3)] py-6 text-center">{t('cost.noChanges')}</div>
           ) : (
             <>
               <div className="overflow-x-auto max-h-80 overflow-y-auto">
@@ -264,7 +264,7 @@ export default function ProductDetailPage() {
                       <tr key={c.id}>
                         <Td>{c.name}</Td><Td>{t('sec.' + c.section)}</Td>
                         <Td dir="ltr">{formatNumber(c.old, { minimumFractionDigits: 2 })}</Td>
-                        <Td dir="ltr" className={c.new > c.old ? 'text-[#BC6B4E] font-medium' : 'text-brand-700 dark:text-brand-300 font-medium'}>
+                        <Td dir="ltr" className={c.new > c.old ? 'text-[#ef4444] font-medium' : 'text-brand-700 dark:text-brand-300 font-medium'}>
                           {formatNumber(c.new, { minimumFractionDigits: 2 })}
                         </Td>
                       </tr>

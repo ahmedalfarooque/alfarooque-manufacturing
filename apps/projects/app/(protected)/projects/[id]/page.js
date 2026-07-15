@@ -92,8 +92,8 @@ export default function ProjectViewPage() {
     return respData.project;
   }
 
-  if (error) return <Shell active="/projects"><div className="text-sm text-[#BC6B4E]">{error}</div></Shell>;
-  if (!data) return <Shell active="/projects"><div className="text-[#8C8A80]">{t('common.loading')}</div></Shell>;
+  if (error) return <Shell active="/projects"><div className="text-sm text-[#ef4444]">{error}</div></Shell>;
+  if (!data) return <Shell active="/projects"><div className="text-[color:var(--tx-3)]">{t('common.loading')}</div></Shell>;
 
   const { project: p, customer: c, documents, assignees } = data;
   const hasValue = p.value != null && Number(p.value) > 0;
@@ -106,7 +106,7 @@ export default function ProjectViewPage() {
         <div>
           <a href="/projects" className="text-xs text-brand-600 dark:text-brand-400 hover:underline">{t('pd.backToProjects')}</a>
           <h2 className="text-lg font-semibold mt-1">{p.project_name}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('pd.breadcrumb', { name: p.project_name })}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('pd.breadcrumb', { name: p.project_name })}</p>
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span>
@@ -114,11 +114,11 @@ export default function ProjectViewPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 mb-4 border-b border-[#E5E2DD]/70 dark:border-white/[0.08] overflow-x-auto">
+      <div className="flex items-center gap-1 mb-4 border-b border-[color:var(--bd)] overflow-x-auto">
         {TABS.map(tb => (
           <button key={tb.key} onClick={() => selectTab(tb.key)}
             className={'px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ' +
-              (tab === tb.key ? 'border-brand-600 text-brand-600 dark:text-brand-400' : 'border-transparent text-[#8C8A80] hover:text-[#5b5a52] dark:hover:text-white/80')}>
+              (tab === tb.key ? 'border-brand-600 text-brand-600 dark:text-brand-400' : 'border-transparent text-[color:var(--tx-3)] hover:text-[#5b5a52] dark:hover:text-white/80')}>
             {t(tb.labelKey)}
           </button>
         ))}
@@ -140,7 +140,7 @@ function Row({ label, value }) {
   if (!value) return null;
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-[#8C8A80]">{label}</dt>
+      <dt className="text-[color:var(--tx-3)]">{label}</dt>
       <dd className="font-medium text-right">{value}</dd>
     </div>
   );
@@ -192,7 +192,7 @@ function OverviewTab({ p, c, hasValue, assignees }) {
 
       <div className="glass-card p-4 mb-4">
         <h3 className="font-medium text-sm mb-3">{t('pd.completeProjectDetails')}</h3>
-        <p className="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-300">{p.project_details || t('pd.noAdditionalDetails')}</p>
+        <p className="text-sm whitespace-pre-wrap text-[color:var(--tx)]">{p.project_details || t('pd.noAdditionalDetails')}</p>
       </div>
 
       <div className="glass-card p-4">
@@ -202,12 +202,12 @@ function OverviewTab({ p, c, hasValue, assignees }) {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {assignees.map(u => (
-              <div key={u.id} className="flex items-center gap-3 rounded-lg border border-[#E5E2DD]/70 dark:border-white/[0.08] p-3">
+              <div key={u.id} className="flex items-center gap-3 rounded-lg border border-[color:var(--bd)] p-3">
                 <Avatar name={u.full_name} />
                 <div className="min-w-0">
                   <div className="font-medium text-sm truncate">{u.full_name}{u.role === 'admin' && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">{t('role.admin')}</span>}</div>
-                  <div className="text-xs text-[#8C8A80] truncate">{u.position || '—'}</div>
-                  <div className="text-xs text-[#8C8A80] truncate">{u.email}</div>
+                  <div className="text-xs text-[color:var(--tx-3)] truncate">{u.position || '—'}</div>
+                  <div className="text-xs text-[color:var(--tx-3)] truncate">{u.email}</div>
                 </div>
               </div>
             ))}
@@ -236,7 +236,7 @@ function AssignedPeopleTab({ assignees, isAdmin, onEdit }) {
         <div className="glass-card overflow-hidden">
           <div className="overflow-auto max-h-[65vh]">
             <table className="w-full text-sm min-w-[800px]">
-              <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+              <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
                 <tr>
                   <Th>{t('common.name')}</Th>
                   <Th>{t('pd.position')}</Th>
@@ -312,13 +312,13 @@ function DocumentsTab({ projectId, documents, isAdmin, refresh }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-medium text-sm">{t('pd.imagesDocuments')}</h3>
         {isAdmin && (
-          <label className="text-sm px-3.5 py-2 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200 cursor-pointer">
+          <label className="text-sm px-3.5 py-2 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors duration-200 cursor-pointer">
             {uploadBusy ? t('pd.uploading') : t('pd.upload')}
             <input ref={fileRef} type="file" accept="image/*,.pdf" className="hidden" disabled={uploadBusy} onChange={uploadFile} />
           </label>
         )}
       </div>
-      {uploadErr && <div className="text-sm text-[#BC6B4E] mb-2">{uploadErr}</div>}
+      {uploadErr && <div className="text-sm text-[#ef4444] mb-2">{uploadErr}</div>}
       {documents.length === 0 ? (
         <EmptyState text={t('pd.noDocumentsYet')} />
       ) : (
@@ -328,11 +328,11 @@ function DocumentsTab({ projectId, documents, isAdmin, refresh }) {
             return (
               <div key={d.id} className="relative group">
                 <button type="button" onClick={() => isImage && setLightbox(d)}
-                  className="aspect-square w-full rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
+                  className="aspect-square w-full rounded-lg border border-[color:var(--bd)] overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
                   {isImage ? (
                     <img src={d.url} alt={d.file_name} loading="lazy" className="w-full h-full object-cover" />
                   ) : (
-                    <a href={d.url} target="_blank" rel="noreferrer" className="text-xs text-center p-2 text-[#8C8A80]">📄<br />{d.file_name}</a>
+                    <a href={d.url} target="_blank" rel="noreferrer" className="text-xs text-center p-2 text-[color:var(--tx-3)]">📄<br />{d.file_name}</a>
                   )}
                 </button>
                 {isAdmin && (
@@ -352,7 +352,7 @@ function DocumentsTab({ projectId, documents, isAdmin, refresh }) {
           <div className="relative max-w-full max-h-full" onClick={e => e.stopPropagation()}>
             <img src={lightbox.url} alt={lightbox.file_name} className="max-w-full max-h-full rounded-lg" />
             <div className="absolute top-2 right-2 flex gap-2">
-              {isAdmin && <button onClick={() => deleteFile(lightbox.id)} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm">{t('pd.deleteBtn')}</button>}
+              {isAdmin && <button onClick={() => deleteFile(lightbox.id)} className="gbtn gbtn-danger gbtn--sm">{t('pd.deleteBtn')}</button>}
               <button onClick={() => setLightbox(null)} className="px-3 py-1.5 rounded-lg bg-black/70 text-white text-sm">{t('pd.closeBtn')}</button>
             </div>
           </div>
@@ -376,11 +376,11 @@ function PurchaseRequestsTab({ projectId, canCreate, isAdmin }) {
         <h3 className="font-medium text-sm">{t('pd.tab.purchaseRequests')}</h3>
         {canCreate && <Button onClick={() => setModal('new')}>{t('pd.newPurchaseRequest')}</Button>}
       </div>
-      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
       <div className="glass-card overflow-hidden">
         <div className="overflow-auto max-h-[60vh]">
           <table className="w-full text-sm min-w-[700px]">
-            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
               <tr>
                 <Th>{t('pd.date')}</Th>
                 <Th>{t('pr.col.materials')}</Th>
@@ -392,7 +392,7 @@ function PurchaseRequestsTab({ projectId, canCreate, isAdmin }) {
             </thead>
             <tbody>
               {!data ? (
-                <tr><td colSpan={6} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState text={t('pd.noPurchaseRequestsYet')} /></td></tr>
               ) : rows.map(r => (
@@ -402,7 +402,7 @@ function PurchaseRequestsTab({ projectId, canCreate, isAdmin }) {
                   <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PR_PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></Td>
                   <Td>{r.requested_by_name || '—'}</Td>
                   <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PR_STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
-                  <Td className="text-end"><button onClick={() => setModal({ id: r.id })} className="text-[#8C8A80]" title={t('pd.viewTitle')}>{'\u{1F441}'}</button></Td>
+                  <Td className="text-end"><button onClick={() => setModal({ id: r.id })} className="text-[color:var(--tx-3)]" title={t('pd.viewTitle')}>{'\u{1F441}'}</button></Td>
                 </tr>
               ))}
             </tbody>
@@ -468,7 +468,7 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
   return (
     <Modal title={t('pd.newPurchaseRequest').replace(/^\+\s*/, '')} onClose={onClose} wide>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+        {err && <div className="text-sm text-[#ef4444]">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('pd.date')}><Input type="date" value={form.request_date} onChange={set('request_date')} /></Field>
           <Field label={t('pd.supplierOptional')}><Input value={form.supplier} onChange={set('supplier')} /></Field>
@@ -498,7 +498,7 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
           <div className="col-span-2">
             <Field label={t('pd.attachmentOptional20')}>
               <input type="file" accept="image/*,.pdf,.xls,.xlsx,.doc,.docx,.zip" onChange={onFileChange}
-                className="w-full text-sm rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2" />
+                className="ginput text-sm" />
             </Field>
             {busy && file && <div className="mt-1 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden"><div className="h-full bg-brand-500 transition-all" style={{ width: progress + '%' }} /></div>}
           </div>
@@ -543,7 +543,7 @@ function PurchaseRequestDetailModal({ id, isAdmin, onClose, onChanged }) {
 
   return (
     <Modal title={t('pd.purchaseRequest')} onClose={onClose}>
-      {!r ? <div className="text-[#8C8A80] text-sm">{t('common.loading')}</div> : (
+      {!r ? <div className="text-[color:var(--tx-3)] text-sm">{t('common.loading')}</div> : (
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PR_STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span>
@@ -558,33 +558,33 @@ function PurchaseRequestDetailModal({ id, isAdmin, onClose, onChanged }) {
             <Row label={t('pd.requiredDate')} value={r.required_date} />
           </dl>
           <div>
-            <div className="text-xs text-[#8C8A80] mb-1">{t('pd.materialDescription')}</div>
+            <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.materialDescription')}</div>
             <p className="text-sm whitespace-pre-wrap">{r.material_description}</p>
           </div>
           {r.material_list && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.materialList')}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.materialList')}</div>
               <p className="text-sm whitespace-pre-wrap">{r.material_list}</p>
             </div>
           )}
           {r.remarks && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.remarks')}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.remarks')}</div>
               <p className="text-sm whitespace-pre-wrap">{r.remarks}</p>
             </div>
           )}
           {attachments.length > 0 && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.attachments')}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.attachments')}</div>
               <div className="flex flex-wrap gap-2">
                 {attachments.map(a => (
-                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-2 py-1 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08]">📎 {a.file_name}</a>
+                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-2 py-1 rounded-lg border border-[color:var(--bd)]">📎 {a.file_name}</a>
                 ))}
               </div>
             </div>
           )}
           {isAdmin && (
-            <div className="pt-2 border-t border-[#E5E2DD]/70 dark:border-white/[0.08] flex flex-wrap gap-2">
+            <div className="pt-2 border-t border-[color:var(--bd)] flex flex-wrap gap-2">
               {PR_ACTIONS.filter(to => to !== r.status).map(to => (
                 <Button key={to} variant="ghost" disabled={busy} onClick={() => setStatus(to)}>{t('pd.act.' + to)}</Button>
               ))}
@@ -615,11 +615,11 @@ function DailyUpdatesTab({ projectId, canCreate, isAdmin, meId }) {
         <h3 className="font-medium text-sm">{t('pd.tab.dailyUpdates')}</h3>
         {canCreate && <Button onClick={() => setModal('new')}>{t('pd.newDailyUpdate')}</Button>}
       </div>
-      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
       <div className="glass-card overflow-hidden">
         <div className="overflow-auto max-h-[60vh]">
           <table className="w-full text-sm min-w-[600px]">
-            <thead className="sticky top-0 z-10 bg-[#FBFAF7]/95 dark:bg-[#1B1B14]/95 backdrop-blur">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
               <tr>
                 <Th>{t('pd.date')}</Th>
                 <Th>{t('pd.duUser')}</Th>
@@ -631,7 +631,7 @@ function DailyUpdatesTab({ projectId, canCreate, isAdmin, meId }) {
             </thead>
             <tbody>
               {!data ? (
-                <tr><td colSpan={6} className="py-8 text-center text-[#8C8A80]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState text={t('pd.noDailyUpdatesYet')} /></td></tr>
               ) : rows.map(u => (
@@ -641,7 +641,7 @@ function DailyUpdatesTab({ projectId, canCreate, isAdmin, meId }) {
                   <Td className="max-w-[260px] truncate">{u.title || u.todays_work}</Td>
                   <Td>{u.progress_pct != null ? `${u.progress_pct}%` : '—'}</Td>
                   <Td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (DU_STATUS_BADGE[u.status || 'Pending'] || '')}>{trEnum(t, 'status', u.status || 'Pending')}</span></Td>
-                  <Td className="text-end"><button onClick={() => setModal({ id: u.id })} className="text-[#8C8A80]" title={t('pd.viewTitle')}>{'\u{1F441}'}</button></Td>
+                  <Td className="text-end"><button onClick={() => setModal({ id: u.id })} className="text-[color:var(--tx-3)]" title={t('pd.viewTitle')}>{'\u{1F441}'}</button></Td>
                 </tr>
               ))}
             </tbody>
@@ -707,7 +707,7 @@ function DailyUpdateModal({ projectId, onClose, onSaved }) {
   return (
     <Modal title={t('pd.duModalTitle')} onClose={onClose} wide>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+        {err && <div className="text-sm text-[#ef4444]">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('pd.date')}><Input type="date" value={form.update_date} onChange={set('update_date')} /></Field>
           <Field label={t('pd.duTitleOptional')}><Input value={form.title} onChange={set('title')} /></Field>
@@ -747,7 +747,7 @@ function DailyUpdateModal({ projectId, onClose, onSaved }) {
           <div className="col-span-2">
             <Field label={t('pd.attachmentsOptional50')}>
               <input type="file" accept="image/*,.pdf,video/*" onChange={onFileChange}
-                className="w-full text-sm rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] bg-white dark:bg-white/5 px-3 py-2" />
+                className="ginput text-sm" />
             </Field>
             {busy && file && <div className="mt-1 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden"><div className="h-full bg-brand-500 transition-all" style={{ width: progress + '%' }} /></div>}
           </div>
@@ -790,7 +790,7 @@ function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
 
   return (
     <Modal title={u ? (u.title || t('pd.duTitleFallback', { date: u.update_date })) : t('pd.tab.dailyUpdates')} onClose={onClose}>
-      {!u ? <div className="text-[#8C8A80] text-sm">{t('common.loading')}</div> : (
+      {!u ? <div className="text-[color:var(--tx-3)] text-sm">{t('common.loading')}</div> : (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             {u.progress_pct != null && <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-500/10 text-brand-600 dark:text-brand-400">{u.progress_pct}%</span>}
@@ -801,54 +801,54 @@ function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
             <Row label={t('pd.duBy')} value={u.author_name} />
             <Row label={t('pd.duWeather')} value={u.weather} />
           </dl>
-          {u.need_help && <div className="text-sm text-[#BC6B4E] font-medium">{t('pd.duNeedHelpFlag')}</div>}
+          {u.need_help && <div className="text-sm text-[#ef4444] font-medium">{t('pd.duNeedHelpFlag')}</div>}
           <div>
-            <div className="text-xs text-[#8C8A80] mb-1">{t('pd.duTodaysWork')}</div>
+            <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.duTodaysWork')}</div>
             <p className="text-sm whitespace-pre-wrap">{u.todays_work}</p>
           </div>
           {u.description && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.duDescription')}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.duDescription')}</div>
               <p className="text-sm whitespace-pre-wrap">{u.description}</p>
             </div>
           )}
           {u.issues && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.duIssues')}</div>
-              <p className="text-sm whitespace-pre-wrap text-[#BC6B4E]">{u.issues}</p>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.duIssues')}</div>
+              <p className="text-sm whitespace-pre-wrap text-[#ef4444]">{u.issues}</p>
             </div>
           )}
           {u.tomorrow_plan && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.duTomorrowPlan')}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.duTomorrowPlan')}</div>
               <p className="text-sm whitespace-pre-wrap">{u.tomorrow_plan}</p>
             </div>
           )}
           {u.remarks && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.remarks')}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.remarks')}</div>
               <p className="text-sm whitespace-pre-wrap">{u.remarks}</p>
             </div>
           )}
           {attachments.length > 0 && (
             <div>
-              <div className="text-xs text-[#8C8A80] mb-1">{t('pd.attachments')}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.attachments')}</div>
               <div className="grid grid-cols-3 gap-2">
                 {attachments.map(a => {
                   const isImage = /\.(jpe?g|png|gif|webp)$/i.test(a.file_name);
                   return isImage ? (
-                    <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="aspect-square rounded-lg overflow-hidden border border-[#E5E2DD] dark:border-white/[0.08] block">
+                    <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="aspect-square rounded-lg overflow-hidden border border-[color:var(--bd)] block">
                       <img src={a.url} alt={a.file_name} loading="lazy" className="w-full h-full object-cover" />
                     </a>
                   ) : (
-                    <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-2 py-3 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] text-center">📎 {a.file_name}</a>
+                    <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-2 py-3 rounded-lg border border-[color:var(--bd)] text-center">📎 {a.file_name}</a>
                   );
                 })}
               </div>
             </div>
           )}
           {isAdmin && (
-            <div className="pt-2 border-t border-[#E5E2DD]/70 dark:border-white/[0.08] flex flex-wrap gap-2">
+            <div className="pt-2 border-t border-[color:var(--bd)] flex flex-wrap gap-2">
               {DU_REVIEW_ACTIONS.filter(to => to !== u.status).map(to => (
                 <Button key={to} variant="ghost" disabled={busy} onClick={() => setReviewStatus(to)}>{t('pd.duact.' + to)}</Button>
               ))}
@@ -874,17 +874,17 @@ function ActivityTab({ projectId }) {
   return (
     <div className="glass-card p-4">
       <h3 className="font-medium text-sm mb-3">{t('pd.activity')}</h3>
-      {error && <div className="text-sm text-[#BC6B4E] mb-3">{error}</div>}
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
       {!data ? (
-        <div className="text-sm text-[#8C8A80] py-6 text-center">{t('common.loading')}</div>
+        <div className="text-sm text-[color:var(--tx-3)] py-6 text-center">{t('common.loading')}</div>
       ) : rows.length === 0 ? (
         <EmptyState text={t('pd.noActivityYet')} />
       ) : (
-        <ol className="relative border-s border-[#E5E2DD] dark:border-white/[0.1] ms-2 space-y-4">
+        <ol className="relative border-s border-[color:var(--bd)] ms-2 space-y-4">
           {rows.map(a => (
             <li key={a.id} className="ms-4">
               <div className="absolute w-2 h-2 rounded-full bg-brand-500 mt-1.5 -start-1" />
-              <time className="block text-xs text-[#8C8A80]">{formatDate(a.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</time>
+              <time className="block text-xs text-[color:var(--tx-3)]">{formatDate(a.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</time>
               <p className="text-sm">{a.activity}</p>
             </li>
           ))}

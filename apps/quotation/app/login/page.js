@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
+import { Button, Input } from '@/components/ui';
+import { GlassTabs } from '@/components/glass';
 
 const API = '/api/auth';
 
@@ -120,14 +122,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F7F5F1] dark:bg-[#14140F] px-4 transition-colors duration-200">
-      <div className="w-full max-w-md rounded-2xl border border-[#E5E2DD] dark:border-white/[0.08] bg-white dark:bg-white/[0.05] shadow-[0_2px_6px_rgba(26,26,24,0.05),0_20px_50px_rgba(26,26,24,0.10)] dark:shadow-none p-5 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-[color:var(--bg)] px-4 transition-colors duration-200">
+      <div className="glass-card glass-card--pad w-full max-w-md">
         <div className="flex items-center justify-between gap-2 mb-6">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <img src="/logo.png" alt="AL FAROOQUE" className="h-11 w-11 object-contain shrink-0" />
             <div className="min-w-0">
-              <div className="text-[#1A1A18] dark:text-white font-semibold text-lg leading-tight truncate">{t('shell.appName')}</div>
-              <div className="text-[#8C8A80] dark:text-slate-400 text-xs truncate">{t('login.tagline')}</div>
+              <div className="text-[color:var(--tx)] font-semibold text-lg leading-tight truncate">{t('shell.appName')}</div>
+              <div className="text-[color:var(--tx-3)] text-xs truncate">{t('login.tagline')}</div>
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -142,15 +144,10 @@ export default function LoginPage() {
         </div>
 
         {step === 'credentials' && (
-          <div className="grid grid-cols-2 gap-1 mb-6 rounded-lg bg-[#F7F5F1] dark:bg-white/5 p-1">
-            <button type="button" onClick={() => switchMode('user')}
-              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'user' ? 'bg-brand-500 text-white' : 'text-[#8C8A80] dark:text-slate-400 hover:text-[#1A1A18] dark:hover:text-slate-200')}>
-              {t('login.user')}
-            </button>
-            <button type="button" onClick={() => switchMode('admin')}
-              className={'rounded-md py-2 text-sm font-medium transition ' + (mode === 'admin' ? 'bg-brand-500 text-white' : 'text-[#8C8A80] dark:text-slate-400 hover:text-[#1A1A18] dark:hover:text-slate-200')}>
-              {t('login.admin')}
-            </button>
+          <div className="mb-6">
+            <GlassTabs
+              items={[{ value: 'user', label: t('login.user') }, { value: 'admin', label: t('login.admin') }]}
+              value={mode} onChange={switchMode} />
           </div>
         )}
 
@@ -164,38 +161,33 @@ export default function LoginPage() {
         {step === 'credentials' ? (
           <form onSubmit={submitCredentials} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#8C8A80] dark:text-slate-400 mb-1">{t('login.email')}</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full rounded-lg bg-[#F7F5F1] dark:bg-white/5 border border-[#E5E2DD] dark:border-white/10 px-3 py-2.5 text-[#1A1A18] dark:text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+              <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1.5">{t('login.email')}</label>
+              <Input type="email" required value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             {mode === 'admin' && (
               <div>
-                <label className="block text-xs font-medium text-[#8C8A80] dark:text-slate-400 mb-1">{t('login.password')}</label>
-                <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                  className="w-full rounded-lg bg-[#F7F5F1] dark:bg-white/5 border border-[#E5E2DD] dark:border-white/10 px-3 py-2.5 text-[#1A1A18] dark:text-white text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+                <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1.5">{t('login.password')}</label>
+                <Input type="password" required value={password} onChange={e => setPassword(e.target.value)} />
               </div>
             )}
-            <button disabled={busy} type="submit"
-              className="w-full rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition">
+            <Button type="submit" block loading={busy}>
               {busy ? t('login.signingIn') : t('login.continue')}
-            </button>
+            </Button>
           </form>
         ) : (
           <form onSubmit={submitOtp} className="space-y-4">
-            <p className="text-[#8C8A80] dark:text-slate-400 text-sm">{t('login.otpSentPrefix')} <span className="text-[#1A1A18] dark:text-white">{email}</span></p>
-            <input inputMode="numeric" pattern="[0-9]*" maxLength={6} required value={code}
+            <p className="text-[color:var(--tx-3)] text-sm">{t('login.otpSentPrefix')} <span className="text-[color:var(--tx)]">{email}</span></p>
+            <Input inputMode="numeric" pattern="[0-9]*" maxLength={6} required value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-              className="w-full text-center tracking-[0.5em] text-lg rounded-lg bg-[#F7F5F1] dark:bg-white/5 border border-[#E5E2DD] dark:border-white/10 px-3 py-2.5 text-[#1A1A18] dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
-            <button disabled={busy} type="submit"
-              className="w-full rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition">
+              className="text-center tracking-[0.5em] text-lg" />
+            <Button type="submit" block loading={busy}>
               {busy ? t('login.verifying') : t('login.verifyAndSignIn')}
-            </button>
-            <button type="button" disabled={cooldown > 0} onClick={resend}
-              className="w-full rounded-lg border border-[#E5E2DD] dark:border-white/10 text-[#4A4A45] dark:text-slate-300 text-sm py-2 disabled:opacity-50">
+            </Button>
+            <Button type="button" variant="secondary" block disabled={cooldown > 0} onClick={resend}>
               {cooldown > 0 ? t('login.resendCodeCountdown', { seconds: cooldown }) : t('login.resendCode')}
-            </button>
+            </Button>
             <button type="button" onClick={() => switchMode(mode)}
-              className="w-full text-center text-xs text-[#8C8A80] dark:text-slate-500 hover:text-[#4A4A45] dark:hover:text-slate-300">{mode === 'admin' ? t('login.backToEmailPassword') : t('login.backToEmail')}</button>
+              className="w-full text-center text-xs text-[color:var(--tx-4)] hover:text-[color:var(--tx-2)]">{mode === 'admin' ? t('login.backToEmailPassword') : t('login.backToEmail')}</button>
           </form>
         )}
       </div>

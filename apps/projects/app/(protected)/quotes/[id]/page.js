@@ -112,7 +112,7 @@ export default function QuoteDetailPage() {
   }
 
   if (error) return <Shell active="/quotes"><div className="text-red-500">{error}</div></Shell>;
-  if (!quote) return <Shell active="/quotes"><div className="text-[#8C8A80]">{t('common.loading')}</div></Shell>;
+  if (!quote) return <Shell active="/quotes"><div className="text-[color:var(--tx-3)]">{t('common.loading')}</div></Shell>;
 
   return (
     <Shell active="/quotes">
@@ -123,10 +123,10 @@ export default function QuoteDetailPage() {
         </div>
 
         <div className="glass-card p-4 space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-[#8C8A80]">{t('common.email')}</span><span dir="ltr">{quote.email || '—'}</span></div>
-          <div className="flex justify-between"><span className="text-[#8C8A80]">Phone</span><span dir="ltr">{quote.phone || '—'}</span></div>
-          <div className="flex justify-between"><span className="text-[#8C8A80]">{t('oq.col.product')}</span><span>{quote.product || '—'}</span></div>
-          {quote.message && <div><span className="text-[#8C8A80] block mb-1">Message</span><p>{quote.message}</p></div>}
+          <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('common.email')}</span><span dir="ltr">{quote.email || '—'}</span></div>
+          <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">Phone</span><span dir="ltr">{quote.phone || '—'}</span></div>
+          <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('oq.col.product')}</span><span>{quote.product || '—'}</span></div>
+          {quote.message && <div><span className="text-[color:var(--tx-3)] block mb-1">Message</span><p>{quote.message}</p></div>}
         </div>
 
         {!replyOpen ? (
@@ -147,7 +147,7 @@ export default function QuoteDetailPage() {
                 <Button variant="ghost" disabled={busy} onClick={() => setReplyOpen(true)}>{t('oq.replyToCustomer')}</Button>
               )}
               <Button variant="danger" disabled={busy} onClick={deleteQuote}>{t('oq.delete')}</Button>
-              <a href="/quotes" className="text-sm text-[#8C8A80] hover:underline ms-auto">‹ {t('oq.quotesTitle')}</a>
+              <a href="/quotes" className="text-sm text-[color:var(--tx-3)] hover:underline ms-auto">‹ {t('oq.quotesTitle')}</a>
             </div>
           </div>
         ) : (
@@ -163,16 +163,16 @@ export default function QuoteDetailPage() {
               <Textarea value={message} onChange={e => setMessage(e.target.value)} rows={6} />
             </Field>
             <div>
-              <label className="text-xs text-[#8C8A80] block mb-1">{t('oq.attachments')}</label>
+              <label className="text-xs text-[color:var(--tx-3)] block mb-1">{t('oq.attachments')}</label>
               <input type="file" multiple onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
               {attachments.length === 0 ? (
-                <p className="text-[#8C8A80] text-xs mt-2">{t('oq.noAttachments')}</p>
+                <p className="text-[color:var(--tx-3)] text-xs mt-2">{t('oq.noAttachments')}</p>
               ) : (
                 <div className="mt-2 space-y-1">
                   {attachments.map((f, i) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span>{f.name} ({Math.round(f.size / 1024)} KB)</span>
-                      <button onClick={() => removeAttachment(i)} className="text-[#BC6B4E]">✕</button>
+                      <button onClick={() => removeAttachment(i)} className="text-[#ef4444]">✕</button>
                     </div>
                   ))}
                 </div>
@@ -188,21 +188,21 @@ export default function QuoteDetailPage() {
         <div className="glass-card p-4 text-sm">
           <h3 className="font-medium mb-2">{t('oq.communicationHistory')}</h3>
           {replies === null ? (
-            <p className="text-[#8C8A80]">{t('common.loading')}</p>
+            <p className="text-[color:var(--tx-3)]">{t('common.loading')}</p>
           ) : replies.length === 0 ? (
-            <p className="text-[#8C8A80]">{t('oq.noRepliesYet')}</p>
+            <p className="text-[color:var(--tx-3)]">{t('oq.noRepliesYet')}</p>
           ) : replies.map(r => (
-            <div key={r.id} className="py-2 border-b last:border-0 border-[#E5E2DD]/70 dark:border-white/[0.06]">
+            <div key={r.id} className="py-2 border-b last:border-0 border-[color:var(--bd)]">
               <div className="flex justify-between items-center gap-2">
                 <strong>{r.subject}</strong>
                 <span className={'px-2 py-0.5 rounded-full text-xs ' + (r.status === 'failed' ? 'bg-red-500/10 text-red-600' : 'bg-emerald-500/10 text-emerald-600')}>
                   {r.status === 'failed' ? t('oq.replyStatusFailed') : t('oq.replyStatusSent')}
                 </span>
               </div>
-              <div className="text-xs text-[#8C8A80] mb-1">{r.admin_name} — {new Date(r.created_at).toLocaleString()}</div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{r.admin_name} — {new Date(r.created_at).toLocaleString()}</div>
               <p>{r.message}</p>
               {r.attachments?.length > 0 && (
-                <div className="text-xs text-[#8C8A80] mt-1">📎 {r.attachments.map(a => a.name).join(', ')}</div>
+                <div className="text-xs text-[color:var(--tx-3)] mt-1">📎 {r.attachments.map(a => a.name).join(', ')}</div>
               )}
             </div>
           ))}

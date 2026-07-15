@@ -8,7 +8,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
 
-const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#3d3d33] dark:hover:text-white/90 transition-colors';
+const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[color:var(--tx)] transition-colors';
 
 export default function MaintenanceShopsPage() {
   const { t } = useLanguage();
@@ -59,18 +59,18 @@ export default function MaintenanceShopsPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('shops.title')}</h2>
-          <p className="text-xs text-[#8C8A80]">{t('shops.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('shops.breadcrumb')}</p>
         </div>
         {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('shops.addShop')}</Button>}
       </div>
 
       <Input placeholder={t('shops.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm mb-4" />
 
-      {error && <div className="text-[#BC6B4E] text-sm mb-3">{error}</div>}
+      {error && <div className="text-[#ef4444] text-sm mb-3">{error}</div>}
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="sticky top-0 z-10 bg-[#F7F5F1]/95 dark:bg-[#1B1B14]/95 backdrop-blur-sm border-b border-[#E5E2DD]/70 dark:border-white/[0.06]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
             <tr>
               <Th><span onClick={() => toggleSort('name')} className={sortHeaderCls}>{t('shops.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
               <Th><span onClick={() => toggleSort('contact_person')} className={sortHeaderCls}>{t('shops.colContact')}<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></span></Th>
@@ -82,11 +82,11 @@ export default function MaintenanceShopsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="py-8 text-center text-[#8C8A80]">{t('shops.loading')}</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-[color:var(--tx-3)]">{t('shops.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
               <tr><td colSpan={6}><EmptyState text={t('shops.noneYet')} /></td></tr>
             ) : pageRows.map(s => (
-              <tr key={s.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+              <tr key={s.id} className="hover:bg-[color:var(--pr-soft)]">
                 <Td className="font-medium">{s.name}</Td>
                 <Td>{s.contact_person || '—'}</Td>
                 <Td>{s.mobile || '—'}</Td>
@@ -96,7 +96,7 @@ export default function MaintenanceShopsPage() {
                   <Td className="text-end">
                     <div className="flex items-center justify-end gap-3">
                       <button onClick={() => setModal({ mode: 'edit', data: s })} title={t('shops.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎</button>
-                      <button onClick={() => deleteShop(s.id)} title={t('shops.delete')} className="text-[#BC6B4E] hover:underline">🗑</button>
+                      <button onClick={() => deleteShop(s.id)} title={t('shops.delete')} className="text-[#ef4444] hover:underline">🗑</button>
                     </div>
                   </Td>
                 )}
@@ -106,7 +106,7 @@ export default function MaintenanceShopsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[#8C8A80] flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('shops.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -115,9 +115,9 @@ export default function MaintenanceShopsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">‹</button>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[#F1EEE7] dark:hover:bg-white/5">›</button>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">›</button>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ export function ShopModal({ modal, onClose, onSaved }) {
   return (
     <Modal title={modal.mode === 'add' ? t('shops.addModalTitle') : t('shops.editModalTitle')} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-[#BC6B4E] text-sm">{err}</div>}
+        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('shops.colName')} required className="col-span-2"><Input value={form.name || ''} onChange={set('name')} required /></Field>
           <Field label={t('shops.colContact')}><Input value={form.contact_person || ''} onChange={set('contact_person')} /></Field>
