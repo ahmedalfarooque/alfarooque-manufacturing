@@ -30,6 +30,7 @@ export default function VehiclesPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   /* Reads ?status= from the URL on first render — this is how the
@@ -97,6 +98,9 @@ export default function VehiclesPage() {
      existing list API (pages of 100 — its max) so the PDF carries the
      same complete dataset and columns as the Excel export. */
   async function exportPdf() {
+    if (pdfBusy) return; // guards against a double-click firing two concurrent full-list refetches + generations
+    setPdfBusy(true);
+    try {
     const all = [];
     for (let p = 1; p <= 200; p++) {
       const res = await fetch('/api/cars?' + new URLSearchParams({ page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
@@ -124,6 +128,7 @@ export default function VehiclesPage() {
       lang,
       fileName: 'vehicles-report.pdf',
     });
+    } finally { setPdfBusy(false); }
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -140,7 +145,7 @@ export default function VehiclesPage() {
           <>
             {isAdmin && <GlassButton variant="ghost" onClick={() => setImportOpen(true)}>⇪ {t('vehicles.importExcel')}</GlassButton>}
             <GlassButton variant="ghost" onClick={exportExcel}>⤓ {t('vehicles.exportExcel')}</GlassButton>
-            <GlassButton variant="ghost" onClick={exportPdf}>⤓ {t('vehicles.exportPdf')}</GlassButton>
+            <GlassButton variant="ghost" onClick={exportPdf} disabled={pdfBusy}>⤓ {t('vehicles.exportPdf')}</GlassButton>
             {isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('vehicles.addVehicle')}</GlassButton>}
           </>
         }

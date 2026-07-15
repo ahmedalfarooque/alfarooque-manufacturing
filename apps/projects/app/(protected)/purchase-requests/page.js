@@ -48,6 +48,7 @@ export default function PurchaseRequestsPage() {
   const [priority, setPriority] = useState('All');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get('status');
@@ -134,6 +135,9 @@ export default function PurchaseRequestsPage() {
      Exports exactly the same rows and columns as the Excel/CSV export
      above, so both formats always carry identical data. */
   async function exportPdf() {
+    if (pdfBusy) return; // guards against a double-click firing two concurrent generations/downloads
+    setPdfBusy(true);
+    try {
     const ar = lang === 'ar';
     const { exportReportPdf } = await import('@/lib/reportPdf');
     await exportReportPdf({
@@ -151,6 +155,7 @@ export default function PurchaseRequestsPage() {
       lang,
       fileName: 'purchase-requests-report.pdf',
     });
+    } finally { setPdfBusy(false); }
   }
 
   function printReport() { window.print(); }
@@ -166,7 +171,7 @@ export default function PurchaseRequestsPage() {
         </div>
         <div className="flex items-center flex-wrap gap-2">
           <GlassButton onClick={exportExcel} variant="success">⤓ {t('common.exportExcel')}</GlassButton>
-          <GlassButton onClick={exportPdf} variant="secondary">⤓ {t('common.exportPdf')}</GlassButton>
+          <GlassButton onClick={exportPdf} variant="secondary" disabled={pdfBusy}>⤓ {t('common.exportPdf')}</GlassButton>
           <GlassButton onClick={printReport} variant="ghost">🖶 {t('common.print')}</GlassButton>
         </div>
       </div>

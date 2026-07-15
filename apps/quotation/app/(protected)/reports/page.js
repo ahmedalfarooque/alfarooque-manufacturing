@@ -44,6 +44,7 @@ export default function ReportsPage() {
   const [entity, setEntity] = useState('');
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   useEffect(() => {
     fetch('/api/entities', { credentials: 'same-origin' })
@@ -68,17 +69,21 @@ export default function ReportsPage() {
      always carry identical data. The quotation DOCUMENT pdf pipeline
      (lib/pdf/*) is untouched. */
   async function exportPdf() {
-    const res = await fetch(`/api/reports/${slug}?${qs()}`, { credentials: 'same-origin' }).catch(() => null);
-    const d = res && res.ok ? await res.json() : null;
-    if (!d || !d.columns) return;
-    const { exportReportPdf } = await import('@/lib/reportPdf');
-    await exportReportPdf({
-      title: t('report.' + slug),
-      columns: d.columns.map(c => ({ key: c.key, header: c.header })),
-      rows: d.rows || [],
-      lang,
-      fileName: slug + '-report.pdf',
-    });
+    if (pdfBusy) return; // guards against a double-click firing two concurrent fetch+generate cycles
+    setPdfBusy(true);
+    try {
+      const res = await fetch(`/api/reports/${slug}?${qs()}`, { credentials: 'same-origin' }).catch(() => null);
+      const d = res && res.ok ? await res.json() : null;
+      if (!d || !d.columns) return;
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('report.' + slug),
+        columns: d.columns.map(c => ({ key: c.key, header: c.header })),
+        rows: d.rows || [],
+        lang,
+        fileName: slug + '-report.pdf',
+      });
+    } finally { setPdfBusy(false); }
   }
 
   function cell(v) {
@@ -109,7 +114,7 @@ export default function ReportsPage() {
           <div className="flex-1" />
           <a href={`/api/reports/${slug}?${qs()}&format=xlsx`} className="af-btn af-btn--secondary text-sm">⇩ Excel</a>
           <a href={`/api/reports/${slug}?${qs()}&format=csv`} className="af-btn af-btn--secondary text-sm">⇩ CSV</a>
-          <GlassButton variant="secondary" className="text-sm" onClick={exportPdf}>⇩ PDF</GlassButton>
+          <GlassButton variant="secondary" className="text-sm" onClick={exportPdf} disabled={pdfBusy}>⇩ PDF</GlassButton>
         </div>
 
         <div className="glass-card overflow-hidden">

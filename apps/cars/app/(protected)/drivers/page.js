@@ -36,6 +36,7 @@ export default function DriversPage() {
   const [cars, setCars] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const isAdmin = me?.role === 'admin';
   const url = '/api/drivers?' + new URLSearchParams({ search: debouncedSearch, status }).toString();
@@ -82,6 +83,9 @@ export default function DriversPage() {
      driver list (this page paginates client-side), with the same columns
      as the Excel export. */
   async function exportPdf() {
+    if (pdfBusy) return; // guards against a double-click firing two concurrent generations/downloads
+    setPdfBusy(true);
+    try {
     const ar = lang === 'ar';
     const { exportReportPdf } = await import('@/lib/reportPdf');
     await exportReportPdf({
@@ -102,6 +106,7 @@ export default function DriversPage() {
       lang,
       fileName: 'drivers-report.pdf',
     });
+    } finally { setPdfBusy(false); }
   }
 
   const SortTh = ({ col, label }) => (
@@ -119,7 +124,7 @@ export default function DriversPage() {
         toolbar={
           <>
             <GlassButton variant="ghost" onClick={exportExcel}>⤓ {t('drivers.exportExcel')}</GlassButton>
-            <GlassButton variant="ghost" onClick={exportPdf}>⤓ {t('drivers.exportPdf')}</GlassButton>
+            <GlassButton variant="ghost" onClick={exportPdf} disabled={pdfBusy}>⤓ {t('drivers.exportPdf')}</GlassButton>
             {isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('drivers.addDriver')}</GlassButton>}
           </>
         }

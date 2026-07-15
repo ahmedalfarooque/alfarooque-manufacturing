@@ -33,10 +33,25 @@ import { buildQuoteQrText, buildQuoteQrDataUrl } from '@/lib/qr';
    i.e. pixel-identical to before. */
 const SHEET_W = 794;
 
+/* Per-page-view cache, keyed by language — the server route always
+   re-renders the SAME url/data for the lifetime of this page (the print
+   page is read-only, nothing here mutates the quotation), so a second
+   Download/Print click for a language already generated this view can
+   safely reuse the exact same bytes instead of paying for a whole new
+   headless-Chrome render. Cleared implicitly on navigation (module-level
+   Map keyed by quotation id, so switching quotations never serves stale
+   bytes). Not persisted anywhere — purely an in-memory, same-tab reuse. */
+const pdfBlobCache = new Map();
+
 async function fetchServerPdfBlob(id, lang) {
+  const key = id + ':' + lang;
+  const cached = pdfBlobCache.get(key);
+  if (cached) return cached;
   const res = await fetch(`/api/quotations/${id}/pdf?lang=${lang}`, { credentials: 'same-origin' });
   if (!res.ok) throw new Error('Server-side PDF generation unavailable');
-  return res.blob();
+  const blob = await res.blob();
+  pdfBlobCache.set(key, blob);
+  return blob;
 }
 
 export default function PrintPage() {
@@ -214,11 +229,23 @@ export default function PrintPage() {
 
   async function printPdf() {
     setPrinting(true);
+    /* Opened synchronously, inside the click handler's own call stack —
+       BEFORE the await below. Browsers only honor window.open() as a
+       trusted, non-popup-blocked call for a brief window tied to the
+       original user gesture; awaiting the PDF fetch first (as this used
+       to) meant the gesture had already expired by the time window.open()
+       ran, so popup blockers silently ate the "Print" click on some
+       browsers/settings — this is that "async race condition" bug.
+       Opening a blank tab immediately preserves the gesture, and its
+       location is simply pointed at the real PDF once it's ready. */
+    const win = window.open('', '_blank');
     try {
       const blob = await fetchServerPdfBlob(id, lang || 'en');
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      if (win && !win.closed) win.location.href = url;
+      else window.open(url, '_blank');
     } catch (_) {
+      if (win && !win.closed) win.close();
       try {
         await withUnscaledCapture(() => printQuotePdf(getDocEl()));
       } catch (_) {
@@ -306,7 +333,21 @@ export default function PrintPage() {
            not by shrinking the box — this just guarantees the shrink is
            what actually gets painted. */
         .print-sheet-wrap {
-          display: flex; justify-content: center; overflow: hidden;
+          display: flex; justify-content: center;
+          /* Horizontal only. The height set inline below (natH * scale)
+             is a JS measurement taken after mount/font-load/QR-load — if
+             a late reflow (e.g. the Arabic font finishing its swap after
+             the measurement, or the QR image landing a beat later) makes
+             the real content a touch taller than that measurement, an
+             overflow:hidden on BOTH axes would silently clip the extra
+             pixels off the BOTTOM, which is exactly what made the footer
+             flash into view and then vanish/get cut off on some loads.
+             overflow-y stays visible so any such gap just shows briefly
+             as a touch of extra height (self-corrects the instant the
+             ResizeObserver below re-measures) instead of ever hiding real
+             content. Only the width still needs hard clipping — that's
+             the actual WebKit transform-scale bug this rule exists for. */
+          overflow-x: hidden; overflow-y: visible;
           width: 100%; max-width: 100vw;
           transform: translateZ(0); -webkit-transform: translateZ(0);
           -webkit-mask-image: -webkit-radial-gradient(white, black);

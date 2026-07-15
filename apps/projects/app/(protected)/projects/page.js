@@ -28,6 +28,7 @@ export default function ProjectsPage() {
   const [me, setMe] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   /* Always starts at 'All' so server and client render identically
@@ -90,6 +91,9 @@ export default function ProjectsPage() {
      carries the same complete dataset as the Excel export, with the
      same columns. No API changes. */
   async function exportPdf() {
+    if (pdfBusy) return; // guards against a double-click firing two concurrent full-list refetches + generations
+    setPdfBusy(true);
+    try {
     const all = [];
     for (let p = 1; p <= 200; p++) {
       const res = await fetch('/api/projects?' + new URLSearchParams({ status: 'All', page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
@@ -115,6 +119,7 @@ export default function ProjectsPage() {
       lang,
       fileName: 'projects-report.pdf',
     });
+    } finally { setPdfBusy(false); }
   }
 
   function printReport() { window.print(); }
@@ -130,7 +135,7 @@ export default function ProjectsPage() {
         </div>
         <div className="flex items-center flex-wrap gap-2">
           <GlassButton onClick={exportExcel} variant="success">⤓ {t('common.exportExcel')}</GlassButton>
-          <GlassButton onClick={exportPdf} variant="secondary">⤓ {t('common.exportPdf')}</GlassButton>
+          <GlassButton onClick={exportPdf} variant="secondary" disabled={pdfBusy}>⤓ {t('common.exportPdf')}</GlassButton>
           <GlassButton onClick={printReport} variant="ghost">🖶 {t('common.print')}</GlassButton>
           {isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} variant="primary">{t('projects.addProject')}</GlassButton>}
         </div>
