@@ -6,6 +6,18 @@ import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { STATUS_BADGE } from '../page';
+import { GlassButton } from '@/components/glass';
+
+/* Dynamic status-transition buttons (STATUS_ACTIONS) map to a GlassButton
+   variant by semantic meaning of the target status, since the available
+   transitions vary per click — mirrors the mapping used in
+   app/(protected)/projects/[id]/page.js for PR_ACTIONS. */
+function statusActionVariant(to) {
+  if (to === 'Rejected' || to === 'Cancelled') return 'danger';
+  if (to === 'Approved' || to === 'Delivered' || to === 'Payment Completed') return 'success';
+  if (to === 'On Hold') return 'warning';
+  return 'secondary';
+}
 
 const ALL_STATUSES = ['Pending', 'Under Review', 'Approved', 'Rejected', 'On Hold', 'Purchased', 'Delivered', 'Cancelled', 'Payment Pending', 'Payment Approved', 'Payment Completed'];
 /* Target statuses; button labels resolve through t('pd.act.<status>') at render time. */
@@ -127,7 +139,7 @@ export default function PurchaseRequestDetailPage({ params }) {
             <form onSubmit={postComment} className="flex gap-2">
               <input value={comment} onChange={e => setComment(e.target.value)} placeholder={t('prd.addCommentPlaceholder')}
                 className="flex-1 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-              <button disabled={posting} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{posting ? '…' : t('prd.post')}</button>
+              <GlassButton disabled={posting} variant="primary">{posting ? '…' : t('prd.post')}</GlassButton>
             </form>
           </div>
         </div>
@@ -139,8 +151,8 @@ export default function PurchaseRequestDetailPage({ params }) {
               <Dropdown value={r.status} onChange={changeStatus} options={ALL_STATUSES.map(s => [s, trEnum(t, 'status', s)])} disabled={busy} />
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {STATUS_ACTIONS.filter(to => to !== r.status).map(to => (
-                  <button key={to} disabled={busy} onClick={() => changeStatus(to)}
-                    className="text-xs px-2.5 py-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-brand-500/40">{t('pd.act.' + to)}</button>
+                  <GlassButton key={to} disabled={busy} onClick={() => changeStatus(to)}
+                    variant={statusActionVariant(to)} className="text-xs px-2.5 py-1.5">{t('pd.act.' + to)}</GlassButton>
                 ))}
               </div>
             </div>

@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage } from '@/lib/i18n';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { GlassButton, GlassIconButton } from '@/components/glass';
 
 const EMPTY_FORM = { full_name: '', company_name: '', email: '', mobile_number: '', vat_number: '', cr_number: '', address: '', city: '', country: '', notes: '' };
 const REFRESH_MS = 15000;
@@ -61,7 +62,7 @@ export default function CustomersPage() {
           <h2 className="text-lg font-semibold">{t('cust.title')}</h2>
           <p className="text-xs text-slate-500">{t('cust.breadcrumb')}</p>
         </div>
-        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">{t('cust.addCustomer')}</button>}
+        {isAdmin && <GlassButton variant="primary" onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2">{t('cust.addCustomer')}</GlassButton>}
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
@@ -103,9 +104,9 @@ export default function CustomersPage() {
                 <td>{c.city || '—'}</td>
                 <td>{formatDate(c.created_at)}</td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => setModal({ mode: 'view', data: c })} title={t('common.view')} className="text-slate-400">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: c })} title={t('common.edit')} className="text-brand-500">✎</button>}
-                  {isAdmin && <button onClick={() => deleteCustomer(c.id)} title={t('common.delete')} className="text-red-500">🗑</button>}
+                  <GlassIconButton onClick={() => setModal({ mode: 'view', data: c })} title={t('common.view')} tone="neutral">{'\u{1F441}'}</GlassIconButton>
+                  {isAdmin && <GlassIconButton onClick={() => setModal({ mode: 'edit', data: c })} title={t('common.edit')} tone="cyan">✎</GlassIconButton>}
+                  {isAdmin && <GlassIconButton onClick={() => deleteCustomer(c.id)} title={t('common.delete')} tone="red">🗑</GlassIconButton>}
                 </td>
               </tr>
             ))}
@@ -122,9 +123,9 @@ export default function CustomersPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <GlassButton variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</GlassButton>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <GlassButton variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</GlassButton>
         </div>
       </div>
 
@@ -175,8 +176,8 @@ export function CustomerModal({ modal, isAdmin, onClose, onSave }) {
           )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{readOnly ? t('common.close') : t('common.cancel')}</button>
-          {!readOnly && <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>}
+          <GlassButton type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm">{readOnly ? t('common.close') : t('common.cancel')}</GlassButton>
+          {!readOnly && <GlassButton variant="primary" disabled={busy} className="px-4 py-2 text-sm">{busy ? t('common.saving') : t('common.save')}</GlassButton>}
         </div>
       </form>
     </div>

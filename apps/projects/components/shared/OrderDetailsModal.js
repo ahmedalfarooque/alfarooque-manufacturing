@@ -28,7 +28,6 @@ export const STATUS_BADGE = {
   rejected: 'bg-red-500/10 text-red-600 dark:text-red-400',
   returned: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
-function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
 
 /* If a resolved image URL genuinely 404s (file deleted, legacy/bad

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
 import { Select, EmptyState, Th, Td } from '@/components/ui';
+import { GlassIconButton } from '@/components/glass';
 
 const ROLES = ['admin', 'manager', 'sales', 'estimator', 'accountant', 'production', 'readonly'];
 const PERMS = {
@@ -64,7 +65,7 @@ export default function UsersPage() {
               </tr></thead>
               <tbody>
                 {rows === null ? (
-                  <tr><Td colSpan={6} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                  <tr><Td colSpan={6} className="text-center text-[#7C9296]">{t('shell.loading')}</Td></tr>
                 ) : rows.length === 0 ? (
                   <tr><td colSpan={6}><EmptyState text={t('common.noRecords')} /></td></tr>
                 ) : rows.map(u => (
@@ -80,10 +81,10 @@ export default function UsersPage() {
                           options={ROLES.map(r => ({ value: r, label: t('qrole.' + r) }))} />
                       )}
                     </Td>
-                    <Td className="text-[12px] text-[#8C8A80] whitespace-nowrap">{formatDate(u.created_at)}</Td>
+                    <Td className="text-[12px] text-[#7C9296] whitespace-nowrap">{formatDate(u.created_at)}</Td>
                     <Td className="text-end whitespace-nowrap">
                       {me && me.id !== u.id && (
-                        <button onClick={() => deleteUser(u)} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                        <GlassIconButton tone="red" title={t('common.delete')} onClick={() => deleteUser(u)}>🗑</GlassIconButton>
                       )}
                     </Td>
                   </tr>

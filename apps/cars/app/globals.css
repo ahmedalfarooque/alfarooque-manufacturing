@@ -6,43 +6,43 @@
 
 html.dark { color-scheme: dark; }
 
-/* ═══ Shared design tokens (mirrors css/themes.css on the main site) ═══
-   These apps are LIGHT by default with `html.dark` opting into dark —
-   the inverse of the main site's dark-default/html.light convention —
-   so light values sit at :root and dark values live under html.dark. */
+/* ═══ Shared design tokens — the unified AL FAROOQUE glass design system,
+   matching the approved TrackFleet login (deep navy + bright cyan). Light
+   values sit at :root; dark values (the premium default experience) live
+   under html.dark. Change a value here and it propagates app-wide. ═══ */
 :root {
-  --bg:      #FFFFFF;
-  --bg-2:    #F7F5F1;
+  --bg:      #F0F5F6;
+  --bg-2:    #EEF3F4;
   --bg-card: #FFFFFF;
-  --bd:      #E5E2DD;
-  --bd-2:    #D8D4CC;
-  --tx:      #1A1A18;
-  --tx-2:    #4A4A45;
-  --tx-3:    #6B6B63;
-  --tx-4:    #8C8A80;
-  --pr:      #6B7A4F;
-  --pr-2:    #7D8F5C;
+  --bd:      #D9E4E6;
+  --bd-2:    #C7D6D8;
+  --tx:      #122A30;
+  --tx-2:    #41585C;
+  --tx-3:    #5E7579;
+  --tx-4:    #7C9296;
+  --pr:      #0EA5E9;
+  --pr-2:    #25D4FF;
   --nav-bg:  rgba(255,255,255,0.78);
   --sh-sm:   0 1px 2px rgba(26,26,24,0.04), 0 4px 12px rgba(26,26,24,0.05);
   --sh-md:   0 2px 6px rgba(26,26,24,0.05), 0 12px 28px rgba(26,26,24,0.07);
   --sh-lg:   0 4px 10px rgba(26,26,24,0.06), 0 24px 54px rgba(26,26,24,0.09);
 }
 html.dark {
-  --bg:      #14140F;
-  --bg-2:    #1B1B14;
-  --bg-card: rgba(255,255,255,0.05);
-  --bd:      rgba(255,255,255,0.08);
-  --bd-2:    rgba(255,255,255,0.14);
-  --tx:      #F5F3EE;
-  --tx-2:    #D6D2C4;
-  --tx-3:    #A8A497;
-  --tx-4:    #79766B;
-  --pr:      #8CA05B;
-  --pr-2:    #A3B873;
-  --nav-bg:  rgba(20,20,15,0.55);
-  --sh-sm:   0 2px 12px rgba(0,0,0,0.40);
-  --sh-md:   0 8px 32px rgba(0,0,0,0.50);
-  --sh-lg:   0 20px 60px rgba(0,0,0,0.60);
+  --bg:      #06141C;
+  --bg-2:    #0B2230;
+  --bg-card: rgba(255,255,255,0.06);
+  --bd:      rgba(255,255,255,0.10);
+  --bd-2:    rgba(255,255,255,0.16);
+  --tx:      #FFFFFF;
+  --tx-2:    #AFC4D6;
+  --tx-3:    #8CA6B8;
+  --tx-4:    #6B8496;
+  --pr:      #25D4FF;
+  --pr-2:    #36E2FF;
+  --nav-bg:  rgba(11,34,48,0.55);
+  --sh-sm:   0 2px 12px rgba(0,0,0,0.45);
+  --sh-md:   0 8px 32px rgba(2,10,16,0.55);
+  --sh-lg:   0 20px 60px rgba(2,10,16,0.65);
 }
 
 /* ── Arabic RTL fonts (Cairo body / Tajawal display) ── */
@@ -53,45 +53,100 @@ html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 {
   font-family: 'Tajawal', 'Noto Sans Arabic', sans-serif;
 }
 
-/* ── Decorative background: gives backdrop-filter blur something to
-   blur — over a flat solid color, blur is invisible, which is why the
-   glass cards below were reading as plain flat panels. ── */
+/* ── Base surface: deep navy gradient (dark) so the frosted glass and the
+   glowing spheres below read exactly like the login. ── */
 body {
-  background:
-    radial-gradient(ellipse 60% 40% at 8% 0%, rgba(107,122,79,0.07) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 35% at 95% 100%, rgba(107,122,79,0.05) 0%, transparent 55%),
-    #FFFFFF;
+  background: linear-gradient(160deg, #0B2230 0%, #06141C 55%, #040E14 100%);
   background-attachment: fixed;
-  color: #1A1A18;
+  color: #FFFFFF;
   transition: background-color .3s ease, color .3s ease;
 }
-html.dark body {
-  background:
-    radial-gradient(ellipse 60% 40% at 8% 0%, rgba(140,160,91,0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 35% at 95% 100%, rgba(140,160,91,0.08) 0%, transparent 55%),
-    #14140F;
+html:not(.dark) body {
+  background: linear-gradient(160deg, #F2F7F8 0%, #E9F1F2 100%);
   background-attachment: fixed;
-  color: #F5F3EE;
+  color: #122A30;
+}
+
+/* ── Ambient sphere atmosphere — the login page's glowing cyan planets as
+   a FIXED layer behind ALL app content (z-index:-1, never overlaps). The
+   semi-transparent glass surfaces above let these bright cyan spheres glow
+   through, exactly like the login. Compositor-only transform/opacity. ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(48vw 48vw at 20% -4%, rgba(54,226,255,0.42), rgba(37,212,255,0.20) 46%, transparent 72%),
+    radial-gradient(44vw 44vw at 106% 12%, rgba(37,212,255,0.32), rgba(14,165,233,0.16) 50%, transparent 64%),
+    radial-gradient(58vw 58vw at 86% 106%, rgba(14,165,233,0.40), rgba(37,212,255,0.16) 46%, transparent 68%);
+  filter: blur(44px);
+  animation: afAppBgFloat 22s ease-in-out infinite;
+}
+html:not(.dark) body::before {
+  background:
+    radial-gradient(38vw 38vw at 12% 6%, rgba(14,165,196,0.12), transparent 60%),
+    radial-gradient(48vw 48vw at 90% 94%, rgba(14,165,196,0.08), transparent 64%),
+    radial-gradient(26vw 26vw at 66% 58%, rgba(14,165,196,0.04), transparent 66%);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 12% 22%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 82% 18%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(2px 2px at 70% 62%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1.5px 1.5px at 22% 78%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 92% 72%, rgba(255,255,255,0.35), transparent);
+  opacity: 0.5;
+}
+html:not(.dark) body::after { opacity: 0.14; }
+@keyframes afAppBgFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.5%, -1.8%, 0) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+
+/* ── Shell polish — active-nav gradient pill + cyan glow (mirrors the
+   login's active tab / primary button) and the login card's inset
+   top-sheen on the sidebar/header glass. Visual only. ── */
+.af-nav-active {
+  color: #fff;
+  background: linear-gradient(135deg, #25D4FF 0%, #0EA5E9 55%, #0284C7 100%);
+  box-shadow: 0 8px 22px rgba(37,212,255,0.42), 0 1px 0 rgba(255,255,255,0.30) inset;
+}
+.af-shell-aside {
+  box-shadow: 0 1.5px 0 rgba(255,255,255,0.9) inset, 4px 0 24px rgba(18,42,48,0.05);
+}
+html.dark .af-shell-aside {
+  box-shadow: 0 1.5px 0 rgba(255,255,255,0.22) inset, 4px 0 24px rgba(0,0,0,0.30);
+}
+.af-shell-header {
+  box-shadow: 0 1.5px 0 rgba(255,255,255,0.9) inset, 0 2px 16px rgba(18,42,48,0.05);
+}
+html.dark .af-shell-header {
+  box-shadow: 0 1.5px 0 rgba(255,255,255,0.22) inset, 0 2px 16px rgba(0,0,0,0.30);
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(107,122,79,.4); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(107,122,79,.6); }
+::-webkit-scrollbar-thumb { background: rgba(37,212,255,.45); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(37,212,255,.7); }
 
 /* ═══ Glass icon system (sprite injected by components/GlassIcons.js) ═══
    Tints ride on CSS vars the sprite's gradients read; they live on the
-   injected #giSpriteRoot (var lookups resolve there, not per-consumer).
-   These apps are LIGHT by default with `html.dark` opting into dark —
-   the inverse of the main site — so light values sit at the root and
-   dark values under html.dark. */
+   injected #giSpriteRoot. Light values at root, dark under html.dark. */
 #giSpriteRoot svg {
-  --gi-t:  #6B7A4F; --gi-t2: #46512F; --gi-hl: #FFFFFF;
+  --gi-t:  #0EA5E9; --gi-t2: #0C6E88; --gi-hl: #FFFFFF;
   --gw-t:  #96713D; --gw-t2: #5C431F;   /* wood  */
   --gs-t:  #5B7288; --gs-t2: #35485A;   /* steel */
   --ga-t:  #5E92A5; --ga-t2: #3A606F;   /* aluminium */
 }
 html.dark #giSpriteRoot svg {
-  --gi-t:  #A3B873; --gi-t2: #566440;
+  --gi-t:  #36E2FF; --gi-t2: #0EA5E9;
   --gw-t:  #B08D57; --gw-t2: #6E5230;
   --gs-t:  #7E93A8; --gs-t2: #46586B;
   --ga-t:  #8FB6C4; --ga-t2: #4E7381;
@@ -116,9 +171,7 @@ html.dark #giSpriteRoot svg {
   .gicon { transition: none; }
 }
 
-/* ═══ Glass toggle pills (theme + language) — ported from the main
-   site's css/themes.css .glass-ctrl / .lang-switcher, adapted to this
-   app's light-default/html.dark convention. ═══ */
+/* ═══ Glass toggle pills (theme + language) ═══ */
 .glass-ctrl {
   display: inline-flex;
   align-items: center;
@@ -147,14 +200,16 @@ html.dark .glass-ctrl {
   box-shadow: 0 4px 20px rgba(26,26,24,0.22);
 }
 .glass-ctrl:hover {
-  background: rgba(107,122,79,0.09);
-  border-color: rgba(107,122,79,0.30);
+  background: rgba(14,165,233,0.10);
+  border-color: rgba(37,212,255,0.34);
   color: var(--tx);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37,212,255,0.22);
 }
 html.dark .glass-ctrl:hover {
-  background: rgba(140,160,91,0.16);
-  border-color: rgba(140,160,91,0.34);
+  background: rgba(37,212,255,0.16);
+  border-color: rgba(54,226,255,0.42);
+  box-shadow: 0 6px 22px rgba(37,212,255,0.30);
 }
 .glass-ctrl .gicon { opacity: 1; }
 .glass-ctrl .ctrl-icon {
@@ -191,8 +246,8 @@ html.dark .glass-ctrl:hover {
   line-height: 1;
 }
 .lang-btn:hover { color: var(--tx); background: var(--bg-card); }
-.lang-btn.active { color: var(--pr-2); background: rgba(107,122,79,0.09); }
-html.dark .lang-btn.active { background: rgba(140,160,91,0.16); }
+.lang-btn.active { color: var(--pr-2); background: rgba(14,165,233,0.10); }
+html.dark .lang-btn.active { background: rgba(37,212,255,0.16); }
 .lang-btn.ar-btn {
   font-family: 'Cairo', 'Tajawal', sans-serif;
   font-size: 12px;
@@ -209,45 +264,150 @@ html[dir="rtl"] .lang-btn.ar-btn { border-left: none; border-right: 1px solid va
   .glass-ctrl .ctrl-label { display: none; }
 }
 
-/* ═══ Premium glass card — shared surface for dashboard stat cards,
-   charts, list panels, tables and the notification dropdown. Two
-   distinct recipes (not one theme inverted): light gets a bright
-   layered-white frost, dark gets a deeper frosted tint with a subtle
-   brand-olive glow on hover, both reusing the token layer above. ═══ */
+/* ═══ Premium glass card — shared surface for stat cards, charts, list
+   panels, tables, dialogs and the notification dropdown. Deep frosted
+   tint + inset sheen + cyan glow, matching the login card. ═══ */
 .glass-card {
   position: relative;
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid var(--bd-2);
-  background: linear-gradient(148deg, rgba(255,255,255,0.92) 0%, rgba(247,245,241,0.78) 100%);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(196,210,228,0.5), 0 2px 6px rgba(26,26,24,0.05), 0 14px 32px rgba(26,26,24,0.08);
+  background: linear-gradient(148deg, rgba(255,255,255,0.94) 0%, rgba(238,246,248,0.80) 100%);
+  backdrop-filter: blur(26px) saturate(185%);
+  -webkit-backdrop-filter: blur(26px) saturate(185%);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(37,212,255,0.10), 0 2px 6px rgba(6,20,28,0.05), 0 16px 38px rgba(6,20,28,0.09);
   transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .glass-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(107,122,79,0.28);
-  box-shadow: 0 0 0 1px rgba(107,122,79,0.14), 0 4px 10px rgba(26,26,24,0.06), 0 18px 40px rgba(26,26,24,0.09), 0 0 26px rgba(107,122,79,0.08);
+  transform: translateY(-3px);
+  border-color: rgba(37,212,255,0.30);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(37,212,255,0.16), 0 22px 48px rgba(6,20,28,0.12), 0 0 30px rgba(37,212,255,0.10);
 }
 html.dark .glass-card {
-  background: linear-gradient(148deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%);
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.04), 0 10px 28px rgba(0,0,0,0.40);
+  background: linear-gradient(148deg, rgba(255,255,255,0.08) 0%, rgba(37,212,255,0.03) 55%, rgba(255,255,255,0.02) 100%);
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.10) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 16px 40px rgba(0,0,0,0.50), 0 0 40px rgba(37,212,255,0.05);
 }
 html.dark .glass-card:hover {
-  border-color: rgba(140,160,91,0.38);
-  box-shadow: 0 0 0 1px rgba(140,160,91,0.20), 0 12px 32px rgba(0,0,0,0.45), 0 0 32px rgba(140,160,91,0.16);
+  border-color: rgba(54,226,255,0.42);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.14) inset, 0 0 0 1px rgba(37,212,255,0.22), 0 18px 44px rgba(0,0,0,0.55), 0 0 44px rgba(54,226,255,0.20);
 }
 .glass-card--pad {
   padding: 14px;
 }
 
+/* ═══ Premium glass button system — ONE recipe for every button across all
+   three apps. Frosted, transparent, luminous border, inner reflection,
+   ambient cyan glow, crystal-clear white text. Variants: primary, secondary,
+   success, warning, danger, ghost. ═══ */
+.af-btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 14px;
+  padding: 10px 18px;
+  min-height: 40px;
+  font-size: 15px; font-weight: 600; letter-spacing: 0.2px; line-height: 1;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  cursor: pointer;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(2,10,16,0.35);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .25s cubic-bezier(0.34,1.56,0.64,1), box-shadow .25s ease, background .25s ease, border-color .25s ease, filter .25s ease;
+}
+.af-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #25D4FF; }
+.af-btn:active:not(:disabled) { transform: scale(0.98); filter: brightness(0.97); }
+.af-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Primary — transparent cyan crystal */
+.af-btn--primary {
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 42%), rgba(37,212,255,0.18);
+  border-color: rgba(255,255,255,0.22);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 8px 24px rgba(37,212,255,0.26), 0 0 22px rgba(54,226,255,0.16);
+}
+.af-btn--primary:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.02);
+  background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0) 42%), rgba(37,212,255,0.30);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.45) inset, 0 14px 34px rgba(37,212,255,0.42), 0 0 34px rgba(54,226,255,0.38);
+}
+/* Secondary / Ghost — neutral frosted glass */
+.af-btn--secondary, .af-btn--ghost {
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0) 45%), rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.20) inset, 0 6px 18px rgba(2,10,16,0.35);
+}
+.af-btn--secondary:hover:not(:disabled), .af-btn--ghost:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(37,212,255,0.45);
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 45%), rgba(37,212,255,0.12);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.28) inset, 0 10px 26px rgba(37,212,255,0.22), 0 0 22px rgba(54,226,255,0.20);
+}
+html:not(.dark) .af-btn--secondary, html:not(.dark) .af-btn--ghost { color: var(--tx); text-shadow: none; }
+/* Success — cyan-green glass */
+.af-btn--success {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0) 45%), rgba(52,211,153,0.18);
+  border-color: rgba(255,255,255,0.20);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.30) inset, 0 8px 22px rgba(52,211,153,0.24), 0 0 20px rgba(52,211,153,0.16);
+}
+.af-btn--success:hover:not(:disabled) { transform: translateY(-3px) scale(1.02); background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0) 45%), rgba(52,211,153,0.28); box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 12px 30px rgba(52,211,153,0.36), 0 0 30px rgba(52,211,153,0.34); }
+/* Warning — amber glass */
+.af-btn--warning {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0) 45%), rgba(251,191,36,0.18);
+  border-color: rgba(255,255,255,0.20);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.30) inset, 0 8px 22px rgba(251,191,36,0.22), 0 0 20px rgba(251,191,36,0.16);
+}
+.af-btn--warning:hover:not(:disabled) { transform: translateY(-3px) scale(1.02); background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0) 45%), rgba(251,191,36,0.28); box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 12px 30px rgba(251,191,36,0.34), 0 0 30px rgba(251,191,36,0.32); }
+/* Danger — dark glass + red accent, never solid red */
+.af-btn--danger {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 45%), rgba(10,20,26,0.45);
+  border-color: rgba(248,113,113,0.42);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.14) inset, 0 6px 18px rgba(0,0,0,0.40);
+}
+.af-btn--danger:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(248,113,113,0.72);
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 45%), rgba(248,113,113,0.16);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 10px 26px rgba(0,0,0,0.45), 0 0 26px rgba(248,113,113,0.42);
+}
+html:not(.dark) .af-btn--danger { color: #B91C1C; text-shadow: none; }
+/* Info — light blue glass */
+.af-btn--info {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0) 45%), rgba(14,165,233,0.18);
+  border-color: rgba(255,255,255,0.20);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.30) inset, 0 8px 22px rgba(14,165,233,0.22), 0 0 20px rgba(14,165,233,0.16);
+}
+.af-btn--info:hover:not(:disabled) { transform: translateY(-3px) scale(1.02); background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0) 45%), rgba(14,165,233,0.28); box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 12px 30px rgba(14,165,233,0.34), 0 0 30px rgba(14,165,233,0.32); }
+
+/* ═══ Compact glass action pills — table row actions (Edit / View /
+   Duplicate / Approve / Reject / Delete). Icon + text, 34px, individual
+   glass container, tone hover. ═══ */
+.af-actionbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 34px; padding: 0 14px; border-radius: 12px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.2px; line-height: 1;
+  border: 1px solid var(--bd-2);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  color: var(--tx-2);
+  cursor: pointer; white-space: nowrap;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+}
+.af-actionbtn:hover { transform: translateY(-2px); color: var(--tx); }
+.af-actionbtn:active { transform: scale(0.98); }
+.af-actionbtn--cyan:hover { border-color: rgba(37,212,255,0.55); background: rgba(37,212,255,0.14); color: #36E2FF; box-shadow: 0 0 18px rgba(37,212,255,0.30); }
+.af-actionbtn--neutral:hover { border-color: rgba(255,255,255,0.30); background: rgba(255,255,255,0.12); }
+.af-actionbtn--blue:hover { border-color: rgba(14,165,233,0.55); background: rgba(14,165,233,0.14); color: #38BDF8; box-shadow: 0 0 18px rgba(14,165,233,0.30); }
+.af-actionbtn--purple:hover { border-color: rgba(167,139,250,0.55); background: rgba(167,139,250,0.14); color: #C4B5FD; box-shadow: 0 0 18px rgba(167,139,250,0.30); }
+.af-actionbtn--emerald:hover { border-color: rgba(52,211,153,0.55); background: rgba(52,211,153,0.14); color: #34D399; box-shadow: 0 0 18px rgba(52,211,153,0.30); }
+.af-actionbtn--red { border-color: rgba(248,113,113,0.32); }
+.af-actionbtn--red:hover { border-color: rgba(248,113,113,0.6); background: rgba(248,113,113,0.14); color: #F87171; box-shadow: 0 0 18px rgba(248,113,113,0.32); }
+.af-actionbtn--icononly { padding: 0; width: 34px; }
+
 /* ═══ Stat-card micro-animations — trend line / progress ring / mini bar
-   chart draw-in + caption typewriter. One-shot on mount only (no
-   `infinite`, nothing re-triggers on a 15s data refresh since the card
-   doesn't remount unless the underlying value actually changes) — kept
-   quiet on purpose so a dashboard people check all day doesn't stay
-   "busy". ═══ */
+   chart draw-in + caption typewriter. One-shot on mount only. ═══ */
 .trendline-svg { overflow: visible; display: block; }
 .trendline-area {
   opacity: 0;
@@ -302,13 +462,8 @@ html.dark .glass-card:hover {
   .tw-caption { animation: none; width: auto; }
 }
 
-
-/* ═══ Admin app-switcher buttons — same .glass-ctrl recipe (height,
-   radius, glass, shadows, hover), but they keep their pill shape and
-   TEXT label on mobile: below 768px the generic .glass-ctrl collapses
-   to a 44px icon circle and hides .ctrl-label, which would leave these
-   text-only buttons empty. Scoped strictly to .app-switch-btn — nothing
-   else in the header changes. ═══ */
+/* ═══ Admin app-switcher buttons — keep pill shape + text label on mobile
+   (the generic .glass-ctrl rule collapses to a 44px icon circle). ═══ */
 @media (max-width: 768px) {
   .glass-ctrl.app-switch-btn {
     width: auto; height: 34px;
@@ -316,4 +471,15 @@ html.dark .glass-card:hover {
     font-size: 12px; gap: 6px;
   }
   .glass-ctrl.app-switch-btn .ctrl-label { display: inline; font-size: 11px; }
+}
+
+/* ═══ Language toggle — text-only .glass-ctrl (EN / عربي, no icon): keep it
+   a pill with the label visible on mobile. ═══ */
+@media (max-width: 768px) {
+  .glass-ctrl.lang-toggle-btn {
+    width: auto; height: 44px;
+    padding: 0 14px; border-radius: 40px;
+    font-size: 13px; gap: 0;
+  }
+  .glass-ctrl.lang-toggle-btn .ctrl-label { display: inline; font-size: 12px; }
 }

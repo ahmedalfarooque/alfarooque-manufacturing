@@ -281,7 +281,6 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
 
   form.addEventListener('submit',async e=>{
     e.preventDefault();
-    console.log('[Quote] Submit button clicked');
 
     const btn=form.querySelector('[type=submit]');
     if(!btn) return;
@@ -289,18 +288,12 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
     const data=Object.fromEntries(new FormData(form));
     data.type = 'contact';
     data.language = IS_AR ? 'ar' : 'en';
-    console.log('[Quote] Form data collected:',{
-      name: data.first_name?`${data.first_name} ${data.last_name||''}`:data.name,
-      email: data.email,
-      service: data.service,
-    });
 
     btn.disabled=true;
     const origText=btn.textContent;
     btn.textContent=tr('Sending…','جارٍ الإرسال…');
     showStatus(tr('Sending your request…','جارٍ إرسال طلبك…'),'info');
 
-    console.log('[Quote] Calling API: POST /api/quote');
     let res,json;
     try {
       res=await fetch('/api/quote',{
@@ -318,10 +311,7 @@ const $$ = (s,c=document) => [...c.querySelectorAll(s)];
       return;
     }
 
-    console.log('[Quote] API response:',res.status,json);
-
     if(res.ok&&json.success){
-      console.log('[Quote] SUCCESS — email delivered to arshad@alfarooque.com, id:',json.id);
       btn.textContent=tr('✓ Sent','✓ تم الإرسال');
       showStatus(tr('Thank you. Your request has been submitted successfully.',
                     'شكراً لك. تم إرسال طلبك بنجاح.'),'success');

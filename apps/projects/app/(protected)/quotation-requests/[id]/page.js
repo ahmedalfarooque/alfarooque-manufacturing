@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { STATUS_BADGE } from '../page';
+import { GlassButton } from '@/components/glass';
 
 function money(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }); }
 
@@ -43,7 +44,7 @@ export default function QuotationRequestDetailPage() {
   }
 
   if (error) return <Shell active="/quotation-requests"><div className="text-red-500">{error}</div></Shell>;
-  if (!row) return <Shell active="/quotation-requests"><div className="text-[#8C8A80]">{t('common.loading')}</div></Shell>;
+  if (!row) return <Shell active="/quotation-requests"><div className="text-[#7C9296]">{t('common.loading')}</div></Shell>;
 
   const customerName = row.customer?.company_name_en || row.customer?.company_name_ar || row.customer?.company_name || '—';
 
@@ -71,13 +72,13 @@ export default function QuotationRequestDetailPage() {
         <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 flex flex-wrap items-center gap-2">
           {row.status === 'pending' && (
             <>
-              <button disabled={busy} onClick={() => setStatus('accepted')} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white disabled:opacity-50">{t('qr.accept')}</button>
-              <button disabled={busy} onClick={() => setStatus('on_hold')} className="text-sm px-3 py-2 rounded-lg bg-amber-600 text-white disabled:opacity-50">{t('qr.hold')}</button>
-              <button disabled={busy} onClick={() => setStatus('rejected')} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('qr.reject')}</button>
+              <GlassButton variant="success" className="text-sm px-3 py-2" disabled={busy} onClick={() => setStatus('accepted')}>{t('qr.accept')}</GlassButton>
+              <GlassButton variant="warning" className="text-sm px-3 py-2" disabled={busy} onClick={() => setStatus('on_hold')}>{t('qr.hold')}</GlassButton>
+              <GlassButton variant="danger" className="text-sm px-3 py-2" disabled={busy} onClick={() => setStatus('rejected')}>{t('qr.reject')}</GlassButton>
             </>
           )}
           {['accepted', 'on_hold'].includes(row.status) && !row.project_id && (
-            <button disabled={busy} onClick={startProject} className="text-sm px-3 py-2 rounded-lg bg-brand-600 text-white disabled:opacity-50">{t('qr.projectStart')}</button>
+            <GlassButton variant="primary" className="text-sm px-3 py-2" disabled={busy} onClick={startProject}>{t('qr.projectStart')}</GlassButton>
           )}
           {row.project_id && (
             <a href={'/projects/' + row.project_id} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">↗ {t('qr.openProject')}</a>

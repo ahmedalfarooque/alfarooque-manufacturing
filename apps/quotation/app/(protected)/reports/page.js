@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Select, Field, EmptyState, Th, Td } from '@/components/ui';
+import { GlassButton } from '@/components/glass';
 import { pickDefaultEntityId } from '@/lib/defaultEntity';
 
 const REPORTS = ['quotation-register', 'sales-by-customer', 'profit-margin', 'vat-summary',
@@ -106,9 +107,9 @@ export default function ReportsPage() {
           )}
           <Button disabled={busy} onClick={run}>{busy ? t('shell.loading') : t('reports.run')}</Button>
           <div className="flex-1" />
-          <a href={`/api/reports/${slug}?${qs()}&format=xlsx`} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ Excel</a>
-          <a href={`/api/reports/${slug}?${qs()}&format=csv`} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ CSV</a>
-          <button onClick={exportPdf} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ PDF</button>
+          <a href={`/api/reports/${slug}?${qs()}&format=xlsx`} className="af-btn af-btn--secondary text-sm">⇩ Excel</a>
+          <a href={`/api/reports/${slug}?${qs()}&format=csv`} className="af-btn af-btn--secondary text-sm">⇩ CSV</a>
+          <GlassButton variant="secondary" className="text-sm" onClick={exportPdf}>⇩ PDF</GlassButton>
         </div>
 
         <div className="glass-card overflow-hidden">
@@ -128,7 +129,7 @@ export default function ReportsPage() {
                 {/* header cells mirror <Th> exactly but wrap instead of
                     nowrap, so long headers never widen the table */}
                 <thead><tr>{data.columns.map(c => (
-                  <th key={c.key} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#8C8A80] font-medium align-top break-words whitespace-normal">{c.header}</th>
+                  <th key={c.key} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[#7C9296] font-medium align-top break-words whitespace-normal">{c.header}</th>
                 ))}</tr></thead>
                 <tbody>
                   {data.rows.map((r, i) => {
@@ -136,14 +137,14 @@ export default function ReportsPage() {
                     return (
                       <tr key={i}
                         onClick={clickable ? () => { window.location.href = '/quotations/' + r.id; } : undefined}
-                        className={'transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] ' + (clickable ? 'cursor-pointer' : '')}>
+                        className={'transition-colors duration-150 hover:bg-[#EEF3F4] dark:hover:bg-white/[0.03] ' + (clickable ? 'cursor-pointer' : '')}>
                         {data.columns.map(c => <Td key={c.key} dir="auto" className="align-top break-words whitespace-normal">{cell(r[c.key])}</Td>)}
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
-              <div className="px-4 py-2 text-[12px] text-[#8C8A80]">{data.rows.length} {t('reports.rows')}</div>
+              <div className="px-4 py-2 text-[12px] text-[#7C9296]">{data.rows.length} {t('reports.rows')}</div>
             </div>
           )}
         </div>

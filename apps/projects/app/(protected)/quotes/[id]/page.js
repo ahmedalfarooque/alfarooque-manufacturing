@@ -5,9 +5,9 @@ import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { QUOTE_STATUS_BADGE } from '../page';
+import { GlassButton } from '@/components/glass';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
-function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -111,7 +111,7 @@ export default function QuoteDetailPage() {
   }
 
   if (error) return <Shell active="/quotes"><div className="text-red-500">{error}</div></Shell>;
-  if (!quote) return <Shell active="/quotes"><div className="text-[#8C8A80]">{t('common.loading')}</div></Shell>;
+  if (!quote) return <Shell active="/quotes"><div className="text-[#7C9296]">{t('common.loading')}</div></Shell>;
 
   return (
     <Shell active="/quotes">
@@ -142,14 +142,14 @@ export default function QuoteDetailPage() {
                 className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2" />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button disabled={busy} onClick={save} className="text-sm px-3 py-2 rounded-lg bg-brand-600 text-white disabled:opacity-50">{t('oq.save')}</button>
+              <GlassButton variant="primary" className="text-sm px-3 py-2" disabled={busy} onClick={save}>{t('oq.save')}</GlassButton>
               {!quote.order_id && (
-                <button disabled={busy} onClick={convertToOrder} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">{t('oq.convertToOrder')}</button>
+                <GlassButton variant="secondary" className="text-sm px-3 py-2" disabled={busy} onClick={convertToOrder}>{t('oq.convertToOrder')}</GlassButton>
               )}
               {quote.email && (
-                <button disabled={busy} onClick={() => setReplyOpen(true)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">{t('oq.replyToCustomer')}</button>
+                <GlassButton variant="secondary" className="text-sm px-3 py-2" disabled={busy} onClick={() => setReplyOpen(true)}>{t('oq.replyToCustomer')}</GlassButton>
               )}
-              <button disabled={busy} onClick={deleteQuote} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.delete')}</button>
+              <GlassButton variant="danger" className="text-sm px-3 py-2" disabled={busy} onClick={deleteQuote}>{t('oq.delete')}</GlassButton>
               <a href="/quotes" className="text-sm text-slate-400 hover:underline ms-auto">‹ {t('oq.quotesTitle')}</a>
             </div>
           </div>
@@ -185,8 +185,8 @@ export default function QuoteDetailPage() {
               )}
             </div>
             <div className="flex items-center flex-wrap gap-2">
-              <button disabled={sending} onClick={sendReply} className="text-sm px-3 py-2 rounded-lg bg-brand-600 text-white disabled:opacity-50">{sending ? t('oq.sending') : t('oq.send')}</button>
-              <button disabled={sending} onClick={() => setReplyOpen(false)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">{t('oq.cancel')}</button>
+              <GlassButton variant="primary" className="text-sm px-3 py-2" disabled={sending} onClick={sendReply}>{sending ? t('oq.sending') : t('oq.send')}</GlassButton>
+              <GlassButton variant="secondary" className="text-sm px-3 py-2" disabled={sending} onClick={() => setReplyOpen(false)}>{t('oq.cancel')}</GlassButton>
             </div>
           </div>
         )}

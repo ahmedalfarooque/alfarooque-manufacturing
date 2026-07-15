@@ -16,7 +16,7 @@ export default function MiniBarChart({ values, colors = [], height = 90 }) {
         const pct = Math.max(6, (v / max) * 100);
         return (
           <div key={i} className="mbar-bar flex-1 rounded-t-md"
-            style={{ '--mbar-h': pct + '%', background: colors[i] || '#6B7A4F', animationDelay: (i * 90) + 'ms' }} />
+            style={{ '--mbar-h': pct + '%', background: colors[i] || '#0C93AE', animationDelay: (i * 90) + 'ms' }} />
         );
       })}
     </div>

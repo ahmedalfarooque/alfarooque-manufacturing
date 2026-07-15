@@ -5,6 +5,7 @@ import { useLanguage } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
+import { GlassButton } from '@/components/glass';
 
 const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
@@ -37,7 +38,8 @@ export default function Shell({ children, active }) {
       /* Cross-app pref cookie wins (latest choice made in ANY app);
          the per-app localStorage key stays as the fallback. */
       const saved = readPref(THEME_PREF_COOKIE) || localStorage.getItem('af-projects-theme');
-      setDark(saved === 'dark');
+      setDark(saved !== 'light');
+      if (saved !== 'light') document.documentElement.classList.add('dark');
     } catch (_) {}
   }, []);
 
@@ -114,26 +116,26 @@ export default function Shell({ children, active }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F7F5F1] dark:bg-[#14140F] text-[#1A1A18] dark:text-[#F5F3EE] transition-colors duration-300">
+    <div className="min-h-screen flex text-[#122A30] dark:text-[#F4F9FA] transition-colors duration-300">
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-white/80 dark:bg-[#1B1B14]/75 backdrop-blur-2xl backdrop-saturate-150 border-e border-[#E5E2DD] dark:border-white/[0.08] text-[#4A4A45] dark:text-[#A8A497] flex flex-col transition-transform shadow-[4px_0_24px_rgba(26,26,24,0.04)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)] ' +
+        'af-shell-aside fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 bg-white/80 dark:bg-[#0F2A36]/75 backdrop-blur-2xl backdrop-saturate-150 border-e border-[#D9E4E6] dark:border-white/[0.08] text-[#41585C] dark:text-[#9DB3B6] flex flex-col transition-transform ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-[#E5E2DD] dark:border-white/[0.08]">
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-[#D9E4E6] dark:border-white/[0.08]">
           <img src="/logo.png" alt="AL FAROOQUE" className="h-9 w-9 object-contain shrink-0" />
           <div>
-            <div className="text-[#1A1A18] dark:text-[#F5F3EE] font-semibold text-sm leading-tight">{t('shell.appName')}</div>
-            <div className="text-[11px] text-[#8C8A80]">{t('shell.appTagline')}</div>
+            <div className="text-[#122A30] dark:text-[#F4F9FA] font-semibold text-sm leading-tight">{t('shell.appName')}</div>
+            <div className="text-[11px] text-[#7C9296]">{t('shell.appTagline')}</div>
           </div>
         </div>
-        <div className="px-5 py-3 text-[11px] uppercase tracking-wider text-[#8C8A80]">{user?.role ? t('role.' + user.role) : ' '}</div>
+        <div className="px-5 py-3 text-[11px] uppercase tracking-wider text-[#7C9296]">{user?.role ? t('role.' + user.role) : ' '}</div>
         <div className="px-5 pb-3 flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-brand-600/15 flex items-center justify-center text-xs font-medium text-brand-700 dark:text-brand-300">
             {(user?.full_name || user?.email || '?').slice(0, 1).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <div className="text-sm text-[#1A1A18] dark:text-[#F5F3EE] truncate">{user?.full_name || t('shell.loading')}</div>
-            <div className="text-[11px] text-[#8C8A80] truncate">{user?.role ? t('role.' + user.role) : ''}</div>
+            <div className="text-sm text-[#122A30] dark:text-[#F4F9FA] truncate">{user?.full_name || t('shell.loading')}</div>
+            <div className="text-[11px] text-[#7C9296] truncate">{user?.role ? t('role.' + user.role) : ''}</div>
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2">
@@ -141,14 +143,14 @@ export default function Shell({ children, active }) {
             <a key={item.href} href={item.href}
               className={
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ' +
-                (active === item.href ? 'bg-brand-600 text-white shadow-sm' : 'hover:bg-[#F1EEE7] dark:hover:bg-white/5 text-[#4A4A45] dark:text-[#A8A497]')
+                (active === item.href ? 'af-nav-active' : 'hover:bg-[#E4EDEE] dark:hover:bg-white/5 text-[#41585C] dark:text-[#9DB3B6]')
               }>
               <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.labelKey)}
             </a>
           ))}
         </nav>
         <div className="p-3">
-          <button onClick={logout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[#4A4A45] dark:text-[#A8A497] hover:bg-[#F1EEE7] dark:hover:bg-white/5 transition-colors duration-200">
+          <button onClick={logout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[#41585C] dark:text-[#9DB3B6] hover:bg-[#E4EDEE] dark:hover:bg-white/5 transition-colors duration-200">
             <GlassIcon name="logout" size={20} className="shrink-0" />{t('shell.logout')}
           </button>
         </div>
@@ -157,7 +159,7 @@ export default function Shell({ children, active }) {
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[#E5E2DD] dark:border-white/[0.08] bg-white/75 dark:bg-[#1B1B14]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20 shadow-[0_2px_16px_rgba(26,26,24,0.04)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
+        <header className="af-shell-header min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[#D9E4E6] dark:border-white/[0.08] bg-white/75 dark:bg-[#0F2A36]/65 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
             <button className="lg:hidden text-xl shrink-0" onClick={() => setSidebarOpen(true)}>☰</button>
             <h1 className="font-semibold text-lg capitalize truncate">{(() => { const navItem = NAV.find(i => i.href === active); return navItem ? t(navItem.labelKey) : active.replace('/', ''); })()}</h1>
@@ -165,36 +167,36 @@ export default function Shell({ children, active }) {
           <div className="flex items-center flex-wrap justify-end gap-2 sm:gap-3">
             <AppSwitcherButtons user={user} />
             <div className="relative">
-              <button onClick={() => setNotifOpen(o => !o)} className="relative h-9 w-9 rounded-lg border border-[#E5E2DD] dark:border-white/[0.08] flex items-center justify-center text-sm transition-colors duration-200 hover:bg-[#F1EEE7] dark:hover:bg-white/5" aria-label={t('shell.notifications')}>
+              <button onClick={() => setNotifOpen(o => !o)} className="relative h-9 w-9 rounded-lg border border-[#D9E4E6] dark:border-white/[0.08] flex items-center justify-center text-sm transition-colors duration-200 hover:bg-[#E4EDEE] dark:hover:bg-white/5" aria-label={t('shell.notifications')}>
                 <GlassIcon name="bell" size={18} />
-                {unread > 0 && <span className="absolute -top-1 -end-1 h-4 min-w-4 px-1 rounded-full bg-[#BC6B4E] text-white text-[10px] leading-4 text-center">{unread > 9 ? '9+' : unread}</span>}
+                {unread > 0 && <span className="absolute -top-1 -end-1 h-4 min-w-4 px-1 rounded-full bg-brand-600 text-white text-[10px] leading-4 text-center">{unread > 9 ? '9+' : unread}</span>}
               </button>
               {notifOpen && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
                   <div className="glass-card absolute end-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[70vh] overflow-y-auto z-40">
-                    <div className="px-4 py-3 border-b border-[#E5E2DD] dark:border-white/[0.08] font-medium text-sm">{t('shell.notifications')}</div>
+                    <div className="px-4 py-3 border-b border-[#D9E4E6] dark:border-white/[0.08] font-medium text-sm">{t('shell.notifications')}</div>
                     {notifications.length === 0 ? (
-                      <div className="px-4 py-6 text-center text-sm text-[#8C8A80]">{t('shell.noNotificationsYet')}</div>
+                      <div className="px-4 py-6 text-center text-sm text-[#7C9296]">{t('shell.noNotificationsYet')}</div>
                     ) : notifications.map(n => (
                       <div key={n.id}
-                        className={'w-full text-start px-4 py-3 border-b border-[#E5E2DD]/60 dark:border-white/5 hover:bg-[#F7F5F1] dark:hover:bg-white/5 transition-colors duration-200 ' + (n.is_read ? 'opacity-60' : '')}>
+                        className={'w-full text-start px-4 py-3 border-b border-[#D9E4E6]/60 dark:border-white/5 hover:bg-[#EEF3F4] dark:hover:bg-white/5 transition-colors duration-200 ' + (n.is_read ? 'opacity-60' : '')}>
                         <button onClick={() => markRead(n.id, n.link)} className="w-full text-start">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-sm font-medium truncate">{n.title}</span>
                             {!n.is_read && <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />}
                           </div>
-                          {n.body && <div className="text-xs text-[#6B6B63] whitespace-pre-line">{n.body}</div>}
-                          <div className="text-[11px] text-[#8C8A80] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                          {n.body && <div className="text-xs text-[#5E7579] whitespace-pre-line">{n.body}</div>}
+                          <div className="text-[11px] text-[#7C9296] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
                         </button>
                         {n.type === 'quotation_request' && !n.is_read && (
                           <div className="flex items-center gap-2 mt-2">
-                            <button onClick={(e) => actOnQuotationRequest(e, n, 'accepted')} className="text-xs px-2 py-1 rounded-lg bg-emerald-600 text-white">{t('qr.accept')}</button>
-                            <button onClick={(e) => actOnQuotationRequest(e, n, 'on_hold')} className="text-xs px-2 py-1 rounded-lg bg-amber-600 text-white">{t('qr.hold')}</button>
-                            <button onClick={(e) => actOnQuotationRequest(e, n, 'rejected')} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white">{t('qr.reject')}</button>
+                            <GlassButton variant="success" className="text-xs px-2 py-1" onClick={(e) => actOnQuotationRequest(e, n, 'accepted')}>{t('qr.accept')}</GlassButton>
+                            <GlassButton variant="warning" className="text-xs px-2 py-1" onClick={(e) => actOnQuotationRequest(e, n, 'on_hold')}>{t('qr.hold')}</GlassButton>
+                            <GlassButton variant="danger" className="text-xs px-2 py-1" onClick={(e) => actOnQuotationRequest(e, n, 'rejected')}>{t('qr.reject')}</GlassButton>
                           </div>
                         )}
-                        <button onClick={(e) => deleteNotification(e, n.id)} className="text-[11px] text-[#8C8A80] hover:text-red-500 mt-1">{t('common.delete')}</button>
+                        <button onClick={(e) => deleteNotification(e, n.id)} className="text-[11px] text-[#7C9296] hover:text-red-500 mt-1">{t('common.delete')}</button>
                       </div>
                     ))}
                   </div>

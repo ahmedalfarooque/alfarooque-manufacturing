@@ -8,6 +8,7 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { GlassButton, GlassIconButton } from '@/components/glass';
 
 export const STATUS_BADGE = {
   pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -152,18 +153,18 @@ export default function QuotationRequestsPage() {
                   <div className="flex items-center justify-end gap-2 flex-wrap">
                     {r.status === 'pending' && (
                       <>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')} className="text-xs px-2 py-1 rounded-lg bg-emerald-600 text-white disabled:opacity-50">{t('qr.accept')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')} className="text-xs px-2 py-1 rounded-lg bg-amber-600 text-white disabled:opacity-50">{t('qr.hold')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('qr.reject')}</button>
+                        <GlassButton variant="success" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')}>{t('qr.accept')}</GlassButton>
+                        <GlassButton variant="warning" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')}>{t('qr.hold')}</GlassButton>
+                        <GlassButton variant="danger" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')}>{t('qr.reject')}</GlassButton>
                       </>
                     )}
                     {['accepted', 'on_hold'].includes(r.status) && !r.project_id && (
-                      <button disabled={busyId === r.id} onClick={() => startProject(r.id)} className="text-xs px-2 py-1 rounded-lg bg-brand-600 text-white disabled:opacity-50">{t('qr.projectStart')}</button>
+                      <GlassButton variant="primary" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => startProject(r.id)}>{t('qr.projectStart')}</GlassButton>
                     )}
                     {r.project_id && (
                       <a href={'/projects/' + r.project_id} className="text-xs px-2 py-1 rounded-lg border border-black/10 dark:border-white/10">↗ {t('qr.openProject')}</a>
                     )}
-                    <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-red-500">🗑</button>
+                    <GlassIconButton tone="red" title={t('common.delete')} onClick={() => deleteRequest(r.id)}>🗑</GlassIconButton>
                   </div>
                 </td>
               </tr>
@@ -181,9 +182,9 @@ export default function QuotationRequestsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <GlassButton variant="ghost" className="px-3 py-1" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</GlassButton>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <GlassButton variant="ghost" className="px-3 py-1" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</GlassButton>
         </div>
       </div>
     </Shell>

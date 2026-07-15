@@ -1674,7 +1674,6 @@ var orderModal = {
     })
     .then(function(r) {
       if (r.ok && r.json.success) {
-        console.log('[Order] SUCCESS — email sent to arshad@alfarooque.com, id:', r.json.id);
         self.setStatus(t('Thank you. Your request has been submitted successfully.',
                          'شكراً لك. تم إرسال طلبك بنجاح.'), 'success');
         if (btn) { btn.classList.remove('is-loading'); btn.textContent = t('✓ Submitted', '✓ تم الإرسال'); }

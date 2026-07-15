@@ -40,15 +40,15 @@ export default function SuppliersPage() {
     <>
       {msg && (
         <div className="fixed top-20 inset-x-0 z-50 flex justify-center px-4">
-          <div className="glass-card bg-white dark:bg-[#1B1B14] px-4 py-2 text-sm shadow-xl" onClick={() => setMsg(null)}>{msg}</div>
+          <div className="glass-card bg-white dark:bg-[#0F2A36] px-4 py-2 text-sm shadow-xl" onClick={() => setMsg(null)}>{msg}</div>
         </div>
       )}
       <MasterList active="/suppliers" api="/api/suppliers" titleKey="nav.suppliers"
         columns={columns} fields={fields} wide
         toolbar={({ reload }) => (
           <span className="flex items-center gap-3">
-            <a href={'/api/export/suppliers?template=1&lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.template')}</a>
-            <a href={'/api/export/suppliers?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+            <a href={'/api/export/suppliers?template=1&lang=' + lang} className="af-btn af-btn--secondary text-sm">⇩ {t('common.template')}</a>
+            <a href={'/api/export/suppliers?lang=' + lang} className="af-btn af-btn--secondary text-sm">⇩ {t('common.export')}</a>
             <ImportButton endpoint="/api/import/suppliers" onDone={(err, d) => {
               setMsg(err ? '⚠ ' + err : t('import.genericResult', { created: d.inserted, updated: d.updated, failed: d.failed }));
               if (!err) reload();

@@ -2,10 +2,16 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
-import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage } from '@/lib/i18n';
+import {
+  GlassPage, GlassButton, GlassDropdown, GlassSearch,
+  GlassThead, GlassTr, GlassTd, GlassField, GlassInput, GlassTextarea, GlassModal, GlassEmptyState, GlassLoader,
+} from '@/components/glass';
+
+const TH = 'text-start px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-[var(--tx-4)] font-semibold whitespace-nowrap';
+const THsort = TH + ' cursor-pointer select-none hover:text-[var(--pr-2)] transition-colors';
 
 export default function MaintenanceShopsPage() {
   const { t } = useLanguage();
@@ -51,74 +57,95 @@ export default function MaintenanceShopsPage() {
     load();
   }
 
+  const SortTh = ({ col, label }) => (
+    <th onClick={() => toggleSort(col)} className={THsort}>{label}<SortIndicator column={col} sortKey={sortKey} sortDir={sortDir} /></th>
+  );
+
   return (
     <Shell active="/maintenance-shops">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">{t('shops.title')}</h2>
-          <p className="text-xs text-slate-500">{t('shops.breadcrumb')}</p>
-        </div>
-        {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('shops.addShop')}</button>}
-      </div>
+      <GlassPage
+        title={t('shops.title')}
+        subtitle={t('shops.breadcrumb')}
+        toolbar={isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('shops.addShop')}</GlassButton>}
+      >
+        <GlassSearch className="max-w-sm" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('shops.searchPlaceholder')} />
 
-      <input placeholder={t('shops.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-        className="w-full max-w-sm rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm mb-4" />
+        {error && <div className="text-[#F87171] text-sm">{error}</div>}
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
-
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[800px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th onClick={() => toggleSort('name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('contact_person')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colContact')}<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('mobile')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colMobile')}<SortIndicator column="mobile" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colCity')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('shops.colVat')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              {isAdmin && <th className="text-right px-4">{t('shops.colActions')}</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('shops.loading')}</td></tr>
-            ) : pageRows.length === 0 ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('shops.noneYet')}</td></tr>
-            ) : pageRows.map(s => (
-              <tr key={s.id} className="border-b border-black/5 dark:border-white/5">
-                <td className="py-3 px-4 font-medium">{s.name}</td>
-                <td>{s.contact_person || '—'}</td>
-                <td>{s.mobile || '—'}</td>
-                <td>{s.city || '—'}</td>
-                <td>{s.vat_number || '—'}</td>
-                {isAdmin && (
-                  <td className="text-right px-4 space-x-2">
-                    <button onClick={() => setModal({ mode: 'edit', data: s })} title={t('shops.edit')} className="text-brand-500">✎</button>
-                    <button onClick={() => deleteShop(s.id)} title={t('shops.delete')} className="text-red-500">🗑</button>
-                  </td>
-                )}
+        <div className="glass-card !rounded-[22px] overflow-auto max-h-[70vh]">
+          <table className="w-full min-w-[800px]">
+            <GlassThead>
+              <tr>
+                <SortTh col="name" label={t('shops.colName')} />
+                <SortTh col="contact_person" label={t('shops.colContact')} />
+                <SortTh col="mobile" label={t('shops.colMobile')} />
+                <SortTh col="city" label={t('shops.colCity')} />
+                <SortTh col="vat_number" label={t('shops.colVat')} />
+                {isAdmin && <th className={TH + ' text-end'}>{t('shops.colActions')}</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </GlassThead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={6}><GlassLoader label={t('shops.loading')} /></td></tr>
+              ) : pageRows.length === 0 ? (
+                <tr><td colSpan={6}><GlassEmptyState text={t('shops.noneYet')} /></td></tr>
+              ) : pageRows.map(s => (
+                <GlassTr key={s.id}>
+                  <GlassTd className="font-semibold !text-[var(--tx)]">{s.name}</GlassTd>
+                  <GlassTd>{s.contact_person || '—'}</GlassTd>
+                  <GlassTd>{s.mobile || '—'}</GlassTd>
+                  <GlassTd>{s.city || '—'}</GlassTd>
+                  <GlassTd>{s.vat_number || '—'}</GlassTd>
+                  {isAdmin && (
+                    <GlassTd className="text-end whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5">
+                        <IconBtn title={t('shops.edit')} tone="brand" onClick={() => setModal({ mode: 'edit', data: s })}>✎</IconBtn>
+                        <IconBtn title={t('shops.delete')} tone="red" onClick={() => deleteShop(s.id)}>🗑</IconBtn>
+                      </span>
+                    </GlassTd>
+                  )}
+                </GlassTr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('shops.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('shops.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+        <div className="flex items-center justify-between text-sm text-[var(--tx-4)] flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <span>{t('shops.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
+            <div className="flex items-center gap-1.5">
+              <span>{t('shops.rows')}</span>
+              <GlassDropdown className="w-24" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <PageBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</PageBtn>
+            <span className="text-[var(--tx-2)]">{page} / {totalPages}</span>
+            <PageBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</PageBtn>
           </div>
         </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
-        </div>
-      </div>
+      </GlassPage>
 
       {modal && <ShopModal modal={modal} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
     </Shell>
+  );
+}
+
+function IconBtn({ children, title, onClick, tone }) {
+  const color = tone === 'brand' ? 'text-[var(--pr-2)]' : tone === 'red' ? 'text-[#F87171]' : 'text-[var(--tx-4)]';
+  return (
+    <button onClick={onClick} title={title}
+      className={'h-8 w-8 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl hover:border-[rgba(37,212,255,0.4)] transition-colors flex items-center justify-center ' + color}>
+      {children}
+    </button>
+  );
+}
+function PageBtn({ children, disabled, onClick }) {
+  return (
+    <button disabled={disabled} onClick={onClick}
+      className="h-8 min-w-8 px-2 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl text-[var(--tx-2)] disabled:opacity-40 hover:border-[rgba(37,212,255,0.4)] hover:text-[var(--pr-2)] transition-colors">
+      {children}
+    </button>
   );
 }
 
@@ -149,39 +176,26 @@ export function ShopModal({ modal, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('shops.addModalTitle') : t('shops.editModalTitle')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('shops.colName')} value={form.name} onChange={set('name')} required className="col-span-2" />
-          <Field label={t('shops.colContact')} value={form.contact_person} onChange={set('contact_person')} />
-          <Field label={t('shops.colMobile')} value={form.mobile} onChange={set('mobile')} />
-          <Field label={t('fields.telephone')} value={form.telephone} onChange={set('telephone')} />
-          <Field label={t('fields.email')} value={form.email} onChange={set('email')} type="email" />
-          <Field label={t('fields.address')} value={form.address} onChange={set('address')} className="col-span-2" />
-          <Field label={t('shops.colCity')} value={form.city} onChange={set('city')} />
-          <Field label={t('shops.colVat')} value={form.vat_number} onChange={set('vat_number')} />
-          <Field label={t('fields.crNumber')} value={form.cr_number} onChange={set('cr_number')} />
-          <div className="col-span-2">
-            <label className="block text-xs text-slate-500 mb-1">{t('fields.notes')}</label>
-            <textarea value={form.notes || ''} onChange={set('notes')} rows={2} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-          </div>
+    <GlassModal title={modal.mode === 'add' ? t('shops.addModalTitle') : t('shops.editModalTitle')} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-[#F87171] text-sm">{err}</div>}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <GlassField className="sm:col-span-2" label={t('shops.colName')} required><GlassInput value={form.name || ''} onChange={set('name')} required /></GlassField>
+          <GlassField label={t('shops.colContact')}><GlassInput value={form.contact_person || ''} onChange={set('contact_person')} /></GlassField>
+          <GlassField label={t('shops.colMobile')}><GlassInput value={form.mobile || ''} onChange={set('mobile')} /></GlassField>
+          <GlassField label={t('fields.telephone')}><GlassInput value={form.telephone || ''} onChange={set('telephone')} /></GlassField>
+          <GlassField label={t('fields.email')}><GlassInput type="email" value={form.email || ''} onChange={set('email')} /></GlassField>
+          <GlassField className="sm:col-span-2" label={t('fields.address')}><GlassInput value={form.address || ''} onChange={set('address')} /></GlassField>
+          <GlassField label={t('shops.colCity')}><GlassInput value={form.city || ''} onChange={set('city')} /></GlassField>
+          <GlassField label={t('shops.colVat')}><GlassInput value={form.vat_number || ''} onChange={set('vat_number')} /></GlassField>
+          <GlassField label={t('fields.crNumber')}><GlassInput value={form.cr_number || ''} onChange={set('cr_number')} /></GlassField>
+          <GlassField className="sm:col-span-2" label={t('fields.notes')}><GlassTextarea value={form.notes || ''} onChange={set('notes')} rows={2} /></GlassField>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('shops.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('shops.saving') : t('shops.save')}</button>
+          <GlassButton type="button" variant="ghost" onClick={onClose}>{t('shops.cancel')}</GlassButton>
+          <GlassButton type="submit" disabled={busy}>{busy ? t('shops.saving') : t('shops.save')}</GlassButton>
         </div>
       </form>
-    </div>
-  );
-}
-
-function Field({ label, className, ...props }) {
-  return (
-    <div className={className}>
-      <label className="block text-xs text-slate-500 mb-1">{label}</label>
-      <input {...props} value={props.value || ''} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-    </div>
+    </GlassModal>
   );
 }

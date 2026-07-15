@@ -1,0 +1,117 @@
+/* AL FAROOQUE - Unified Login Glass Design System (v2, part 2 of 2)
+   Continues login-part1.css: inputs (with leading glass icon),
+   buttons, status message, glass control pills, footer, divider. */
+
+.af-login-label {
+  display: block; font-size: 0.75rem; font-weight: 500;
+  color: var(--al-text-3); margin-bottom: 0.35rem;
+}
+.af-login-input-wrap { position: relative; display: flex; align-items: center; }
+.af-login-input-icon {
+  position: absolute; left: 0.85rem; display: flex; align-items: center; justify-content: center;
+  width: 1.15rem; height: 1.15rem; color: var(--al-teal); opacity: 0.85; pointer-events: none;
+  flex-shrink: 0;
+}
+html[dir="rtl"] .af-login-input-icon { left: auto; right: 0.85rem; }
+.af-login-input {
+  width: 100%; border-radius: 14px;
+  padding: 0.75rem 0.9rem 0.75rem 2.6rem;
+  font-size: 0.9rem;
+  color: var(--al-text);
+  background: var(--al-input-bg);
+  border: 1px solid var(--al-input-border);
+  backdrop-filter: blur(8px);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+html[dir="rtl"] .af-login-input { padding: 0.75rem 2.6rem 0.75rem 0.9rem; }
+.af-login-input::placeholder { color: var(--al-text-3); }
+.af-login-input:focus {
+  border-color: var(--al-teal);
+  box-shadow: 0 0 0 3px rgba(14,165,196,0.2), 0 0 24px rgba(14,165,196,0.14);
+  background: rgba(255,255,255,0.06);
+}
+html:not(.dark) .af-login-input:focus { background: rgba(255,255,255,0.75); }
+.af-login-input--otp { text-align: center; letter-spacing: 0.5em; font-size: 1.125rem; padding-left: 0.9rem; }
+html[dir="rtl"] .af-login-input--otp { padding-right: 0.9rem; }
+
+.af-login-eye-btn {
+  position: absolute; right: 0.7rem; display: flex; align-items: center; justify-content: center;
+  width: 1.9rem; height: 1.9rem; border-radius: 10px;
+  color: var(--al-text-3);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid transparent;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+html[dir="rtl"] .af-login-eye-btn { right: auto; left: 0.7rem; }
+.af-login-eye-btn:hover { color: var(--al-teal); border-color: var(--al-input-border); }
+.af-login-eye-btn:focus-visible { outline: 2px solid var(--al-teal); outline-offset: 2px; }
+
+.af-login-btn-primary {
+  width: 100%; border-radius: 14px; padding: 0.8rem 0;
+  font-size: 0.9rem; font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, var(--al-teal-light) 0%, var(--al-teal) 45%, var(--al-teal-dark) 100%);
+  box-shadow: 0 10px 26px rgba(14,165,196,0.35), 0 1px 0 rgba(255,255,255,0.3) inset;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, filter 0.2s ease;
+}
+.af-login-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(14,165,196,0.45), 0 1px 0 rgba(255,255,255,0.35) inset;
+  filter: brightness(1.06);
+}
+.af-login-btn-primary:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+.af-login-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.af-login-btn-primary:focus-visible { outline: 2px solid var(--al-teal-light); outline-offset: 2px; }
+
+.af-login-btn-secondary {
+  width: 100%; border-radius: 14px; padding: 0.6rem 0;
+  font-size: 0.875rem; color: var(--al-text-2);
+  background: var(--al-input-bg);
+  border: 1px solid var(--al-input-border);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.af-login-btn-secondary:hover:not(:disabled) { color: var(--al-text); border-color: var(--al-teal); }
+.af-login-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+.af-login-btn-secondary:focus-visible { outline: 2px solid var(--al-teal); outline-offset: 2px; }
+
+.af-login-link-btn { width: 100%; text-align: center; font-size: 0.75rem; color: var(--al-text-3); transition: color 0.2s ease; }
+.af-login-link-btn:hover { color: var(--al-teal); }
+.af-login-link-btn:focus-visible { outline: 2px solid var(--al-teal); outline-offset: 2px; border-radius: 6px; }
+
+.af-login-msg {
+  border-radius: 14px; padding: 0.65rem 0.85rem;
+  font-size: 0.875rem; white-space: pre-line;
+  backdrop-filter: blur(8px);
+  border: 1px solid transparent;
+}
+.af-login-msg--success { color: #6EE7B7; background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.28); }
+.af-login-msg--error { color: #FCA5A5; background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.28); }
+html:not(.dark) .af-login-msg--success { color: #0E7A57; }
+html:not(.dark) .af-login-msg--error { color: #C0362C; }
+
+.af-login-page .glass-ctrl {
+  background: var(--al-input-bg);
+  border-color: var(--al-input-border);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  color: var(--al-text-2);
+}
+.af-login-page .glass-ctrl:hover {
+  border-color: var(--al-teal);
+  box-shadow: 0 4px 18px rgba(14,165,196,0.25);
+  color: var(--al-text);
+}
+.af-login-globe { width: 15px; height: 15px; flex-shrink: 0; }
+
+.af-login-footer {
+  margin-top: 1.75rem; text-align: center;
+  font-size: 0.7rem; line-height: 1.5; color: var(--al-text-3);
+}
+
+.af-login-divider {
+  display: flex; align-items: center; gap: 0.75rem; margin: 0.25rem 0;
+  color: var(--al-text-3); font-size: 0.75rem;
+}
+.af-login-divider::before, .af-login-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--al-input-border);
+}

@@ -6,6 +6,7 @@ import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { GlassButton } from '@/components/glass';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
 export const QUOTE_STATUS_BADGE = {
@@ -16,7 +17,6 @@ export const QUOTE_STATUS_BADGE = {
   closed: 'bg-slate-500/10 text-slate-500',
 };
 const REFRESH_MS = 15000;
-function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 export default function QuotesPage() {
   const { t } = useLanguage();
@@ -88,9 +88,9 @@ export default function QuotesPage() {
                 <td>{new Date(r.created_at).toLocaleDateString()}</td>
                 <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
-                    <a href={'/quotes/' + r.id} className="text-xs px-2 py-1 rounded-lg border border-black/10 dark:border-white/10">{t('oq.view')}</a>
+                    <a href={'/quotes/' + r.id} className="af-btn af-btn--secondary text-xs px-2 py-1">{t('oq.view')}</a>
                     {softDeleteEnabled && (
-                      <button disabled={busyId === r.id} onClick={() => deleteQuote(r.id)} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.delete')}</button>
+                      <GlassButton variant="danger" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => deleteQuote(r.id)}>{t('oq.delete')}</GlassButton>
                     )}
                   </div>
                 </td>

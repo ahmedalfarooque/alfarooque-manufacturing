@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
+import { GlassButton } from '@/components/glass';
 import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { DriverModal } from '@/app/(protected)/drivers/page';
@@ -97,8 +98,8 @@ export default function DriverViewPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span>
-          <button onClick={() => window.print()} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
-          {isAdmin && <button onClick={() => setEditOpen(true)} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">✎ {t('common.edit')}</button>}
+          <GlassButton variant="secondary" onClick={() => window.print()} className="text-sm">🖶 {t('common.print')}</GlassButton>
+          {isAdmin && <GlassButton variant="primary" onClick={() => setEditOpen(true)} className="text-sm">✎ {t('common.edit')}</GlassButton>}
         </div>
       </div>
 

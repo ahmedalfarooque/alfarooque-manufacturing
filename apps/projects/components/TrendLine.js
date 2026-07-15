@@ -15,7 +15,7 @@ import { AreaChart, Area, XAxis, CartesianGrid, ResponsiveContainer } from 'rech
    Recharts' reveal animation is driven by its own JS/SVG internals, not
    CSS, so prefers-reduced-motion has to be checked here rather than via the
    CSS media query used for the bar/ring charts. */
-export default function TrendLine({ data, dataKey = 'value', labelKey = 'label', color = '#6B7A4F', height = 96 }) {
+export default function TrendLine({ data, dataKey = 'value', labelKey = 'label', color = '#0C93AE', height = 96 }) {
   const [animate, setAnimate] = useState(true);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function TrendLine({ data, dataKey = 'value', labelKey = 'label',
   const gradId = 'tl-grad-' + color.replace('#', '');
 
   return (
-    <div style={{ height }} dir="ltr" className="text-[#8C8A80] dark:text-[#79766B] -mx-1">
+    <div style={{ height }} dir="ltr" className="text-[#7C9296] dark:text-[#6E888C] -mx-1">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
           <defs>

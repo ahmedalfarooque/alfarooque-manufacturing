@@ -6,6 +6,7 @@ import { useLanguage, codeLabel } from '@/lib/i18n';
 import { formatMaterialDims, DIM_UNITS } from '@/lib/dims';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Button, Input, Textarea, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
+import { GlassIconButton, GlassTabs } from '@/components/glass';
 import ImportButton from '@/components/ImportButton';
 import MaterialEditDialog from '@/components/MaterialEditDialog';
 
@@ -180,21 +181,14 @@ export default function MaterialsPage() {
     <Shell active="/materials">
       <div className="glass-card overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 p-4">
-          <div className="flex rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] overflow-hidden">
-            {['', 'material', 'hardware'].map(k => (
-              <button key={k} onClick={() => setKind(k)}
-                className={'px-3 py-2 text-sm transition-colors ' + (kind === k ? 'bg-brand-600 text-white' : 'hover:bg-[#F1EEE7] dark:hover:bg-white/5')}>
-                {k === '' ? t('common.all') : t('kind.' + k)}
-              </button>
-            ))}
-          </div>
+          <GlassTabs tabs={['', 'material', 'hardware'].map(k => ({ value: k, label: k === '' ? t('common.all') : t('kind.' + k) }))} value={kind} onChange={setKind} />
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder={t('materials.searchPlaceholder')} className="max-w-xs" />
           <Select value={category} onChange={e => setCategory(e.target.value)} className="max-w-[220px]"
             options={[{ value: '', label: t('common.allCategories') },
               ...categories.filter(c => !kind || c.kind === kind).map(c => ({ value: c.id, label: tr(c.name) }))]} />
           <div className="flex-1" />
-          <a href={'/api/export/materials?template=1&lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.template')}</a>
-          <a href={'/api/export/materials?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <a href={'/api/export/materials?template=1&lang=' + lang} className="af-btn af-btn--secondary text-sm">⇩ {t('common.template')}</a>
+          <a href={'/api/export/materials?lang=' + lang} className="af-btn af-btn--secondary text-sm">⇩ {t('common.export')}</a>
           <ImportButton endpoint="/api/import/materials" label={t('common.importExcel')} onDone={(err, d) => {
             setImportResult(err ? '⚠ ' + err : t('import.genericResult', { created: d.inserted, updated: d.updated, failed: d.failed }));
             if (!err) load();
@@ -219,12 +213,12 @@ export default function MaterialsPage() {
             </tr></thead>
             <tbody>
               {rows === null ? (
-                <tr><Td colSpan={8} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                <tr><Td colSpan={8} className="text-center text-[#7C9296]">{t('shell.loading')}</Td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={8}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(row => (
                 <tr key={row.id} onClick={() => open(row)}
-                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[#EEF3F4] dark:hover:bg-white/[0.03]">
                   <Td className="whitespace-nowrap" dir="ltr">{row.code || '—'}</Td>
                   <Td>{trL(row, 'name')}</Td>
                   <Td dir="ltr" className="text-start">{formatMaterialDims(row, t) || '—'}</Td>
@@ -233,10 +227,10 @@ export default function MaterialsPage() {
                   <Td className="whitespace-nowrap font-medium">{formatNumber(row.latest_price, { minimumFractionDigits: 2 })}</Td>
                   <Td>{formatNumber(row.default_waste_pct)}%</Td>
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => showHistory(row)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('materials.priceHistory')}</button>
-                    <button onClick={() => open(row)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</button>
-                    <button onClick={() => duplicateRow(row)} className="text-[#8C8A80] hover:underline text-sm me-3">{t('common.duplicate')}</button>
-                    <button onClick={() => remove(row)} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                    <GlassIconButton tone="neutral" title={t('materials.priceHistory')} onClick={() => showHistory(row)} className="me-2">📈</GlassIconButton>
+                    <GlassIconButton tone="cyan" title={t('common.edit')} onClick={() => open(row)} className="me-2">✎</GlassIconButton>
+                    <GlassIconButton tone="purple" title={t('common.duplicate')} onClick={() => duplicateRow(row)} className="me-2">⧉</GlassIconButton>
+                    <GlassIconButton tone="red" title={t('common.delete')} onClick={() => remove(row)}>🗑</GlassIconButton>
                   </Td>
                 </tr>
               ))}
@@ -293,8 +287,8 @@ export default function MaterialsPage() {
                 )}
               </Field>
             ))}
-            {modal.row && <div className="md:col-span-3 text-[12px] text-[#8C8A80]">{t('materials.priceEditNote')}</div>}
-            {err && <div className="md:col-span-3 text-sm text-[#BC6B4E]">{err}</div>}
+            {modal.row && <div className="md:col-span-3 text-[12px] text-[#7C9296]">{t('materials.priceEditNote')}</div>}
+            {err && <div className="md:col-span-3 text-sm text-[#EF4444]">{err}</div>}
             <div className="md:col-span-3 flex justify-end gap-2 pt-1">
               <Button variant="ghost" onClick={() => setModal(null)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={busy || !(form.name_en || form.name_ar)}>{busy ? t('common.saving') : t('common.save')}</Button>
@@ -319,19 +313,19 @@ export default function MaterialsPage() {
                 setNewCat({ name: '', kind: newCat.kind });
               }}>+ {t('common.add')}</Button>
             </div>
-            <div className="max-h-80 overflow-y-auto border-t border-[#E5E2DD] dark:border-white/[0.08]">
+            <div className="max-h-80 overflow-y-auto border-t border-[#D9E4E6] dark:border-white/[0.08]">
               {categories.map(c => (
-                <div key={c.id} className="flex items-center gap-3 py-2 border-b border-[#E5E2DD]/60 dark:border-white/5">
+                <div key={c.id} className="flex items-center gap-3 py-2 border-b border-[#D9E4E6]/60 dark:border-white/5">
                   <span className="flex-1 text-sm">{tr(c.name)}</span>
-                  <span className="text-[11px] text-[#8C8A80]">{t('kind.' + c.kind)}</span>
-                  <button onClick={async () => {
+                  <span className="text-[11px] text-[#7C9296]">{t('kind.' + c.kind)}</span>
+                  <GlassIconButton tone="cyan" title={t('common.edit')} className="me-2" onClick={async () => {
                     const next = window.prompt(t('materials.renameCategory'), c.name);
                     if (next && next.trim() && next !== c.name) await catAction('PATCH', { id: c.id, name: next });
-                  }} className="text-brand-600 dark:text-brand-400 hover:underline text-sm">{t('common.edit')}</button>
-                  <button onClick={async () => {
+                  }}>✎</GlassIconButton>
+                  <GlassIconButton tone="red" title={t('common.delete')} onClick={async () => {
                     if (!window.confirm(t('common.confirmDelete') + '\n' + c.name)) return;
                     await catAction('DELETE', { id: c.id });
-                  }} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                  }}>🗑</GlassIconButton>
                 </div>
               ))}
             </div>
@@ -359,7 +353,7 @@ export default function MaterialsPage() {
             {bulkPreview && (
               <div className="rounded-lg bg-brand-600/10 border border-brand-600/25 px-3 py-2 text-sm">
                 {t('materials.bulkMatched', { n: bulkPreview.matched })}
-                <ul className="mt-1 text-[12px] text-[#8C8A80]">
+                <ul className="mt-1 text-[12px] text-[#7C9296]">
                   {bulkPreview.sample.map(s => (
                     <li key={s.id}>{s.name}: <span dir="ltr">{formatNumber(s.old, { minimumFractionDigits: 2 })} → {formatNumber(s.new, { minimumFractionDigits: 2 })}</span></li>
                   ))}
@@ -401,7 +395,7 @@ export default function MaterialsPage() {
         <Modal title={t('materials.priceHistory') + ' — ' + trL(history.material, 'name')}
           onClose={() => setHistory(null)} wide>
           {history.rows === null ? (
-            <div className="text-sm text-[#8C8A80]">{t('shell.loading')}</div>
+            <div className="text-sm text-[#7C9296]">{t('shell.loading')}</div>
           ) : history.rows.length === 0 ? (
             <EmptyState text={t('materials.noPriceHistory')} />
           ) : (

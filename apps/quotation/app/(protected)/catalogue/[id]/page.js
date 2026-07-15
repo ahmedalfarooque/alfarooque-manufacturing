@@ -43,7 +43,7 @@ function DimensionsCard({ product, setProduct, t }) {
           </Field>
         ))}
       </div>
-      <div className="text-[11px] text-[#8C8A80] mt-2">{t('catalogue.dimensionsNote')}</div>
+      <div className="text-[11px] text-[#7C9296] mt-2">{t('catalogue.dimensionsNote')}</div>
     </div>
   );
 }
@@ -90,7 +90,7 @@ function ImagesCard({ product, setProduct, id, t }) {
         onDrop={e => { e.preventDefault(); setDrag(false); upload(e.dataTransfer.files); }}
         onClick={() => inputRef.current && inputRef.current.click()}
         className={'cursor-pointer rounded-xl border-2 border-dashed p-4 text-center text-sm transition-colors ' +
-          (drag ? 'border-brand-600 bg-brand-600/10' : 'border-[#E5E2DD] dark:border-white/[0.1] text-[#8C8A80]')}>
+          (drag ? 'border-brand-600 bg-brand-600/10' : 'border-[#D9E4E6] dark:border-white/[0.1] text-[#7C9296]')}>
         {busy ? t('common.importing') : t('catalogue.dropImages')}
         <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => upload(e.target.files)} />
       </div>
@@ -102,9 +102,9 @@ function ImagesCard({ product, setProduct, id, t }) {
                 className={'h-20 w-full object-cover rounded-lg border-2 ' + (product.image_path === img.url ? 'border-brand-600' : 'border-transparent')} />
               <div className="absolute inset-0 hidden group-hover:flex items-center justify-center gap-1 bg-black/50 rounded-lg text-[10px]">
                 {product.image_path !== img.url && (
-                  <button onClick={() => setPrimary(img.url)} className="bg-white/90 rounded px-1.5 py-0.5 text-[#1a1a18]">★</button>
+                  <button onClick={() => setPrimary(img.url)} className="bg-white/90 rounded px-1.5 py-0.5 text-[#122A30]">★</button>
                 )}
-                <button onClick={() => remove(img.url)} className="bg-white/90 rounded px-1.5 py-0.5 text-[#BC6B4E]">✕</button>
+                <button onClick={() => remove(img.url)} className="bg-white/90 rounded px-1.5 py-0.5 text-[#EF4444]">✕</button>
               </div>
               {product.image_path === img.url && <span className="absolute top-1 start-1 text-[9px] bg-brand-600 text-white rounded px-1">{t('catalogue.primary')}</span>}
             </div>
@@ -202,7 +202,7 @@ export default function ProductDetailPage() {
   }
 
   if (!product) {
-    return <Shell active="/catalogue"><div className="text-sm text-[#8C8A80]">{t('shell.loading')}</div></Shell>;
+    return <Shell active="/catalogue"><div className="text-sm text-[#7C9296]">{t('shell.loading')}</div></Shell>;
   }
 
   const name = trL(product, 'name');
@@ -214,12 +214,12 @@ export default function ProductDetailPage() {
         <div className="glass-card p-4 flex flex-wrap items-center gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <a href="/catalogue" className="text-[#8C8A80] hover:underline text-sm">‹</a>
-              <span className="text-[11px] text-[#8C8A80]" dir="ltr">{product.code}</span>
+              <a href="/catalogue" className="text-[#7C9296] hover:underline text-sm">‹</a>
+              <span className="text-[11px] text-[#7C9296]" dir="ltr">{product.code}</span>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-600/10 border border-brand-600/25">{codeLabel(t, 'cat', product.category)}</span>
             </div>
             <div className="font-semibold text-lg truncate">{name}</div>
-            <div className="text-[12px] text-[#8C8A80]">
+            <div className="text-[12px] text-[#7C9296]">
               {t('catalogue.standardPrice')}: <b dir="ltr">{formatNumber(product.standard_price, { minimumFractionDigits: 2 })} {t('common.currencyUnit')}</b>
               {' · '}{t('catalogue.lastCost')}: <span dir="ltr">{product.last_calculated_cost != null ? formatNumber(product.last_calculated_cost, { minimumFractionDigits: 2 }) : '—'}</span>
               {' / '}{codeLabel(t, 'u', product.unit)}
@@ -235,7 +235,7 @@ export default function ProductDetailPage() {
         </div>
 
         {msg && <div className="rounded-lg bg-brand-600/10 border border-brand-600/25 px-3 py-2 text-sm">{msg}</div>}
-        {dirty && <div className="text-[12px] text-[#8C8A80]">{t('cost.unsavedChanges')}</div>}
+        {dirty && <div className="text-[12px] text-[#7C9296]">{t('cost.unsavedChanges')}</div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <DimensionsCard product={product} setProduct={setProduct} t={t} />
@@ -253,7 +253,7 @@ export default function ProductDetailPage() {
       {recost && (
         <Modal title={t('cost.recostTitle')} onClose={() => setRecost(null)} wide>
           {recost.changes.length === 0 ? (
-            <div className="text-sm text-[#8C8A80] py-6 text-center">{t('cost.noChanges')}</div>
+            <div className="text-sm text-[#7C9296] py-6 text-center">{t('cost.noChanges')}</div>
           ) : (
             <>
               <div className="overflow-x-auto max-h-80 overflow-y-auto">
@@ -264,7 +264,7 @@ export default function ProductDetailPage() {
                       <tr key={c.id}>
                         <Td>{c.name}</Td><Td>{t('sec.' + c.section)}</Td>
                         <Td dir="ltr">{formatNumber(c.old, { minimumFractionDigits: 2 })}</Td>
-                        <Td dir="ltr" className={c.new > c.old ? 'text-[#BC6B4E] font-medium' : 'text-brand-700 dark:text-brand-300 font-medium'}>
+                        <Td dir="ltr" className={c.new > c.old ? 'text-[#EF4444] font-medium' : 'text-brand-700 dark:text-brand-300 font-medium'}>
                           {formatNumber(c.new, { minimumFractionDigits: 2 })}
                         </Td>
                       </tr>

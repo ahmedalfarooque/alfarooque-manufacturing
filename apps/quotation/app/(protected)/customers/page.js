@@ -5,6 +5,7 @@ import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Button, Input, Textarea, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
+import { GlassIconButton } from '@/components/glass';
 
 const TYPES = ['hotel', 'contractor', 'individual', 'engineer', 'government', 'other'];
 
@@ -101,8 +102,8 @@ export default function CustomersPage() {
           <Select value={type} onChange={e => setType(e.target.value)} className="max-w-[180px]"
             options={[{ value: '', label: t('common.allTypes') }, ...TYPES.map(x => ({ value: x, label: t('ctype.' + x) }))]} />
           <div className="flex-1" />
-          <a href={'/api/export/customers?template=1&lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.template')}</a>
-          <a href={'/api/export/customers?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <a href={'/api/export/customers?template=1&lang=' + lang} className="af-btn af-btn--secondary text-sm">⇩ {t('common.template')}</a>
+          <a href={'/api/export/customers?lang=' + lang} className="af-btn af-btn--secondary text-sm">⇩ {t('common.export')}</a>
           <input ref={fileRef} type="file" accept=".xlsx" className="hidden" onChange={doImport} />
           <Button variant="ghost" disabled={importing} onClick={() => fileRef.current && fileRef.current.click()}>
             {importing ? t('common.importing') : '⇪ ' + t('common.importExcel')}
@@ -118,20 +119,20 @@ export default function CustomersPage() {
             </tr></thead>
             <tbody>
               {rows === null ? (
-                <tr><Td colSpan={6} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                <tr><Td colSpan={6} className="text-center text-[#7C9296]">{t('shell.loading')}</Td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(row => (
                 <tr key={row.id} onClick={() => open(row)}
-                  className="cursor-pointer transition-colors duration-150 hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03]">
+                  className="cursor-pointer transition-colors duration-150 hover:bg-[#EEF3F4] dark:hover:bg-white/[0.03]">
                   <Td>{trL(row, 'company_name') || '—'}</Td>
                   <Td>{trL(row, 'contact_person') || row.contact_person || '—'}</Td>
                   <Td dir="ltr">{row.phone || '—'}</Td>
                   <Td>{t('ctype.' + (row.customer_type || 'other'))}</Td>
                   <Td>{row.city || '—'}</Td>
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => open(row)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</button>
-                    <button onClick={() => remove(row)} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                    <GlassIconButton tone="cyan" title={t('common.edit')} onClick={() => open(row)} className="me-2">✎</GlassIconButton>
+                    <GlassIconButton tone="red" title={t('common.delete')} onClick={() => remove(row)}>🗑</GlassIconButton>
                   </Td>
                 </tr>
               ))}
@@ -156,7 +157,7 @@ export default function CustomersPage() {
                 )}
               </Field>
             ))}
-            {err && <div className="md:col-span-2 text-sm text-[#BC6B4E]">{err}</div>}
+            {err && <div className="md:col-span-2 text-sm text-[#EF4444]">{err}</div>}
             <div className="md:col-span-2 flex justify-end gap-2 pt-1">
               <Button variant="ghost" onClick={() => setModal(null)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={busy || !(form.company_name_en || form.company_name_ar)}>{busy ? t('common.saving') : t('common.save')}</Button>

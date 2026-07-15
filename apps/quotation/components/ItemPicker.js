@@ -20,7 +20,7 @@ const API_BY_SECTION = {
 
 export default function ItemPicker({ section, onPick, lang: langOverride }) {
   const ctx = useLanguage();
-  const { t, tr, trL, lang, formatNumber } = langOverride ? langHelpers(langOverride) : ctx;
+  const { t, trL, formatNumber } = langOverride ? langHelpers(langOverride) : ctx;
   const [q, setQ] = useState('');
   const dq = useDebouncedValue(q, 200);
   const [rows, setRows] = useState([]);
@@ -87,13 +87,13 @@ export default function ItemPicker({ section, onPick, lang: langOverride }) {
         placeholder={t('cost.pickPlaceholder')}
       />
       {open && rows.length > 0 && (
-        <div className="glass-card absolute z-30 mt-1 w-full bg-white dark:bg-[#1B1B14] shadow-xl max-h-72 overflow-y-auto">
+        <div className="glass-card absolute z-30 mt-1 w-full bg-white dark:bg-[#0F2A36] shadow-xl max-h-72 overflow-y-auto">
           {rows.map((r, i) => (
             <button key={r.id} type="button" onClick={() => pick(r)} onMouseEnter={() => setIdx(i)}
-              className={'w-full text-start px-3 py-2 border-b border-[#E5E2DD]/60 dark:border-white/5 transition-colors ' +
+              className={'w-full text-start px-3 py-2 border-b border-[#D9E4E6]/60 dark:border-white/5 transition-colors ' +
                 (i === idx ? 'bg-brand-600/10' : '')}>
               <div className="text-sm font-medium truncate">{name(r)}</div>
-              <div className="text-[11px] text-[#8C8A80] truncate" dir="ltr">{meta(r)}</div>
+              <div className="text-[11px] text-[#7C9296] truncate" dir="ltr">{meta(r)}</div>
             </button>
           ))}
         </div>

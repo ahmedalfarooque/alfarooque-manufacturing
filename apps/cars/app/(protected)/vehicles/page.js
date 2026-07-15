@@ -2,17 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
-import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import {
+  GlassPage, GlassButton, GlassDropdown, GlassSearch, GlassStatusChip,
+  GlassThead, GlassTr, GlassTd, GlassField, GlassInput, GlassModal, GlassEmptyState, GlassLoader,
+} from '@/components/glass';
 
-const STATUS_BADGE = {
-  Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  Idle: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  Stopped: 'bg-red-500/10 text-red-600 dark:text-red-400',
-  Offline: 'bg-slate-500/10 text-slate-500',
-};
+const STATUS_TONE = { Running: 'emerald', Idle: 'amber', Stopped: 'red', Offline: 'slate' };
 
 const EMPTY_FORM = {
   vehicle_number: '', name: '', type: 'Truck', fuel_type: 'Diesel', driver: '', status: 'Idle', location: '', current_km: '',
@@ -20,6 +18,9 @@ const EMPTY_FORM = {
   vin_number: '', engine_number: '', last_service_date: '', next_service_date: '',
   assigned_driver_id: '', purchase_date: '', purchase_cost: '',
 };
+
+const TH = 'text-start px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-[var(--tx-4)] font-semibold whitespace-nowrap';
+const THsort = TH + ' cursor-pointer select-none hover:text-[var(--pr-2)] transition-colors';
 
 export default function VehiclesPage() {
   const { t, lang } = useLanguage();
@@ -126,92 +127,118 @@ export default function VehiclesPage() {
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const SortTh = ({ col, label }) => (
+    <th onClick={() => toggleSort(col)} className={THsort}>{label}<SortIndicator column={col} sortKey={sortKey} sortDir={sortDir} /></th>
+  );
 
   return (
     <Shell active="/vehicles">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">{t('vehicles.title')}</h2>
-          <p className="text-xs text-slate-500">{t('vehicles.breadcrumb')}</p>
+      <GlassPage
+        title={t('vehicles.title')}
+        subtitle={t('vehicles.breadcrumb')}
+        toolbar={
+          <>
+            {isAdmin && <GlassButton variant="ghost" onClick={() => setImportOpen(true)}>⇪ {t('vehicles.importExcel')}</GlassButton>}
+            <GlassButton variant="ghost" onClick={exportExcel}>⤓ {t('vehicles.exportExcel')}</GlassButton>
+            <GlassButton variant="ghost" onClick={exportPdf}>⤓ {t('vehicles.exportPdf')}</GlassButton>
+            {isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('vehicles.addVehicle')}</GlassButton>}
+          </>
+        }
+      >
+        {/* Filters */}
+        <div className="glass-card !rounded-[22px] p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+          <GlassSearch className="col-span-2" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('vehicles.searchPlaceholder')} />
+          <GlassDropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={[['All', t('common.all')], ...['Running', 'Idle', 'Stopped', 'Offline'].map(s => [s, trEnum(t, 'status', s)])]} />
+          <GlassDropdown value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={[['All', t('common.all')], ...['Diesel', 'Petrol', 'Electric'].map(f => [f, trEnum(t, 'fuel', f)])]} />
+          <GlassDropdown value={assignment} onChange={v => { setPage(1); setAssignment(v); }} options={[['All', t('common.all')], ...['Assigned', 'Unassigned'].map(a => [a, trEnum(t, 'assignment', a)])]} />
         </div>
-        <div className="flex items-center gap-2">
-          {isAdmin && <button onClick={() => setImportOpen(true)} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">⇪ {t('vehicles.importExcel')}</button>}
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('vehicles.exportExcel')}</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('vehicles.exportPdf')}</button>
-          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">+ {t('vehicles.addVehicle')}</button>}
-        </div>
-      </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-5 gap-3">
-        <input placeholder={t('vehicles.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-        <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }} options={[['All', t('common.all')], ...['Running', 'Idle', 'Stopped', 'Offline'].map(s => [s, trEnum(t, 'status', s)])]} />
-        <Dropdown value={fuelType} onChange={v => { setPage(1); setFuelType(v); }} options={[['All', t('common.all')], ...['Diesel', 'Petrol', 'Electric'].map(f => [f, trEnum(t, 'fuel', f)])]} />
-        <Dropdown value={assignment} onChange={v => { setPage(1); setAssignment(v); }} options={[['All', t('common.all')], ...['Assigned', 'Unassigned'].map(a => [a, trEnum(t, 'assignment', a)])]} />
-      </div>
+        {error && <div className="text-[#F87171] text-sm">{error}</div>}
 
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
-
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[900px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th className="py-3 px-4">{t('vehicles.colNumber')}</th>
-              <th onClick={() => toggleSort('vehicle_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colVehicleNumber')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colType')}<SortIndicator column="type" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('fuel_type')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colFuel')}<SortIndicator column="fuel_type" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('driver')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colDriver')}<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('location')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('vehicles.colLocation')}<SortIndicator column="location" sortKey={sortKey} sortDir={sortDir} /></th>
-              {isAdmin && <th className="text-right px-4">{t('vehicles.colActions')}</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('vehicles.loading')}</td></tr>
-            ) : sorted.length === 0 ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('vehicles.noMatch')}</td></tr>
-            ) : sorted.map((v, i) => (
-              <tr key={v.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
-                onClick={() => { window.location.href = '/vehicles/' + v.id; }}>
-                <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
-                <td className="font-medium">{v.vehicle_number}</td>
-                <td>{v.name || '—'}</td>
-                <td>{trEnum(t, 'vtype', v.type)}</td>
-                <td>{trEnum(t, 'fuel', v.fuel_type)}</td>
-                <td>{v.driver || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span></td>
-                <td>{v.location || '—'}</td>
-                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} className="text-slate-400">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title={t('vehicles.edit')} className="text-brand-500">✎</button>}
-                  {isAdmin && <button onClick={() => deleteVehicle(v.id)} title={t('vehicles.delete')} className="text-red-500">🗑</button>}
-                </td>
+        {/* Table */}
+        <div className="glass-card !rounded-[22px] overflow-auto max-h-[70vh]">
+          <table className="w-full min-w-[900px]">
+            <GlassThead>
+              <tr>
+                <th className={TH}>{t('vehicles.colNumber')}</th>
+                <SortTh col="vehicle_number" label={t('vehicles.colVehicleNumber')} />
+                <SortTh col="name" label={t('vehicles.colName')} />
+                <SortTh col="type" label={t('vehicles.colType')} />
+                <SortTh col="fuel_type" label={t('vehicles.colFuel')} />
+                <SortTh col="driver" label={t('vehicles.colDriver')} />
+                <SortTh col="status" label={t('vehicles.colStatus')} />
+                <SortTh col="location" label={t('vehicles.colLocation')} />
+                {isAdmin && <th className={TH + ' text-end'}>{t('vehicles.colActions')}</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </GlassThead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={9}><GlassLoader label={t('vehicles.loading')} /></td></tr>
+              ) : sorted.length === 0 ? (
+                <tr><td colSpan={9}><GlassEmptyState text={t('vehicles.noMatch')} /></td></tr>
+              ) : sorted.map((v, i) => (
+                <GlassTr key={v.id} onClick={() => { window.location.href = '/vehicles/' + v.id; }}>
+                  <GlassTd className="text-[var(--tx-4)]">{(page - 1) * pageSize + i + 1}</GlassTd>
+                  <GlassTd className="font-semibold !text-[var(--tx)]">{v.vehicle_number}</GlassTd>
+                  <GlassTd>{v.name || '—'}</GlassTd>
+                  <GlassTd>{trEnum(t, 'vtype', v.type)}</GlassTd>
+                  <GlassTd>{trEnum(t, 'fuel', v.fuel_type)}</GlassTd>
+                  <GlassTd>{v.driver || '—'}</GlassTd>
+                  <GlassTd><GlassStatusChip label={trEnum(t, 'status', v.status)} tone={STATUS_TONE[v.status] || 'slate'} /></GlassTd>
+                  <GlassTd>{v.location || '—'}</GlassTd>
+                  {isAdmin && (
+                    <GlassTd className="text-end whitespace-nowrap" >
+                      <span onClick={e => e.stopPropagation()} className="inline-flex items-center gap-1.5">
+                        <IconBtn title={t('vehicles.view')} onClick={() => { window.location.href = '/vehicles/' + v.id; }}>{'\u{1F441}'}</IconBtn>
+                        <IconBtn title={t('vehicles.edit')} tone="brand" onClick={() => setModal({ mode: 'edit', data: v })}>✎</IconBtn>
+                        <IconBtn title={t('vehicles.delete')} tone="red" onClick={() => deleteVehicle(v.id)}>🗑</IconBtn>
+                      </span>
+                    </GlassTd>
+                  )}
+                </GlassTr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('vehicles.showingEntries', { from: vehicles.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + vehicles.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('vehicles.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+        {/* Footer / pagination */}
+        <div className="flex items-center justify-between text-sm text-[var(--tx-4)] flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <span>{t('vehicles.showingEntries', { from: vehicles.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + vehicles.length, total })}</span>
+            <div className="flex items-center gap-1.5">
+              <span>{t('vehicles.rows')}</span>
+              <GlassDropdown className="w-24" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <PageBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</PageBtn>
+            <span className="text-[var(--tx-2)]">{page} / {totalPages}</span>
+            <PageBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</PageBtn>
           </div>
         </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
-        </div>
-      </div>
+      </GlassPage>
 
       {modal && <VehicleModal modal={modal} drivers={drivers} onClose={() => setModal(null)} onSave={saveVehicle} />}
       {importOpen && <ImportModal onClose={() => setImportOpen(false)} onDone={() => { setImportOpen(false); load(); }} />}
     </Shell>
+  );
+}
+
+function IconBtn({ children, title, onClick, tone }) {
+  const color = tone === 'brand' ? 'text-[var(--pr-2)]' : tone === 'red' ? 'text-[#F87171]' : 'text-[var(--tx-4)]';
+  return (
+    <button onClick={onClick} title={title}
+      className={'h-8 w-8 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl hover:border-[rgba(37,212,255,0.4)] transition-colors flex items-center justify-center ' + color}>
+      {children}
+    </button>
+  );
+}
+function PageBtn({ children, disabled, onClick }) {
+  return (
+    <button disabled={disabled} onClick={onClick}
+      className="h-8 min-w-8 px-2 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl text-[var(--tx-2)] disabled:opacity-40 hover:border-[rgba(37,212,255,0.4)] hover:text-[var(--pr-2)] transition-colors">
+      {children}
+    </button>
   );
 }
 
@@ -230,65 +257,55 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
   }
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+  const SecTitle = ({ children }) => <div className="text-[11px] font-semibold text-[var(--tx-4)] uppercase tracking-[0.1em] pt-1">{children}</div>;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4 my-8">
-        <h3 className="font-semibold text-lg">{modal.mode === 'add' ? t('vehicles.addModalTitle') : t('vehicles.editModalTitle')}</h3>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
+    <GlassModal wide title={modal.mode === 'add' ? t('vehicles.addModalTitle') : t('vehicles.editModalTitle')} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        {err && <div className="text-[#F87171] text-sm">{err}</div>}
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('vehicles.sectionBasic')}</div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('fields.vehicleNumber')} value={form.vehicle_number} onChange={set('vehicle_number')} required />
-          <Field label={t('fields.name')} value={form.name || ''} onChange={set('name')} />
-          <Field label={t('fields.type')} value={form.type || ''} onChange={set('type')} />
-          <Field label={t('fields.fuelType')} value={form.fuel_type || ''} onChange={set('fuel_type')} />
-          <Field label={t('fields.driver')} value={form.driver || ''} onChange={set('driver')} />
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('fields.status')}</label>
-            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Running', 'Idle', 'Stopped', 'Offline'].map(s => [s, trEnum(t, 'status', s)])} />
-          </div>
-          <Field label={t('fields.currentKm')} value={form.current_km ?? ''} onChange={set('current_km')} type="number" />
-          <Field label={t('fields.location')} value={form.location || ''} onChange={set('location')} />
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{t('fields.assignedDriver')}</label>
-            <Dropdown value={form.assigned_driver_id || ''} onChange={v => setForm(f => ({ ...f, assigned_driver_id: v }))} placeholder={t('common.none')}
+        <SecTitle>{t('vehicles.sectionBasic')}</SecTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <GlassField label={t('fields.vehicleNumber')} required><GlassInput value={form.vehicle_number} onChange={set('vehicle_number')} required /></GlassField>
+          <GlassField label={t('fields.name')}><GlassInput value={form.name || ''} onChange={set('name')} /></GlassField>
+          <GlassField label={t('fields.type')}><GlassInput value={form.type || ''} onChange={set('type')} /></GlassField>
+          <GlassField label={t('fields.fuelType')}><GlassInput value={form.fuel_type || ''} onChange={set('fuel_type')} /></GlassField>
+          <GlassField label={t('fields.driver')}><GlassInput value={form.driver || ''} onChange={set('driver')} /></GlassField>
+          <GlassField label={t('fields.status')}>
+            <GlassDropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Running', 'Idle', 'Stopped', 'Offline'].map(s => [s, trEnum(t, 'status', s)])} />
+          </GlassField>
+          <GlassField label={t('fields.currentKm')}><GlassInput value={form.current_km ?? ''} onChange={set('current_km')} type="number" /></GlassField>
+          <GlassField label={t('fields.location')}><GlassInput value={form.location || ''} onChange={set('location')} /></GlassField>
+          <GlassField label={t('fields.assignedDriver')}>
+            <GlassDropdown value={form.assigned_driver_id || ''} onChange={v => setForm(f => ({ ...f, assigned_driver_id: v }))} placeholder={t('common.none')}
               options={[['', t('common.none')], ...(drivers || []).map(d => [d.id, d.full_name])]} />
-          </div>
+          </GlassField>
         </div>
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('vehicles.sectionInsurance')}</div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('fields.insuranceCompany')} value={form.insurance_company || ''} onChange={set('insurance_company')} />
-          <Field label={t('fields.insuranceNumber')} value={form.insurance_number || ''} onChange={set('insurance_number')} />
-          <Field label={t('fields.insuranceExpiry')} value={form.insurance_expiry || ''} onChange={set('insurance_expiry')} type="date" />
-          <Field label={t('fields.registrationExpiry')} value={form.registration_expiry || ''} onChange={set('registration_expiry')} type="date" />
-          <Field label={t('fields.vinNumber')} value={form.vin_number || ''} onChange={set('vin_number')} />
-          <Field label={t('fields.engineNumber')} value={form.engine_number || ''} onChange={set('engine_number')} />
+        <SecTitle>{t('vehicles.sectionInsurance')}</SecTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <GlassField label={t('fields.insuranceCompany')}><GlassInput value={form.insurance_company || ''} onChange={set('insurance_company')} /></GlassField>
+          <GlassField label={t('fields.insuranceNumber')}><GlassInput value={form.insurance_number || ''} onChange={set('insurance_number')} /></GlassField>
+          <GlassField label={t('fields.insuranceExpiry')}><GlassInput value={form.insurance_expiry || ''} onChange={set('insurance_expiry')} type="date" /></GlassField>
+          <GlassField label={t('fields.registrationExpiry')}><GlassInput value={form.registration_expiry || ''} onChange={set('registration_expiry')} type="date" /></GlassField>
+          <GlassField label={t('fields.vinNumber')}><GlassInput value={form.vin_number || ''} onChange={set('vin_number')} /></GlassField>
+          <GlassField label={t('fields.engineNumber')}><GlassInput value={form.engine_number || ''} onChange={set('engine_number')} /></GlassField>
         </div>
 
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide pt-2">{t('vehicles.sectionService')}</div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('fields.lastServiceDate')} value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" />
-          <Field label={t('fields.nextServiceDate')} value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" />
-          <Field label={t('fields.purchaseDate')} value={form.purchase_date || ''} onChange={set('purchase_date')} type="date" />
-          <Field label={t('fields.purchaseCost')} value={form.purchase_cost ?? ''} onChange={set('purchase_cost')} type="number" />
+        <SecTitle>{t('vehicles.sectionService')}</SecTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <GlassField label={t('fields.lastServiceDate')}><GlassInput value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" /></GlassField>
+          <GlassField label={t('fields.nextServiceDate')}><GlassInput value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" /></GlassField>
+          <GlassField label={t('fields.purchaseDate')}><GlassInput value={form.purchase_date || ''} onChange={set('purchase_date')} type="date" /></GlassField>
+          <GlassField label={t('fields.purchaseCost')}><GlassInput value={form.purchase_cost ?? ''} onChange={set('purchase_cost')} type="number" /></GlassField>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('vehicles.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('vehicles.saving') : t('vehicles.save')}</button>
+          <GlassButton type="button" variant="ghost" onClick={onClose}>{t('vehicles.cancel')}</GlassButton>
+          <GlassButton type="submit" disabled={busy}>{busy ? t('vehicles.saving') : t('vehicles.save')}</GlassButton>
         </div>
       </form>
-    </div>
-  );
-}
-function Field({ label, ...props }) {
-  return (
-    <div>
-      <label className="block text-xs text-slate-500 mb-1">{label}</label>
-      <input {...props} className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-    </div>
+    </GlassModal>
   );
 }
 
@@ -315,31 +332,29 @@ function ImportModal({ onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0f172a] p-6 space-y-4">
-        <h3 className="font-semibold text-lg">{t('vehicles.importTitle')}</h3>
-        <p className="text-xs text-slate-500">{t('vehicles.importDesc')}</p>
-        {err && <div className="text-red-500 text-sm">{err}</div>}
-        {result ? (
-          <div className="text-sm space-y-1">
-            <div className="text-emerald-500 font-medium">{t('vehicles.importComplete')}</div>
-            <div>{t('vehicles.importAdded', { n: result.inserted })}</div>
-            <div>{t('vehicles.importSkippedDuplicate', { n: result.skippedDuplicate })}</div>
-            <div>{t('vehicles.importSkippedEmpty', { n: result.skippedEmpty })}</div>
-            {result.maintenance?.sheetFound && <div>{t('vehicles.importMaintAdded', { n: result.maintenance.inserted, skipped: result.maintenance.skipped })}</div>}
-            {result.maintenanceLog?.sheetFound && <div>{t('vehicles.importLogAdded', { n: result.maintenanceLog.inserted, skipped: result.maintenanceLog.skipped })}</div>}
-            <button onClick={onDone} className="mt-3 w-full px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{t('vehicles.importDone')}</button>
+    <GlassModal title={t('vehicles.importTitle')} onClose={onClose}>
+      <p className="text-xs text-[var(--tx-4)] mb-3">{t('vehicles.importDesc')}</p>
+      {err && <div className="text-[#F87171] text-sm mb-3">{err}</div>}
+      {result ? (
+        <div className="text-sm space-y-1 text-[var(--tx-2)]">
+          <div className="text-[#34D399] font-medium">{t('vehicles.importComplete')}</div>
+          <div>{t('vehicles.importAdded', { n: result.inserted })}</div>
+          <div>{t('vehicles.importSkippedDuplicate', { n: result.skippedDuplicate })}</div>
+          <div>{t('vehicles.importSkippedEmpty', { n: result.skippedEmpty })}</div>
+          {result.maintenance?.sheetFound && <div>{t('vehicles.importMaintAdded', { n: result.maintenance.inserted, skipped: result.maintenance.skipped })}</div>}
+          {result.maintenanceLog?.sheetFound && <div>{t('vehicles.importLogAdded', { n: result.maintenanceLog.inserted, skipped: result.maintenanceLog.skipped })}</div>}
+          <GlassButton onClick={onDone} className="mt-3 w-full">{t('vehicles.importDone')}</GlassButton>
+        </div>
+      ) : (
+        <form onSubmit={submit} className="space-y-3">
+          <input type="file" accept=".xlsx" onChange={e => setFile(e.target.files?.[0] || null)}
+            className="w-full text-sm text-[var(--tx-2)] file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(37,212,255,0.15)] file:px-4 file:py-2 file:text-[var(--pr-2)] file:font-semibold" />
+          <div className="flex justify-end gap-2">
+            <GlassButton type="button" variant="ghost" onClick={onClose}>{t('vehicles.cancel')}</GlassButton>
+            <GlassButton type="submit" disabled={busy || !file}>{busy ? t('vehicles.importing') : t('vehicles.importSubmit')}</GlassButton>
           </div>
-        ) : (
-          <form onSubmit={submit} className="space-y-3">
-            <input type="file" accept=".xlsx" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm" />
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('vehicles.cancel')}</button>
-              <button disabled={busy || !file} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('vehicles.importing') : t('vehicles.importSubmit')}</button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+        </form>
+      )}
+    </GlassModal>
   );
 }

@@ -59,7 +59,7 @@ export default function ProfilePage() {
           <div className="font-semibold">{t('profile.title')}</div>
           {msg && <div className="rounded-lg bg-brand-600/10 border border-brand-600/25 px-3 py-2 text-sm">{msg}</div>}
           {!loaded ? (
-            <div className="text-sm text-[#8C8A80]">{t('shell.loading')}</div>
+            <div className="text-sm text-[#7C9296]">{t('shell.loading')}</div>
           ) : (
             <>
               <Field label={t('f.name')}>
@@ -69,7 +69,7 @@ export default function ProfilePage() {
                 <Input type="email" dir="ltr" value={email} onChange={e => setEmail(e.target.value)} />
               </Field>
 
-              <div className="pt-2 border-t border-[#E5E2DD] dark:border-white/[0.08]">
+              <div className="pt-2 border-t border-[#D9E4E6] dark:border-white/[0.08]">
                 <div className="text-sm font-medium mb-3">{t('profile.changePassword')}</div>
                 <div className="space-y-3">
                   <Field label={t('profile.currentPassword')}>

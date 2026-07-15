@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Field } from '@/components/ui';
+import { GlassTabs } from '@/components/glass';
 
 const TABS = ['entities', 'defaults', 'profit', 'approvals', 'numbering', 'system'];
 
@@ -42,13 +43,8 @@ export default function SettingsPage() {
   return (
     <Shell active="/settings">
       <div className="space-y-4">
-        <div className="glass-card p-2 flex flex-wrap gap-1">
-          {TABS.map(s => (
-            <button key={s} onClick={() => setTab(s)}
-              className={'px-3.5 py-2 rounded-lg text-sm transition-colors ' + (tab === s ? 'bg-brand-600 text-white' : 'hover:bg-[#F1EEE7] dark:hover:bg-white/5')}>
-              {t('settings.' + s)}
-            </button>
-          ))}
+        <div className="glass-card p-2 flex flex-wrap items-center gap-1">
+          <GlassTabs tabs={TABS.map(s => ({ value: s, label: t('settings.' + s) }))} value={tab} onChange={setTab} />
           <div className="flex-1" />
           <Button disabled={busy} onClick={save}>{busy ? t('common.saving') : t('common.save')}</Button>
         </div>
@@ -129,21 +125,21 @@ export default function SettingsPage() {
               <Input dir="ltr" value={num((settings.numbering || {}).product_prefix) || 'P-'}
                 onChange={e => patchSetting('numbering', 'product_prefix', e.target.value)} />
             </Field>
-            <div className="md:col-span-3 text-[12px] text-[#8C8A80]">{t('settings.numberingNote')}</div>
+            <div className="md:col-span-3 text-[12px] text-[#7C9296]">{t('settings.numberingNote')}</div>
           </div>
         )}
 
         {tab === 'system' && (
           <div className="glass-card p-4 text-sm space-y-2">
             <div className="font-semibold">{t('settings.system')}</div>
-            <p className="text-[#8C8A80]">{t('settings.systemNote')}</p>
-            <ul className="text-[13px] space-y-1 text-[#8C8A80]">
+            <p className="text-[#7C9296]">{t('settings.systemNote')}</p>
+            <ul className="text-[13px] space-y-1 text-[#7C9296]">
               <li>• Email (Resend): <code>RESEND_API_KEY</code>, <code>EMAIL_FROM</code></li>
               <li>• Expiry cron secret: <code>CRON_SECRET</code></li>
               <li>• Database & storage: <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code></li>
               <li>• Sessions: <code>JWT_SECRET</code></li>
             </ul>
-            <p className="text-[#8C8A80]">{t('settings.backupNote')}</p>
+            <p className="text-[#7C9296]">{t('settings.backupNote')}</p>
           </div>
         )}
       </div>

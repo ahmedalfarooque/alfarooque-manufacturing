@@ -23,6 +23,7 @@ export const translations = {
     'shell.searchDrivers': 'Drivers',
     'shell.toggleTheme': 'Toggle theme',
     'shell.toggleLanguage': 'Toggle language',
+    'shell.openMenu': 'Open menu',
 
     // Dashboard
     'dash.totalVehicles': 'Total Vehicles',
@@ -263,6 +264,8 @@ export const translations = {
     'login.admin': 'Admin',
     'login.email': 'Email',
     'login.password': 'Password',
+    'login.showPassword': 'Show password',
+    'login.hidePassword': 'Hide password',
     'login.continue': 'Continue',
     'login.signingIn': 'Signing in…',
     'login.codeSentTo': 'We sent a 6-digit code to',
@@ -533,6 +536,7 @@ export const translations = {
     'shell.searchDrivers': 'السائقون',
     'shell.toggleTheme': 'تبديل المظهر',
     'shell.toggleLanguage': 'تبديل اللغة',
+    'shell.openMenu': 'فتح القائمة',
 
     // Dashboard
     'dash.totalVehicles': 'إجمالي المركبات',
@@ -773,6 +777,8 @@ export const translations = {
     'login.admin': 'مسؤول',
     'login.email': 'البريد الإلكتروني',
     'login.password': 'كلمة المرور',
+    'login.showPassword': 'إظهار كلمة المرور',
+    'login.hidePassword': 'إخفاء كلمة المرور',
     'login.continue': 'متابعة',
     'login.signingIn': 'جارٍ تسجيل الدخول…',
     'login.codeSentTo': 'لقد أرسلنا رمزًا مكونًا من 6 أرقام إلى',

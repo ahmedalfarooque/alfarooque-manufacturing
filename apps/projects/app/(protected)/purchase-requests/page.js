@@ -9,6 +9,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
+import { GlassButton, GlassIconButton, GlassPagination } from '@/components/glass';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const PIE_COLORS = ['#f59e0b', '#6366f1', '#3b82f6', '#ef4444', '#f97316', '#a855f7', '#06b6d4', '#94a3b8', '#eab308', '#0ea5e9', '#10b981'];
@@ -164,9 +165,9 @@ export default function PurchaseRequestsPage() {
           <p className="text-xs text-slate-500">{t('pr.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('common.exportExcel')}</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('common.exportPdf')}</button>
-          <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
+          <GlassButton onClick={exportExcel} variant="success">⤓ {t('common.exportExcel')}</GlassButton>
+          <GlassButton onClick={exportPdf} variant="secondary">⤓ {t('common.exportPdf')}</GlassButton>
+          <GlassButton onClick={printReport} variant="ghost">🖶 {t('common.print')}</GlassButton>
         </div>
       </div>
 
@@ -189,7 +190,7 @@ export default function PurchaseRequestsPage() {
               <XAxis dataKey="month" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#6B7A4F" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="count" stroke="#0C93AE" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -269,9 +270,9 @@ export default function PurchaseRequestsPage() {
                 <td>{r.requested_by_name || '—'}</td>
                 <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
                 <td className="text-right px-4 space-x-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-slate-400">{'\u{1F441}'}</a>
-                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-500">↗</a>
-                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-red-500">🗑</button>
+                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="af-actionbtn af-actionbtn--neutral af-actionbtn--icononly">{'\u{1F441}'}</a>
+                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="af-actionbtn af-actionbtn--neutral af-actionbtn--icononly">↗</a>
+                  <GlassIconButton onClick={() => deleteRequest(r.id)} title={t('common.delete')} tone="red">🗑</GlassIconButton>
                 </td>
               </tr>
             ))}
@@ -287,11 +288,7 @@ export default function PurchaseRequestsPage() {
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
-        </div>
+        <GlassPagination page={page} pageSize={pageSize} total={total} onPage={setPage} />
       </div>
 
     </Shell>

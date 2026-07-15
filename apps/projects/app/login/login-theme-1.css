@@ -1,0 +1,201 @@
+/* AL FAROOQUE - Unified Login Glass Design System (v2, part 1 of 2)
+   Shared across QuotePro, Projects, and Car Inventory.
+   Palette derived from the IAA_LOGO ribbon mark (teal + graphite/navy).
+   Scoped entirely under .af-login-page - never touches app-wide
+   brand-* Tailwind tokens or any other screen. DARK is the default
+   experience here; html:not(.dark) supplies the light overrides,
+   matching each app's existing light-default/html.dark convention
+   (the login page forces html.dark on mount). This file covers
+   variables, background/orbs, the card shell, and the header/tabs.
+   Part 2 (login-part2.css) covers inputs, buttons, messages,
+   controls and footer. */
+
+.af-login-page {
+  --al-teal: #0EA5C4;
+  --al-teal-light: #6FE0F2;
+  --al-teal-dark: #076B80;
+  --al-teal-deep: #054F5F;
+  --al-graphite: #6B6B6B;
+  --al-navy: #0F2A36;
+  --al-navy-deep: #081820;
+
+  --al-card-bg: linear-gradient(165deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.05) 100%);
+  --al-card-border: rgba(255,255,255,0.14);
+  --al-card-sheen: rgba(255,255,255,0.35);
+  --al-input-bg: rgba(255,255,255,0.05);
+  --al-input-border: rgba(255,255,255,0.12);
+  --al-text: #F4F9FA;
+  --al-text-2: #B9C7C9;
+  --al-text-3: #7E9093;
+
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+html:not(.dark) .af-login-page {
+  --al-card-bg: linear-gradient(165deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.46) 100%);
+  --al-card-border: rgba(255,255,255,0.65);
+  --al-card-sheen: rgba(255,255,255,0.9);
+  --al-input-bg: rgba(255,255,255,0.55);
+  --al-input-border: rgba(14,165,196,0.16);
+  --al-text: #142B30;
+  --al-text-2: #4F686C;
+  --al-text-3: #7C9296;
+}
+
+.af-login-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 65% 55% at 20% 15%, rgba(14,165,196,0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 85% 85%, rgba(15,42,54,0.55) 0%, transparent 65%),
+    linear-gradient(160deg, #0A1E27 0%, #071219 55%, #050D12 100%);
+}
+html:not(.dark) .af-login-bg {
+  background:
+    radial-gradient(ellipse 65% 55% at 20% 10%, rgba(14,165,196,0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 88% 90%, rgba(15,42,54,0.06) 0%, transparent 65%),
+    linear-gradient(160deg, #F2F7F8 0%, #E9F1F2 100%);
+}
+
+.af-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.6;
+  will-change: transform;
+  animation: afOrbFloat 18s ease-in-out infinite;
+}
+.af-orb--teal {
+  width: 30vw; height: 30vw; min-width: 260px; min-height: 260px; max-width: 460px; max-height: 460px;
+  top: -10%; left: -8%;
+  background: radial-gradient(circle at 35% 35%, var(--al-teal-light), var(--al-teal) 55%, transparent 75%);
+}
+.af-orb--navy {
+  width: 38vw; height: 38vw; min-width: 320px; min-height: 320px; max-width: 620px; max-height: 620px;
+  bottom: -16%; right: -10%;
+  background: radial-gradient(circle at 40% 40%, var(--al-teal-dark), var(--al-navy) 62%, transparent 78%);
+  animation-delay: -7s;
+  animation-duration: 22s;
+}
+.af-orb--gray {
+  width: 20vw; height: 20vw; min-width: 180px; min-height: 180px; max-width: 320px; max-height: 320px;
+  top: 58%; left: 62%;
+  background: radial-gradient(circle at 40% 40%, var(--al-graphite), transparent 75%);
+  opacity: 0.22;
+  animation-delay: -12s;
+  animation-duration: 20s;
+}
+html:not(.dark) .af-orb { opacity: 0.35; }
+html:not(.dark) .af-orb--gray { opacity: 0.14; }
+
+.af-sparkles {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 12% 22%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 82% 18%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(2px 2px at 70% 62%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1.5px 1.5px at 22% 78%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 92% 72%, rgba(255,255,255,0.35), transparent);
+  opacity: 0.7;
+}
+html:not(.dark) .af-sparkles { opacity: 0.25; }
+
+@keyframes afOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(2%, -2.5%) scale(1.05); }
+  66% { transform: translate(-1.6%, 1.8%) scale(0.97); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .af-orb { animation: none; }
+}
+
+.af-login-card {
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  border-radius: 32px;
+  padding: 2.5rem;
+  background: var(--al-card-bg);
+  border: 1px solid var(--al-card-border);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  box-shadow:
+    0 1.5px 0 var(--al-card-sheen) inset,
+    0 0 0 1px rgba(255,255,255,0.03) inset,
+    0 40px 90px -24px rgba(3,15,20,0.55),
+    0 0 90px rgba(14,165,196,0.08);
+  animation: afCardIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
+html:not(.dark) .af-login-card {
+  box-shadow:
+    0 1.5px 0 var(--al-card-sheen) inset,
+    0 30px 70px -22px rgba(15,42,54,0.16),
+    0 10px 28px rgba(15,42,54,0.08);
+}
+@media (min-width: 640px) { .af-login-card { padding: 3rem; max-width: 32rem; } }
+@media (max-width: 380px) { .af-login-card { padding: 1.75rem; border-radius: 24px; } }
+
+@keyframes afCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .af-login-card { animation: none; }
+}
+
+.af-login-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+.af-login-brand { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; min-width: 0; }
+.af-login-logo-badge {
+  display: flex; align-items: center; justify-content: center;
+  width: 4rem; height: 4rem; border-radius: 20px;
+  background: linear-gradient(155deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02));
+  border: 1px solid var(--al-card-border);
+  box-shadow: 0 8px 24px rgba(14,165,196,0.18), 0 1px 0 rgba(255,255,255,0.15) inset;
+  margin-bottom: 0.85rem;
+}
+html:not(.dark) .af-login-logo-badge {
+  background: linear-gradient(155deg, rgba(255,255,255,0.9), rgba(255,255,255,0.5));
+}
+.af-login-logo {
+  height: 2.5rem; width: 2.5rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(14,165,196,0.3));
+}
+.af-login-appname {
+  color: var(--al-text);
+  font-weight: 700; font-size: 1.5rem; line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.af-login-tagline { color: var(--al-text-3); font-size: 0.8125rem; margin-top: 0.2rem; }
+
+.af-login-controls { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+
+.af-login-tabs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  padding: 4px; border-radius: 14px; margin-bottom: 1.75rem;
+  background: var(--al-input-bg);
+  border: 1px solid var(--al-input-border);
+}
+.af-login-tab {
+  border-radius: 10px; padding: 0.6rem 0;
+  font-size: 0.875rem; font-weight: 500;
+  color: var(--al-text-3);
+  transition: color 0.2s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+.af-login-tab:hover:not(.af-login-tab--active) { color: var(--al-text); }
+.af-login-tab--active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--al-teal-light), var(--al-teal) 55%, var(--al-teal-dark));
+  box-shadow: 0 6px 18px rgba(14,165,196,0.4);
+}

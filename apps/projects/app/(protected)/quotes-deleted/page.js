@@ -5,11 +5,11 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { GlassButton } from '@/components/glass';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
 const RECOVERY_OPTIONS = ['All', 'green', 'orange', 'red'];
 
-function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function recoveryBadgeClass(days) {
   if (days > 14) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
   if (days > 3) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
@@ -117,9 +117,9 @@ export default function DeletedQuotesPage() {
                     <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></td>
                     <td className="text-right px-4 whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
-                        <button disabled={busyId === r.id} onClick={() => recover(r.id)} className="text-xs px-2 py-1 rounded-lg bg-brand-600 text-white disabled:opacity-50">{t('oq.recover')}</button>
+                        <GlassButton variant="success" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => recover(r.id)}>{t('oq.recover')}</GlassButton>
                         {isSuperAdmin && (
-                          <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.deletePermanently')}</button>
+                          <GlassButton variant="danger" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => permanentDelete(r.id)}>{t('oq.deletePermanently')}</GlassButton>
                         )}
                       </div>
                     </td>

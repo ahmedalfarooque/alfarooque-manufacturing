@@ -11,7 +11,7 @@ export default function ComingSoon({ active }) {
     <Shell active={active}>
       <div className="glass-card p-10 text-center">
         <div className="text-4xl mb-3">🛠️</div>
-        <div className="text-sm text-[#8C8A80]">{t('common.comingSoon')}</div>
+        <div className="text-sm text-[#7C9296]">{t('common.comingSoon')}</div>
         <a href="/dashboard" className="inline-block mt-4 text-sm text-brand-600 dark:text-brand-400 hover:underline">
           {t('common.backToDashboard')}
         </a>

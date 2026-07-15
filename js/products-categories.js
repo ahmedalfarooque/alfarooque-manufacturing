@@ -95,6 +95,17 @@
       wrapEl.appendChild(card);
     });
     wrapEl.addEventListener('click', window.pcCardClickHandler);
+    /* These cards are rendered after the initial page-load scroll-
+       reveal scan (they wait on the async product fetch), so without
+       this they'd sit at [data-reveal]'s CSS-default opacity:0 forever
+       — visible content ("Premium Door Collection" etc.) fine, the
+       actual product cards permanently blank. window.ScrollExperience
+       may not exist yet if scroll-experience.js hasn't finished
+       initializing (unlikely given script order, but harmless if so —
+       the cards simply keep their `.visible` class fallback). */
+    if (window.ScrollExperience && window.ScrollExperience.revealNew) {
+      window.ScrollExperience.revealNew(wrapEl);
+    }
   }
 
   function boot() {

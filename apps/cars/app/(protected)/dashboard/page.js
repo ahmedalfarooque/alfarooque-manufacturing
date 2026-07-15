@@ -45,10 +45,11 @@ export default function DashboardPage() {
   const runningPct = pct(stats.running, stats.totalVehicles);
   const idlePct = pct(stats.idle, stats.totalVehicles);
   const stoppedPct = pct(stats.stopped, stats.totalVehicles);
-  const CATEGORY_COLORS = ['#6B7A4F', '#0ea5e9', '#BC6B4E', '#ef4444', '#8b5cf6', '#7FA65C', '#f97316', '#64748b', '#ec4899'];
+  const CATEGORY_COLORS = ['#0C93AE', '#0ea5e9', '#BC6B4E', '#ef4444', '#8b5cf6', '#7FA65C', '#f97316', '#64748b', '#ec4899'];
 
   return (
     <Shell active="/dashboard">
+      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t('nav.vehicles')}</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon="truck" tone="brand" label={t('dash.totalVehicles')} value={stats.totalVehicles} sub={t('dash.allVehicles')} href="/vehicles"
           bars={{ values: [stats.running, stats.idle, stats.stopped], colors: [COLORS.Running, COLORS.Idle, COLORS.Stopped] }} />
@@ -59,27 +60,16 @@ export default function DashboardPage() {
         <StatCard icon="pin" tone="slate" label={t('dash.totalDistance')} value={fmt(stats.totalDistance) + ' ' + t('common.km')} sub={t('dash.thisPeriod')} />
         <StatCard icon="chart" tone="brand" label={t('dash.totalTrips')} value={stats.totalTrips} sub={t('dash.loggedTrips')} typewriter />
         <StatCard icon="gear" tone="blue" label={t('dash.avgSpeed')} value={stats.avgSpeed != null ? stats.avgSpeed + ' ' + t('common.kmh') : '—'} sub={stats.avgSpeed != null ? t('dash.fromLoggedTrips') : t('dash.noTripsLoggedYet')} />
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon="bag" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' ' + t('common.liter')} sub={t('dash.thisPeriod')} />
         <StatCard icon="gem" tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} typewriter />
+      </div>
+
+      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t('nav.maintenance')}</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon="wrench" tone="amber" label={t('dash.maintenanceDue')} value={stats.maintenanceDueCount} sub={t('dash.vehicles')} href="/maintenance-schedule" />
         <StatCard icon="bell" tone="red" label={t('dash.activeAlerts')} value={stats.activeAlerts} sub={t('dash.unread')} href="/alerts" />
         <StatCard icon="receipt" tone="slate" label={t('dash.maintenanceCost')} value={'SAR ' + fmt(stats.maintenanceCost)} sub={t('dash.loggedServices')}
           trend={monthlyCostData} trendKey="cost" trendLabelKey="month" />
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="shield" tone={critical('license') ? 'red' : 'emerald'} label={t('dash.licenseExpiring')} value={critical('license')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="folder" tone={critical('iqama') ? 'red' : 'emerald'} label={t('dash.iqamaExpiring')} value={critical('iqama')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="box" tone={critical('passport') ? 'red' : 'emerald'} label={t('dash.passportExpiring')} value={critical('passport')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="heart" tone={critical('medical') ? 'red' : 'emerald'} label={t('dash.medicalExpiring')} value={critical('medical')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="shield" tone={critical('insurance') ? 'red' : 'emerald'} label={t('dash.insuranceExpiring')} value={critical('insurance')} sub={t('dash.within30Days')} href="/vehicles" />
-        <StatCard icon="receipt" tone={critical('registration') ? 'red' : 'emerald'} label={t('dash.registrationExpiring')} value={critical('registration')} sub={t('dash.within30Days')} href="/vehicles" />
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon="wrench" tone="brand" label={t('dash.maintenanceRecords')} value={stats.totalMaintenanceRecords} sub={t('dash.allTime')} href="/maintenance" />
         <StatCard icon="receipt" tone="slate" label={t('dash.totalMaintCost')} value={'SAR ' + fmt(stats.totalMaintenanceRecordsCost)} sub={t('dash.allRecords')} href="/maintenance"
           trend={monthlyCostData} trendKey="cost" trendLabelKey="month" />
@@ -90,7 +80,17 @@ export default function DashboardPage() {
         <StatCard icon="gear" tone="amber" label={t('dash.inWorkshop')} value={stats.vehiclesInWorkshop} sub={t('dash.today')} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4 mb-6">
+      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t('dash.expirySummary')}</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon="shield" tone={critical('license') ? 'red' : 'emerald'} label={t('dash.licenseExpiring')} value={critical('license')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="folder" tone={critical('iqama') ? 'red' : 'emerald'} label={t('dash.iqamaExpiring')} value={critical('iqama')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="box" tone={critical('passport') ? 'red' : 'emerald'} label={t('dash.passportExpiring')} value={critical('passport')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="heart" tone={critical('medical') ? 'red' : 'emerald'} label={t('dash.medicalExpiring')} value={critical('medical')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="shield" tone={critical('insurance') ? 'red' : 'emerald'} label={t('dash.insuranceExpiring')} value={critical('insurance')} sub={t('dash.within30Days')} href="/vehicles" />
+        <StatCard icon="receipt" tone={critical('registration') ? 'red' : 'emerald'} label={t('dash.registrationExpiring')} value={critical('registration')} sub={t('dash.within30Days')} href="/vehicles" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.vehiclesStatus')}</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -131,13 +131,13 @@ export default function DashboardPage() {
               <XAxis type="number" />
               <YAxis type="category" dataKey="name" width={90} />
               <Tooltip />
-              <Bar dataKey="distance" fill="#6B7A4F" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="distance" fill="#0C93AE" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.driverStatus')}</h3>
           {driverPieData.length === 0 ? <EmptyNote text={t('dash.noDriversYet')} /> : (
@@ -194,7 +194,7 @@ export default function DashboardPage() {
               <XAxis dataKey="month" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} />
               <Tooltip />
-              <Area type="monotone" dataKey="cost" stroke="#6B7A4F" fill="#6B7A4F" fillOpacity={0.25} />
+              <Area type="monotone" dataKey="cost" stroke="#0C93AE" fill="#0C93AE" fillOpacity={0.25} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

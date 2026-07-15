@@ -8,6 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { GlassButton, GlassIconButton, GlassPagination } from '@/components/glass';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -128,10 +129,10 @@ export default function ProjectsPage() {
           <p className="text-xs text-slate-500">{t('projects.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          <button onClick={exportExcel} className="text-sm px-3 py-2 rounded-lg bg-emerald-600 text-white">⤓ {t('common.exportExcel')}</button>
-          <button onClick={exportPdf} className="text-sm px-3 py-2 rounded-lg bg-red-600 text-white">⤓ {t('common.exportPdf')}</button>
-          <button onClick={printReport} className="text-sm px-3 py-2 rounded-lg border border-black/10 dark:border-white/10">🖶 {t('common.print')}</button>
-          {isAdmin && <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">{t('projects.addProject')}</button>}
+          <GlassButton onClick={exportExcel} variant="success">⤓ {t('common.exportExcel')}</GlassButton>
+          <GlassButton onClick={exportPdf} variant="secondary">⤓ {t('common.exportPdf')}</GlassButton>
+          <GlassButton onClick={printReport} variant="ghost">🖶 {t('common.print')}</GlassButton>
+          {isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} variant="primary">{t('projects.addProject')}</GlassButton>}
         </div>
       </div>
 
@@ -188,9 +189,9 @@ export default function ProjectsPage() {
                   <span className="text-xs text-slate-500">{p.progress}%</span>
                 </td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/projects/' + p.id; }} title={t('common.view')} className="text-slate-400">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: p })} title={t('common.edit')} className="text-brand-500">✎</button>}
-                  {isAdmin && <button onClick={() => deleteProject(p.id)} title={t('common.delete')} className="text-red-500">🗑</button>}
+                  <GlassIconButton onClick={() => { window.location.href = '/projects/' + p.id; }} title={t('common.view')} tone="neutral">{'\u{1F441}'}</GlassIconButton>
+                  {isAdmin && <GlassIconButton onClick={() => setModal({ mode: 'edit', data: p })} title={t('common.edit')} tone="cyan">✎</GlassIconButton>}
+                  {isAdmin && <GlassIconButton onClick={() => deleteProject(p.id)} title={t('common.delete')} tone="red">🗑</GlassIconButton>}
                 </td>
               </tr>
             ))}
@@ -206,11 +207,7 @@ export default function ProjectsPage() {
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
-        </div>
+        <GlassPagination page={page} pageSize={pageSize} total={total} onPage={setPage} />
       </div>
 
       {modal && <ProjectModal modal={modal} onClose={() => setModal(null)} onSave={saveProject} />}
@@ -346,7 +343,7 @@ export function ProjectModal({ modal, onClose, onSave }) {
         <div className="pt-2 border-t border-black/5 dark:border-white/10">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-semibold">{t('projects.modal.assignedUsers')}</h4>
-            <button type="button" onClick={() => setAddUserOpen(true)} className="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white">{t('projects.modal.addUser')}</button>
+            <GlassButton type="button" onClick={() => setAddUserOpen(true)} variant="primary" className="text-xs px-3 py-1.5">{t('projects.modal.addUser')}</GlassButton>
           </div>
           {newUserInfo && (
             <div className="mb-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs space-y-1">
@@ -384,8 +381,8 @@ export function ProjectModal({ modal, onClose, onSave }) {
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('common.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>
+          <GlassButton type="button" onClick={onClose} variant="secondary">{t('common.cancel')}</GlassButton>
+          <GlassButton disabled={busy} variant="primary">{busy ? t('common.saving') : t('common.save')}</GlassButton>
         </div>
       </form>
       {addUserOpen && <AddUserModal onClose={() => setAddUserOpen(false)} onSave={submitNewUser} />}
@@ -417,8 +414,8 @@ function AddUserModal({ onClose, onSave }) {
         <Field label={t('projects.addUserModal.email')} type="email" value={form.email} onChange={set('email')} required />
         <Field label={t('projects.addUserModal.position')} value={form.position} onChange={set('position')} placeholder={t('projects.addUserModal.positionPlaceholder')} />
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('common.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>
+          <GlassButton type="button" onClick={onClose} variant="secondary">{t('common.cancel')}</GlassButton>
+          <GlassButton disabled={busy} variant="primary">{busy ? t('common.saving') : t('common.save')}</GlassButton>
         </div>
       </form>
     </div>

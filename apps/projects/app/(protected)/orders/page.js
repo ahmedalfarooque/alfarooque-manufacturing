@@ -8,6 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
+import { GlassButton } from '@/components/glass';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected'];
 export const STATUS_BADGE = {
@@ -22,7 +23,6 @@ export const STATUS_BADGE = {
 };
 const REFRESH_MS = 15000;
 function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
-function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 export default function OrdersPage() {
   const { t } = useLanguage();
@@ -117,10 +117,10 @@ export default function OrdersPage() {
                   <td>{new Date(r.created_at).toLocaleDateString()}</td>
                   <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setViewOrderId(r.id)} className="text-xs px-2 py-1 rounded-lg border border-black/10 dark:border-white/10">{t('oq.view')}</button>
-                      <a href={'/orders/' + r.id} className="text-xs px-2 py-1 rounded-lg bg-brand-600 text-white">{t('oq.edit')}</a>
+                      <GlassButton variant="secondary" onClick={() => setViewOrderId(r.id)} className="!text-xs !px-2 !py-1">{t('oq.view')}</GlassButton>
+                      <a href={'/orders/' + r.id} className="af-btn af-btn--primary !text-xs !px-2 !py-1">{t('oq.edit')}</a>
                       {softDeleteEnabled && (
-                        <button disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white disabled:opacity-50">{t('oq.delete')}</button>
+                        <GlassButton variant="danger" disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="!text-xs !px-2 !py-1">{t('oq.delete')}</GlassButton>
                       )}
                     </div>
                   </td>
@@ -133,10 +133,10 @@ export default function OrdersPage() {
 
       <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
         <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+        <div className="flex gap-1 items-center">
+          <GlassButton variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="!px-3 !py-1">‹</GlassButton>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <GlassButton variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="!px-3 !py-1">›</GlassButton>
         </div>
       </div>
 

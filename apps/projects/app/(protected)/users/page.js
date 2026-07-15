@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage } from '@/lib/i18n';
+import { GlassButton, GlassIconButton } from '@/components/glass';
 
 const EMPTY_FORM = { full_name: '', email: '', position: '', role: 'viewer', phone: '', department: '', company: '', status: 'Active', otp_login_enabled: true };
 const ROLE_BADGE = {
@@ -74,7 +75,7 @@ export default function UsersPage() {
           <h2 className="text-lg font-semibold">{t('users.title')}</h2>
           <p className="text-xs text-slate-500">{t('users.breadcrumb')}</p>
         </div>
-        <button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2 rounded-lg bg-brand-500 text-white">{t('users.addUser')}</button>
+        <GlassButton variant="primary" onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2">{t('users.addUser')}</GlassButton>
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
@@ -114,8 +115,8 @@ export default function UsersPage() {
                 <td>{u.company || '—'}</td>
                 <td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (STATUS_BADGE[u.status || 'Active'] || '')}>{t('users.status.' + (u.status || 'Active').toLowerCase())}</span></td>
                 <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => setModal({ mode: 'edit', data: u })} title={t('common.edit')} className="text-brand-500">✎</button>
-                  {me && me.id !== u.id && <button onClick={() => deleteUser(u)} title={t('common.delete')} className="text-red-500">🗑</button>}
+                  <GlassIconButton onClick={() => setModal({ mode: 'edit', data: u })} title={t('common.edit')} tone="cyan">✎</GlassIconButton>
+                  {me && me.id !== u.id && <GlassIconButton onClick={() => deleteUser(u)} title={t('common.delete')} tone="red">🗑</GlassIconButton>}
                 </td>
               </tr>
             ))}
@@ -132,9 +133,9 @@ export default function UsersPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">‹</button>
+          <GlassButton variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</GlassButton>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded border border-black/10 dark:border-white/10 disabled:opacity-40">›</button>
+          <GlassButton variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</GlassButton>
         </div>
       </div>
 
@@ -168,7 +169,7 @@ function UserModal({ modal, onClose, onSave }) {
           <h3 className="font-semibold text-lg">{t('users.modal.userCreatedTitle')}</h3>
           <p className="text-sm text-slate-500">{t('users.modal.userCreatedNote', { name: form.full_name })}</p>
           <div className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-4 py-3 font-mono text-lg text-center select-all">{tempPassword}</div>
-          <div className="flex justify-end"><button onClick={onClose} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{t('common.done')}</button></div>
+          <div className="flex justify-end"><GlassButton variant="primary" onClick={onClose} className="px-4 py-2 text-sm">{t('common.done')}</GlassButton></div>
         </div>
       </div>
     );
@@ -201,8 +202,8 @@ function UserModal({ modal, onClose, onSave }) {
           <p className="text-xs text-slate-500">{t('users.modal.otpNote')}</p>
         )}
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 text-sm">{t('common.cancel')}</button>
-          <button disabled={busy} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm">{busy ? t('common.saving') : t('common.save')}</button>
+          <GlassButton type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm">{t('common.cancel')}</GlassButton>
+          <GlassButton variant="primary" disabled={busy} className="px-4 py-2 text-sm">{busy ? t('common.saving') : t('common.save')}</GlassButton>
         </div>
       </form>
     </div>

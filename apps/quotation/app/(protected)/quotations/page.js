@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { projectStatusBadgeKey } from '@/lib/projectStatus';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Button, Input, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
+import { GlassIconButton, GlassTabs } from '@/components/glass';
 import { isSuperAdminEmail } from '@/lib/superAdmin';
 import { pickDefaultEntityId } from '@/lib/defaultEntity';
 
@@ -96,17 +97,10 @@ export default function QuotationsPage() {
     <Shell active="/quotations">
       <div className="glass-card overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 p-4">
-          <div className="flex flex-wrap rounded-lg border border-[#E5E2DD] dark:border-white/[0.1] overflow-hidden">
-            {TABS.map(s => (
-              <button key={s} onClick={() => setTab(s)}
-                className={'px-3 py-2 text-[13px] transition-colors ' + (tab === s ? 'bg-brand-600 text-white' : 'hover:bg-[#F1EEE7] dark:hover:bg-white/5')}>
-                {s === '' ? t('common.all') : t('status.' + s)}
-              </button>
-            ))}
-          </div>
+          <GlassTabs tabs={TABS.map(s => ({ value: s, label: s === '' ? t('common.all') : t('status.' + s) }))} value={tab} onChange={setTab} />
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder={t('quote.searchNumber')} className="max-w-[200px]" />
           <div className="flex-1" />
-          <a href={'/api/export/quotations?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <a href={'/api/export/quotations?lang=' + lang} className="af-btn af-btn--secondary text-sm">⇩ {t('common.export')}</a>
           <Button onClick={() => { setNewOpen(true); setCustomerId(''); setCustQ(''); setErr(null); }}>+ {t('quote.new')}</Button>
         </div>
         <div className="overflow-x-auto">
@@ -119,11 +113,11 @@ export default function QuotationsPage() {
             </tr></thead>
             <tbody>
               {rows === null ? (
-                <tr><Td colSpan={8} className="text-center text-[#8C8A80]">{t('shell.loading')}</Td></tr>
+                <tr><Td colSpan={8} className="text-center text-[#7C9296]">{t('shell.loading')}</Td></tr>
               ) : rows.length === 0 ? (
                 <tr><td colSpan={8}><EmptyState text={t('common.noRecords')} /></td></tr>
               ) : rows.map(r => (
-                <tr key={r.id} className="hover:bg-[#F7F5F1] dark:hover:bg-white/[0.03] cursor-pointer"
+                <tr key={r.id} className="hover:bg-[#EEF3F4] dark:hover:bg-white/[0.03] cursor-pointer"
                   onClick={() => { window.location.href = '/quotations/' + r.id; }}>
                   <Td dir="ltr" className="font-medium whitespace-nowrap">{r.quote_number}</Td>
                   <Td>{r.customer ? custName(r.customer) : '—'}</Td>
@@ -145,19 +139,19 @@ export default function QuotationsPage() {
                   </Td>
                   <Td className="whitespace-nowrap">{r.valid_until ? formatDate(r.valid_until) : '—'}</Td>
                   <Td className="text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <a href={'/quotations/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('common.edit')}</a>
-                    <button onClick={async () => {
+                    <a href={'/quotations/' + r.id} title={t('common.edit')} className="af-actionbtn af-actionbtn--cyan af-actionbtn--icononly me-2">✎</a>
+                    <GlassIconButton tone="purple" title={t('catalogue.duplicate')} className="me-2" onClick={async () => {
                       const res = await fetch('/api/quotations/' + r.id + '/duplicate', { method: 'POST', credentials: 'same-origin' }).catch(() => null);
                       const d = res && res.ok ? await res.json() : null;
                       if (d && d.id) window.location.href = '/quotations/' + d.id;
-                    }} className="text-[#8C8A80] hover:underline text-sm me-3">{t('catalogue.duplicate')}</button>
+                    }}>⧉</GlassIconButton>
                     {(['draft', 'cancelled', 'rejected', 'expired'].includes(r.status) || (me && isSuperAdminEmail(me.email))) && (
-                      <button onClick={async () => {
+                      <GlassIconButton tone="red" title={t('common.delete')} onClick={async () => {
                         if (!window.confirm(t('quote.deleteConfirm'))) return;
                         const res = await fetch('/api/quotations/' + r.id, { method: 'DELETE', credentials: 'same-origin' }).catch(() => null);
                         if (!res || !res.ok) { const d = res ? await res.json().catch(() => ({})) : {}; alert(d.error || t('common.genericError')); return; }
                         load();
-                      }} className="text-[#BC6B4E] hover:underline text-sm">{t('common.delete')}</button>
+                      }}>🗑</GlassIconButton>
                     )}
                   </Td>
                 </tr>
@@ -178,18 +172,18 @@ export default function QuotationsPage() {
             <Field label={t('nav.customers')}>
               <Input value={custQ} onChange={e => { setCustQ(e.target.value); setCustomerId(''); }} placeholder={t('common.search')} />
               {custQ && !customerId && custRows.length > 0 && (
-                <div className="mt-1 border border-[#E5E2DD] dark:border-white/[0.1] rounded-lg max-h-48 overflow-y-auto">
+                <div className="mt-1 border border-[#D9E4E6] dark:border-white/[0.1] rounded-lg max-h-48 overflow-y-auto">
                   {custRows.slice(0, 8).map(c => (
                     <button key={c.id} type="button" onClick={() => { setCustomerId(c.id); setCustQ(custName(c)); }}
-                      className="w-full text-start px-3 py-2 text-sm hover:bg-[#F1EEE7] dark:hover:bg-white/5 border-b border-[#E5E2DD]/60 dark:border-white/5">
-                      {custName(c)} <span className="text-[11px] text-[#8C8A80]" dir="ltr">{c.phone}</span>
+                      className="w-full text-start px-3 py-2 text-sm hover:bg-[#E4EDEE] dark:hover:bg-white/5 border-b border-[#D9E4E6]/60 dark:border-white/5">
+                      {custName(c)} <span className="text-[11px] text-[#7C9296]" dir="ltr">{c.phone}</span>
                     </button>
                   ))}
                 </div>
               )}
-              <div className="text-[11px] text-[#8C8A80] mt-1">{t('quote.customerOptional')}</div>
+              <div className="text-[11px] text-[#7C9296] mt-1">{t('quote.customerOptional')}</div>
             </Field>
-            {err && <div className="text-sm text-[#BC6B4E]">{err}</div>}
+            {err && <div className="text-sm text-[#EF4444]">{err}</div>}
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setNewOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={busy || !entityId}>{busy ? t('common.saving') : t('quote.create')}</Button>
