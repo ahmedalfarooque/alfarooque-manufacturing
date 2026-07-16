@@ -132,7 +132,7 @@ export default function Shell({ children, active }) {
                   <div>
                     <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[#7C9296]">{t('shell.searchVehicles')}</div>
                     {results.vehicles.map(v => (
-                      <a key={v.id} href={'/vehicles/' + v.id} className="block px-3 py-2 text-sm hover:bg-[#0C93AE]/8 dark:hover:bg-white/[0.05]">
+                      <a key={v.id} href={'/vehicles/' + v.id} className="block px-3 py-2 text-sm text-[#122A30] dark:text-[#F4F9FA] hover:bg-[#0C93AE]/8 dark:hover:bg-white/[0.05]">
                         <div className="font-medium">{v.vehicle_number}</div>
                         <div className="text-xs text-[#7C9296]">{v.name || '—'}</div>
                       </a>
@@ -143,7 +143,7 @@ export default function Shell({ children, active }) {
                   <div>
                     <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[#7C9296]">{t('shell.searchDrivers')}</div>
                     {results.drivers.map(d => (
-                      <a key={d.id} href={'/drivers/' + d.id} className="block px-3 py-2 text-sm hover:bg-[#0C93AE]/8 dark:hover:bg-white/[0.05]">
+                      <a key={d.id} href={'/drivers/' + d.id} className="block px-3 py-2 text-sm text-[#122A30] dark:text-[#F4F9FA] hover:bg-[#0C93AE]/8 dark:hover:bg-white/[0.05]">
                         <div className="font-medium">{d.full_name}</div>
                         <div className="text-xs text-[#7C9296]">{d.phone || d.license_number || '—'}</div>
                       </a>

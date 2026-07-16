@@ -87,10 +87,10 @@ export default function ItemPicker({ section, onPick, lang: langOverride }) {
         placeholder={t('cost.pickPlaceholder')}
       />
       {open && rows.length > 0 && (
-        <div className="glass-card absolute z-30 mt-1 w-full bg-white dark:bg-[#0F2A36] shadow-xl max-h-72 overflow-y-auto">
+        <div className="glass-card absolute z-40 mt-1 w-full bg-white dark:bg-[#0F2A36] shadow-xl max-h-72 overflow-y-auto">
           {rows.map((r, i) => (
             <button key={r.id} type="button" onClick={() => pick(r)} onMouseEnter={() => setIdx(i)}
-              className={'w-full text-start px-3 py-2 border-b border-[#D9E4E6]/60 dark:border-white/5 transition-colors ' +
+              className={'w-full text-start px-3 py-2 text-[#122A30] dark:text-[#F4F9FA] border-b border-[#D9E4E6]/60 dark:border-white/5 transition-colors ' +
                 (i === idx ? 'bg-brand-600/10' : '')}>
               <div className="text-sm font-medium truncate">{name(r)}</div>
               <div className="text-[11px] text-[#7C9296] truncate" dir="ltr">{meta(r)}</div>

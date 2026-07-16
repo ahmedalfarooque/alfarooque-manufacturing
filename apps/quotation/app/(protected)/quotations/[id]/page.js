@@ -466,11 +466,11 @@ export default function QuotationEditorPage() {
                 onFocus={() => setCustOpen(true)}
                 onChange={e => { setCustQ(e.target.value); setCustOpen(true); }} />
               {custOpen && editable && custRows.length > 0 && (
-                <div className="absolute z-30 mt-1 w-full glass-card bg-white dark:bg-[#0F2A36] shadow-xl max-h-56 overflow-y-auto">
+                <div className="absolute z-40 mt-1 w-full glass-card bg-white dark:bg-[#0F2A36] shadow-xl max-h-56 overflow-y-auto">
                   {custRows.slice(0, 8).map(c => (
                     <button key={c.id} type="button"
                       onClick={() => { patchDoc({ customer_id: c.id }); setPickedCustomer(c); setCustQ(custName(c)); setCustOpen(false); }}
-                      className="w-full text-start px-3 py-2 text-sm hover:bg-[#E4EDEE] dark:hover:bg-white/5 border-b border-[#D9E4E6]/60 dark:border-white/5">
+                      className="w-full text-start px-3 py-2 text-sm text-[#122A30] dark:text-[#F4F9FA] hover:bg-[#E4EDEE] dark:hover:bg-white/5 border-b border-[#D9E4E6]/60 dark:border-white/5">
                       {custName(c)} <span className="text-[11px] text-[#7C9296]" dir="ltr">{c.phone}</span>
                     </button>
                   ))}
