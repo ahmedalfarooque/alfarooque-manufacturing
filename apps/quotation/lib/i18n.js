@@ -321,6 +321,15 @@ export const translations = {
 
     // Phase 5+6
     'nav.audit': 'Audit Log',
+    'nav.contracts': 'Contracts',
+    'contract.pay.errOver': 'Payment milestones exceed the contract total.',
+    'contract.pay.errPct': 'Percentage must be between 0 and 100 —',
+    'contract.pay.errNeg': 'Amount cannot be negative —',
+    'contract.new': 'New Contract',
+    'contract.title': 'Works Contract',
+    'contract.status.contract_submitted': 'Contract Submitted',
+    'contract.status.contract_accepted': 'Contract Accepted',
+    'contract.status.project_sent': 'Project Sent to Production',
     'common.template': 'Template',
     'common.export': 'Export',
     'common.updated': 'Updated',
@@ -769,6 +778,15 @@ export const translations = {
 
     // Phase 5+6
     'nav.audit': 'سجل التدقيق',
+    'nav.contracts': 'العقود',
+    'contract.pay.errOver': 'تتجاوز دفعات الجدول قيمة العقد.',
+    'contract.pay.errPct': 'يجب أن تكون النسبة بين ٠ و١٠٠ —',
+    'contract.pay.errNeg': 'لا يمكن أن يكون المبلغ سالباً —',
+    'contract.new': 'عقد جديد',
+    'contract.title': 'عقد أعمال',
+    'contract.status.contract_submitted': 'تم تقديم العقد',
+    'contract.status.contract_accepted': 'تم قبول العقد',
+    'contract.status.project_sent': 'أُرسل المشروع للإنتاج',
     'common.template': 'قالب',
     'common.export': 'تصدير',
     'common.updated': 'آخر تحديث',
