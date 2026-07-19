@@ -302,6 +302,22 @@ img { display: block; max-width: 100%; }
   text-align: center;
 }
 
+/* ── Profile photo ── */
+.bc-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(0,144,168,.55);
+  box-shadow: 0 0 0 1px rgba(0,144,168,.18), 0 8px 24px rgba(0,0,0,.32);
+  margin: 0 auto 16px;
+  display: block;
+}
+[data-theme="light"] .bc-avatar {
+  border-color: rgba(0,120,144,.55);
+  box-shadow: 0 0 0 1px rgba(0,120,144,.18), 0 6px 18px rgba(20,24,26,.18);
+}
+
 /* ── Logo ── */
 .bc-logo {
   height: 72px;
@@ -717,6 +733,12 @@ html[dir="rtl"] .wa-fab {
     <img src="assets/images/logo/IAA_LOGO.png" alt="" class="card-watermark" aria-hidden="true">
 
     <div class="card-inner">
+
+      <!-- Profile photo -->
+      <img src="assets/images/profile/mohammed-alfarooque.jpg"
+           alt="Mohammed Alfarooque"
+           class="bc-avatar"
+           width="96" height="96">
 
       <!-- Logo (floating) -->
       <img src="assets/images/logo/IAA_LOGO.png"
