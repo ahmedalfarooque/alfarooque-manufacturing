@@ -10,6 +10,7 @@
   "dependencies": {
     "@supabase/server": "^1.2.0",
     "@supabase/supabase-js": "^2.45.4",
+    "@vercel/functions": "^1.5.0",
     "bcryptjs": "^2.4.3",
     "nodemailer": "^9.0.3",
     "ws": "^8.18.0"

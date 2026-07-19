@@ -20,12 +20,7 @@
     { "source": "/woodworks-ar",  "destination": "/pages/woodworks-ar" },
     { "source": "/steelworks-ar", "destination": "/pages/steelworks-ar" },
     { "source": "/aluminium-ar",  "destination": "/pages/aluminium-ar" },
-    { "source": "/admin",         "destination": "/pages/admin/login" },
-    {
-      "source": "/",
-      "destination": "/mohammed",
-      "has": [{ "type": "host", "value": "mohammed.alfarooque.com" }]
-    }
+    { "source": "/admin",         "destination": "/pages/admin/login" }
   ],
   "headers": [
     {
