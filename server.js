@@ -188,11 +188,19 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify({ error: 'Not found' }));
   }
 
-  /* 1. Try route table */
+  /* 1. Business-card subdomain — mirrors the vercel.json host-based
+     rewrite so local dev matches production: mohammed.alfarooque.com/
+     serves the card at the root, no /mohammed in the address bar. */
+  const host = (req.headers.host || '').split(':')[0];
+  if (urlPath === '/' && host === 'mohammed.alfarooque.com') {
+    return serve(path.join(ROOT, 'mohammed.html'), res, urlPath);
+  }
+
+  /* 2. Try route table */
   const routed = ROUTES[urlPath];
   if (routed) return serve(path.join(ROOT, routed), res, urlPath);
 
-  /* 2. Serve static asset directly */
+  /* 3. Serve static asset directly */
   const filePath = path.join(ROOT, urlPath);
   /* Directory traversal guard */
   if (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT) {
