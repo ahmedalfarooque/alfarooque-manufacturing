@@ -35,10 +35,10 @@ import { APPS, getAppUrl } from '@/lib/appLinks';
    the switcher never blocks a working app.) */
 
 const LABELS = {
-  en: { quotation: 'QuotePro', projects: 'Projects', cars: 'Car Inventory' },
-  ar: { quotation: 'QuotePro', projects: 'المشاريع', cars: 'مخزون السيارات' },
+  en: { quotation: 'QuotePro', projects: 'Projects', cars: 'Car Inventory', inventory: 'Inventory' },
+  ar: { quotation: 'QuotePro', projects: 'المشاريع', cars: 'مخزون السيارات', inventory: 'المستودع' },
 };
-const ORDER = ['quotation', 'projects', 'cars'];
+const ORDER = ['quotation', 'projects', 'cars', 'inventory'];
 
 export default function AppSwitcherButtons({ user }) {
   const { lang } = useLanguage();

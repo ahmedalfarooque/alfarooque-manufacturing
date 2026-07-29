@@ -31,7 +31,7 @@
 const jwt = require('jsonwebtoken');
 
 const SSO_COOKIE_NAME = 'af_sso_session';
-const APP_COOKIE_NAMES = ['af_quotation_session', 'af_projects_session', 'af_cars_session'];
+const APP_COOKIE_NAMES = ['af_quotation_session', 'af_projects_session', 'af_cars_session', 'af_inventory_session'];
 const SSO_TTL_SECONDS = 12 * 60 * 60; // matches each app's own session TTL
 
 function ssoSecret() {
@@ -40,23 +40,22 @@ function ssoSecret() {
   return s;
 }
 
-/* Only ever called for a user whose effective role is 'admin' — the
-   caller (the auth route) is responsible for that check. */
+/* Called for any authenticated user — mints an SSO token with their
+   actual role so they can switch apps without re-logging in. */
 function signSsoSession(user) {
   return jwt.sign(
-    { sub: user.id, email: user.email, role: 'admin', sso: true },
+    { sub: user.id, email: user.email, role: user.role, sso: true },
     ssoSecret(),
     { expiresIn: SSO_TTL_SECONDS }
   );
 }
 
-/* Returns the payload only for a genuine admin SSO token — wrong
-   signature, expired, non-admin, or a regular app session token all
-   yield null. */
+/* Returns the payload for any valid SSO token (any role) — wrong
+   signature, expired, or a regular app session token all yield null. */
 function verifySsoSession(token) {
   try {
     const p = jwt.verify(token, ssoSecret());
-    if (!p || p.sso !== true || p.role !== 'admin') return null;
+    if (!p || p.sso !== true) return null;
     return p;
   } catch (_) { return null; }
 }

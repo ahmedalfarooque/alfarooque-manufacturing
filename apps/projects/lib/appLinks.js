@@ -15,12 +15,14 @@ export const APPS = [
   { id: 'quotation', sub: 'quotation', port: 3030 },
   { id: 'projects', sub: 'projects', port: 3020 },
   { id: 'cars', sub: 'cars', port: 3010 },
+  { id: 'inventory', sub: 'store', port: 3050 },
 ];
 
 const ENV_URLS = {
   quotation: process.env.NEXT_PUBLIC_QUOTATION_APP_URL,
   projects: process.env.NEXT_PUBLIC_PROJECTS_APP_URL,
   cars: process.env.NEXT_PUBLIC_CARS_APP_URL,
+  inventory: process.env.NEXT_PUBLIC_INVENTORY_APP_URL,
 };
 
 export function getAppUrl(id) {

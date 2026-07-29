@@ -20,14 +20,14 @@ async function verify(token) {
   }
 }
 
-/* Cross-app SSO fallback (jose — Edge runtime). Accepted ONLY for admin
-   payloads carrying the sso flag, so no other role can cross apps.
-   Mirrors lib/sso.js verifySsoSession. */
+/* Cross-app SSO fallback (jose — Edge runtime). Accepts any authenticated
+   user carrying the sso flag — extended to all roles so non-admin staff
+   can switch apps. Mirrors lib/sso.js verifySsoSession. */
 async function verifySso(token) {
   try {
     const secret = new TextEncoder().encode(process.env.SSO_JWT_SECRET || process.env.JWT_SECRET || '');
     const { payload } = await jwtVerify(token, secret);
-    return payload && payload.sso === true && payload.role === 'admin' ? payload : null;
+    return payload && payload.sso === true ? payload : null;
   } catch (_) {
     return null;
   }
