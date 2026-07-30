@@ -1,0 +1,66 @@
+{
+	"servers": {
+		"microsoft/fabric-rti-mcp": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"microsoft-fabric-rti-mcp@0.1.0"
+			],
+			"env": {
+				"KUSTO_SERVICE_URI": "${input:kusto_service_uri}",
+				"KUSTO_SERVICE_DEFAULT_DB": "${input:kusto_default_db}",
+				"AZ_OPENAI_EMBEDDING_ENDPOINT": "${input:az_openai_embedding_endpoint}",
+				"KUSTO_KNOWN_SERVICES": "${input:kusto_known_services_json}",
+				"KUSTO_EAGER_CONNECT": "${input:kusto_eager_connect}",
+				"KUSTO_ALLOW_UNKNOWN_SERVICES": "${input:kusto_allow_unknown_services}",
+				"FABRIC_API_BASE": "${input:fabric_api_base}"
+			},
+			"gallery": "https://api.mcp.github.com",
+			"version": "1.0.0"
+		}
+	},
+	"inputs": [
+		{
+			"id": "kusto_service_uri",
+			"type": "promptString",
+			"description": "Default Kusto cluster URI (e.g., https://help.kusto.windows.net/ or your cluster).",
+			"password": false
+		},
+		{
+			"id": "kusto_default_db",
+			"type": "promptString",
+			"description": "Default database name for Kusto queries (e.g., Samples).",
+			"password": false
+		},
+		{
+			"id": "az_openai_embedding_endpoint",
+			"type": "promptString",
+			"description": "Azure OpenAI embeddings endpoint for shots/semantic search (format: https://<resource>.openai.azure.com/openai/deployments/<name>/embeddings?api-version=<version>;impersonate).",
+			"password": false
+		},
+		{
+			"id": "kusto_known_services_json",
+			"type": "promptString",
+			"description": "JSON array of preconfigured Kusto services (e.g., [{\"service_uri\":\"https://cluster.kusto.windows.net\",\"default_database\":\"DB\"}]).",
+			"password": false
+		},
+		{
+			"id": "kusto_eager_connect",
+			"type": "promptString",
+			"description": "Whether to eagerly connect to the default service on startup (true/false).",
+			"password": false
+		},
+		{
+			"id": "kusto_allow_unknown_services",
+			"type": "promptString",
+			"description": "Allow connections to services not listed in KUSTO_KNOWN_SERVICES (true/false).",
+			"password": false
+		},
+		{
+			"id": "fabric_api_base",
+			"type": "promptString",
+			"description": "Base URL for Fabric APIs (default https://api.fabric.microsoft.com/v1).",
+			"password": false
+		}
+	]
+}
