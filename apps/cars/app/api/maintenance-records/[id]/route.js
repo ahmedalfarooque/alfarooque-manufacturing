@@ -21,7 +21,8 @@ export async function GET(req, { params }) {
   if (!record) return json({ error: 'Maintenance record not found.' }, 404);
 
   const { data: attachments } = await sb.from('car_maintenance_attachments').select('*').eq('record_id', params.id).order('created_at', { ascending: true });
-  return json({ record, attachments: attachments || [] });
+  const { data: parts } = await sb.from('car_maintenance_parts').select('*, inv_products(id, name, sku)').eq('record_id', params.id).order('created_at');
+  return json({ record, attachments: attachments || [], parts: parts || [] });
 }
 
 export async function PATCH(req, { params }) {

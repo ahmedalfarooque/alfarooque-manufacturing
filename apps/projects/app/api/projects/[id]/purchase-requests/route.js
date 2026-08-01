@@ -54,6 +54,8 @@ export async function POST(req, { params }) {
     expected_date: body.expected_date || null,
     priority,
     remarks: body.remarks || null,
+    inv_material_id: body.inv_material_id || null,
+    inv_product_id: body.inv_product_id || null,
   }).select().single();
   if (error) { console.error('[purchase-requests] create failed:', error.message); return json({ error: 'Could not create the purchase request.' }, 500); }
 
