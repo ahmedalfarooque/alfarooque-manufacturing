@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { getDb } = require('./db');
 const { SSO_COOKIE_NAME, verifySsoSession } = require('./sso');
+const { isSuperAdminEmail } = require('./superAdmin');
 
 const APP = 'cars';
 const COOKIE_NAME = 'af_cars_session';
@@ -72,14 +73,14 @@ function clearCookieHeader(domain) {
 function readSession(req) {
   const cookies = parseCookies(req.headers.get ? req.headers.get('cookie') : req.headers.cookie);
   const token = cookies[COOKIE_NAME];
-  const session = token ? verifySession(token) : null;
-  if (session) return session;
-  /* SSO fallback — an Admin already signed into a sibling app (QuotePro/
-     Projects) is accepted here without a second login. verifySsoSession
-     only ever returns admin payloads, so no other role can cross apps
-     and permissions are never elevated. */
-  if (cookies[SSO_COOKIE_NAME]) return verifySsoSession(cookies[SSO_COOKIE_NAME]);
-  return null;
+  let session = token ? verifySession(token) : null;
+  if (!session && cookies[SSO_COOKIE_NAME]) session = verifySsoSession(cookies[SSO_COOKIE_NAME]);
+  if (!session) return null;
+  /* Super-admin override: the master account is always treated as admin
+     here, regardless of the role baked into the JWT — same as every
+     other app (projects/quotation/inventory/accounting/crm). */
+  if (isSuperAdminEmail(session.email)) session.role = 'admin';
+  return session;
 }
 
 async function isLoginRateLimited(email) {

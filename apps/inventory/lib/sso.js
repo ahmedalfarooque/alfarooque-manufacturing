@@ -21,7 +21,7 @@
 const jwt = require('jsonwebtoken');
 
 const SSO_COOKIE_NAME = 'af_sso_session';
-const APP_COOKIE_NAMES = ['af_quotation_session', 'af_projects_session', 'af_cars_session', 'af_inventory_session'];
+const APP_COOKIE_NAMES = ['af_quotation_session', 'af_projects_session', 'af_cars_session', 'af_inventory_session', 'af_accounting_session', 'af_crm_session'];
 const SSO_TTL_SECONDS = 12 * 60 * 60; // matches each app's own session TTL
 
 function ssoSecret() {

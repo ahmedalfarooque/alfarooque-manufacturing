@@ -10,6 +10,14 @@ import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const EMPTY_FORM = { full_name: '', email: '', position: '', role: 'viewer', phone: '', department: '', company: '', status: 'Active', otp_login_enabled: true };
+const APP_ACCESS_OPTIONS = [
+  { id: 'quotation', label: 'QuotePro' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'cars', label: 'Car Inventory' },
+  { id: 'inventory', label: 'Inventory' },
+  { id: 'accounting', label: 'Accounting' },
+  { id: 'crm', label: 'CRM' },
+];
 const ROLE_BADGE = {
   admin: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
   viewer: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -151,13 +159,33 @@ function UserModal({ modal, onClose, onSave }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [tempPassword, setTempPassword] = useState(null);
+  const [appAccess, setAppAccess] = useState([]);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  useEffect(() => {
+    if (modal.mode !== 'edit' || !modal.data.id) return;
+    fetch(`/api/app-permissions?user_id=${modal.data.id}`, { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setAppAccess(d.apps || []))
+      .catch(() => {});
+  }, [modal.mode, modal.data.id]);
+
+  function toggleApp(id) {
+    setAppAccess(list => list.includes(id) ? list.filter(a => a !== id) : [...list, id]);
+  }
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
       const result = await onSave(form, modal.mode, modal.data.id);
+      const userId = modal.mode === 'edit' ? modal.data.id : result?.user?.id;
+      if (userId) {
+        await fetch('/api/app-permissions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ user_id: userId, apps: appAccess }),
+        }).catch(() => {});
+      }
       if (result?.temp_password) setTempPassword(result.temp_password);
     } catch (e2) { setErr(e2.message); }
     setBusy(false);
@@ -197,6 +225,19 @@ function UserModal({ modal, onClose, onSave }) {
         </div>
         {modal.mode === 'add' && form.role !== 'admin' && (
           <p className="text-xs text-[color:var(--tx-3)]">{t('users.modal.otpNote')}</p>
+        )}
+        {form.role !== 'admin' && (
+          <div>
+            <p className="text-xs font-medium text-[color:var(--tx-3)] mb-2">App Access (Application Switcher) — admins always see every app</p>
+            <div className="grid grid-cols-2 gap-2">
+              {APP_ACCESS_OPTIONS.map(a => (
+                <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={appAccess.includes(a.id)} onChange={() => toggleApp(a.id)} />
+                  {a.label}
+                </label>
+              ))}
+            </div>
+          </div>
         )}
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
