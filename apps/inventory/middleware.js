@@ -73,7 +73,9 @@ export const config = {
     '/dashboard/:path*', '/products/:path*', '/materials/:path*',
     '/categories/:path*', '/suppliers/:path*', '/warehouses/:path*',
     '/locations/:path*', '/stock/:path*', '/stock-movements/:path*',
+    '/reservations/:path*', '/transfers/:path*',
     '/purchase-requests/:path*', '/purchase-orders/:path*',
-    '/goods-receipts/:path*', '/reports/:path*', '/settings/:path*',
+    '/goods-receipts/:path*', '/goods-issues/:path*',
+    '/reports/:path*', '/settings/:path*',
   ],
 };

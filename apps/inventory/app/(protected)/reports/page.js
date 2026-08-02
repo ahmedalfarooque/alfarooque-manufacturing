@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassSelect } from '@/components/glass';
+import { GlassSelect, GlassButton } from '@/components/glass';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const COLORS = ['#06B6D4', '#22D3EE', '#0891B2', '#67E8F9', '#155E75', '#A5F3FC', '#0E7490', '#CFFAFE'];
@@ -59,6 +59,99 @@ export default function ReportsPage() {
     { key: 'lowstock', label: t('reports.lowStock') },
   ];
 
+  const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'ar') ? 'ar' : 'en';
+
+  async function exportPdf() {
+    const { exportReportPdf } = await import('@/lib/reportPdf');
+    if (activeTab === 'stock') {
+      await exportReportPdf({
+        title: lang === 'ar' ? 'تقرير تقييم المخزون' : 'Stock Valuation Report',
+        lang,
+        columns: [
+          { key: 'name', header: lang === 'ar' ? 'الاسم' : 'Name' },
+          { key: 'warehouse', header: lang === 'ar' ? 'المستودع' : 'Warehouse' },
+          { key: 'qty', header: lang === 'ar' ? 'الكمية' : 'Qty' },
+          { key: 'cost', header: lang === 'ar' ? 'متوسط التكلفة' : 'Avg Cost' },
+          { key: 'value', header: lang === 'ar' ? 'القيمة' : 'Value' },
+        ],
+        rows: stock.map(row => ({
+          name: row.inv_products?.name || row.inv_materials?.name || '—',
+          warehouse: row.inv_warehouses?.name || '—',
+          qty: Number(row.qty_on_hand || 0).toLocaleString(),
+          cost: Number(row.avg_cost || 0).toFixed(2),
+          value: (Number(row.qty_on_hand || 0) * Number(row.avg_cost || 0)).toFixed(2),
+        })),
+        fileName: 'stock-valuation.pdf',
+      });
+    } else if (activeTab === 'movements') {
+      await exportReportPdf({
+        title: lang === 'ar' ? 'تقرير حركة المخزون' : 'Stock Movement Report',
+        lang,
+        columns: [
+          { key: 'date', header: lang === 'ar' ? 'التاريخ' : 'Date' },
+          { key: 'name', header: lang === 'ar' ? 'الاسم' : 'Name' },
+          { key: 'type', header: lang === 'ar' ? 'النوع' : 'Type' },
+          { key: 'warehouse', header: lang === 'ar' ? 'المستودع' : 'Warehouse' },
+          { key: 'qty', header: lang === 'ar' ? 'الكمية' : 'Qty' },
+          { key: 'reference', header: lang === 'ar' ? 'المرجع' : 'Reference' },
+        ],
+        rows: movements.map(m => ({
+          date: m.created_at ? new Date(m.created_at).toLocaleDateString() : '—',
+          name: m.inv_products?.name || m.inv_materials?.name || '—',
+          type: m.movement_type,
+          warehouse: m.inv_warehouses?.name || '—',
+          qty: Number(m.qty || 0).toLocaleString(),
+          reference: m.reference || '—',
+        })),
+        fileName: 'stock-movements.pdf',
+      });
+    } else if (activeTab === 'lowstock') {
+      await exportReportPdf({
+        title: lang === 'ar' ? 'تقرير نقص المخزون' : 'Low Stock Report',
+        lang,
+        columns: [
+          { key: 'name', header: lang === 'ar' ? 'الاسم' : 'Name' },
+          { key: 'warehouse', header: lang === 'ar' ? 'المستودع' : 'Warehouse' },
+          { key: 'qty', header: lang === 'ar' ? 'الكمية' : 'Qty on Hand' },
+          { key: 'minQty', header: lang === 'ar' ? 'الحد الأدنى' : 'Min Stock' },
+          { key: 'shortage', header: lang === 'ar' ? 'النقص' : 'Shortage' },
+        ],
+        rows: lowStock.map(row => {
+          const qty = Number(row.qty_on_hand || 0);
+          const minQty = Number(row.inv_products?.min_stock_qty || row.inv_materials?.min_stock_qty || 0);
+          return {
+            name: row.inv_products?.name || row.inv_materials?.name || '—',
+            warehouse: row.inv_warehouses?.name || '—',
+            qty: qty.toLocaleString(),
+            minQty: minQty.toLocaleString(),
+            shortage: Math.max(0, minQty - qty).toLocaleString(),
+          };
+        }),
+        fileName: 'low-stock.pdf',
+      });
+    } else if (activeTab === 'purchasing') {
+      await exportReportPdf({
+        title: lang === 'ar' ? 'تقرير أوامر الشراء' : 'Purchase Orders Report',
+        lang,
+        columns: [
+          { key: 'number', header: lang === 'ar' ? 'الرقم' : 'PO Number' },
+          { key: 'supplier', header: lang === 'ar' ? 'المورد' : 'Supplier' },
+          { key: 'amount', header: lang === 'ar' ? 'المبلغ' : 'Amount' },
+          { key: 'status', header: lang === 'ar' ? 'الحالة' : 'Status' },
+          { key: 'date', header: lang === 'ar' ? 'التاريخ' : 'Date' },
+        ],
+        rows: orders.map(o => ({
+          number: o.po_number || o.id.slice(0, 8),
+          supplier: o.inv_suppliers?.name || '—',
+          amount: Number(o.total_amount || 0).toFixed(2),
+          status: o.status,
+          date: o.created_at ? new Date(o.created_at).toLocaleDateString() : '—',
+        })),
+        fileName: 'purchase-orders.pdf',
+      });
+    }
+  }
+
   return (
     <Shell active="/reports">
       <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -70,8 +163,9 @@ export default function ReportsPage() {
             </button>
           ))}
         </div>
-        <div className="ms-auto">
+        <div className="ms-auto flex items-center gap-3">
           <GlassSelect value={warehouseId} onChange={setWarehouseId} options={whOptions} />
+          <GlassButton variant="secondary" onClick={exportPdf}>{t('reports.exportPdf')}</GlassButton>
         </div>
       </div>
 

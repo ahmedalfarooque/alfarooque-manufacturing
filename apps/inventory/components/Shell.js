@@ -17,9 +17,12 @@ const NAV = [
   { href: '/locations',        key: 'nav.locations',       icon: 'map-pin' },
   { href: '/stock',            key: 'nav.stock',           icon: 'box' },
   { href: '/stock-movements',  key: 'nav.stockMovements',  icon: 'arrows' },
+  { href: '/reservations',     key: 'nav.reservations',    icon: 'shield' },
+  { href: '/transfers',        key: 'nav.transfers',       icon: 'truck' },
   { href: '/purchase-requests',key: 'nav.purchaseRequests',icon: 'clipboard' },
   { href: '/purchase-orders',  key: 'nav.purchaseOrders',  icon: 'file-text' },
   { href: '/goods-receipts',   key: 'nav.goodsReceipts',   icon: 'check-square' },
+  { href: '/goods-issues',     key: 'nav.goodsIssues',     icon: 'door' },
   { href: '/reports',          key: 'nav.reports',         icon: 'bar-chart' },
   { href: '/settings',         key: 'nav.settings',        icon: 'settings' },
 ];

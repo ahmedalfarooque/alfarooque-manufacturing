@@ -20,6 +20,9 @@ export const translations = {
     'nav.purchaseRequests': 'Purchase Requests',
     'nav.purchaseOrders': 'Purchase Orders',
     'nav.goodsReceipts': 'Goods Receipts',
+    'nav.goodsIssues': 'Goods Issues',
+    'nav.transfers': 'Stock Transfers',
+    'nav.reservations': 'Reservations',
     'nav.reports': 'Reports',
     'nav.settings': 'Settings',
     'shell.tagline': 'Inventory & Warehouse',
@@ -317,6 +320,7 @@ export const translations = {
 
     // Reports page
     'reports.title': 'Reports',
+    'reports.exportPdf': 'Export PDF',
     'reports.stockValuation': 'Stock Valuation',
     'reports.movementHistory': 'Movement History',
     'reports.lowStock': 'Low Stock',
@@ -414,6 +418,41 @@ export const translations = {
     'gr.invoiceNumber': 'Invoice Number',
     'gr.deliveryNote': 'Delivery Note',
     'gr.qtyReceived': 'Qty Received',
+
+    // Goods Issue keys
+    'gi.addIssue': 'New Goods Issue',
+    'gi.giNumber': 'GI Number',
+    'gi.issueDate': 'Issue Date',
+    'gi.issuedTo': 'Issued To',
+    'gi.issuedToPlaceholder': 'e.g. Project Alpha / Production Dept.',
+    'gi.qtyIssued': 'Qty Issued',
+    'gi.refType': 'Reference Type',
+    'gi.refType.project': 'Project',
+    'gi.refType.department': 'Department',
+    'gi.refType.sales_order': 'Sales Order',
+    'gi.refType.other': 'Other',
+
+    // Stock Transfer keys
+    'transfer.addTransfer': 'New Transfer',
+    'transfer.transferNumber': 'Transfer Number',
+    'transfer.transferDate': 'Transfer Date',
+    'transfer.from': 'From Warehouse',
+    'transfer.to': 'To Warehouse',
+    'transfer.qty': 'Qty',
+
+    // Reservation keys
+    'resv.addReservation': 'New Reservation',
+    'resv.qty': 'Qty to Reserve',
+    'resv.reference': 'Reference',
+    'resv.referenceLabel': 'Reference Label',
+    'resv.referenceLabelPlaceholder': 'e.g. SO-2024-014',
+    'resv.fulfill': 'Fulfill',
+    'resv.release': 'Release',
+    'resv.fulfilled': 'Reservation fulfilled.',
+    'resv.released': 'Reservation released.',
+    'resv.status.active': 'Active',
+    'resv.status.fulfilled': 'Fulfilled',
+    'resv.status.released': 'Released',
 
     // Enum sets
     'prStatus.pending': 'Pending',
@@ -898,6 +937,7 @@ export const translations = {
 
     // Reports page
     'reports.title': 'التقارير',
+    'reports.exportPdf': 'تصدير PDF',
     'reports.stockValuation': 'تقييم المخزون',
     'reports.movementHistory': 'سجل الحركات',
     'reports.lowStock': 'مخزون منخفض',
@@ -995,6 +1035,38 @@ export const translations = {
     'gr.invoiceNumber': 'رقم الفاتورة',
     'gr.deliveryNote': 'ملاحظة التسليم',
     'gr.qtyReceived': 'الكمية المستلمة',
+
+    'gi.addIssue': 'إذن صرف جديد',
+    'gi.giNumber': 'رقم إذن الصرف',
+    'gi.issueDate': 'تاريخ الصرف',
+    'gi.issuedTo': 'الجهة المستفيدة',
+    'gi.issuedToPlaceholder': 'مثال: مشروع ألفا / قسم الإنتاج',
+    'gi.qtyIssued': 'الكمية المصروفة',
+    'gi.refType': 'نوع المرجع',
+    'gi.refType.project': 'مشروع',
+    'gi.refType.department': 'قسم',
+    'gi.refType.sales_order': 'أمر بيع',
+    'gi.refType.other': 'أخرى',
+
+    'transfer.addTransfer': 'تحويل جديد',
+    'transfer.transferNumber': 'رقم التحويل',
+    'transfer.transferDate': 'تاريخ التحويل',
+    'transfer.from': 'من مستودع',
+    'transfer.to': 'إلى مستودع',
+    'transfer.qty': 'الكمية',
+
+    'resv.addReservation': 'حجز جديد',
+    'resv.qty': 'الكمية المحجوزة',
+    'resv.reference': 'المرجع',
+    'resv.referenceLabel': 'وسم المرجع',
+    'resv.referenceLabelPlaceholder': 'مثال: SO-2024-014',
+    'resv.fulfill': 'تنفيذ',
+    'resv.release': 'إلغاء الحجز',
+    'resv.fulfilled': 'تم تنفيذ الحجز.',
+    'resv.released': 'تم إلغاء الحجز.',
+    'resv.status.active': 'نشط',
+    'resv.status.fulfilled': 'منفَّذ',
+    'resv.status.released': 'ملغى',
 
     // Enum sets
     'prStatus.pending': 'معلق',
