@@ -18,6 +18,22 @@ export const translations = {
     'nav.ordersDeleted': 'Deleted Orders',
     'nav.quotes': 'Website Quotes',
     'nav.quotesDeleted': 'Deleted Quotes',
+    'nav.salesOrders': 'Sales Orders',
+
+    // Sales Orders (Quotation → Reserve → Deliver → Invoice → Paid pipeline)
+    'so.title': 'Sales Orders',
+    'so.new': '+ New Sales Order',
+    'so.col.number': 'SO #', 'so.col.customer': 'Customer', 'so.col.total': 'Total', 'so.col.status': 'Status', 'so.col.date': 'Date',
+    'so.noneFound': 'No sales orders found.',
+    'so.breadcrumbDetails': 'Sales Order Details',
+    'so.customer': 'Customer', 'so.currency': 'Currency', 'so.notes': 'Notes', 'so.quotation': 'Quotation', 'so.project': 'Project', 'so.invoice': 'Invoice',
+    'so.lines': 'Line Items', 'so.addLine': '+ Add Line', 'so.description': 'Description', 'so.qty': 'Qty', 'so.unitPrice': 'Unit Price', 'so.lineTotal': 'Total',
+    'so.inventoryItem': 'Inventory Item (optional)', 'so.warehouse': 'Warehouse',
+    'so.act.reserve': 'Reserve Stock', 'so.act.deliver': 'Mark Delivered', 'so.act.invoice': 'Create Invoice', 'so.act.markPaid': 'Mark Paid', 'so.act.cancel': 'Cancel Order',
+    'so.confirmCancel': 'Cancel this sales order? Any reserved stock will be released.',
+    'so.notFound': 'Sales order not found.', 'so.couldNotUpdate': 'Could not update sales order.',
+    'so.searchInventory': 'Search product or material…',
+    'status.Draft': 'Draft', 'status.Reserved': 'Reserved', 'status.Invoiced': 'Invoiced', 'status.Paid': 'Paid',
 
     // Orders / Quotes (shared with the Website Admin — same tables)
     'oq.ordersTitle': 'Website Orders', 'oq.ordersDeletedTitle': 'Deleted Orders',
@@ -470,6 +486,22 @@ export const translations = {
     'nav.ordersDeleted': 'الطلبات المحذوفة',
     'nav.quotes': 'عروض أسعار الموقع',
     'nav.quotesDeleted': 'عروض الأسعار المحذوفة',
+    'nav.salesOrders': 'أوامر البيع',
+
+    // أوامر البيع (سلسلة عرض السعر ← حجز ← تسليم ← فاتورة ← دفع)
+    'so.title': 'أوامر البيع',
+    'so.new': '+ أمر بيع جديد',
+    'so.col.number': 'رقم الأمر', 'so.col.customer': 'العميل', 'so.col.total': 'الإجمالي', 'so.col.status': 'الحالة', 'so.col.date': 'التاريخ',
+    'so.noneFound': 'لا توجد أوامر بيع.',
+    'so.breadcrumbDetails': 'تفاصيل أمر البيع',
+    'so.customer': 'العميل', 'so.currency': 'العملة', 'so.notes': 'ملاحظات', 'so.quotation': 'عرض السعر', 'so.project': 'المشروع', 'so.invoice': 'الفاتورة',
+    'so.lines': 'بنود الأمر', 'so.addLine': '+ إضافة بند', 'so.description': 'الوصف', 'so.qty': 'الكمية', 'so.unitPrice': 'سعر الوحدة', 'so.lineTotal': 'الإجمالي',
+    'so.inventoryItem': 'صنف المخزون (اختياري)', 'so.warehouse': 'المستودع',
+    'so.act.reserve': 'حجز المخزون', 'so.act.deliver': 'وضع علامة تم التسليم', 'so.act.invoice': 'إنشاء فاتورة', 'so.act.markPaid': 'وضع علامة مدفوع', 'so.act.cancel': 'إلغاء الأمر',
+    'so.confirmCancel': 'إلغاء أمر البيع هذا؟ سيتم تحرير أي مخزون محجوز.',
+    'so.notFound': 'أمر البيع غير موجود.', 'so.couldNotUpdate': 'تعذر تحديث أمر البيع.',
+    'so.searchInventory': 'ابحث عن منتج أو مادة…',
+    'status.Draft': 'مسودة', 'status.Reserved': 'محجوز', 'status.Invoiced': 'تمت الفوترة', 'status.Paid': 'مدفوع',
 
     'oq.ordersTitle': 'طلبات الموقع', 'oq.ordersDeletedTitle': 'الطلبات المحذوفة',
     'oq.quotesTitle': 'عروض أسعار الموقع', 'oq.quotesDeletedTitle': 'عروض الأسعار المحذوفة',

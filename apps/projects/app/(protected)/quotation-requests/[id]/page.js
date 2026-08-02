@@ -43,6 +43,22 @@ export default function QuotationRequestDetailPage() {
     if (d.project?.id) window.location.href = '/projects/' + d.project.id;
   }
 
+  async function createSalesOrder() {
+    setBusy(true);
+    const res = await fetch('/api/sales-orders', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+      body: JSON.stringify({ quotation_id: row.quotation_id, customer_name: customerNameOf(row) }),
+    }).catch(() => null);
+    const d = res ? await res.json().catch(() => ({})) : {};
+    setBusy(false);
+    if (!res || !res.ok) { alert(d.error || t('common.genericError')); return; }
+    if (d.salesOrder?.id) window.location.href = '/sales-orders/' + d.salesOrder.id;
+  }
+
+  function customerNameOf(r) {
+    return r.customer?.company_name_en || r.customer?.company_name_ar || r.customer?.company_name || 'Unknown Customer';
+  }
+
   if (error) return <Shell active="/quotation-requests"><div className="text-[#ef4444]">{error}</div></Shell>;
   if (!row) return <Shell active="/quotation-requests"><div className="text-[color:var(--tx-3)]">{t('common.loading')}</div></Shell>;
 
@@ -82,6 +98,9 @@ export default function QuotationRequestDetailPage() {
           )}
           {row.project_id && (
             <a href={'/projects/' + row.project_id} className="text-sm px-3 py-2 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors duration-200">↗ {t('qr.openProject')}</a>
+          )}
+          {row.status === 'accepted' && (
+            <button disabled={busy} onClick={createSalesOrder} className="gbtn gbtn--sm disabled:opacity-50">{t('so.new').replace(/^\+\s*/, '')}</button>
           )}
           <a href="/quotation-requests" className="text-sm text-[color:var(--tx-3)] hover:underline ms-auto">‹ {t('qr.title')}</a>
         </div>

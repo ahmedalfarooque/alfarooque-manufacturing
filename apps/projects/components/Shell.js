@@ -10,6 +10,7 @@ import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
 const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
   { href: '/projects', labelKey: 'nav.projects', icon: 'folder' },
+  { href: '/sales-orders', labelKey: 'nav.salesOrders', icon: 'truck', adminOnly: true },
   { href: '/orders', labelKey: 'nav.orders', icon: 'receipt', adminOnly: true },
   { href: '/orders-deleted', labelKey: 'nav.ordersDeleted', icon: 'receipt', adminOnly: true },
   { href: '/quotes', labelKey: 'nav.quotes', icon: 'mail', adminOnly: true },
