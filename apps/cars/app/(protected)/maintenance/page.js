@@ -204,15 +204,50 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
   const [addShopOpen, setAddShopOpen] = useState(false);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
+  // Additive inventory parts picker — links this maintenance record's parts
+  // to real Inventory products (car_maintenance_parts.inv_product_id), on
+  // top of the existing free-text "Parts Changed" field. New records only;
+  // does not change the existing edit workflow.
+  const [partsList, setPartsList] = useState([]);
+  const [partQuery, setPartQuery] = useState('');
+  const [partResults, setPartResults] = useState(null);
+
+  useEffect(() => {
+    const query = partQuery.trim();
+    if (query.length < 2) { setPartResults(null); return; }
+    const timer = setTimeout(() => {
+      fetch('/api/inventory-search?q=' + encodeURIComponent(query), { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => d && setPartResults(d))
+        .catch(() => {});
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [partQuery]);
+
+  function addPart(p) {
+    setPartsList(list => [...list, { inv_product_id: p.id, name: p.name, sku: p.sku, qty: 1, unit_cost: p.cost_price || 0 }]);
+    setPartQuery('');
+    setPartResults(null);
+  }
+  function updatePart(i, key, val) {
+    setPartsList(list => list.map((row, idx) => idx === i ? { ...row, [key]: val } : row));
+  }
+  function removePart(i) {
+    setPartsList(list => list.filter((_, idx) => idx !== i));
+  }
+
   async function submit(e) {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
       const url = modal.mode === 'add' ? '/api/maintenance-records' : `/api/maintenance-records/${modal.data.id}`;
+      const payload = modal.mode === 'add' && partsList.length > 0
+        ? { ...form, parts_list: partsList.map(p => ({ inv_product_id: p.inv_product_id, name: p.name, qty: p.qty, unit_cost: p.unit_cost })) }
+        : form;
       const res = await fetch(url, {
         method: modal.mode === 'add' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -282,6 +317,40 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
           <div className="grid gap-3">
             <Field label={t('fields.workPerformed')}><Textarea rows={2} value={form.work_performed || ''} onChange={set('work_performed')} /></Field>
             <Field label={t('fields.partsChanged')}><Textarea rows={2} value={form.parts_changed || ''} onChange={set('parts_changed')} /></Field>
+            {modal.mode === 'add' && (
+              <div className="relative">
+                <Field label={t('maint.linkInventoryParts')}>
+                  <Input value={partQuery} onChange={e => setPartQuery(e.target.value)} placeholder={t('maint.linkInventoryPartsPlaceholder')} />
+                </Field>
+                {partResults && (partResults.products?.length > 0 || partResults.materials?.length > 0) && (
+                  <div className="absolute z-30 mt-1 w-full rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 shadow-lg max-h-64 overflow-y-auto">
+                    {[...(partResults.products || []), ...(partResults.materials || [])].map(p => (
+                      <button key={p.id} type="button" onClick={() => addPart(p)}
+                        className="block w-full text-start px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5">
+                        <div className="font-medium">{p.name}</div>
+                        <div className="text-xs opacity-60">{p.sku || p.material_code || '—'} · {t('maint.inStock')}: {Number(p.qty_on_hand || 0).toLocaleString()}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {partsList.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {partsList.map((p, i) => (
+                      <div key={i} className="grid grid-cols-12 gap-2 items-center text-sm">
+                        <div className="col-span-6 truncate">{p.name} <span className="text-xs opacity-60">({p.sku || '—'})</span></div>
+                        <div className="col-span-2">
+                          <Input type="number" value={p.qty} onChange={e => updatePart(i, 'qty', e.target.value)} />
+                        </div>
+                        <div className="col-span-3">
+                          <Input type="number" value={p.unit_cost} onChange={e => updatePart(i, 'unit_cost', e.target.value)} />
+                        </div>
+                        <button type="button" onClick={() => removePart(i)} className="col-span-1 text-[#ef4444] text-xs">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <Field label={t('fields.laborDetails')}><Textarea rows={2} value={form.labor_details || ''} onChange={set('labor_details')} /></Field>
             <Field label={t('fields.additionalNotes')}><Textarea rows={2} value={form.notes || ''} onChange={set('notes')} /></Field>
           </div>

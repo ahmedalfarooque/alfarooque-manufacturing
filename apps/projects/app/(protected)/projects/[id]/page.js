@@ -421,12 +421,50 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
   const [form, setForm] = useState({
     request_date: new Date().toISOString().slice(0, 10), supplier: '', material_description: '', material_list: '',
     quantity: '', unit: '', estimated_price: '', required_date: '', priority: 'Normal', remarks: '',
+    inv_material_id: '', inv_product_id: '',
   });
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [err, setErr] = useState(null);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  // Additive inventory lookup — lets a requester link this purchase request
+  // to an existing Inventory item so it shows real on-hand stock instead of
+  // free text alone. Does not change the existing required fields/workflow.
+  const [invQuery, setInvQuery] = useState('');
+  const [invResults, setInvResults] = useState(null);
+  const [invPicked, setInvPicked] = useState(null);
+
+  useEffect(() => {
+    const query = invQuery.trim();
+    if (query.length < 2) { setInvResults(null); return; }
+    const timer = setTimeout(() => {
+      fetch('/api/inventory-search?q=' + encodeURIComponent(query), { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => d && setInvResults(d))
+        .catch(() => {});
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [invQuery]);
+
+  function pickInventoryItem(item, kind) {
+    setInvPicked({ ...item, kind });
+    setInvResults(null);
+    setInvQuery('');
+    setForm(f => ({
+      ...f,
+      inv_material_id: kind === 'material' ? item.id : '',
+      inv_product_id: kind === 'product' ? item.id : '',
+      material_description: f.material_description || item.name,
+      unit: f.unit || item.unit || '',
+    }));
+  }
+
+  function clearInventoryItem() {
+    setInvPicked(null);
+    setForm(f => ({ ...f, inv_material_id: '', inv_product_id: '' }));
+  }
 
   function onFileChange(e) {
     const f = e.target.files?.[0];
@@ -476,6 +514,36 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
             <Field label={t('pd.materialDescription')}>
               <Textarea value={form.material_description} onChange={set('material_description')} rows={2} required />
             </Field>
+          </div>
+          <div className="col-span-2 relative">
+            <Field label={t('pd.linkInventoryItem')}>
+              {invPicked ? (
+                <div className="flex items-center justify-between rounded-lg border border-black/10 dark:border-white/10 px-3 py-2 text-sm">
+                  <span>{invPicked.name} <span className="text-xs opacity-60">({invPicked.kind === 'product' ? invPicked.sku : invPicked.material_code || '—'})</span></span>
+                  <button type="button" onClick={clearInventoryItem} className="text-xs text-[#ef4444] hover:underline">{t('common.clear')}</button>
+                </div>
+              ) : (
+                <Input value={invQuery} onChange={e => setInvQuery(e.target.value)} placeholder={t('pd.linkInventoryItemPlaceholder')} />
+              )}
+            </Field>
+            {invResults && (invResults.products?.length > 0 || invResults.materials?.length > 0) && (
+              <div className="absolute z-30 mt-1 w-full rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 shadow-lg max-h-64 overflow-y-auto">
+                {invResults.products?.map(p => (
+                  <button key={'p:' + p.id} type="button" onClick={() => pickInventoryItem(p, 'product')}
+                    className="block w-full text-start px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5">
+                    <div className="font-medium">{p.name}</div>
+                    <div className="text-xs opacity-60">{p.sku || '—'} · {t('pd.stockOnHand')}: {Number(p.qty_on_hand || 0).toLocaleString()}</div>
+                  </button>
+                ))}
+                {invResults.materials?.map(m => (
+                  <button key={'m:' + m.id} type="button" onClick={() => pickInventoryItem(m, 'material')}
+                    className="block w-full text-start px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5">
+                    <div className="font-medium">{m.name}</div>
+                    <div className="text-xs opacity-60">{m.material_code || '—'} · {t('pd.stockOnHand')}: {Number(m.qty_on_hand || 0).toLocaleString()}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="col-span-2">
             <Field label={t('pd.materialListOptional')}>
