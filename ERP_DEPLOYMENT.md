@@ -11,7 +11,7 @@ In the Supabase Dashboard → **SQL Editor → New query**, paste and run each f
 1. `supabase/inv-schema-v01-initial.sql`
 2. `supabase/inv-schema-v02-cross-app.sql`
 3. `supabase/inv-schema-v03-issue-transfer-reservation.sql`
-4. `supabase/inv-schema-v04-accounting-schema-fix.sql` — **critical**, corrects the Accounting schema to match the working API (see `ERP_ERRORS.md`)
+4. `supabase/inv-schema-v04-accounting-schema-fix-v2.sql` — **critical**, corrects the Accounting schema to match the working API (see `ERP_ERRORS.md`). Use **v2**, not the original `v04-accounting-schema-fix.sql` — that file fails with `ERROR 42710: constraint already exists` (two tables redeclared the same `created_by` FK both inline and as a named constraint); v2 fixes this with no schema/logic changes otherwise.
 5. `supabase/inv-schema-v05-purchasing-destination.sql`
 6. `supabase/inv-schema-v06-crm-cross-links.sql`
 7. `supabase/inv-schema-v07-app-permissions.sql`
