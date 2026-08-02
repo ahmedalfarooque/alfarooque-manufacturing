@@ -59,6 +59,7 @@ export const translations = {
     // Products page
     'products.title': 'Products',
     'products.addProduct': 'Add Product',
+    'products.printLabel': 'Print Label',
     'products.searchPlaceholder': 'Search products…',
     'products.colSku': 'SKU',
     'products.colName': 'Name',
@@ -676,6 +677,7 @@ export const translations = {
     // Products page
     'products.title': 'المنتجات',
     'products.addProduct': 'إضافة منتج',
+    'products.printLabel': 'طباعة الملصق',
     'products.searchPlaceholder': 'بحث عن منتجات…',
     'products.colSku': 'الرمز',
     'products.colName': 'الاسم',

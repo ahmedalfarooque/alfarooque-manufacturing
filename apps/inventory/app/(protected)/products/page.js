@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import QRCode from 'qrcode';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
@@ -9,11 +10,42 @@ import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast } from '
 
 const REFRESH_MS = 30000;
 
+function LabelModal({ product, onClose, t }) {
+  const [qrDataUrl, setQrDataUrl] = useState(null);
+  const code = product.barcode || product.sku || product.id;
+
+  useEffect(() => {
+    QRCode.toDataURL(code, { margin: 1, width: 160 }).then(setQrDataUrl).catch(() => {});
+  }, [code]);
+
+  return (
+    <GlassModal title={t('products.printLabel')} onClose={onClose}>
+      <div className="flex flex-col items-center gap-2 py-4 print-label">
+        {qrDataUrl && <img src={qrDataUrl} alt="QR" width={160} height={160} className="bg-white rounded p-2" />}
+        <p className="font-semibold text-center">{product.name}</p>
+        <p className="text-xs text-[color:var(--tx-3)] font-mono">{code}</p>
+      </div>
+      <div className="flex justify-end gap-2 mt-2 print:hidden">
+        <button onClick={onClose} className="gbtn gbtn-ghost">{t('common.cancel')}</button>
+        <button onClick={() => window.print()} className="gbtn gbtn-primary">{t('products.printLabel')}</button>
+      </div>
+      <style jsx global>{`
+        @media print {
+          body * { visibility: hidden; }
+          .print-label, .print-label * { visibility: visible; }
+          .print-label { position: fixed; inset: 0; }
+        }
+      `}</style>
+    </GlassModal>
+  );
+}
+
 export default function ProductsPage() {
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null);
+  const [labelProduct, setLabelProduct] = useState(null);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
@@ -105,6 +137,7 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
+                      <button onClick={() => setLabelProduct(p)} className="gbtn gbtn-ghost gbtn--icon gbtn--sm" title={t('products.printLabel')}><GlassIcon name="receipt" size={15} bare /></button>
                       <button onClick={() => openEdit(p)} className="gbtn gbtn-ghost gbtn--icon gbtn--sm" title={t('common.edit')}><GlassIcon name="edit" size={15} bare /></button>
                       {p.is_active && <button onClick={() => deactivate(p.id)} className="gbtn gbtn-ghost gbtn--icon gbtn--sm text-red-500" title={t('common.deactivate')}><GlassIcon name="trash" size={15} bare /></button>}
                     </div>
@@ -175,6 +208,8 @@ export default function ProductsPage() {
           </div>
         </GlassModal>
       )}
+
+      {labelProduct && <LabelModal product={labelProduct} onClose={() => setLabelProduct(null)} t={t} />}
     </Shell>
   );
 }
