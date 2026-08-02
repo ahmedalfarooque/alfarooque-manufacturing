@@ -24,7 +24,7 @@ export async function GET(req) {
     sb.from('acc_bills').select('total_amount, status').eq('status', 'Unpaid'),
     sb.from('acc_bank_accounts').select('current_balance, currency').eq('is_active', true),
     sb.from('acc_journal_entries').select('id', { count: 'exact', head: true }).gte('entry_date', monthStart),
-    sb.from('acc_expense_claims').select('total_amount').gte('claim_date', monthStart).eq('status', 'Approved'),
+    sb.from('acc_expenses').select('amount').gte('expense_date', monthStart).eq('status', 'Approved'),
     sb.from('acc_invoices').select('id, invoice_number, customer_name, total_amount, status, due_date').order('created_at', { ascending: false }).limit(5),
     sb.from('acc_bills').select('id, bill_number, vendor_name, total_amount, status, due_date').order('created_at', { ascending: false }).limit(5),
   ]);
@@ -32,7 +32,7 @@ export async function GET(req) {
   const totalReceivable = (invoices || []).reduce((s, r) => s + Number(r.total_amount || 0), 0);
   const totalPayable = (bills || []).reduce((s, r) => s + Number(r.total_amount || 0), 0);
   const cashBalance = (bankAccounts || []).reduce((s, r) => s + Number(r.current_balance || 0), 0);
-  const monthExpensesTotal = (monthExpenses || []).reduce((s, r) => s + Number(r.total_amount || 0), 0);
+  const monthExpensesTotal = (monthExpenses || []).reduce((s, r) => s + Number(r.amount || 0), 0);
 
   return json({
     totalReceivable, totalPayable, cashBalance,

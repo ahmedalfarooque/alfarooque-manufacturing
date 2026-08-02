@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
 
 const STATUSES = ['Draft', 'Unpaid', 'Paid', 'Overdue', 'Cancelled', 'Partially Paid'];
 function statusTone(s) { return s === 'Paid' ? 'success' : s === 'Overdue' ? 'error' : s === 'Unpaid' ? 'warning' : 'neutral'; }
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
+const emptyLine = () => ({ description: '', qty: 1, unit_price: '', tax_rate: 15 });
 
 export default function BillsPage() {
   const [search, setSearch] = useState('');
@@ -14,6 +16,7 @@ export default function BillsPage() {
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({});
+  const [lines, setLines] = useState([emptyLine()]);
   const [saving, setSaving] = useState(false);
   const pageSize = 25;
 
@@ -23,15 +26,25 @@ export default function BillsPage() {
   const { data, refresh } = useLiveData(`/api/bills?${params}`, 15000);
   const bills = data?.bills || [];
 
+  const lineSubtotal = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0), 0);
+  const lineTax = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0) * ((Number(l.tax_rate) || 0) / 100), 0);
+  const hasLines = lines.some(l => l.description && Number(l.unit_price) > 0);
+
+  function updateLine(i, patch) { setLines(ls => ls.map((l, idx) => idx === i ? { ...l, ...patch } : l)); }
+  function addLine() { setLines(ls => [...ls, emptyLine()]); }
+  function removeLine(i) { setLines(ls => ls.length > 1 ? ls.filter((_, idx) => idx !== i) : ls); }
+
   async function createBill() {
     setSaving(true);
     try {
-      const res = await fetch('/api/bills', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const payload = hasLines ? { ...form, lines: lines.filter(l => l.description) } : form;
+      const res = await fetch('/api/bills', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Failed to create bill');
       toast('Bill created', 'success');
       setShowForm(false);
       setForm({});
+      setLines([emptyLine()]);
       refresh();
     } catch (e) { toast(e.message, 'error'); }
     finally { setSaving(false); }
@@ -89,6 +102,7 @@ export default function BillsPage() {
                 <GlassTd><GlassBadge tone={statusTone(b.status)}>{b.status}</GlassBadge></GlassTd>
                 <GlassTd>
                   <div className="flex gap-1">
+                    <Link href={`/bills/${b.id}`}><GlassButton variant="secondary" size="sm">View</GlassButton></Link>
                     {b.status === 'Draft' && <GlassButton variant="secondary" size="sm" onClick={() => updateStatus(b.id, 'Unpaid')}>Approve</GlassButton>}
                     {b.status === 'Unpaid' && <GlassButton variant="secondary" size="sm" onClick={() => updateStatus(b.id, 'Paid')}>Mark Paid</GlassButton>}
                     <GlassButton variant="danger" size="sm" onClick={() => del(b.id)}>Del</GlassButton>
@@ -125,20 +139,48 @@ export default function BillsPage() {
             <GlassField label="Due Date">
               <GlassInput type="date" value={form.due_date || ''} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
             </GlassField>
-            <GlassField label="Subtotal">
-              <GlassInput type="number" step="0.01" value={form.subtotal || ''} onChange={e => setForm(f => ({ ...f, subtotal: e.target.value }))} />
-            </GlassField>
-            <GlassField label="VAT Amount">
-              <GlassInput type="number" step="0.01" value={form.tax_amount || ''} onChange={e => setForm(f => ({ ...f, tax_amount: e.target.value }))} />
-            </GlassField>
-            <GlassField label="Total Amount">
-              <GlassInput type="number" step="0.01" value={form.total_amount || ''} onChange={e => setForm(f => ({ ...f, total_amount: e.target.value }))} />
-            </GlassField>
             <GlassField label="Currency">
               <GlassSelect value={form.currency || 'SAR'} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}>
                 <option>SAR</option><option>USD</option><option>EUR</option><option>AED</option>
               </GlassSelect>
             </GlassField>
+          </div>
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Line Items</span>
+              <GlassButton variant="secondary" size="sm" onClick={addLine}>+ Add Line</GlassButton>
+            </div>
+            <div className="space-y-2">
+              {lines.map((l, i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-5"><GlassInput placeholder="Description" value={l.description} onChange={e => updateLine(i, { description: e.target.value })} /></div>
+                  <div className="col-span-2"><GlassInput type="number" placeholder="Qty" value={l.qty} onChange={e => updateLine(i, { qty: e.target.value })} /></div>
+                  <div className="col-span-2"><GlassInput type="number" placeholder="Unit Price" value={l.unit_price} onChange={e => updateLine(i, { unit_price: e.target.value })} /></div>
+                  <div className="col-span-2"><GlassInput type="number" placeholder="Tax %" value={l.tax_rate} onChange={e => updateLine(i, { tax_rate: e.target.value })} /></div>
+                  <div className="col-span-1"><GlassButton variant="danger" size="sm" onClick={() => removeLine(i)} disabled={lines.length <= 1}>✕</GlassButton></div>
+                </div>
+              ))}
+            </div>
+            {hasLines ? (
+              <div className="flex justify-end gap-6 mt-3 text-sm text-slate-300">
+                <span>Subtotal: {fmt(lineSubtotal)}</span>
+                <span>VAT: {fmt(lineTax)}</span>
+                <span className="font-semibold text-white">Total: {fmt(lineSubtotal + lineTax)}</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4 mt-3">
+                <GlassField label="Subtotal (no line items)">
+                  <GlassInput type="number" step="0.01" value={form.subtotal || ''} onChange={e => setForm(f => ({ ...f, subtotal: e.target.value }))} />
+                </GlassField>
+                <GlassField label="VAT Amount">
+                  <GlassInput type="number" step="0.01" value={form.tax_amount || ''} onChange={e => setForm(f => ({ ...f, tax_amount: e.target.value }))} />
+                </GlassField>
+                <GlassField label="Total Amount">
+                  <GlassInput type="number" step="0.01" value={form.total_amount || ''} onChange={e => setForm(f => ({ ...f, total_amount: e.target.value }))} />
+                </GlassField>
+              </div>
+            )}
           </div>
         </GlassModal>
       )}
