@@ -3,6 +3,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 const { getInvRole, can } = require('@/lib/perms');
+const { syncItemQty } = require('@/lib/stockSync');
 
 export async function GET(req) {
   const { response } = requireSession(req);
@@ -117,6 +118,11 @@ export async function POST(req) {
         created_by: session.sub,
       },
     ]);
+
+    // Transfers change qty_on_hand at both warehouses but net totals across
+    // all warehouses are unchanged for the source-side sync; still resync
+    // for correctness in case of concurrent writes.
+    await syncItemQty(sb, { productId: it.product_id || null, materialId: it.material_id || null });
   }
 
   return json({ transfer }, 201);

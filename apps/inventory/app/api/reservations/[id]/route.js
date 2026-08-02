@@ -3,6 +3,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 const { getInvRole, can } = require('@/lib/perms');
+const { syncItemQty } = require('@/lib/stockSync');
 
 export async function PATCH(req, { params }) {
   const { response, session } = requireSession(req);
@@ -54,6 +55,8 @@ export async function PATCH(req, { params }) {
       reference_id: reservation.id,
       created_by: session.sub,
     });
+
+    await syncItemQty(sb, { productId: reservation.product_id || null, materialId: reservation.material_id || null });
   }
 
   return json({ ok: true });

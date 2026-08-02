@@ -3,6 +3,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 const { getInvRole, can } = require('@/lib/perms');
+const { syncItemQty } = require('@/lib/stockSync');
 
 export async function GET(req) {
   const { response } = requireSession(req);
@@ -105,6 +106,8 @@ export async function POST(req) {
     if (it.po_item_id) {
       await sb.from('inv_purchase_order_items').update({ qty_received: sb.raw('qty_received + ' + qty) }).eq('id', it.po_item_id);
     }
+
+    await syncItemQty(sb, { productId: it.product_id || null, materialId: it.material_id || null });
   }
 
   return json({ receipt: gr }, 201);

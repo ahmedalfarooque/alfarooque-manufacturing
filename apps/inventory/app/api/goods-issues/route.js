@@ -3,6 +3,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 const { getInvRole, can } = require('@/lib/perms');
+const { syncItemQty } = require('@/lib/stockSync');
 
 export async function GET(req) {
   const { response } = requireSession(req);
@@ -94,6 +95,8 @@ export async function POST(req) {
       reference_id: gi.id,
       created_by: session.sub,
     });
+
+    await syncItemQty(sb, { productId: it.product_id || null, materialId: it.material_id || null });
   }
 
   return json({ issue: gi }, 201);
