@@ -1,14 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
 
 const STATUSES = ['Draft', 'Unpaid', 'Paid', 'Overdue', 'Cancelled', 'Partially Paid'];
+const DESTINATIONS = [
+  { value: '', label: 'None (expense only)' },
+  { value: 'warehouse', label: 'Warehouse — increase Inventory' },
+  { value: 'project', label: 'Running Project — assign cost, no inventory change' },
+  { value: 'asset', label: 'Company Asset — register Fixed Asset' },
+];
 function statusTone(s) { return s === 'Paid' ? 'success' : s === 'Overdue' ? 'error' : s === 'Unpaid' ? 'warning' : 'neutral'; }
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
-const emptyLine = () => ({ description: '', qty: 1, unit_price: '', tax_rate: 15 });
+const emptyLine = () => ({ description: '', qty: 1, unit_price: '', tax_rate: 15, inv_product_id: '', inv_material_id: '' });
 
 export default function BillsPage() {
   const [search, setSearch] = useState('');
@@ -18,6 +24,9 @@ export default function BillsPage() {
   const [form, setForm] = useState({});
   const [lines, setLines] = useState([emptyLine()]);
   const [saving, setSaving] = useState(false);
+  const [warehouses, setWarehouses] = useState([]);
+  const [itemQuery, setItemQuery] = useState({});
+  const [itemResults, setItemResults] = useState({});
   const pageSize = 25;
 
   const params = new URLSearchParams({ page, pageSize });
@@ -25,6 +34,31 @@ export default function BillsPage() {
   if (status) params.set('status', status);
   const { data, refresh } = useLiveData(`/api/bills?${params}`, 15000);
   const bills = data?.bills || [];
+
+  useEffect(() => {
+    if (form.destination_type === 'warehouse' && warehouses.length === 0) {
+      fetch('/api/warehouses', { credentials: 'same-origin' }).then(r => r.json()).then(b => setWarehouses(b.warehouses || [])).catch(() => {});
+    }
+  }, [form.destination_type, warehouses.length]);
+
+  function searchInventoryItem(i, q) {
+    setItemQuery(m => ({ ...m, [i]: q }));
+    if (q.trim().length < 2) { setItemResults(m => ({ ...m, [i]: null })); return; }
+    fetch('/api/inventory-search?q=' + encodeURIComponent(q), { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setItemResults(m => ({ ...m, [i]: d })))
+      .catch(() => {});
+  }
+  function pickInventoryItem(i, item, kind) {
+    updateLine(i, {
+      description: item.name,
+      unit_price: item.cost_price || 0,
+      inv_product_id: kind === 'product' ? item.id : '',
+      inv_material_id: kind === 'material' ? item.id : '',
+    });
+    setItemResults(m => ({ ...m, [i]: null }));
+    setItemQuery(m => ({ ...m, [i]: '' }));
+  }
 
   const lineSubtotal = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0), 0);
   const lineTax = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0) * ((Number(l.tax_rate) || 0) / 100), 0);
@@ -146,6 +180,35 @@ export default function BillsPage() {
             </GlassField>
           </div>
 
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Purchase Destination</span>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <GlassField label="Destination">
+                <GlassSelect value={form.destination_type || ''} onChange={e => setForm(f => ({ ...f, destination_type: e.target.value }))}>
+                  {DESTINATIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                </GlassSelect>
+              </GlassField>
+              {form.destination_type === 'warehouse' && (
+                <GlassField label="Warehouse" required>
+                  <GlassSelect value={form.destination_warehouse_id || ''} onChange={e => setForm(f => ({ ...f, destination_warehouse_id: e.target.value }))}>
+                    <option value="">Select warehouse…</option>
+                    {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                  </GlassSelect>
+                </GlassField>
+              )}
+              {form.destination_type === 'project' && (
+                <GlassField label="Project ID">
+                  <GlassInput value={form.project_id || ''} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} placeholder="Project UUID" />
+                </GlassField>
+              )}
+              {form.destination_type === 'asset' && (
+                <GlassField label="Asset Category">
+                  <GlassInput value={form.asset_category || ''} onChange={e => setForm(f => ({ ...f, asset_category: e.target.value }))} placeholder="e.g. Equipment, Machinery, Vehicles" />
+                </GlassField>
+              )}
+            </div>
+          </div>
+
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Line Items</span>
@@ -153,8 +216,30 @@ export default function BillsPage() {
             </div>
             <div className="space-y-2">
               {lines.map((l, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-5"><GlassInput placeholder="Description" value={l.description} onChange={e => updateLine(i, { description: e.target.value })} /></div>
+                <div key={i} className="grid grid-cols-12 gap-2 items-center relative">
+                  <div className="col-span-5">
+                    {form.destination_type === 'warehouse' ? (
+                      <>
+                        <GlassInput placeholder="Search inventory item…" value={itemQuery[i] ?? l.description} onChange={e => { searchInventoryItem(i, e.target.value); updateLine(i, { description: e.target.value }); }} />
+                        {itemResults[i] && (itemResults[i].products?.length > 0 || itemResults[i].materials?.length > 0) && (
+                          <div className="absolute z-30 mt-1 w-full max-w-xs rounded-lg border border-white/10 bg-slate-900 shadow-lg max-h-56 overflow-y-auto">
+                            {(itemResults[i].products || []).map(p => (
+                              <button key={'p:' + p.id} type="button" onClick={() => pickInventoryItem(i, p, 'product')} className="block w-full text-start px-3 py-2 text-sm hover:bg-white/5 text-white">
+                                {p.name} <span className="text-xs text-slate-400">({p.sku || '—'})</span>
+                              </button>
+                            ))}
+                            {(itemResults[i].materials || []).map(m => (
+                              <button key={'m:' + m.id} type="button" onClick={() => pickInventoryItem(i, m, 'material')} className="block w-full text-start px-3 py-2 text-sm hover:bg-white/5 text-white">
+                                {m.name} <span className="text-xs text-slate-400">({m.material_code || '—'})</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <GlassInput placeholder="Description" value={l.description} onChange={e => updateLine(i, { description: e.target.value })} />
+                    )}
+                  </div>
                   <div className="col-span-2"><GlassInput type="number" placeholder="Qty" value={l.qty} onChange={e => updateLine(i, { qty: e.target.value })} /></div>
                   <div className="col-span-2"><GlassInput type="number" placeholder="Unit Price" value={l.unit_price} onChange={e => updateLine(i, { unit_price: e.target.value })} /></div>
                   <div className="col-span-2"><GlassInput type="number" placeholder="Tax %" value={l.tax_rate} onChange={e => updateLine(i, { tax_rate: e.target.value })} /></div>
