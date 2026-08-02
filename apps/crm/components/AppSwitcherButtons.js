@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useLanguage } from '@/lib/i18n';
+import { useLang } from '@/lib/i18n';
 import { APPS, getAppUrl } from '@/lib/appLinks';
 
 /* Application Switcher — visible to every authenticated user, not just
@@ -17,7 +17,7 @@ const LABELS = {
 };
 
 export default function AppSwitcherButtons({ user }) {
-  const { lang } = useLanguage();
+  const { lang } = useLang();
   const [activeApp, setActiveApp] = useState(null);
   const [busy, setBusy] = useState(null);
   const [permitted, setPermitted] = useState(null);
