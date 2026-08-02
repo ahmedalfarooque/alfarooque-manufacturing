@@ -4,9 +4,9 @@ export const APPS = [
   { id: 'quotation',  sub: 'quotation',  port: 3030 },
   { id: 'projects',   sub: 'projects',   port: 3020 },
   { id: 'cars',       sub: 'cars',       port: 3010 },
-  { id: 'inventory',  sub: 'store',      port: 3050 },
-  { id: 'accounting', sub: 'accounting', port: 3060 },
-  { id: 'crm',        sub: 'crm',        port: 3080 },
+  { id: 'inventory',  sub: 'store',      port: 3040 },
+  { id: 'accounting', sub: 'accounting', port: 3050 },
+  { id: 'crm',        sub: 'crm',        port: 3060 },
 ];
 
 const ENV_URLS = {

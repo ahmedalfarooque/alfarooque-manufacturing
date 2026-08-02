@@ -4,9 +4,9 @@
   "private": true,
   "description": "AL FAROOQUE — Inventory & Warehouse Management System (deployed independently at store.alfarooque.com)",
   "scripts": {
-    "dev": "next dev -p 3050",
+    "dev": "next dev -p 3040",
     "build": "next build",
-    "start": "next start -p 3050",
+    "start": "next start -p 3040",
     "lint": "next lint"
   },
   "dependencies": {

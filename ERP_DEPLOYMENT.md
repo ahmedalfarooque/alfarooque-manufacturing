@@ -68,7 +68,7 @@ NEXT_PUBLIC_INVENTORY_APP_URL=https://store.alfarooque.com
 NEXT_PUBLIC_ACCOUNTING_APP_URL=https://accounting.alfarooque.com
 NEXT_PUBLIC_CRM_APP_URL=https://crm.alfarooque.com
 ```
-(Leave all six unset on localhost — the switcher falls back to dev ports 3030/3020/3010/3050/3060/3080 automatically.)
+(Leave all six unset on localhost — the switcher falls back to dev ports 3030/3020/3010/3040/3050/3060 automatically.)
 
 ### App-specific extras
 - **Inventory, Cars, Projects, Quotation**: `NEXT_PUBLIC_COMPANY_*` vars (PDF report branding), `RESEND_API_KEY`/`EMAIL_FROM`/`EMAIL_TO` (OTP + notification email — without `RESEND_API_KEY`, OTP codes just print to the server log, which is fine for testing but not production)

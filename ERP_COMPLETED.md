@@ -35,7 +35,7 @@
   - **Quotation**: intentionally left as-is. Its `qt_materials`/`qt_catalogue_products` are a deliberately separate pricing/catalogue system for building customer quotes, not a stock-tracking duplicate — and Quotation is explicitly protected from workflow changes. See `ERP_REMAINING.md`.
 - Accounting also gained its own `inventory-search` + `warehouses` routes (see below) as part of the Purchasing destination feature.
 
-## Phase 2 — Accounting App (`localhost:3060`)
+## Phase 2 — Accounting App (`localhost:3050`)
 
 ### Critical fix: schema/API mismatch
 The entire `acc_*` schema in `inv-schema-v02-cross-app.sql` was drafted independently from the Next.js API routes actually built against it — different column names throughout (`code` vs `account_code`, `entry_number` vs `journal_number`, `supplier_name` vs `vendor_name`, `txn_date` vs `transaction_date`, etc.), different status-enum casing (`'draft'` vs `'Draft'`), a payments model with the wrong type vocabulary and missing columns, and **no `acc_settings` table at all** despite the Settings page depending on it. Since nothing had been deployed to Supabase yet, `supabase/inv-schema-v04-accounting-schema-fix.sql` drops and recreates every mismatched table to match the working application code exactly. See `ERP_ERRORS.md` for the full list.
@@ -66,7 +66,7 @@ Every vendor bill now resolves to one of three destinations, matching the requir
 ### Settings
 - Company info, VAT/CR numbers, numbering prefixes — now backed by a real `acc_settings` table (previously didn't exist)
 
-## Phase 3 — CRM App (`localhost:3080`)
+## Phase 3 — CRM App (`localhost:3060`)
 
 ### Pre-existing (verified largely complete by audit)
 - Contacts (Lead/Prospect/Customer/Partner/Supplier via `contact_type` enum on one shared table — not separate modules)

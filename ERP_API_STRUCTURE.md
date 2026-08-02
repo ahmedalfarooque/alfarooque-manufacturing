@@ -41,7 +41,7 @@ Admins/super-admin get the full 6-app list regardless of table contents.
 | `/api/reports` (via `/stats`) | GET | Stock valuation, movements, low stock, purchasing |
 | `/api/settings`, `/api/users`, `/api/roles` | GET / PATCH | |
 
-## Accounting App (`localhost:3060/api/`)
+## Accounting App (`localhost:3050/api/`)
 
 | Route | Methods | Notes |
 |-------|---------|-------|
@@ -87,7 +87,7 @@ When `destination_type` is set:
 - `'project'` — no inventory change; `project_id` tags the bill (already worked; now an explicit named destination).
 - `'asset'` — auto-inserts a new `acc_assets` row (`purchase_cost = total_amount`, `category = asset_category`).
 
-## CRM App (`localhost:3080/api/`)
+## CRM App (`localhost:3060/api/`)
 
 | Route | Methods | Notes |
 |-------|---------|-------|

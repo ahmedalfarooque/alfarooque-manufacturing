@@ -22,7 +22,11 @@ down another.
 | **QuotePro** (`apps/quotation`) | `quotation.alfarooque.com` | 3030 | `qt_` | ✅ Built |
 | **Projects** (`apps/projects`) | `projects.alfarooque.com` | 3020 | `pm_` | ✅ Built |
 | **Car Inventory** (`apps/cars`) | `cars.alfarooque.com` | 3010 | `car_` | ✅ Built |
+| **Inventory & Warehouse** (`apps/inventory`) | `store.alfarooque.com` | 3040 | `inv_` | ✅ Built |
+| **Accounting** (`apps/accounting`) | `accounting.alfarooque.com` | 3050 | `acc_` | ✅ Built |
+| **CRM** (`apps/crm`) | `crm.alfarooque.com` | 3060 | `crm_` | ✅ Built |
 | **Public website + e-commerce** (repo root) | `alfarooque.com` | 3000 | `products`, `orders`, `profiles`, … | ✅ Built |
+| **Business Card** (`card/`) | `mohammed.alfarooque.com` | 3005 | — (static, no DB) | ✅ Built |
 
 ### Modules already shipping
 
@@ -209,13 +213,14 @@ built.
 | QuotePro | quotation | 3030 | `qt_` | ✅ |
 | Projects | projects | 3020 | `pm_` | ✅ |
 | Car Inventory | cars | 3010 | `car_` | ✅ |
-| Inventory & Warehouse | inv | 3040 | `inv_` | 🔲 planned |
-| Production / MRP | production | 3050 | `mfg_` | 🔲 planned |
-| Finance & Accounting | finance | 3060 | `fin_` | 🔲 planned |
+| Inventory & Warehouse | store | 3040 | `inv_` | ✅ |
+| Accounting | accounting | 3050 | `acc_` | ✅ |
+| CRM | crm | 3060 | `crm_` | ✅ |
 | HR & Payroll | hr | 3070 | `hr_` | 🔲 planned |
 
-*(Procurement, CRM, Fixed Assets, BI, Documents are modules inside existing
-apps — no new subdomain/port needed.)*
+*(Public website root: 3000. Business Card static site: 3005. Production/MRP,
+Fixed Assets, BI, Documents are modules planned inside existing apps — no new
+subdomain/port needed.)*
 
 ---
 
@@ -246,20 +251,21 @@ with zero changes to the apps already in production.
 ```
                          ┌──────────────────────────────┐
                          │      Supabase (one project)   │
-                         │  qt_*  pm_*  car_*  inv_* …    │
+                         │  qt_*  pm_*  car_*  inv_*      │
+                         │  acc_*  crm_*  app_permissions │
                          │  platform_users / _sessions    │
-                         │  admin_users · profiles(auth)  │
                          └───────────────┬────────────────┘
                                          │ service-role (server-side only)
       ┌──────────────┬──────────────┬────┴─────────┬──────────────┬─────────────┐
       ▼              ▼              ▼              ▼              ▼             ▼
-  QuotePro       Projects      Car Inv.      Inventory      Production      Finance …
- quotation.     projects.      cars.         inv.           production.     finance.
+  QuotePro       Projects      Car Inv.      Inventory      Accounting        CRM
+ quotation.     projects.      cars.         store.         accounting.     crm.
    :3030          :3020         :3010         :3040           :3050           :3060
       └──────────────┴──────── af_sso_session (.alfarooque.com) ──────────────┘
                     Admin SSO · app switcher · shared theme/lang
                                          │
-                          Public site  alfarooque.com  (Supabase Auth e-commerce)
+              Public site  alfarooque.com :3000  (Supabase Auth e-commerce)
+              Business Card  mohammed.alfarooque.com :3005  (static)
 ```
 
 **In one sentence:** every ERP pillar is its own small Next.js app on its own
