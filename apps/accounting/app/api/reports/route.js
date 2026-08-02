@@ -60,6 +60,65 @@ export async function GET(req) {
     return json({ type, from, to, output_vat: outputVat, input_vat: inputVat, net_vat_payable: outputVat - inputVat });
   }
 
+  /* Reads inv_stock/inv_products/inv_materials directly (same Supabase
+     project) — Inventory remains the sole source of stock quantities and
+     cost; this report only aggregates what's already there. */
+  if (type === 'inventory_valuation') {
+    const { data: stock, error } = await sb.from('inv_stock')
+      .select('qty_on_hand, avg_cost, inv_warehouses(name), inv_products(name, sku), inv_materials(name, material_code)')
+      .gt('qty_on_hand', 0);
+    if (error) return json({ error: 'Could not load inventory valuation.' }, 500);
+
+    const byWarehouse = {};
+    let totalValue = 0;
+    const lines = (stock || []).map(row => {
+      const qty = Number(row.qty_on_hand || 0);
+      const cost = Number(row.avg_cost || 0);
+      const value = qty * cost;
+      totalValue += value;
+      const wh = row.inv_warehouses?.name || 'Unassigned';
+      byWarehouse[wh] = (byWarehouse[wh] || 0) + value;
+      return {
+        name: row.inv_products?.name || row.inv_materials?.name || '—',
+        code: row.inv_products?.sku || row.inv_materials?.material_code || '—',
+        warehouse: wh, qty, avg_cost: cost, value,
+      };
+    }).sort((a, b) => b.value - a.value);
+
+    return json({ type, total_value: totalValue, by_warehouse: byWarehouse, lines: lines.slice(0, 200) });
+  }
+
+  /* Reads pm_projects directly (same Supabase project) to attach project
+     names to acc_bills/acc_expenses/acc_invoices that were tagged with a
+     project_id — the cross-app link the Purchasing "Running Project"
+     destination and manual project tagging both rely on. */
+  if (type === 'project_costing') {
+    const [bills, expenses, invoices, projects] = await Promise.all([
+      sb.from('acc_bills').select('project_id, total_amount').not('project_id', 'is', null).gte('bill_date', from).lte('bill_date', to),
+      sb.from('acc_expenses').select('project_id, amount').not('project_id', 'is', null).eq('status', 'Approved').gte('expense_date', from).lte('expense_date', to),
+      sb.from('acc_invoices').select('project_id, total_amount').not('project_id', 'is', null).gte('invoice_date', from).lte('invoice_date', to),
+      sb.from('pm_projects').select('id, project_name, customer_name'),
+    ]);
+    const projectNames = {};
+    (projects.data || []).forEach(p => { projectNames[p.id] = p.project_name; });
+
+    const byProject = {};
+    function addCost(projectId, amount) {
+      if (!byProject[projectId]) byProject[projectId] = { project_id: projectId, project_name: projectNames[projectId] || 'Unknown Project', cost: 0, revenue: 0 };
+      byProject[projectId].cost += amount;
+    }
+    function addRevenue(projectId, amount) {
+      if (!byProject[projectId]) byProject[projectId] = { project_id: projectId, project_name: projectNames[projectId] || 'Unknown Project', cost: 0, revenue: 0 };
+      byProject[projectId].revenue += amount;
+    }
+    (bills.data || []).forEach(b => addCost(b.project_id, Number(b.total_amount || 0)));
+    (expenses.data || []).forEach(e => addCost(e.project_id, Number(e.amount || 0)));
+    (invoices.data || []).forEach(i => addRevenue(i.project_id, Number(i.total_amount || 0)));
+
+    const rows = Object.values(byProject).map(p => ({ ...p, margin: p.revenue - p.cost })).sort((a, b) => b.cost - a.cost);
+    return json({ type, from, to, projects: rows });
+  }
+
   const [invoiceCount, billCount, expenseTotal, journalCount, bankBalance] = await Promise.all([
     sb.from('acc_invoices').select('id', { count: 'exact', head: true }),
     sb.from('acc_bills').select('id', { count: 'exact', head: true }),

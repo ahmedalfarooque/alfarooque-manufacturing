@@ -40,10 +40,12 @@ export default function ReportsPage() {
               <option value="balance_sheet">Balance Sheet</option>
               <option value="cash_flow">Cash Flow Statement</option>
               <option value="vat">VAT Report (ZATCA)</option>
+              <option value="inventory_valuation">Inventory Valuation</option>
+              <option value="project_costing">Project Costing</option>
               <option value="summary">Summary Dashboard</option>
             </GlassSelect>
           </GlassField>
-          {type !== 'balance_sheet' && type !== 'summary' && (
+          {type !== 'balance_sheet' && type !== 'summary' && type !== 'inventory_valuation' && (
             <>
               <GlassField label="From">
                 <GlassInput type="date" value={from} onChange={e => setFrom(e.target.value)} />
@@ -127,6 +129,76 @@ export default function ReportsPage() {
                 </tbody>
               </table>
               <p className="text-xs text-slate-500 mt-4">For ZATCA filing — verify figures before submission.</p>
+            </div>
+          )}
+
+          {data.type === 'inventory_valuation' && (
+            <div>
+              <h2 className="text-lg font-bold text-white mb-4">Inventory Valuation</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="rounded-lg bg-white/5 p-4">
+                  <p className="text-xs text-slate-400">Total Stock Value</p>
+                  <p className="text-xl font-bold text-cyan-400 mt-1">SAR {fmt(data.total_value)}</p>
+                </div>
+                {Object.entries(data.by_warehouse || {}).map(([wh, val]) => (
+                  <div key={wh} className="rounded-lg bg-white/5 p-4">
+                    <p className="text-xs text-slate-400">{wh}</p>
+                    <p className="text-xl font-bold text-white mt-1">SAR {fmt(val)}</p>
+                  </div>
+                ))}
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-slate-400">
+                    <th className="text-start py-2">Item</th>
+                    <th className="text-start py-2">Code</th>
+                    <th className="text-start py-2">Warehouse</th>
+                    <th className="text-end py-2">Qty</th>
+                    <th className="text-end py-2">Avg Cost</th>
+                    <th className="text-end py-2">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.lines || []).map((l, i) => (
+                    <tr key={i} className="border-b border-white/5">
+                      <td className="py-2 text-white">{l.name}</td>
+                      <td className="py-2 text-slate-400">{l.code}</td>
+                      <td className="py-2 text-slate-400">{l.warehouse}</td>
+                      <td className="py-2 text-end">{fmt(l.qty)}</td>
+                      <td className="py-2 text-end">{fmt(l.avg_cost)}</td>
+                      <td className="py-2 text-end font-semibold text-white">{fmt(l.value)}</td>
+                    </tr>
+                  ))}
+                  {!data.lines?.length && <tr><td colSpan={6} className="text-center text-slate-500 py-8">No stock on hand.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {data.type === 'project_costing' && (
+            <div>
+              <h2 className="text-lg font-bold text-white mb-4">Project Costing — {data.from} to {data.to}</h2>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-slate-400">
+                    <th className="text-start py-2">Project</th>
+                    <th className="text-end py-2">Revenue (Invoiced)</th>
+                    <th className="text-end py-2">Cost (Bills + Expenses)</th>
+                    <th className="text-end py-2">Margin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.projects || []).map(p => (
+                    <tr key={p.project_id} className="border-b border-white/5">
+                      <td className="py-2 text-white">{p.project_name}</td>
+                      <td className="py-2 text-end">{fmt(p.revenue)}</td>
+                      <td className="py-2 text-end">{fmt(p.cost)}</td>
+                      <td className={`py-2 text-end font-semibold ${p.margin >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt(p.margin)}</td>
+                    </tr>
+                  ))}
+                  {!data.projects?.length && <tr><td colSpan={4} className="text-center text-slate-500 py-8">No project-tagged costs in this range.</td></tr>}
+                </tbody>
+              </table>
             </div>
           )}
 
