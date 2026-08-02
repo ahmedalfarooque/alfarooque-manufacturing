@@ -34,10 +34,11 @@ Dashboard → **Project Settings → API**:
 
 The super-admin email is hardcoded as `arshad@alfarooque.com` in every app's `lib/superAdmin.js` (always treated as `admin` regardless of stored role). Insert (or update) that row in `platform_users`:
 ```sql
-insert into platform_users (email, full_name, role, is_active)
-values ('arshad@alfarooque.com', 'Arshad', 'admin', true)
+insert into platform_users (email, password_hash, full_name, role, is_active)
+values ('arshad@alfarooque.com', 'OTP_ONLY_NO_PASSWORD_LOGIN', 'Arshad', 'admin', true)
 on conflict (email) do update set role = 'admin', is_active = true;
 ```
+`password_hash` is `not null` on this table, but every app in this monorepo authenticates via OTP, never password — the value above is a placeholder that's never checked (see `apps/cars/app/api/auth/route.js`'s own auto-provisioning code, which does the same thing with a random bcrypt hash and the comment "this account can only ever sign in via OTP").
 Every other user needs a `platform_users` row too (created via each app's own `/users` — or `/api/users` — API, or manually via SQL for the first batch).
 
 ### 1.4 Grant initial app access
