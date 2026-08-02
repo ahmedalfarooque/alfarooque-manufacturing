@@ -67,10 +67,19 @@ This file records every concrete bug found and fixed this session, discovered by
 
 **Fix**: added `apps/cars/lib/superAdmin.js` (mirrored from the other apps) and wired it into `readSession()`.
 
+## CRM: `AppSwitcherButtons.js` importing a hook that doesn't exist (found in this session's final build-verification pass)
+
+**Found by**: running `npx next build` in `apps/crm` as part of the final build-verification sweep — the build succeeded but logged `Attempted import error: 'useLanguage' is not exported from '@/lib/i18n'`.
+
+**Root cause**: CRM's `lib/i18n.js` is a smaller, standalone implementation (only exports `LanguageProvider`/`useLang`) rather than the fuller `useLanguage`/`trEnum` module the other 5 apps share. `AppSwitcherButtons.js` was copied over verbatim from an app that does export `useLanguage`, so the import silently resolved to `undefined`.
+
+**Impact**: calling `useLanguage()` inside the component would throw a runtime `TypeError` the first time the Application Switcher rendered in CRM — i.e. for every logged-in user.
+
+**Fix**: changed the import to `useLang` and destructured `{ lang }` from it (the only field the component uses). Rebuilt CRM — the warning is gone and the build is fully clean.
+
 ## Known limitations (not errors — explicitly out of scope this session)
 
-1. **Barcode/QR code generation** in Inventory — no `jsbarcode`/`qrcode` dependency installed; `barcode` remains a plain text field.
-2. **ZATCA Phase 1 QR code** (scannable image on invoices) — requires installing the `qrcode` npm package (network/registry access was not available to test this in-session); the invoice PDF currently uses a plain `window.print()` flow without a QR stamp.
-3. **PDF visual parity with Quotation's document pipeline** — Accounting's invoice/bill "Print/PDF" uses the browser's native print dialog (a real, working PDF path via "Save as PDF"), not the same jsPDF/puppeteer/Arabic-shaping engine Quotation uses for its formal customer-facing documents. Replicating that exact pipeline for accounting documents is a substantial, separate effort — see `ERP_REMAINING.md`.
-4. **Full Sales Order pipeline** (Quotation → Sales Order → Inventory Check → Reserve Stock → Delivery → Invoice → Payment → Accounting) as a single tracked entity — the individual pieces all exist and work (Quotation, Inventory reservations, Accounting invoices/payments, CRM deal links), but there is no dedicated "Sales Order" record connecting them end-to-end yet. See `ERP_REMAINING.md`.
-5. **Admin UI for `app_permissions`** exists only in the Projects app's Users page — the other 5 apps have the enforcement (API + switcher) but not a management screen. A super-admin can grant access from Projects and it takes effect everywhere via the shared `app_permissions` table.
+1. **PDF visual parity with Quotation's document pipeline** — Accounting's invoice/bill "Print/PDF" uses the browser's native print dialog (a real, working PDF path via "Save as PDF"), not the same jsPDF/puppeteer/Arabic-shaping engine Quotation uses for its formal customer-facing documents. Replicating that exact pipeline for accounting documents is a substantial, separate effort — see `ERP_REMAINING.md`.
+2. **Admin UI for `app_permissions`** exists only in the Projects app's Users page — the other 5 apps have the enforcement (API + switcher) but not a management screen. A super-admin can grant access from Projects and it takes effect everywhere via the shared `app_permissions` table.
+
+Resolved this session (previously listed here): **barcode/QR generation in Inventory**, **ZATCA Phase 1 QR code on invoices**, and the **full Sales Order pipeline** — see `ERP_COMPLETED.md`.

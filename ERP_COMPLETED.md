@@ -89,16 +89,26 @@ Every vendor bill now resolves to one of three destinations, matching the requir
 - **Bugfix**: `lib/appLinks.js` in the same four apps only listed 4 of 6 apps — admins could never switch to Accounting or CRM from those apps.
 - **Bugfix**: `apps/cars/lib/auth.js` was missing the super-admin override present in every other app — `arshad@alfarooque.com` was not automatically treated as admin in Cars.
 
+## Phase 4 — Post-Audit Follow-Through (this session)
+
+Closed out the three items `ERP_REMAINING.md` had flagged as "immediately buildable, no external credentials needed":
+
+- **ZATCA Phase 1 QR code on invoices** — `apps/accounting/lib/zatca.js` builds the Base64 TLV payload (seller name, VAT number, timestamp, invoice total, VAT total); a new server-side route `app/api/invoices/[id]/qr/route.js` renders it via the `qrcode` package and the invoice detail page displays it next to the totals block.
+- **Barcode/QR generation in Inventory** — the Products page gained a per-row "Print Label" action (`LabelModal`) that renders a scannable QR of the item's barcode/SKU plus a print-only CSS layout.
+- **Sales Order tracked entity** — `sales_orders`/`sales_order_lines` (`supabase/inv-schema-v08-sales-orders.sql`) tie Quotation → Reserve Stock → Deliver → Invoice → Payment into one auditable record, built in the Projects app (`/sales-orders`). Reserve/Deliver actions inline the same stock-reservation/goods-issue logic Inventory's own endpoints use; Invoice creation writes directly into `acc_invoices`/`acc_invoice_lines`. A "Create Sales Order" shortcut was added to accepted Quotation Requests.
+- **Deployment prep** — `.env.example` added to all 6 apps (verified against actual `process.env` usage), `vercel.json` added to Accounting/CRM (the two that were missing it), and a consolidated `ERP_DEPLOYMENT.md` covering Supabase migrations/keys, env vars, Vercel project creation, DNS, and Resend setup.
+- **Bugfix**: CRM's `components/AppSwitcherButtons.js` imported `useLanguage` from `lib/i18n.js`, which only ever exported `useLang()` (CRM's i18n module is a smaller, standalone implementation, unlike the other 5 apps). The mismatched import resolved to `undefined` and would throw the moment the app switcher rendered — found during this session's final build-verification pass, fixed by switching to `useLang()`.
+
 ## Build Verification
 
-All 6 Next.js apps build clean after every change in this session:
+All 6 Next.js apps build clean after every change in this session (including the Sales Order feature and the CRM fix above):
 
 | App | Status |
 |-----|--------|
 | Inventory | ✓ Compiled successfully |
 | Accounting | ✓ Compiled successfully |
-| CRM | ✓ Compiled successfully |
-| Projects | ✓ Compiled successfully |
+| CRM | ✓ Compiled successfully (after `AppSwitcherButtons.js` fix) |
+| Projects | ✓ Compiled successfully (incl. new Sales Order routes/pages) |
 | Cars | ✓ Compiled successfully |
 | Quotation | ✓ Compiled successfully |
 

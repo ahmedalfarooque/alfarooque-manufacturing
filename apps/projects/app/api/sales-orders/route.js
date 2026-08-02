@@ -55,6 +55,12 @@ export async function POST(req) {
 
   if (!customerName) return json({ error: 'Customer name is required.' }, 400);
 
+  if (quotationId) {
+    const { data: existing } = await sb.from('sales_orders')
+      .select('id').eq('quotation_id', quotationId).neq('status', 'Cancelled').maybeSingle();
+    if (existing) return json({ salesOrder: existing, existing: true });
+  }
+
   const { data: so, error } = await sb.from('sales_orders').insert({
     so_number: body.so_number || null,
     quotation_id: quotationId,
