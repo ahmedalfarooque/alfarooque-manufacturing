@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
@@ -12,6 +13,15 @@ export default function InvoiceDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { data, loading, refresh } = useLiveData(`/api/invoices/${id}`, 0);
+  const [qrDataUrl, setQrDataUrl] = useState(null);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/invoices/${id}/qr`, { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setQrDataUrl(d.dataUrl))
+      .catch(() => {});
+  }, [id]);
 
   if (loading) return <div className="text-center text-slate-400 py-12">Loading…</div>;
   if (!data) return <div className="text-center text-slate-400 py-12">Invoice not found.</div>;
@@ -92,7 +102,13 @@ export default function InvoiceDetailPage() {
           </table>
         )}
 
-        <div className="flex justify-end mt-4 pt-4 border-t border-white/10">
+        <div className="flex justify-between items-end mt-4 pt-4 border-t border-white/10">
+          {qrDataUrl ? (
+            <div className="text-center">
+              <img src={qrDataUrl} alt="ZATCA QR" width={110} height={110} className="rounded bg-white p-1" />
+              <p className="text-[10px] text-slate-500 mt-1">ZATCA Simplified Tax Invoice QR</p>
+            </div>
+          ) : <div />}
           <div className="w-64 space-y-1 text-sm">
             <div className="flex justify-between"><span className="text-slate-400">Subtotal</span><span className="text-white">{invoice.currency} {fmt(invoice.subtotal)}</span></div>
             <div className="flex justify-between"><span className="text-slate-400">VAT</span><span className="text-white">{invoice.currency} {fmt(invoice.tax_amount)}</span></div>
