@@ -100,3 +100,10 @@ hr_wps_exports        -- id, period, created_at, file_url, total_amount, employe
 - `hr_user_roles` table for app-specific role override (same pattern as acc/crm)
 - Payslip PDF via `jsPDF` or server-side html→pdf (same pattern as Quotation app)
 - Do NOT build HR until Phases 1-3 are fully live and tested in production
+
+## Updated Guidance (post Phase 1-3 completion pass)
+
+- **Register HR in the shared `app_permissions` table** (`supabase/inv-schema-v07-app-permissions.sql`) — add `'hr'` to the `app_id` CHECK constraint, add it to every app's `lib/appLinks.js` APPS array and `AppSwitcherButtons.js` LABELS, exactly like Accounting/CRM were added this session. This is now a well-established, mechanical pattern — see `ERP_ERRORS.md` for what was missed the first two times apps were added (SSO cookie list, appLinks list) so HR doesn't repeat it.
+- **Payroll → Accounting integration**: when a payroll run is approved, post a journal entry to `acc_journal_entries`/`acc_journal_lines` (salary expense debit, GOSI/bank credit) the same way Accounting's own routes do — HR should write directly to those tables (same Supabase project, same pattern already used for Inventory↔Accounting and CRM↔Quotation/Projects in this codebase), not duplicate a parallel ledger.
+- **Before writing any HR API route**, write the full SQL schema first and have every route read/write against it exactly — the Accounting phase's biggest issue (`ERP_ERRORS.md`) was schema and API being written independently and drifting apart. Write one, then the other, checking column names as you go, not both from memory in parallel.
+- **Verify schema against code before considering any feature done** — this session's central lesson: run through every route's exact `.select()`/`.insert()`/`.update()` field names against the actual `CREATE TABLE` statement, don't assume they match because both "look right" in isolation.

@@ -1,126 +1,105 @@
 # ERP Completed Features
 
+> Verified against actual source code (not just prior documentation) as of this session. Every claim below was confirmed by reading the implementation, and every affected app builds clean (`npx next build`).
+
 ## Phase 1 — Inventory App (`localhost:3040`)
 
-- Full inventory management: items, categories, warehouses, transactions
-- Stock in/out with warehouse tracking
+### Core (verified pre-existing)
+- Products, Materials, Categories/Subcategories, Suppliers, Brands, Units — full CRUD
+- Warehouses, Locations
+- Stock ledger (`inv_stock`) with per-warehouse quantity + average cost
+- Stock adjustments (manual in/out)
+- Goods Receipts (from suppliers, updates stock + average cost)
+- Purchase Requests, Purchase Orders — full CRUD workflow
 - Low-stock alerts, supplier management
-- PDF printing for item sheets
-- Barcode/QR ready item cards
-- Reports: stock levels, valuation, movement history
-- Cross-app inventory search (shared across Quotation, Projects, Cars)
+- Reports: stock valuation, movement history, low stock (Recharts visualizations)
+- Full Arabic/English i18n with RTL, dark/light theme
+- OTP auth + SSO
+
+### Completed this session (previously missing or broken)
+- **Goods Issue** — new page + API (`/goods-issues`). Issues stock out of a warehouse to a project/department/sales order/other, decrements `qty_on_hand`, writes an `issue` stock movement.
+- **Stock Transfers** — new page + API (`/transfers`). Warehouse-to-warehouse moves; decrements source, increments destination, writes paired `transfer_out`/`transfer_in` movements.
+- **Stock Reservations** — new page + API (`/reservations`). Soft-holds available stock (`qty_reserved`) with **Fulfill** (converts to an actual issue) and **Release** actions.
+- **PDF export wired up** — the existing `lib/reportPdf.js` engine (present but never called by any page) is now wired to an "Export PDF" button on the Reports page for stock valuation, movements, low stock, and purchase orders.
+- **Bugfix**: `inv_stock_movements.reference_type`/`reference_id` were written by the Goods Receipts route but never existed as columns — every receipt would have thrown a Postgres error. Fixed via `ALTER TABLE`.
+- **Bugfix**: `inv_products.qty_on_hand` / `inv_materials.qty_on_hand` (the denormalized totals read by Products/Materials lists and by every cross-app inventory-search endpoint) were never updated by any route — always stuck at 0. Added `lib/stockSync.js`, called after every stock mutation (adjustments, receipts, issues, transfers, reservation fulfillment).
+
+### Known remaining gap
+- Barcode/QR **generation** (a printable card with a scannable code) is not implemented — `barcode` is a plain text field. No `jsbarcode`/`qrcode` dependency is installed. See `ERP_REMAINING.md`.
+
+## Cross-App Inventory Integration
+
+- `inventory-search` API routes in Quotation, Projects, Cars (added in a prior session) were real and functional but had **zero frontend consumers** — confirmed by audit, now fixed:
+  - **Projects**: the Purchase Request creation modal now has an optional "Link to Inventory Item" search that sets `inv_material_id`/`inv_product_id` (the API already accepted these fields — no UI ever offered a way to set them).
+  - **Cars**: the Maintenance Record creation modal now has an optional inventory parts picker that populates `car_maintenance_parts` with real `inv_product_id` links (the API already supported a `parts_list` array — no UI ever sent one).
+  - **Quotation**: intentionally left as-is. Its `qt_materials`/`qt_catalogue_products` are a deliberately separate pricing/catalogue system for building customer quotes, not a stock-tracking duplicate — and Quotation is explicitly protected from workflow changes. See `ERP_REMAINING.md`.
+- Accounting also gained its own `inventory-search` + `warehouses` routes (see below) as part of the Purchasing destination feature.
 
 ## Phase 2 — Accounting App (`localhost:3060`)
 
-### Authentication
-- OTP-based login with SSO (`af_sso_session`) integration
-- Role-based access: admin, accountant, viewer
-- `acc_user_roles` table for app-specific role override
+### Critical fix: schema/API mismatch
+The entire `acc_*` schema in `inv-schema-v02-cross-app.sql` was drafted independently from the Next.js API routes actually built against it — different column names throughout (`code` vs `account_code`, `entry_number` vs `journal_number`, `supplier_name` vs `vendor_name`, `txn_date` vs `transaction_date`, etc.), different status-enum casing (`'draft'` vs `'Draft'`), a payments model with the wrong type vocabulary and missing columns, and **no `acc_settings` table at all** despite the Settings page depending on it. Since nothing had been deployed to Supabase yet, `supabase/inv-schema-v04-accounting-schema-fix.sql` drops and recreates every mismatched table to match the working application code exactly. See `ERP_ERRORS.md` for the full list.
 
 ### General Ledger
-- Chart of Accounts: CRUD with account types (Asset, Liability, Equity, Revenue, Expense)
-- Journal Entries: create, post, void; debit/credit line items with account references
-- Auto-balance validation
+- Chart of Accounts: full CRUD
+- Journal Entries: list, post, void — **creation page added this session** (`/journal-entries/new` was a dead link before; the API already supported posting balanced debit/credit lines)
 
-### Accounts Receivable
-- Invoices: Draft → Sent → Paid → Cancelled/Overdue workflow
-- Customer name, dates, subtotal, tax, total
-- Invoice listing with search, status filter, pagination
+### Accounts Receivable / Accounts Payable
+- Invoices and Bills: Draft→Sent/Unpaid→Paid workflows
+- **Line items added this session**: both create modals now support multiple description/qty/unit-price/tax-rate rows with auto-computed subtotal/tax/total, falling back to manual totals when no lines are entered
+- **Detail pages added this session** (`/invoices/[id]`, `/bills/[id]`) — previously missing entirely; show line items, running totals, status actions, and a Print/PDF button (`window.print()` with print-friendly layout)
 
-### Accounts Payable
-- Bills: Draft → Unpaid → Paid → Overdue/Partially Paid workflow
-- Vendor details, bill lines
-- Bill listing with search, status filter, pagination
+### Purchasing (new this session)
+Every vendor bill now resolves to one of three destinations, matching the required flow:
+- **Warehouse** — bill lines linked to a real inventory product/material (via a new inventory-search picker) directly increase `inv_stock` and write `inv_stock_movements` when the bill is created. Inventory remains the sole source of stock.
+- **Running Project** — cost assigned via `project_id`, no inventory change.
+- **Company Asset** — automatically registers a new `acc_assets` fixed-asset row from the bill's vendor/date/total.
 
-### Payments
-- Receipt payments (incoming) and outgoing payments
-- Links to bank accounts, invoices, bills
-- Payment history with party name and reference
+### Payments, Banking, Expenses, Fixed Assets
+- Full CRUD, verified working against the corrected schema
 
-### Banking
-- Bank account management: name, IBAN, account number, currency, balance
-- Bank transactions: credit/debit entries per account
-- Account selector with live transaction filter
-
-### Expenses
-- Employee expense claims: category, amount, receipt date, notes
-- Approval workflow: Pending → Approved → Rejected → Paid
-- Category-based filtering
-
-### Fixed Assets
-- Asset register: purchase cost, depreciation method, useful life
-- Book value tracking with accumulated depreciation
-- Status: Active, Disposed, Under Maintenance, Fully Depreciated
-- Dispose action with date recording
-
-### Financial Reports
-- Income Statement (P&L): Revenue − COGS − OpEx = Net Income
-- Balance Sheet: Assets vs Liabilities + Equity (2-column layout)
-- Cash Flow: inflows and outflows from bank transactions
-- VAT Report: output VAT (sales) vs input VAT (purchases) → net payable
-- Summary Dashboard: key counts and totals across all modules
+### Reports
+- Income Statement, Balance Sheet, Cash Flow, VAT — pre-existing, now correct against the fixed schema
+- **Inventory Valuation** (new) — reads `inv_stock`/`inv_products`/`inv_materials` directly, aggregates value by warehouse and by item
+- **Project Costing** (new) — reads `pm_projects` directly, attaches project names to bills/expenses (cost) and invoices (revenue) tagged with a `project_id`, computes margin per project
 
 ### Settings
-- Company information (EN + AR)
-- VAT number, CR number, address
-- Default currency, fiscal year start, VAT rate
-- Numbering prefixes for invoices, bills, journal entries
+- Company info, VAT/CR numbers, numbering prefixes — now backed by a real `acc_settings` table (previously didn't exist)
 
 ## Phase 3 — CRM App (`localhost:3080`)
 
-### Authentication
-- OTP-based login with SSO integration
-- Role-based access: admin, manager, sales, viewer
-- `crm_user_roles` table for app-specific role override
+### Pre-existing (verified largely complete by audit)
+- Contacts (Lead/Prospect/Customer/Partner/Supplier via `contact_type` enum on one shared table — not separate modules)
+- Deals with full pipeline stages, kanban board
+- Activities (Call/Meeting/Email/Demo/Follow-up/Task/Note via `activity_type` enum — Meetings/Calls/Tasks are all activities, not separate modules)
+- Dashboard, Reports, Settings
 
-### Contacts
-- Full contact management: Lead, Prospect, Customer, Partner, Supplier
-- Fields: name, email, phone, company, position, address, source, notes
-- Search across name, email, company, phone
-- Contact detail view with linked deals and recent activities
+### Completed this session
+- **Deal Edit Modal** — previously only Mark Won/Lost existed; the PATCH API accepted full field updates but no UI offered them. Added.
+- **Contact Edit Modal** — previously only Convert-to-Prospect/Customer existed. Added.
+- **Cross-app links** — `crm_deals.linked_quotation_id`/`linked_project_id` (nullable FKs to `qt_quotations`/`pm_projects`) let a deal reference the Quotation/Project it originated from. The deal API reads the linked record's name/status directly; the detail page displays and edits the links.
 
-### Deals
-- Deal lifecycle: Prospecting → Qualification → Proposal → Negotiation → Closed Won/Lost
-- Status workflow: Open → Won / Lost / On Hold
-- Mark Won / Mark Lost buttons on deal detail
-- Fields: title, value, currency, probability, expected close date, description
-- Linked contact card on deal detail
+## Shared Platform Layer (cross-cutting, new this session)
 
-### Activities
-- Types: Call, Meeting, Email, Demo, Follow-up, Task, Note
-- Status: Planned, Completed, Cancelled, No Show
-- Mark Complete action directly from list
-- Linked to contacts and/or deals
-- Type and status filters with pagination
+- **`app_permissions` table** — gates which of the 6 ERP apps a user's Application Switcher shows. Admins and the super-admin account (`arshad@alfarooque.com`) always see every app; non-admins see exactly what's granted (safe default-deny, since the switcher previously hid itself entirely for every non-admin).
+- **`/api/app-permissions` route** mirrored across all 6 apps (GET own/admin-view-another's granted apps; POST admin-only to set a user's grant list).
+- **AppSwitcherButtons.js rewritten** across all 6 apps — visible to any authenticated user (not just admins), renders only permitted apps from the full 6-app list (previously hardcoded 3-4 apps per copy, always missing at least Accounting/CRM).
+- **"App Access" admin UI** — added to the Projects app's existing Users page (the more feature-complete of the two divergent Users implementations found by audit) so an admin can grant/revoke app access without touching the database.
+- **Bugfix**: `lib/sso.js` in Quotation/Projects/Cars/Inventory was missing `af_accounting_session`/`af_crm_session` from `APP_COOKIE_NAMES` — admin logout-everywhere never cleared those two apps' sessions.
+- **Bugfix**: `lib/appLinks.js` in the same four apps only listed 4 of 6 apps — admins could never switch to Accounting or CRM from those apps.
+- **Bugfix**: `apps/cars/lib/auth.js` was missing the super-admin override present in every other app — `arshad@alfarooque.com` was not automatically treated as admin in Cars.
 
-### Pipeline (Kanban)
-- Horizontal scrolling kanban board
-- Columns per stage with deal count and total value
-- Deal cards showing contact, value, probability, expected close
-- Color-coded stage headers
-- Real-time totals: open deals + pipeline value
+## Build Verification
 
-### Reports
-- Summary Overview: contacts, deals, won/lost, pipeline value, won revenue, activities
-- Deals Analysis: by status, by stage, win rate, total value (date range)
-- Activities Report: by type, completion rate (date range)
+All 6 Next.js apps build clean after every change in this session:
 
-### Settings
-- Company name, default currency
-- Win probability threshold configuration
+| App | Status |
+|-----|--------|
+| Inventory | ✓ Compiled successfully |
+| Accounting | ✓ Compiled successfully |
+| CRM | ✓ Compiled successfully |
+| Projects | ✓ Compiled successfully |
+| Cars | ✓ Compiled successfully |
+| Quotation | ✓ Compiled successfully |
 
-## Cross-App Integration
-
-- Inventory search API in Quotation (`/api/inventory-search`)
-- Inventory search API in Projects (`/api/inventory-search`)
-- Inventory search API in Cars (`/api/inventory-search`)
-- SQL schema: `supabase/inv-schema-v02-cross-app.sql`
-
-## Infrastructure
-
-- Monorepo: 6 apps, single Supabase project
-- Shared SSO cookie (`af_sso_session`) across all apps
-- Service-role key server-side only (never browser-exposed)
-- Glass design system consistent across all apps
-- `useLiveData` polling hook with configurable intervals
-- Both Accounting and CRM build clean (`npx next build` → `✓ Compiled successfully`)
+Website (static) and Business Card (static) were not touched this session and remain unaffected.

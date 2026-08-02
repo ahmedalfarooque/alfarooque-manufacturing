@@ -4,123 +4,112 @@ All routes are Next.js 14 App Router Route Handlers under `app/api/`. All return
 
 ## Authentication Pattern
 
-Every protected route calls `requireSession(request)` which:
-1. Reads `af_<app>_session` cookie (app-specific JWT)
-2. Falls back to `af_sso_session` cookie (SSO JWT from any other app)
-3. Verifies JWT with `JWT_SECRET`
-4. Returns `{ sub, email, role, appRole }`
+Every protected route calls `requireSession(request, { adminOnly? })` which:
+1. Reads the app-specific `af_<app>_session` cookie
+2. Falls back to `af_sso_session` (SSO JWT, works across all 6 apps since this session's fixes)
+3. Applies the super-admin override (`arshad@alfarooque.com` → always `role: 'admin'`) — now consistent across **all 6 apps** including Cars, which was missing it before this session
+4. Returns `{ sub, email, role }` or a 401/403 response
 
-Admin-only routes additionally call `requireAdmin(session)` which checks `session.appRole === 'admin'` or `session.email === 'arshad@alfarooque.com'` (super-admin bypass).
+## Shared Cross-App Route (new this session, mirrored across all 6 apps)
+
+```
+GET  /api/app-permissions              — own granted app list ({apps: [...]})
+GET  /api/app-permissions?user_id=<id> — (admin only) another user's granted apps
+POST /api/app-permissions {user_id, apps: [...]} — (admin only) replace a user's grant list
+```
+Admins/super-admin get the full 6-app list regardless of table contents.
 
 ## Inventory App (`localhost:3040/api/`)
 
-| Route | Methods | Description |
-|-------|---------|-------------|
+| Route | Methods | Notes |
+|-------|---------|-------|
 | `/api/auth` | POST | `action: login\|verify-otp\|logout` |
 | `/api/dashboard` | GET | Stats + recent activity |
-| `/api/items` | GET, POST | List (search, category, low-stock filter) + create |
-| `/api/items/[id]` | GET, PATCH, DELETE | Item detail + edit + delete |
-| `/api/categories` | GET, POST | Category list + create |
-| `/api/categories/[id]` | PATCH, DELETE | Edit + delete |
-| `/api/warehouses` | GET, POST | Warehouse list + create |
-| `/api/warehouses/[id]` | PATCH, DELETE | Edit + delete |
-| `/api/stock` | GET | Stock levels with join (item + warehouse) |
-| `/api/stock/[id]` | PATCH | Adjust quantity |
-| `/api/transactions` | GET, POST | Transaction history + new transaction |
-| `/api/suppliers` | GET, POST | Supplier list + create |
-| `/api/suppliers/[id]` | PATCH, DELETE | Edit + delete |
-| `/api/reports` | GET | `type=valuation\|movement\|low_stock` |
-| `/api/settings` | GET, PATCH | App settings |
-| `/api/inventory-search` | GET | Cross-app search (used by quotation/projects/cars) |
+| `/api/items`, `/api/products`, `/api/materials` | GET, POST / PATCH / DELETE | Full CRUD |
+| `/api/categories`, `/api/subcategories`, `/api/units`, `/api/brands` | GET, POST | Reference data |
+| `/api/warehouses`, `/api/locations` | GET, POST / PATCH / DELETE | |
+| `/api/stock` | GET, POST | POST = manual adjustment; now calls `stockSync` after |
+| `/api/stock-movements` | GET | Read-only ledger |
+| `/api/goods-receipts` | GET, POST | Receives stock in; syncs denormalized qty |
+| `/api/goods-issues` | GET, POST | **New.** Issues stock out to project/department/sales order/other |
+| `/api/transfers` | GET, POST | **New.** Warehouse-to-warehouse move, paired movements |
+| `/api/reservations` | GET, POST | **New.** Soft-holds available stock (`qty_reserved`) |
+| `/api/reservations/[id]` | PATCH | **New.** `action: release\|fulfill` |
+| `/api/purchase-requests`, `/api/purchase-orders` | GET, POST / PATCH / DELETE | Full CRUD |
+| `/api/suppliers` | GET, POST / PATCH / DELETE | |
+| `/api/search` | GET | In-app search (products/materials/suppliers) |
+| `/api/reports` (via `/stats`) | GET | Stock valuation, movements, low stock, purchasing |
+| `/api/settings`, `/api/users`, `/api/roles` | GET / PATCH | |
 
 ## Accounting App (`localhost:3060/api/`)
 
-| Route | Methods | Description |
-|-------|---------|-------------|
+| Route | Methods | Notes |
+|-------|---------|-------|
 | `/api/auth` | POST | `action: login\|verify-otp\|logout` |
-| `/api/dashboard` | GET | Key metrics + recent invoices/bills/expenses |
-| `/api/chart-of-accounts` | GET, POST | Account list (search, type filter) + create |
-| `/api/chart-of-accounts/[id]` | PATCH, DELETE | Edit + delete |
-| `/api/journal-entries` | GET, POST | Paginated list (search, status) + create |
-| `/api/journal-entries/[id]` | GET, PATCH, DELETE | Detail + post/void + delete |
-| `/api/invoices` | GET, POST | Paginated list (search, status) + create |
-| `/api/invoices/[id]` | GET, PATCH, DELETE | Detail + status change + delete |
-| `/api/bills` | GET, POST | Paginated list (search, status) + create |
-| `/api/bills/[id]` | GET, PATCH, DELETE | Detail + status change + delete |
-| `/api/payments` | GET, POST | List (type filter) + create |
-| `/api/payments/[id]` | PATCH, DELETE | Edit + delete |
-| `/api/banking` | GET, POST | Bank account list + create |
-| `/api/banking/transactions` | GET, POST | Transactions (account filter) + add |
-| `/api/expenses` | GET, POST | List (category filter) + submit |
-| `/api/expenses/[id]` | PATCH, DELETE | Approve/reject/pay + delete (adminOnly) |
-| `/api/assets` | GET, POST | Asset list (category, status filter) + create |
-| `/api/assets/[id]` | PATCH, DELETE | Edit + dispose + delete |
-| `/api/reports` | GET | `type=income_statement\|balance_sheet\|cash_flow\|vat\|summary` |
-| `/api/settings` | GET, PATCH | Company + financial settings (upsert) |
+| `/api/dashboard` | GET | Fixed to query `acc_expenses` (was querying the unused `acc_expense_claims`) |
+| `/api/chart-of-accounts` | GET, POST | `account_code`, Capitalized `account_type` |
+| `/api/chart-of-accounts/[id]` | GET, PATCH, DELETE | |
+| `/api/journal-entries` | GET, POST | Requires ≥2 balanced lines |
+| `/api/journal-entries/[id]` | GET, PATCH, DELETE | `action: post\|void` |
+| `/api/invoices` | GET, POST | **Now accepts `lines: [...]`**, auto-computes subtotal/tax/total when provided |
+| `/api/invoices/[id]` | GET, PATCH, DELETE | Returns `{ invoice, lines }` |
+| `/api/bills` | GET, POST | **Now accepts `lines: [...]` and Purchasing destination fields** |
+| `/api/bills/[id]` | GET, PATCH, DELETE | Returns `{ bill, lines }` |
+| `/api/payments` | GET, POST | `payment_type: 'receipt'\|'payment'` |
+| `/api/payments/[id]` | GET, PATCH, DELETE | |
+| `/api/banking` | GET, POST | Bank accounts |
+| `/api/banking/transactions` | GET, POST | `transaction_type/transaction_date` |
+| `/api/expenses` | GET, POST | Flat model — any authenticated user may submit |
+| `/api/expenses/[id]` | GET, PATCH (admin), DELETE (admin) | |
+| `/api/assets` | GET, POST | Fixed asset register |
+| `/api/assets/[id]` | GET, PATCH, DELETE | |
+| `/api/reports` | GET | `type=income_statement\|balance_sheet\|cash_flow\|vat\|inventory_valuation\|project_costing\|summary` |
+| `/api/settings` | GET, PATCH | Now backed by a real `acc_settings` table (didn't exist before this session) |
+| `/api/inventory-search` | GET | **New.** Reads `inv_products`/`inv_materials` directly, powers the Purchasing warehouse-destination line-item picker |
+| `/api/warehouses` | GET | **New.** Reads `inv_warehouses` directly |
 
 ### Report Query Parameters
 
 | Report Type | Extra Params | Notes |
 |-------------|-------------|-------|
-| `income_statement` | `from`, `to` | Revenue from invoices, COGS from bills, OpEx from expenses |
-| `balance_sheet` | — (current snapshot) | Assets vs Liabilities + Equity |
-| `cash_flow` | `from`, `to` | Inflows/outflows from bank transactions |
-| `vat` | `from`, `to` | Output VAT (sales) vs Input VAT (purchases) |
+| `income_statement` | `from`, `to` | Revenue (invoices) − COGS (bills) − OpEx (expenses) |
+| `balance_sheet` | — | Cash, receivables, fixed assets vs payables, equity |
+| `cash_flow` | `from`, `to` | From `acc_bank_transactions` |
+| `vat` | `from`, `to` | Output VAT (sales) vs input VAT (purchases) |
+| `inventory_valuation` | — | **New.** Reads `inv_stock` directly; total value + by-warehouse + top 200 lines |
+| `project_costing` | `from`, `to` | **New.** Reads `pm_projects` directly; revenue (invoices) vs cost (bills+expenses) per project, computes margin |
 | `summary` | — | Counts and totals across all modules |
+
+### Purchasing Destination Logic (in `POST /api/bills`)
+
+When `destination_type` is set:
+- `'warehouse'` (requires `destination_warehouse_id`) — for each bill line with an `inv_product_id`/`inv_material_id`, directly increments `inv_stock` and writes `inv_stock_movements` (movement type `receipt`, `reference_type: 'acc_bill'`), then re-syncs the denormalized `inv_products`/`inv_materials.qty_on_hand`.
+- `'project'` — no inventory change; `project_id` tags the bill (already worked; now an explicit named destination).
+- `'asset'` — auto-inserts a new `acc_assets` row (`purchase_cost = total_amount`, `category = asset_category`).
 
 ## CRM App (`localhost:3080/api/`)
 
-| Route | Methods | Description |
-|-------|---------|-------------|
+| Route | Methods | Notes |
+|-------|---------|-------|
 | `/api/auth` | POST | `action: login\|verify-otp\|logout` |
 | `/api/dashboard` | GET | Key metrics + recent contacts/deals |
-| `/api/contacts` | GET, POST | List (search, type filter) + create |
+| `/api/contacts` | GET, POST | |
 | `/api/contacts/[id]` | GET, PATCH, DELETE | Profile + linked deals + activities |
-| `/api/deals` | GET, POST | Paginated list (search, status, stage) + create |
-| `/api/deals/[id]` | GET, PATCH, DELETE | Detail + Mark Won/Lost + delete |
-| `/api/activities` | GET, POST | List (type, status filter, pagination) + log |
-| `/api/activities/[id]` | PATCH, DELETE | Complete/update + delete |
-| `/api/pipeline` | GET | Deals grouped by stage with counts and values |
+| `/api/deals` | GET, POST | **Now accepts `linked_quotation_id`/`linked_project_id`** |
+| `/api/deals/[id]` | GET, PATCH, DELETE | GET now also returns `linkedQuotation`/`linkedProject` (name/status looked up directly from `qt_quotations`/`pm_projects`) |
+| `/api/activities` | GET, POST | |
+| `/api/activities/[id]` | PATCH, DELETE | |
+| `/api/pipeline` | GET | Deals grouped by stage |
 | `/api/reports` | GET | `type=summary\|deals\|activities` |
-| `/api/settings` | GET, PATCH | CRM settings (upsert) |
+| `/api/settings` | GET, PATCH | |
 
-### CRM Pipeline Response Shape
+## Cross-App Inventory Search (shared endpoint, mirrored in Quotation/Projects/Cars/Accounting)
 
-```json
-{
-  "pipeline": [
-    {
-      "stage": "Prospecting",
-      "count": 5,
-      "total_value": 250000,
-      "deals": [
-        {
-          "id": "uuid",
-          "title": "Deal Title",
-          "value": 50000,
-          "probability": 20,
-          "expected_close_date": "2026-09-30",
-          "crm_contacts": { "name": "Ahmed", "company": "ACME" }
-        }
-      ]
-    }
-  ],
-  "total_open": 12,
-  "total_value": 850000
-}
-```
-
-## Cross-App Inventory Search (shared endpoint)
-
-Each app exposes `/api/inventory-search?q=<query>` which:
-1. Validates session (any authenticated user)
-2. Queries `inv_items` with join to `inv_stock` + `inv_warehouses`
-3. Returns up to 20 matches: `{ id, sku, name, unit, stock }`
-
-Available in:
-- `apps/quotation/app/api/inventory-search/route.js`
-- `apps/projects/app/api/inventory-search/route.js`
-- `apps/cars/app/api/inventory-search/route.js`
+`GET /api/inventory-search?q=<query>` — validates session, queries `inv_products`/`inv_materials` directly, returns up to 10 matches each. Now actually consumed by:
+- **Projects**: Purchase Request modal's "Link to Inventory Item" picker
+- **Cars**: Maintenance Record modal's inventory parts picker
+- **Accounting**: Bill line items when Purchasing destination is `'warehouse'`
+- **Quotation**: route exists but intentionally not wired into the UI (see `ERP_REMAINING.md` — Quotation's catalogue is a deliberately separate pricing system, not a stock duplicate)
 
 ## Error Response Format
 
@@ -128,31 +117,24 @@ All API errors follow:
 ```json
 { "error": "Human-readable message" }
 ```
-With appropriate HTTP status codes:
-- `400` Bad Request (validation failure)
-- `401` Unauthorized (no valid session)
-- `403` Forbidden (insufficient role)
-- `404` Not Found
-- `500` Internal Server Error
+HTTP status codes: `400` validation, `401` no session, `403` insufficient role, `404` not found, `500` server error.
 
-## Auth Flow (OTP)
+## Auth Flow (OTP) — unchanged, now consistent across all 6 apps
 
 ```
 POST /api/auth { action: 'login', email, password }
   → validates against platform_users (bcrypt)
-  → checks app_user_roles for app access
   → generates 6-digit OTP, stores in otp_codes (5 min TTL)
   → returns { step: 'otp' }
 
 POST /api/auth { action: 'verify-otp', email, otp }
-  → validates OTP (not expired, not used)
-  → marks OTP as used
-  → mints JWT (24h) with { sub, email, role, appRole }
-  → sets af_<app>_session cookie (HttpOnly, SameSite=Lax)
-  → sets af_sso_session cookie (HttpOnly, SameSite=Lax, same payload)
+  → validates OTP, marks used
+  → mints JWT (12h) with { sub, email, role, app }
+  → sets af_<app>_session cookie + af_sso_session cookie
   → returns { ok: true }
 
 POST /api/auth { action: 'logout' }
-  → clears both cookies
+  → clears both cookies (now clears all 6 apps' cookies via the corrected
+    APP_COOKIE_NAMES list in every app's lib/sso.js)
   → returns { ok: true }
 ```
