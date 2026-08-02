@@ -18,6 +18,7 @@ In the Supabase Dashboard → **SQL Editor → New query**, paste and run each f
 8. `supabase/inv-schema-v08-sales-orders.sql` — Sales Order tracked entity (Projects app)
 9. `supabase/inv-schema-v09-crm-settings.sql` — the `crm_settings` table CRM's own Settings page depends on (see `ERP_ERRORS.md`)
 10. `supabase/inv-schema-v10-crm-schema-fix.sql` — **critical**, corrects `crm_contacts`/`crm_deals`/`crm_activities` to match the working CRM API (see `ERP_ERRORS.md`)
+11. `supabase/inv-schema-v11-goods-receipt-items-fix.sql` — adds `location_id`/`po_item_id` to `inv_goods_receipt_items` (see `ERP_ERRORS.md`)
 
 If `inv-schema-v01-initial.sql` has never been run, also confirm the pre-existing `platform_users`/`platform_otp_codes`/`platform_login_attempts` tables exist (they're defined in an earlier apps-schema file already in `supabase/` from before this ERP build-out — check with `select * from platform_users limit 1;` first).
 
@@ -129,7 +130,7 @@ Without this, every app still works — OTP codes are printed to the Vercel func
 
 ## 6. Post-Deploy Checklist
 
-- [ ] All 7 SQL migrations run, in order (Section 1.1)
+- [ ] All 11 SQL migrations run, in order (Section 1.1)
 - [ ] Super-admin row exists in `platform_users` (Section 1.3)
 - [ ] Env vars set identically across all 6 Vercel projects (Section 2)
 - [ ] All 6 Vercel projects created and deployed (Section 3)
