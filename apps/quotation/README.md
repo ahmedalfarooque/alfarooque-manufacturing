@@ -17,7 +17,7 @@ copy ..\projects\.env.local .env.local   # or create manually:
 
 # 3. Install & start
 npm install
-npm run dev        # http://localhost:3020
+npm run dev        # http://localhost:3030
 ```
 
 Login with the platform admin account (`arshad@alfarooque.com`) — identity is shared with the Cars/Projects apps via `platform_users`, but the session cookie (`af_quotation_session`) is independent.
