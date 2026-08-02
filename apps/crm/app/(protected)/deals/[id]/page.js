@@ -22,7 +22,7 @@ export default function DealDetailPage() {
   if (loading) return <div className="text-center text-slate-400 py-12">Loading…</div>;
   if (!data) return <div className="text-center text-slate-400 py-12">Deal not found.</div>;
 
-  const { deal, activities } = data;
+  const { deal, activities, linkedQuotation, linkedProject } = data;
 
   async function setStatus(status, stage) {
     const patch = { status };
@@ -37,6 +37,7 @@ export default function DealDetailPage() {
       title: deal.title || '', value: deal.value || 0, probability: deal.probability || 0,
       stage: deal.stage || 'Prospecting', expected_close_date: deal.expected_close_date || '',
       currency: deal.currency || 'SAR', description: deal.description || '',
+      linked_quotation_id: deal.linked_quotation_id || '', linked_project_id: deal.linked_project_id || '',
     });
     setEditing(true);
   }
@@ -118,6 +119,12 @@ export default function DealDetailPage() {
                 <GlassTextarea rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
               </GlassField>
             </div>
+            <GlassField label="Linked Quotation ID">
+              <GlassInput value={form.linked_quotation_id} onChange={e => setForm(f => ({ ...f, linked_quotation_id: e.target.value }))} placeholder="Quotation UUID (optional)" />
+            </GlassField>
+            <GlassField label="Linked Project ID">
+              <GlassInput value={form.linked_project_id} onChange={e => setForm(f => ({ ...f, linked_project_id: e.target.value }))} placeholder="Project UUID (optional)" />
+            </GlassField>
           </div>
         </GlassModal>
       )}
@@ -133,6 +140,22 @@ export default function DealDetailPage() {
             <div><p className="text-slate-400">Currency</p><p className="text-white">{deal.currency}</p></div>
           </div>
           {deal.description && <p className="mt-3 text-slate-300 text-sm">{deal.description}</p>}
+          {(linkedQuotation || linkedProject) && (
+            <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-4 text-sm">
+              {linkedQuotation && (
+                <div>
+                  <p className="text-slate-400">Linked Quotation</p>
+                  <p className="text-cyan-400 font-medium">{linkedQuotation.quote_number} <GlassBadge tone="neutral">{linkedQuotation.status}</GlassBadge></p>
+                </div>
+              )}
+              {linkedProject && (
+                <div>
+                  <p className="text-slate-400">Linked Project</p>
+                  <p className="text-cyan-400 font-medium">{linkedProject.project_name} <span className="text-slate-500">({linkedProject.customer_name || '—'})</span></p>
+                </div>
+              )}
+            </div>
+          )}
         </GlassCard>
 
         <GlassCard>

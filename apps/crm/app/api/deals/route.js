@@ -45,6 +45,8 @@ export async function POST(req) {
     expected_close_date: body.expected_close_date || null,
     description: body.description || null,
     assigned_to: body.assigned_to || session.sub,
+    linked_quotation_id: body.linked_quotation_id || null,
+    linked_project_id: body.linked_project_id || null,
     created_by: session.sub,
   }).select().single();
   if (error) { console.error('[crm/deals] create failed:', error.message); return json({ error: 'Could not create deal.' }, 500); }

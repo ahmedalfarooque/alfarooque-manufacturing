@@ -3,7 +3,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 
-const EDITABLE = ['title', 'contact_id', 'value', 'currency', 'stage', 'status', 'probability', 'expected_close_date', 'description', 'assigned_to'];
+const EDITABLE = ['title', 'contact_id', 'value', 'currency', 'stage', 'status', 'probability', 'expected_close_date', 'description', 'assigned_to', 'linked_quotation_id', 'linked_project_id'];
 const VALID_STATUSES = ['Open', 'Won', 'Lost', 'On Hold'];
 const STAGES = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
 
@@ -21,7 +21,21 @@ export async function GET(req, { params }) {
   const { data: activities } = await sb.from('crm_activities')
     .select('*').eq('deal_id', params.id).order('activity_date', { ascending: false }).limit(20);
 
-  return json({ deal: data, activities: activities || [] });
+  /* Reads qt_quotations / pm_projects directly (same Supabase project) to
+     show the human-readable label for a linked record — no data is
+     duplicated, just a name lookup for display. */
+  let linkedQuotation = null;
+  let linkedProject = null;
+  if (data.linked_quotation_id) {
+    const { data: q } = await sb.from('qt_quotations').select('id, quote_number, status').eq('id', data.linked_quotation_id).maybeSingle();
+    linkedQuotation = q || null;
+  }
+  if (data.linked_project_id) {
+    const { data: p } = await sb.from('pm_projects').select('id, project_name, customer_name').eq('id', data.linked_project_id).maybeSingle();
+    linkedProject = p || null;
+  }
+
+  return json({ deal: data, activities: activities || [], linkedQuotation, linkedProject });
 }
 
 export async function PATCH(req, { params }) {
