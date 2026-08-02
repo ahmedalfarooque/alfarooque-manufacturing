@@ -1,6 +1,7 @@
 import './globals.css';
+import GlassIconsLoader from '@/components/GlassIcons';
 
-export const metadata = { title: 'CRM — AL FAROOQUE', description: 'Customer Relationship Management' };
+export const metadata = { title: 'CRM — AL FAROOQUE', description: 'Customer Relationship Management', icons: { icon: '/logo.png' } };
 
 export default function RootLayout({ children }) {
   return (
@@ -15,7 +16,10 @@ export default function RootLayout({ children }) {
           })();
         ` }} />
       </head>
-      <body className="bg-[#0a0f1e] text-white antialiased">{children}</body>
+      <body className="bg-[#0a0f1e] text-white antialiased">
+        <GlassIconsLoader />
+        {children}
+      </body>
     </html>
   );
 }

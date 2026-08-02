@@ -15,8 +15,11 @@ In the Supabase Dashboard → **SQL Editor → New query**, paste and run each f
 5. `supabase/inv-schema-v05-purchasing-destination.sql`
 6. `supabase/inv-schema-v06-crm-cross-links.sql`
 7. `supabase/inv-schema-v07-app-permissions.sql`
+8. `supabase/inv-schema-v08-sales-orders.sql` — Sales Order tracked entity (Projects app)
+9. `supabase/inv-schema-v09-crm-settings.sql` — the `crm_settings` table CRM's own Settings page depends on (see `ERP_ERRORS.md`)
+10. `supabase/inv-schema-v10-crm-schema-fix.sql` — **critical**, corrects `crm_contacts`/`crm_deals`/`crm_activities` to match the working CRM API (see `ERP_ERRORS.md`)
 
-If `inv-schema-v01-initial.sql` has never been run, also confirm the pre-existing `platform_users`/`otp_codes`/`platform_login_attempts` tables exist (they're defined in an earlier apps-schema file already in `supabase/` from before this ERP build-out — check with `select * from platform_users limit 1;` first).
+If `inv-schema-v01-initial.sql` has never been run, also confirm the pre-existing `platform_users`/`platform_otp_codes`/`platform_login_attempts` tables exist (they're defined in an earlier apps-schema file already in `supabase/` from before this ERP build-out — check with `select * from platform_users limit 1;` first).
 
 ### 1.2 Get your Project URL and service-role key
 

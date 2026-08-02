@@ -4,7 +4,7 @@ const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = requireSession(req, { adminOnly: true });
   if (response) return response;
 
   const sb = getDb();
@@ -32,6 +32,10 @@ export async function GET(req, { params }) {
 async function reserveLines(sb, so, lines, session) {
   for (const line of lines) {
     if ((!line.inv_product_id && !line.inv_material_id) || !line.warehouse_id) continue;
+    /* Skip lines a previous (partially-failed) attempt already reserved —
+       without this, retrying after one line ran out of stock would
+       double-reserve every line that succeeded the first time. */
+    if (line.reservation_id) continue;
     const qty = Number(line.qty) || 0;
     if (!qty) continue;
 
@@ -165,6 +169,7 @@ export async function PATCH(req, { params }) {
       if (so.invoice_id) await sb.from('acc_invoices').update({ status: 'Paid' }).eq('id', so.invoice_id);
       await sb.from('sales_orders').update({ status: 'Paid', updated_at: new Date().toISOString() }).eq('id', params.id);
     } else if (action === 'cancel') {
+      if (so.status === 'Paid') return json({ error: 'A Paid order cannot be cancelled.' }, 400);
       if (so.status === 'Reserved') {
         for (const line of lines || []) {
           if (!line.reservation_id) continue;
@@ -178,6 +183,38 @@ export async function PATCH(req, { params }) {
           if (stock) await sb.from('inv_stock').update({ qty_reserved: Math.max(0, Number(stock.qty_reserved) - Number(reservation.qty)) }).eq('id', stock.id);
           await sb.from('inv_stock_reservations').update({ status: 'released', released_at: new Date().toISOString() }).eq('id', reservation.id);
         }
+      } else if (so.status === 'Delivered' || (so.status === 'Invoiced' && lines?.some(l => l.reservation_id))) {
+        /* Stock was already issued (qty_on_hand decremented) — put it back
+           and write a reversing movement, otherwise cancelling a Delivered
+           order leaves the deduction permanently un-reversed. */
+        for (const line of lines || []) {
+          if (!line.reservation_id) continue;
+          const { data: reservation } = await sb.from('inv_stock_reservations').select('*').eq('id', line.reservation_id).maybeSingle();
+          if (!reservation || reservation.status !== 'fulfilled') continue;
+          const qty = Number(reservation.qty);
+          const filter = reservation.product_id ? { product_id: reservation.product_id, material_id: null } : { material_id: reservation.material_id, product_id: null };
+          const { data: stock } = await sb.from('inv_stock')
+            .select('id, qty_on_hand')
+            .eq('warehouse_id', reservation.warehouse_id)
+            .eq(reservation.product_id ? 'product_id' : 'material_id', reservation.product_id || reservation.material_id)
+            .maybeSingle();
+          if (stock) await sb.from('inv_stock').update({ qty_on_hand: Number(stock.qty_on_hand) + qty, updated_at: new Date().toISOString() }).eq('id', stock.id);
+          await sb.from('inv_stock_movements').insert({
+            warehouse_id: reservation.warehouse_id, ...filter,
+            movement_type: 'adjustment_in', qty,
+            reference: so.so_number || so.id, reference_type: 'sales_order_cancelled', reference_id: so.id,
+            created_by: session.sub,
+          });
+          const table = reservation.product_id ? 'inv_products' : 'inv_materials';
+          const itemId = reservation.product_id || reservation.material_id;
+          const { data: stockRows } = await sb.from('inv_stock').select('qty_on_hand').eq(reservation.product_id ? 'product_id' : 'material_id', itemId);
+          const total = (stockRows || []).reduce((s, r) => s + Number(r.qty_on_hand || 0), 0);
+          await sb.from(table).update({ qty_on_hand: total, updated_at: new Date().toISOString() }).eq('id', itemId);
+        }
+      }
+      if (so.invoice_id) {
+        const { data: invoice } = await sb.from('acc_invoices').select('status').eq('id', so.invoice_id).maybeSingle();
+        if (invoice && invoice.status !== 'Paid') await sb.from('acc_invoices').update({ status: 'Cancelled' }).eq('id', so.invoice_id);
       }
       await sb.from('sales_orders').update({ status: 'Cancelled', updated_at: new Date().toISOString() }).eq('id', params.id);
     } else {

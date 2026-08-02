@@ -46,7 +46,9 @@ export async function POST(req) {
     await recordLoginAttempt(email, ip, true);
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
-    await sb.from('otp_codes').upsert({ email, app: APP, otp_hash: sha256Hex(otp), expires_at: expiresAt, attempts: 0 }, { onConflict: 'email,app' });
+    await sb.from('platform_otp_codes').insert({
+      user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
+    });
     console.log(`[crm] OTP for ${email}: ${otp}`);
     return json({ ok: true, message: `OTP sent to ${email}` });
   }
@@ -56,19 +58,23 @@ export async function POST(req) {
     const otp = String(body.otp || '').trim();
     if (!email || !otp) return json({ error: 'Email and OTP are required.' }, 400);
 
-    const { data: record } = await sb.from('otp_codes').select('*').eq('email', email).eq('app', APP).maybeSingle();
-    if (!record) return json({ error: 'No OTP found. Please login again.' }, 400);
-    if (new Date(record.expires_at) < new Date()) return json({ error: 'OTP has expired.' }, 400);
-    if ((record.attempts || 0) >= OTP_MAX_ATTEMPTS) return json({ error: 'Too many OTP attempts.' }, 400);
+    const { data: user } = await sb.from('platform_users').select('id, email, role').eq('email', email).maybeSingle();
+    if (!user) return json({ error: 'No pending verification. Please login again.' }, 400);
 
-    if (record.otp_hash !== sha256Hex(otp)) {
-      await sb.from('otp_codes').update({ attempts: (record.attempts || 0) + 1 }).eq('email', email).eq('app', APP);
+    const { data: record } = await sb.from('platform_otp_codes')
+      .select('*').eq('user_id', user.id).eq('app', APP).eq('purpose', 'login')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (!record) return json({ error: 'No OTP found. Please login again.' }, 400);
+    if (record.consumed_at) return json({ error: 'This code was already used. Please login again.' }, 400);
+    if (new Date(record.expires_at) < new Date()) return json({ error: 'OTP has expired.' }, 400);
+    if ((record.attempt_count || 0) >= OTP_MAX_ATTEMPTS) return json({ error: 'Too many OTP attempts.' }, 400);
+
+    if (record.code_hash !== sha256Hex(otp)) {
+      await sb.from('platform_otp_codes').update({ attempt_count: (record.attempt_count || 0) + 1 }).eq('id', record.id);
       return json({ error: 'Invalid OTP.' }, 401);
     }
 
-    await sb.from('otp_codes').delete().eq('email', email).eq('app', APP);
-    const { data: user } = await sb.from('platform_users').select('id, email, role').eq('email', email).maybeSingle();
-    if (!user) return json({ error: 'User not found.' }, 404);
+    await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', record.id);
 
     let role = user.role === 'admin' ? 'admin' : 'viewer';
     if (isSuperAdminEmail(email)) role = 'admin';
@@ -88,14 +94,21 @@ export async function POST(req) {
 
   if (action === 'resend-otp') {
     const email = String(body.email || '').trim().toLowerCase();
-    const { data: record } = await sb.from('otp_codes').select('created_at').eq('email', email).eq('app', APP).maybeSingle();
+    const { data: user } = await sb.from('platform_users').select('id, email').eq('email', email).maybeSingle();
+    if (!user) return json({ error: 'Invalid request.' }, 400);
+
+    const { data: record } = await sb.from('platform_otp_codes')
+      .select('created_at').eq('user_id', user.id).eq('app', APP).eq('purpose', 'login')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (record) {
       const secondsSince = (Date.now() - new Date(record.created_at).getTime()) / 1000;
       if (secondsSince < OTP_RESEND_COOLDOWN_SECONDS) return json({ error: `Please wait ${Math.ceil(OTP_RESEND_COOLDOWN_SECONDS - secondsSince)}s before resending.` }, 429);
     }
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
-    await sb.from('otp_codes').upsert({ email, app: APP, otp_hash: sha256Hex(otp), expires_at: expiresAt, attempts: 0 }, { onConflict: 'email,app' });
+    await sb.from('platform_otp_codes').insert({
+      user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
+    });
     console.log(`[crm] Resend OTP for ${email}: ${otp}`);
     return json({ ok: true });
   }

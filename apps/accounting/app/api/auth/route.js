@@ -42,8 +42,9 @@ export async function POST(req) {
 
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-    await sb.from('otp_codes').delete().eq('email', email).eq('app', APP);
-    await sb.from('otp_codes').insert({ email, app: APP, code_hash: sha256Hex(otp), expires_at: expiresAt, attempts: 0 });
+    await sb.from('platform_otp_codes').insert({
+      user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
+    });
 
     console.log(`[accounting/auth] OTP for ${email}: ${otp}`);
     return json({ message: `A verification code has been sent to ${email}.` });
@@ -54,18 +55,22 @@ export async function POST(req) {
     const code = String(body.code || '').trim();
     if (!email || !code) return json({ error: 'Email and code are required.' }, 400);
 
-    const { data: otpRow } = await sb.from('otp_codes').select('*').eq('email', email).eq('app', APP).maybeSingle();
+    const { data: user } = await sb.from('platform_users').select('id, email, role').eq('email', email).maybeSingle();
+    if (!user) return json({ error: 'No pending verification. Please sign in again.' }, 400);
+
+    const { data: otpRow } = await sb.from('platform_otp_codes')
+      .select('*').eq('user_id', user.id).eq('app', APP).eq('purpose', 'login')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (!otpRow) return json({ error: 'No pending verification. Please sign in again.' }, 400);
-    if (new Date(otpRow.expires_at) < new Date()) { await sb.from('otp_codes').delete().eq('id', otpRow.id); return json({ error: 'Code expired. Please sign in again.' }, 400); }
-    if (otpRow.attempts >= 5) { await sb.from('otp_codes').delete().eq('id', otpRow.id); return json({ error: 'Too many attempts. Please sign in again.' }, 400); }
+    if (otpRow.consumed_at) return json({ error: 'This code was already used. Please sign in again.' }, 400);
+    if (new Date(otpRow.expires_at) < new Date()) return json({ error: 'Code expired. Please sign in again.' }, 400);
+    if (otpRow.attempt_count >= 5) return json({ error: 'Too many attempts. Please sign in again.' }, 400);
     if (otpRow.code_hash !== sha256Hex(code)) {
-      await sb.from('otp_codes').update({ attempts: otpRow.attempts + 1 }).eq('id', otpRow.id);
+      await sb.from('platform_otp_codes').update({ attempt_count: otpRow.attempt_count + 1 }).eq('id', otpRow.id);
       return json({ error: 'Invalid code.' }, 401);
     }
-    await sb.from('otp_codes').delete().eq('id', otpRow.id);
+    await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otpRow.id);
 
-    const { data: user } = await sb.from('platform_users').select('id, email, role').eq('email', email).maybeSingle();
-    if (!user) return json({ error: 'User not found.' }, 404);
     const { data: roleRow } = await sb.from('acc_user_roles').select('role').eq('user_id', user.id).maybeSingle();
     const appRole = roleRow?.role || (user.role === 'admin' ? 'admin' : 'viewer');
 
@@ -80,15 +85,21 @@ export async function POST(req) {
 
   if (action === 'resend-otp') {
     const email = String(body.email || '').toLowerCase().trim();
-    const { data: otpRow } = await sb.from('otp_codes').select('created_at').eq('email', email).eq('app', APP).maybeSingle();
-    if (otpRow) {
-      const elapsed = (Date.now() - new Date(otpRow.created_at).getTime()) / 1000;
+    const { data: user } = await sb.from('platform_users').select('id, email').eq('email', email).maybeSingle();
+    if (!user) return json({ error: 'Invalid request.' }, 400);
+
+    const { data: last } = await sb.from('platform_otp_codes')
+      .select('created_at').eq('user_id', user.id).eq('app', APP).eq('purpose', 'login')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (last) {
+      const elapsed = (Date.now() - new Date(last.created_at).getTime()) / 1000;
       if (elapsed < 60) return json({ error: 'Please wait before requesting another code.', retryAfter: Math.ceil(60 - elapsed) }, 429);
     }
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-    await sb.from('otp_codes').delete().eq('email', email).eq('app', APP);
-    await sb.from('otp_codes').insert({ email, app: APP, code_hash: sha256Hex(otp), expires_at: expiresAt, attempts: 0 });
+    await sb.from('platform_otp_codes').insert({
+      user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
+    });
     console.log(`[accounting/auth] Resend OTP for ${email}: ${otp}`);
     return json({ message: 'A new code has been sent.' });
   }
