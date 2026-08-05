@@ -42,7 +42,11 @@ const ROUTES = {
   '/contact':       'pages/contact.html',
   '/products':      'products.html',
   '/all-products':  'all-products.html',
-  '/mohammed':      'mohammed.html',
+  /* Single source of truth for the digital business card lives at
+     card/index.html — this route and the host-based rewrite below both
+     point at that one file so there is never a second copy to drift
+     out of sync (see card/README or ERP_DEPLOYMENT.md history). */
+  '/mohammed':      'card/index.html',
   '/admin':         'pages/admin/login.html',
   '/woodworks':     'pages/woodworks.html',
   '/steelworks':    'pages/steelworks.html',
@@ -193,7 +197,7 @@ const server = http.createServer((req, res) => {
      serves the card at the root, no /mohammed in the address bar. */
   const host = (req.headers.host || '').split(':')[0];
   if (urlPath === '/' && host === 'mohammed.alfarooque.com') {
-    return serve(path.join(ROOT, 'mohammed.html'), res, urlPath);
+    return serve(path.join(ROOT, 'card/index.html'), res, urlPath);
   }
 
   /* 2. Try route table */
@@ -265,7 +269,7 @@ server.on('upgrade', (req, clientSocket, head) => {
    actually finishes compiling (not just "process spawned"), and the
    final "Development environment ready." line only appears once all of
    them have reported in. */
-const READY_LABELS = ['Main Website', 'Cars App', 'Projects App', 'Quotation App'];
+const READY_LABELS = ['Main Website', 'Cars App', 'Projects App', 'Quotation App', 'Inventory App', 'Accounting App', 'CRM App'];
 const readyState = {};
 function markReady(label) {
   if (readyState[label]) return;
@@ -280,7 +284,10 @@ function printBanner() {
   console.log('  Main Website        http://localhost:' + PORT);
   console.log('  Cars App            http://localhost:3010');
   console.log('  Projects App        http://localhost:3020');
-  console.log('  Quotation App       http://localhost:3030\n');
+  console.log('  Quotation App       http://localhost:3030');
+  console.log('  Inventory App       http://localhost:3040');
+  console.log('  Accounting App      http://localhost:3050');
+  console.log('  CRM App             http://localhost:3060\n');
   console.log('  Starting development servers...\n');
 }
 
@@ -344,6 +351,9 @@ const MANAGED_APPS = [
   { name: 'cars-app', label: 'Cars App', dir: path.join(ROOT, 'apps', 'cars'), port: 3010 },
   { name: 'projects-app', label: 'Projects App', dir: path.join(ROOT, 'apps', 'projects'), port: 3020 },
   { name: 'quotation-app', label: 'Quotation App', dir: path.join(ROOT, 'apps', 'quotation'), port: 3030 },
+  { name: 'inventory-app', label: 'Inventory App', dir: path.join(ROOT, 'apps', 'inventory'), port: 3040 },
+  { name: 'accounting-app', label: 'Accounting App', dir: path.join(ROOT, 'apps', 'accounting'), port: 3050 },
+  { name: 'crm-app', label: 'CRM App', dir: path.join(ROOT, 'apps', 'crm'), port: 3060 },
 ].map(app => ({ ...app, child: null, restarts: 0, shuttingDown: false }));
 
 function isPortInUse(port) {

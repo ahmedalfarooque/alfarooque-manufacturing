@@ -20,7 +20,8 @@
     { "source": "/woodworks-ar",  "destination": "/pages/woodworks-ar" },
     { "source": "/steelworks-ar", "destination": "/pages/steelworks-ar" },
     { "source": "/aluminium-ar",  "destination": "/pages/aluminium-ar" },
-    { "source": "/admin",         "destination": "/pages/admin/login" }
+    { "source": "/admin",         "destination": "/pages/admin/login" },
+    { "source": "/mohammed",      "destination": "/card/index.html" }
   ],
   "headers": [
     {
