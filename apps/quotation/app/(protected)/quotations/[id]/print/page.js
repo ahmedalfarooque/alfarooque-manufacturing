@@ -53,6 +53,7 @@ export default function PrintPage() {
   /* read ?lang= without useSearchParams — avoids the Suspense-boundary
      requirement next build enforces for that hook */
   const [lang, setLang] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   useEffect(() => {
     try {
       const q = new URLSearchParams(window.location.search).get('lang');
@@ -64,7 +65,12 @@ export default function PrintPage() {
     fetch('/api/quotations/' + id, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : null)
       .then(async d => {
-        if (!d || !d.row) return;
+        /* A deleted (or otherwise missing) quotation resolves here with
+           d === null (404) — without this, `data` stayed null forever and
+           the page below just kept showing "Loading…" with no way out,
+           same failure mode already fixed for the editor/catalogue pages
+           (see quotations/[id]/page.js and catalogue/[id]/page.js). */
+        if (!d || !d.row) { setNotFound(true); return; }
         setData(d);
         /* Fall back to the quotation's own output language ONLY when the
            URL didn't explicitly request one. Checked against the URL
@@ -84,7 +90,7 @@ export default function PrintPage() {
           if (t2 && t2.row) setTerms(t2.row);
         }
       })
-      .catch(() => {});
+      .catch(() => setNotFound(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -229,6 +235,16 @@ export default function PrintPage() {
     }
   }
 
+  if (notFound) {
+    return (
+      <div style={{ padding: 40, fontFamily: 'sans-serif', color: '#888', textAlign: 'center' }}>
+        <div>{lang === 'ar' ? 'لم يتم العثور على عرض السعر هذا — ربما تم حذفه.' : 'This quotation was not found — it may have been deleted.'}</div>
+        <a href={'/quotations/' + id} style={{ color: '#0090A8', display: 'inline-block', marginTop: 12 }}>
+          {lang === 'ar' ? '→ العودة إلى عرض السعر' : '← Back to quotation'}
+        </a>
+      </div>
+    );
+  }
   if (!data) return <div style={{ padding: 40, fontFamily: 'sans-serif', color: '#888' }}>{lang === 'ar' ? 'جارٍ التحميل…' : 'Loading…'}</div>;
 
   return (
