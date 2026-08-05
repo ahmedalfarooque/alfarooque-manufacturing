@@ -244,12 +244,17 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
        measures ~290mm in English can measure ~305mm in Arabic purely
        from normal font-metric differences, tripping a hard 297mm cutoff
        that was never really about "does this need multiple pages" so
-       much as "is this taller than one arbitrary constant". A generous
-       multiplier (1.4x = 416mm) keeps single-quotation documents on one
-       (slightly-taller-than-A4) page across any language/font
-       combination, while still triggering real pagination for content
-       that unambiguously needs it (many product rows). */
-    const ONE_PAGE_TOLERANCE_MM = PAGE_H_MM * 1.4;
+       much as "is this taller than one arbitrary constant". A small,
+       fixed buffer (297+20=317mm) covers exactly that font/rounding
+       variance and nothing more — this used to be a 1.4x multiplier
+       (416mm), which went far past "one page that renders a touch tall"
+       and started swallowing genuinely multi-item quotations into one
+       tall, non-A4, stretched page instead of properly paginating them
+       (confirmed: an 11-line real quotation measured 352mm and was
+       rendering as a single 352mm-tall page — neither A4 nor properly
+       paginated). Content past this buffer now always goes through the
+       real A4-pagination branch below. */
+    const ONE_PAGE_TOLERANCE_MM = PAGE_H_MM + 20;
     const contentHeightMm = await page.evaluate((pageWmm) => {
       const qdoc = document.querySelector('.qdoc');
       const rect = qdoc.getBoundingClientRect();
