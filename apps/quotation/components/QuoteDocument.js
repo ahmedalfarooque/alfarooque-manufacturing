@@ -283,7 +283,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         gridTemplateColumns: isAr
           ? (qrDataUrl ? '138px auto minmax(0, 1fr)' : 'auto minmax(0, 1fr)')
           : (qrDataUrl ? 'minmax(0, 1fr) auto 138px' : 'minmax(0, 1fr) auto'),
-        alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #6B7A4F', paddingBottom: 14,
+        alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #006B7A', paddingBottom: 14,
       }}>
         {isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 150 }} />}
         {isAr && (
@@ -308,7 +308,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
              algorithm, so numbers remain readable. */
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0, justifyContent: 'flex-end', direction: 'ltr' }}>
             <div dir="rtl" style={{ minWidth: 0, textAlign: 'right' }}>
-              <div style={{ fontSize: 19, fontWeight: 700, color: '#46512F', lineHeight: 1.15 }}>
+              <div style={{ fontSize: 19, fontWeight: 700, color: '#006B7A', lineHeight: 1.15 }}>
                 {splitCompanyName(eName).map((line, i) => line && <div key={i}>{line}</div>)}
               </div>
               <div style={{ color: '#6b6b63', marginTop: 3 }}>{eAddr}</div>
@@ -326,7 +326,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0, direction: 'ltr' }}>
             <img src="/logo.png" alt="" style={{ height: 62, width: 'auto', flexShrink: 0 }} />
             <div dir={dir} style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 19, fontWeight: 700, color: '#46512F', lineHeight: 1.15 }}>
+              <div style={{ fontSize: 19, fontWeight: 700, color: '#006B7A', lineHeight: 1.15 }}>
                 {splitCompanyName(eName).map((line, i) => line && <div key={i}>{line}</div>)}
               </div>
               <div style={{ color: '#6b6b63', marginTop: 3 }}>{eAddr}</div>
@@ -370,7 +370,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
       {/* Items */}
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 14 }}>
         <thead>
-          <tr style={{ background: '#46512F', color: '#fff', fontSize: 11 }}>
+          <tr style={{ background: '#006B7A', color: '#fff', fontSize: 11 }}>
             <th style={{ padding: '7px 8px', textAlign: 'start', width: 26 }}>{t.item}</th>
             <th style={{ padding: '7px 8px', textAlign: 'start' }}>{t.description}</th>
             <th style={{ padding: '7px 8px', width: 52 }}>{t.qty}</th>
@@ -413,8 +413,8 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             <Trow label={t.net} value={money(doc.net_total)} />
             <Trow label={`${t.vat} ${Number(doc.vat_rate)}%`} value={money(doc.vat_amount)} />
             <tr>
-              <td style={{ padding: '8px 10px', background: '#46512F', color: '#fff', fontWeight: 700 }}>{t.grandTotal}</td>
-              <td style={{ padding: '8px 10px', background: '#46512F', color: '#fff', fontWeight: 700, textAlign: 'end' }} dir="ltr">{money(doc.grand_total)} {t.currency}</td>
+              <td style={{ padding: '8px 10px', background: '#006B7A', color: '#fff', fontWeight: 700 }}>{t.grandTotal}</td>
+              <td style={{ padding: '8px 10px', background: '#006B7A', color: '#fff', fontWeight: 700, textAlign: 'end' }} dir="ltr">{money(doc.grand_total)} {t.currency}</td>
             </tr>
           </tbody>
         </table>
