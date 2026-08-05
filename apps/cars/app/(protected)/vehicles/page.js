@@ -228,7 +228,7 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
     setBusy(true); setErr(null);
     try { await onSave(form, modal.mode, modal.data.id); }
     catch (e2) { setErr(e2.message); }
-    setBusy(false);
+    finally { setBusy(false); }
   }
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -302,7 +302,7 @@ function ImportModal({ onClose, onDone }) {
       if (!res.ok) throw new Error(data.error);
       setResult(data);
     } catch (e2) { setErr(e2.message); }
-    setBusy(false);
+    finally { setBusy(false); }
   }
 
   return (

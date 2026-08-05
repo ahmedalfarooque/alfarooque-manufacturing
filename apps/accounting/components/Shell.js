@@ -97,7 +97,7 @@ export default function Shell({ children, active }) {
       </aside>
 
       {/* Mobile overlay */}
-      {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">

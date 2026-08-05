@@ -149,7 +149,7 @@ export function ShopModal({ modal, onClose, onSaved }) {
       if (!res.ok) throw new Error(data.error);
       onSaved(data.shop);
     } catch (e2) { setErr(e2.message); }
-    setBusy(false);
+    finally { setBusy(false); }
   }
 
   return (

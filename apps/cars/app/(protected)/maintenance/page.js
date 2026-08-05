@@ -253,7 +253,7 @@ export function RecordModal({ modal, cars, drivers, shops, categories, onShopAdd
       if (!res.ok) throw new Error(data.error);
       onSaved(data.record?.id);
     } catch (e2) { setErr(e2.message); }
-    setBusy(false);
+    finally { setBusy(false); }
   }
 
   return (

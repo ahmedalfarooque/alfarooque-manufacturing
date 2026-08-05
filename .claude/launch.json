@@ -33,6 +33,27 @@
       "runtimeArgs": ["--prefix", "apps/quotation", "run", "dev"],
       "port": 3030,
       "autoPort": true
+    },
+    {
+      "name": "inventory-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/inventory", "run", "dev"],
+      "port": 3040,
+      "autoPort": true
+    },
+    {
+      "name": "accounting-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/accounting", "run", "dev"],
+      "port": 3050,
+      "autoPort": true
+    },
+    {
+      "name": "crm-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/crm", "run", "dev"],
+      "port": 3060,
+      "autoPort": true
     }
   ]
 }

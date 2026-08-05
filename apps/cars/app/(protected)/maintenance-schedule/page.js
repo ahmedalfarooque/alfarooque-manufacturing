@@ -151,7 +151,7 @@ function ScheduleModal({ item, onClose, onSave }) {
     setBusy(true); setErr(null);
     try { await onSave(form, item.id); }
     catch (e2) { setErr(e2.message); }
-    setBusy(false);
+    finally { setBusy(false); }
   }
 
   return (

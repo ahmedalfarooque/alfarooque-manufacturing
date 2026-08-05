@@ -209,7 +209,7 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
     setBusy(true); setErr(null);
     try { await onSave(form, modal.mode, modal.data.id); }
     catch (e2) { setErr(e2.message); }
-    setBusy(false);
+    finally { setBusy(false); }
   }
 
   return (
