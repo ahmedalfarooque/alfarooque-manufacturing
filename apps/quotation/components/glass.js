@@ -119,7 +119,7 @@ const TOAST_ACCENT = {
   amber: '#f59e0b', red: '#ef4444',
 };
 export function GlassToastHost() {
-  const items = useSyncExternalStore(_subscribe, _snapshot, () => []);
+  const items = useSyncExternalStore(_subscribe, _snapshot, _snapshot);
   const onDismiss = useCallback((id) => dismissToast(id), []);
   if (!items.length) return null;
   return (
