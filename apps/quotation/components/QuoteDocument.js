@@ -200,6 +200,21 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
              (signatures) never renders underneath this fixed footer. */
           .qdoc-footer { position: fixed !important; bottom: 0; left: 36px; right: 36px; background: #fff; z-index: 2; }
           .qdoc-body { padding-bottom: 72px; }
+          /* QR was page-1-only by original design (position:absolute
+             against .qdoc, so it only ever painted on the first natural
+             page of the document's total height). Every other header
+             element (logo/company/title/number-date-validity/teal line)
+             already repeats on every printed page via the native
+             thead-repeat mechanism below — the QR was the one piece of
+             "same header on every page" that didn't. Same fix as the
+             footer/watermark above: position:fixed repeats it at the
+             identical page-relative offset (top/left/right values are
+             unchanged, already set inline below) on every page instead
+             of only the first. The header's reserved spacer column
+             (inside the repeating thead) already leaves the same empty
+             slot on every page regardless — this just paints the QR
+             into that already-reserved slot every time instead of once. */
+          .qdoc-qr { position: fixed !important; }
         }
       `}</style>
 
