@@ -398,6 +398,16 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </tbody>
       </table>
 
+      {/* Totals through Signatures are one atomic closing group: if the
+          whole block doesn't fit in the remaining space on the current
+          page, it moves ENTIRELY to the next one. Each section below
+          also has its own breakInside:avoid (belt and suspenders / self-
+          contained if this wrapper is ever removed), but that alone
+          would only stop each section from splitting internally — it
+          would NOT stop e.g. Bank Details landing on page 2 while Terms
+          gets pushed to page 3. Wrapping them together is what makes
+          "totals/bank/terms/signature stay together" actually hold. */}
+      <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
       {/* Totals + delivery/notes side by side (last page only — this
           simply falls wherever the item table ends, which is always
           the final page since nothing follows it but this section) */}
@@ -456,6 +466,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             </div>
           ))}
         </div>
+      </div>{/* /closing-group */}
       </div>
 
       </td></tr></tbody>
