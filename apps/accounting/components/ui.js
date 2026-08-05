@@ -13,6 +13,8 @@
    apps/projects/components/ui.js · apps/cars/components/ui.js.
    ═══════════════════════════════════════════════════════════════════════ */
 
+import { useEffect } from 'react';
+
 const VARIANT_CLASS = {
   primary: 'gbtn-primary',
   secondary: 'gbtn-secondary',
@@ -83,6 +85,11 @@ export function Field({ label, required, children, className = '' }) {
 }
 
 export function Modal({ title, children, onClose, wide, footer }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose(); }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 lg:p-10">
       <div className="gmodal-backdrop" onClick={onClose} />
