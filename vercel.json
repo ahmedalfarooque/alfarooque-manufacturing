@@ -21,7 +21,7 @@
     { "source": "/steelworks-ar", "destination": "/pages/steelworks-ar" },
     { "source": "/aluminium-ar",  "destination": "/pages/aluminium-ar" },
     { "source": "/admin",         "destination": "/pages/admin/login" },
-    { "source": "/mohammed",      "destination": "/card/index.html" }
+    { "source": "/mohammed",      "destination": "/card" }
   ],
   "headers": [
     {
