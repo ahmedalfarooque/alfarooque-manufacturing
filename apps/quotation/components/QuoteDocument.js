@@ -300,7 +300,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           : (qrDataUrl ? 'minmax(0, 1fr) auto 138px' : 'minmax(0, 1fr) auto'),
         alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #006B7A', paddingBottom: 14,
       }}>
-        {isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 150 }} />}
+        {isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 160 }} />}
         {isAr && (
           <div dir="rtl" style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 22, fontWeight: 700 }}>{t.quotation}</div>
@@ -369,7 +369,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             </table>
           </div>
         )}
-        {!isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 150 }} />}
+        {!isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 160 }} />}
       </div>
       </td></tr></thead>
 
