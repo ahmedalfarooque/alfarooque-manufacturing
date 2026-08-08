@@ -8,7 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { GlassButton } from '@/components/glass';
+import { Input } from '@/components/ui';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected'];
 export const STATUS_BADGE = {
@@ -23,6 +23,7 @@ export const STATUS_BADGE = {
 };
 const REFRESH_MS = 15000;
 function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
+function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 export default function OrdersPage() {
   const { t } = useLanguage();
@@ -109,20 +110,18 @@ export default function OrdersPage() {
                 <tr key={r.id} onClick={() => setViewOrderId(r.id)}
                   className="border-t border-[color:var(--bd)] cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors duration-150">
                   <td className="py-3 px-4" dir="ltr">{r.order_no || r.id.slice(0, 8)}</td>
-                  <td className="max-w-[160px] truncate">{name}</td>
-                  <td className="max-w-[180px] truncate" dir="ltr">{email}</td>
-                  <td dir="ltr">{money(r.grand_total)}</td>
-                  <td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
-                  <td className="capitalize">{trEnum(t, 'status', r.payment_status || 'pending')}</td>
-                  <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                  <td className="text-right px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-end gap-2">
-                      <GlassButton variant="secondary" onClick={() => setViewOrderId(r.id)} className="!text-xs !px-2 !py-1">{t('oq.view')}</GlassButton>
-                      <a href={'/orders/' + r.id} className="af-btn af-btn--primary !text-xs !px-2 !py-1">{t('oq.edit')}</a>
-                      {softDeleteEnabled && (
-                        <GlassButton variant="danger" disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="!text-xs !px-2 !py-1">{t('oq.delete')}</GlassButton>
-                      )}
-                    </div>
+                  <td className="px-3 py-2.5 max-w-[160px] truncate">{name}</td>
+                  <td className="px-3 py-2.5 max-w-[180px] truncate" dir="ltr">{email}</td>
+                  <td className="px-3 py-2.5" dir="ltr">{money(r.grand_total)}</td>
+                  <td className="px-3 py-2.5"><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
+                  <td className="px-3 py-2.5 capitalize">{trEnum(t, 'status', r.payment_status || 'pending')}</td>
+                  <td className="px-3 py-2.5">{new Date(r.created_at).toLocaleDateString()}</td>
+                  <td className="text-right px-4 py-2.5 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => setViewOrderId(r.id)} className="text-[color:var(--tx-3)] hover:underline text-sm me-3">{t('oq.view')}</button>
+                    <a href={'/orders/' + r.id} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3">{t('oq.edit')}</a>
+                    {softDeleteEnabled && (
+                      <button disabled={busyId === r.id} onClick={() => deleteOrder(r.id)} className="text-[#ef4444] hover:underline text-sm disabled:opacity-50">{t('oq.delete')}</button>
+                    )}
                   </td>
                 </tr>
               );
@@ -133,10 +132,10 @@ export default function OrdersPage() {
 
       <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-        <div className="flex gap-1 items-center">
-          <GlassButton variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="!px-3 !py-1">‹</GlassButton>
+        <div className="flex gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40">‹</button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <GlassButton variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="!px-3 !py-1">›</GlassButton>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40">›</button>
         </div>
       </div>
 

@@ -7,7 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage } from '@/lib/i18n';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
-import { GlassButton, GlassIconButton } from '@/components/glass';
+import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const EMPTY_FORM = { full_name: '', company_name: '', email: '', mobile_number: '', vat_number: '', cr_number: '', address: '', city: '', country: '', notes: '' };
 const REFRESH_MS = 15000;
@@ -62,7 +62,7 @@ export default function CustomersPage() {
           <h2 className="text-lg font-semibold">{t('cust.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('cust.breadcrumb')}</p>
         </div>
-        {isAdmin && <GlassButton variant="primary" onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} className="text-sm px-3 py-2">{t('cust.addCustomer')}</GlassButton>}
+        {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('cust.addCustomer')}</Button>}
       </div>
 
       <div className="glass-card p-4 mb-4">
@@ -71,42 +71,20 @@ export default function CustomersPage() {
 
       {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[950px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th onClick={() => toggleSort('full_name')} className="py-3 px-4 cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.fullName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('company_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('email')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.email')}<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('mobile_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.mobile')}<SortIndicator column="mobile_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.vatNumber')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('cr_number')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.crNumber')}<SortIndicator column="cr_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('city')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.city')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('created_at')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('cust.col.created')}<SortIndicator column="created_at" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-            ) : customers.length === 0 ? (
-              <tr><td colSpan={9} className="py-8 text-center text-slate-400">{t('cust.noCustomersYet')}</td></tr>
-            ) : customers.map(c => (
-              <tr key={c.id} onClick={() => setModal({ mode: 'view', data: c })}
-                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
-                <td className="py-3 px-4 font-medium">{c.full_name}</td>
-                <td>{c.company_name || '—'}</td>
-                <td>{c.email || '—'}</td>
-                <td>{c.mobile_number || '—'}</td>
-                <td>{c.vat_number || '—'}</td>
-                <td>{c.cr_number || '—'}</td>
-                <td>{c.city || '—'}</td>
-                <td>{formatDate(c.created_at)}</td>
-                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
-                  <GlassIconButton onClick={() => setModal({ mode: 'view', data: c })} title={t('common.view')} tone="neutral">{'\u{1F441}'}</GlassIconButton>
-                  {isAdmin && <GlassIconButton onClick={() => setModal({ mode: 'edit', data: c })} title={t('common.edit')} tone="cyan">✎</GlassIconButton>}
-                  {isAdmin && <GlassIconButton onClick={() => deleteCustomer(c.id)} title={t('common.delete')} tone="red">🗑</GlassIconButton>}
-                </td>
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-auto max-h-[70vh]">
+          <table className="w-full text-sm min-w-[950px]">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
+              <tr>
+                <Th><span onClick={() => toggleSort('full_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.fullName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('company_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('email')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.email')}<SortIndicator column="email" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('mobile_number')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.mobile')}<SortIndicator column="mobile_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('vat_number')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.vatNumber')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('cr_number')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.crNumber')}<SortIndicator column="cr_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('city')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.city')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th><span onClick={() => toggleSort('created_at')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('cust.col.created')}<SortIndicator column="created_at" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th className="text-end">{t('common.actions')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -146,9 +124,9 @@ export default function CustomersPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <GlassButton variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</GlassButton>
+          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</Button>
           <span className="px-3 py-1">{page} / {totalPages}</span>
-          <GlassButton variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</GlassButton>
+          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</Button>
         </div>
       </div>
 
@@ -196,8 +174,8 @@ export function CustomerModal({ modal, isAdmin, onClose, onSave }) {
           )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <GlassButton type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm">{readOnly ? t('common.close') : t('common.cancel')}</GlassButton>
-          {!readOnly && <GlassButton variant="primary" disabled={busy} className="px-4 py-2 text-sm">{busy ? t('common.saving') : t('common.save')}</GlassButton>}
+          <Button type="button" variant="ghost" onClick={onClose}>{readOnly ? t('common.close') : t('common.cancel')}</Button>
+          {!readOnly && <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>}
         </div>
       </form>
     </Modal>

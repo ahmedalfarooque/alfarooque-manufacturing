@@ -7,23 +7,7 @@ import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { ProjectModal } from '@/app/(protected)/projects/page';
-import { GlassButton, GlassIconButton } from '@/components/glass';
-
-/* Dynamic status-transition buttons (PR_ACTIONS / DU_REVIEW_ACTIONS) map to a
-   GlassButton variant by semantic meaning of the target status, since the
-   available transitions vary per click. */
-function prActionVariant(to) {
-  if (to === 'Rejected' || to === 'Cancelled') return 'danger';
-  if (to === 'Approved' || to === 'Delivered' || to === 'Payment Completed') return 'success';
-  if (to === 'On Hold') return 'warning';
-  return 'secondary';
-}
-function duActionVariant(to) {
-  if (to === 'Rejected') return 'danger';
-  if (to === 'Approved' || to === 'Published') return 'success';
-  if (to === 'Need Revision') return 'warning';
-  return 'secondary';
-}
+import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -126,7 +110,7 @@ export default function ProjectViewPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span>
-          {isAdmin && <GlassButton onClick={() => setEditOpen(true)} variant="primary">{t('pd.edit')}</GlassButton>}
+          {isAdmin && <Button onClick={() => setEditOpen(true)}>{t('pd.edit')}</Button>}
         </div>
       </div>
 
@@ -242,7 +226,7 @@ function AssignedPeopleTab({ assignees, isAdmin, onEdit }) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-medium text-sm">{t('pd.tab.assignedPeople')}</h3>
-        {isAdmin && <GlassButton onClick={onEdit} variant="primary">{t('pd.manageAssignees')}</GlassButton>}
+        {isAdmin && <Button onClick={onEdit}>{t('pd.manageAssignees')}</Button>}
       </div>
       {assignees.length === 0 ? (
         <div className="glass-card p-8">
@@ -368,8 +352,8 @@ function DocumentsTab({ projectId, documents, isAdmin, refresh }) {
           <div className="relative max-w-full max-h-full" onClick={e => e.stopPropagation()}>
             <img src={lightbox.url} alt={lightbox.file_name} className="max-w-full max-h-full rounded-lg" />
             <div className="absolute top-2 right-2 flex gap-2">
-              {isAdmin && <GlassButton onClick={() => deleteFile(lightbox.id)} variant="danger">{t('pd.deleteBtn')}</GlassButton>}
-              <GlassButton onClick={() => setLightbox(null)} variant="secondary">{t('pd.closeBtn')}</GlassButton>
+              {isAdmin && <button onClick={() => deleteFile(lightbox.id)} className="gbtn gbtn-danger gbtn--sm">{t('pd.deleteBtn')}</button>}
+              <button onClick={() => setLightbox(null)} className="px-3 py-1.5 rounded-lg bg-black/70 text-white text-sm">{t('pd.closeBtn')}</button>
             </div>
           </div>
         </div>
@@ -390,34 +374,20 @@ function PurchaseRequestsTab({ projectId, canCreate, isAdmin }) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-medium text-sm">{t('pd.tab.purchaseRequests')}</h3>
-        {canCreate && <GlassButton onClick={() => setModal('new')} variant="primary">{t('pd.newPurchaseRequest')}</GlassButton>}
+        {canCreate && <Button onClick={() => setModal('new')}>{t('pd.newPurchaseRequest')}</Button>}
       </div>
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[60vh]">
-        <table className="w-full text-sm min-w-[700px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th className="py-3 px-4">{t('pd.date')}</th>
-              <th>{t('pr.col.materials')}</th>
-              <th>{t('pd.priority')}</th>
-              <th>{t('pd.requestedBy')}</th>
-              <th>{t('common.status')}</th>
-              <th className="text-right px-4">{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('pd.noPurchaseRequestsYet')}</td></tr>
-            ) : rows.map(r => (
-              <tr key={r.id} className="border-b border-black/5 dark:border-white/5">
-                <td className="py-3 px-4">{r.request_date}</td>
-                <td className="max-w-[220px] truncate">{r.material_description}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PR_PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></td>
-                <td>{r.requested_by_name || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PR_STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
-                <td className="text-right px-4"><GlassIconButton onClick={() => setModal({ id: r.id })} tone="neutral" title={t('pd.viewTitle')}>{'\u{1F441}'}</GlassIconButton></td>
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-auto max-h-[60vh]">
+          <table className="w-full text-sm min-w-[700px]">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
+              <tr>
+                <Th>{t('pd.date')}</Th>
+                <Th>{t('pr.col.materials')}</Th>
+                <Th>{t('pd.priority')}</Th>
+                <Th>{t('pd.requestedBy')}</Th>
+                <Th>{t('common.status')}</Th>
+                <Th className="text-end">{t('common.actions')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -602,8 +572,8 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <GlassButton type="button" onClick={onClose} variant="secondary">{t('common.cancel')}</GlassButton>
-          <GlassButton disabled={busy} variant="primary">{busy ? t('pd.submitting') : t('pd.submit')}</GlassButton>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('pd.submitting') : t('pd.submit')}</Button>
         </div>
       </form>
     </Modal>
@@ -664,39 +634,21 @@ function PurchaseRequestDetailModal({ id, isAdmin, onClose, onChanged }) {
               <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.materialList')}</div>
               <p className="text-sm whitespace-pre-wrap">{r.material_list}</p>
             </div>
-            {r.material_list && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.materialList')}</div>
-                <p className="text-sm whitespace-pre-wrap">{r.material_list}</p>
-              </div>
-            )}
-            {r.remarks && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.remarks')}</div>
-                <p className="text-sm whitespace-pre-wrap">{r.remarks}</p>
-              </div>
-            )}
-            {attachments.length > 0 && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.attachments')}</div>
-                <div className="flex flex-wrap gap-2">
-                  {attachments.map(a => (
-                    <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-2 py-1 rounded-lg border border-black/10 dark:border-white/10">📎 {a.file_name}</a>
-                  ))}
-                </div>
-              </div>
-            )}
-            {isAdmin && (
-              <div className="pt-2 border-t border-black/5 dark:border-white/10 flex flex-wrap gap-2">
-                {PR_ACTIONS.filter(to => to !== r.status).map(to => (
-                  <GlassButton key={to} disabled={busy} onClick={() => setStatus(to)} variant={prActionVariant(to)} className="text-xs px-3 py-1.5">{t('pd.act.' + to)}</GlassButton>
+          )}
+          {r.remarks && (
+            <div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.remarks')}</div>
+              <p className="text-sm whitespace-pre-wrap">{r.remarks}</p>
+            </div>
+          )}
+          {attachments.length > 0 && (
+            <div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.attachments')}</div>
+              <div className="flex flex-wrap gap-2">
+                {attachments.map(a => (
+                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-2 py-1 rounded-lg border border-[color:var(--bd)]">📎 {a.file_name}</a>
                 ))}
-                <GlassButton disabled={busy} onClick={del} variant="danger" className="text-xs px-3 py-1.5 ml-auto">{t('pd.deleteBtn')}</GlassButton>
               </div>
-            )}
-            <div className="flex justify-between items-center pt-2">
-              <a href={'/purchase-requests/' + id} className="text-sm text-brand-500 hover:underline">{t('pd.viewFullDetails')}</a>
-              <GlassButton onClick={onClose} variant="secondary">{t('pd.close')}</GlassButton>
             </div>
           )}
           {isAdmin && (
@@ -729,34 +681,20 @@ function DailyUpdatesTab({ projectId, canCreate, isAdmin, meId }) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-medium text-sm">{t('pd.tab.dailyUpdates')}</h3>
-        {canCreate && <GlassButton onClick={() => setModal('new')} variant="primary">{t('pd.newDailyUpdate')}</GlassButton>}
+        {canCreate && <Button onClick={() => setModal('new')}>{t('pd.newDailyUpdate')}</Button>}
       </div>
-      {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[60vh]">
-        <table className="w-full text-sm min-w-[600px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-            <tr>
-              <th className="py-3 px-4">{t('pd.date')}</th>
-              <th>{t('pd.duUser')}</th>
-              <th>{t('pd.duSummary')}</th>
-              <th>{t('pd.progress')}</th>
-              <th>{t('common.status')}</th>
-              <th className="text-right px-4">{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={6} className="py-8 text-center text-slate-400">{t('pd.noDailyUpdatesYet')}</td></tr>
-            ) : rows.map(u => (
-              <tr key={u.id} className="border-b border-black/5 dark:border-white/5">
-                <td className="py-3 px-4">{u.update_date}</td>
-                <td>{u.author_name || '—'}</td>
-                <td className="max-w-[260px] truncate">{u.title || u.todays_work}</td>
-                <td>{u.progress_pct != null ? `${u.progress_pct}%` : '—'}</td>
-                <td><span className={'px-2 py-0.5 rounded-full text-[11px] font-medium ' + (DU_STATUS_BADGE[u.status || 'Pending'] || '')}>{trEnum(t, 'status', u.status || 'Pending')}</span></td>
-                <td className="text-right px-4"><GlassIconButton onClick={() => setModal({ id: u.id })} tone="neutral" title={t('pd.viewTitle')}>{'\u{1F441}'}</GlassIconButton></td>
+      {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-auto max-h-[60vh]">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
+              <tr>
+                <Th>{t('pd.date')}</Th>
+                <Th>{t('pd.duUser')}</Th>
+                <Th>{t('pd.duSummary')}</Th>
+                <Th>{t('pd.progress')}</Th>
+                <Th>{t('common.status')}</Th>
+                <Th className="text-end">{t('common.actions')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -883,8 +821,8 @@ function DailyUpdateModal({ projectId, onClose, onSaved }) {
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <GlassButton type="button" onClick={onClose} variant="secondary">{t('common.cancel')}</GlassButton>
-          <GlassButton disabled={busy} variant="primary">{busy ? t('common.saving') : t('common.save')}</GlassButton>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>
         </div>
       </form>
     </Modal>
@@ -941,57 +879,11 @@ function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
               <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.duDescription')}</div>
               <p className="text-sm whitespace-pre-wrap">{u.description}</p>
             </div>
-            {u.description && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.duDescription')}</div>
-                <p className="text-sm whitespace-pre-wrap">{u.description}</p>
-              </div>
-            )}
-            {u.issues && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.duIssues')}</div>
-                <p className="text-sm whitespace-pre-wrap text-red-500">{u.issues}</p>
-              </div>
-            )}
-            {u.tomorrow_plan && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.duTomorrowPlan')}</div>
-                <p className="text-sm whitespace-pre-wrap">{u.tomorrow_plan}</p>
-              </div>
-            )}
-            {u.remarks && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.remarks')}</div>
-                <p className="text-sm whitespace-pre-wrap">{u.remarks}</p>
-              </div>
-            )}
-            {attachments.length > 0 && (
-              <div>
-                <div className="text-xs text-slate-500 mb-1">{t('pd.attachments')}</div>
-                <div className="grid grid-cols-3 gap-2">
-                  {attachments.map(a => {
-                    const isImage = /\.(jpe?g|png|gif|webp)$/i.test(a.file_name);
-                    return isImage ? (
-                      <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="aspect-square rounded-lg overflow-hidden border border-black/10 dark:border-white/10 block">
-                        <img src={a.url} alt={a.file_name} loading="lazy" className="w-full h-full object-cover" />
-                      </a>
-                    ) : (
-                      <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="text-xs px-2 py-3 rounded-lg border border-black/10 dark:border-white/10 text-center">📎 {a.file_name}</a>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            {isAdmin && (
-              <div className="pt-2 border-t border-black/5 dark:border-white/10 flex flex-wrap gap-2">
-                {DU_REVIEW_ACTIONS.filter(to => to !== u.status).map(to => (
-                  <GlassButton key={to} disabled={busy} onClick={() => setReviewStatus(to)} variant={duActionVariant(to)} className="text-xs px-3 py-1.5">{t('pd.duact.' + to)}</GlassButton>
-                ))}
-                {canDelete && <GlassButton disabled={busy} onClick={del} variant="danger" className="text-xs px-3 py-1.5 ml-auto">{t('pd.deleteBtn')}</GlassButton>}
-              </div>
-            )}
-            <div className="flex justify-end pt-2">
-              <GlassButton onClick={onClose} variant="secondary">{t('pd.close')}</GlassButton>
+          )}
+          {u.issues && (
+            <div>
+              <div className="text-xs text-[color:var(--tx-3)] mb-1">{t('pd.duIssues')}</div>
+              <p className="text-sm whitespace-pre-wrap text-[#ef4444]">{u.issues}</p>
             </div>
           )}
           {u.tomorrow_plan && (

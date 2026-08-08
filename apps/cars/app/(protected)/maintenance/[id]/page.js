@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
-import { GlassButton } from '@/components/glass';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button } from '@/components/ui';
@@ -92,9 +91,9 @@ export default function MaintenanceRecordViewPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{trEnum(t, 'payment', r.payment_status)}</span>
-          <GlassButton variant="secondary" onClick={() => window.print()} className="text-sm">🖶 {t('common.print')}</GlassButton>
-          {isAdmin && <GlassButton variant="primary" onClick={() => setEditOpen(true)} className="text-sm">✎ {t('common.edit')}</GlassButton>}
-          {isAdmin && <GlassButton variant="danger" onClick={deleteRecord} className="text-sm">🗑 {t('common.delete')}</GlassButton>}
+          <Button variant="ghost" onClick={() => window.print()}>🖶 {t('common.print')}</Button>
+          {isAdmin && <Button onClick={() => setEditOpen(true)}>✎ {t('common.edit')}</Button>}
+          {isAdmin && <Button variant="danger" onClick={deleteRecord}>🗑 {t('common.delete')}</Button>}
         </div>
       </div>
 

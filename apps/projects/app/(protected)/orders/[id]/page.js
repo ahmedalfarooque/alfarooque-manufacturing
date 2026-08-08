@@ -5,11 +5,12 @@ import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { STATUS_BADGE } from '../page';
-import { GlassButton } from '@/components/glass';
+import { Button, Input, Textarea, Select, Field } from '@/components/ui';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected'];
 const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'];
 function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
+function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 export default function OrderDetailPage() {
   const { id } = useParams();
@@ -58,7 +59,7 @@ export default function OrderDetailPage() {
   }
 
   if (error) return <Shell active="/orders"><div className="text-red-500">{error}</div></Shell>;
-  if (!order) return <Shell active="/orders"><div className="text-[#7C9296]">{t('common.loading')}</div></Shell>;
+  if (!order) return <Shell active="/orders"><div className="text-[color:var(--tx-3)]">{t('common.loading')}</div></Shell>;
 
   const name = order.guest_name || order.customer_name || '—';
   const email = order.guest_email || order.customer_email || '—';
@@ -109,10 +110,10 @@ export default function OrderDetailPage() {
           </Field>
         </div>
 
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 flex flex-wrap items-center gap-2">
-          <GlassButton variant="primary" disabled={busy} onClick={save} className="!text-sm !px-3 !py-2">{t('oq.save')}</GlassButton>
-          <GlassButton variant="danger" disabled={busy} onClick={deleteOrder} className="!text-sm !px-3 !py-2">{t('oq.delete')}</GlassButton>
-          <a href="/orders" className="text-sm text-slate-400 hover:underline ms-auto">‹ {t('oq.ordersTitle')}</a>
+        <div className="glass-card p-4 flex flex-wrap items-center gap-2">
+          <Button disabled={busy} onClick={save}>{t('oq.save')}</Button>
+          <Button variant="danger" disabled={busy} onClick={deleteOrder}>{t('oq.delete')}</Button>
+          <a href="/orders" className="text-sm text-[color:var(--tx-3)] hover:underline ms-auto">‹ {t('oq.ordersTitle')}</a>
         </div>
       </div>
     </Shell>

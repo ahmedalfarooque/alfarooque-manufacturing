@@ -5,11 +5,12 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { GlassButton } from '@/components/glass';
+import { Input, Th, Td } from '@/components/ui';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
 const RECOVERY_OPTIONS = ['All', 'green', 'orange', 'red'];
 
+function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function recoveryBadgeClass(days) {
   if (days > 14) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
   if (days > 3) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
@@ -84,49 +85,51 @@ export default function DeletedQuotesPage() {
           🔒 {t('oq.softDeleteNotEnabled')}
         </div>
       ) : (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
-          <table className="w-full text-sm min-w-[900px]">
-            <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
-              <tr>
-                <th className="py-3 px-4">{t('oq.col.name')}</th>
-                <th>{t('oq.col.contact')}</th>
-                <th>{t('oq.col.product')}</th>
-                <th>{t('oq.col.status')}</th>
-                <th>{t('oq.col.deletedBy')}</th>
-                <th>{t('oq.col.deletedDate')}</th>
-                <th>{t('oq.col.daysRemaining')}</th>
-                <th className="text-right px-4">{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows === null ? (
-                <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('oq.noDeletedQuotesFound')}</td></tr>
-              ) : filtered.map(r => {
-                const daysText = r.days_remaining <= 0 ? t('oq.expiresToday') : t('oq.daysLeft', { n: r.days_remaining });
-                return (
-                  <tr key={r.id} className="border-b border-black/5 dark:border-white/5">
-                    <td className="py-3 px-4">{r.name || '—'}</td>
-                    <td className="max-w-[180px] truncate" dir="ltr">{r.email || r.phone || '—'}</td>
-                    <td className="max-w-[160px] truncate">{r.product || '—'}</td>
-                    <td className="capitalize">{trEnum(t, 'status', r.status)}</td>
-                    <td>{r.deleted_by_name || '—'}</td>
-                    <td>{r.deleted_at ? new Date(r.deleted_at).toLocaleDateString() : '—'}</td>
-                    <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></td>
-                    <td className="text-right px-4 whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
-                        <GlassButton variant="success" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => recover(r.id)}>{t('oq.recover')}</GlassButton>
-                        {isSuperAdmin && (
-                          <GlassButton variant="danger" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => permanentDelete(r.id)}>{t('oq.deletePermanently')}</GlassButton>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="glass-card overflow-hidden">
+          <div className="overflow-auto max-h-[70vh]">
+            <table className="w-full text-sm min-w-[900px]">
+              <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
+                <tr>
+                  <Th>{t('oq.col.name')}</Th>
+                  <Th>{t('oq.col.contact')}</Th>
+                  <Th>{t('oq.col.product')}</Th>
+                  <Th>{t('oq.col.status')}</Th>
+                  <Th>{t('oq.col.deletedBy')}</Th>
+                  <Th>{t('oq.col.deletedDate')}</Th>
+                  <Th>{t('oq.col.daysRemaining')}</Th>
+                  <Th className="text-end">{t('common.actions')}</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows === null ? (
+                  <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('oq.noDeletedQuotesFound')}</td></tr>
+                ) : filtered.map(r => {
+                  const daysText = r.days_remaining <= 0 ? t('oq.expiresToday') : t('oq.daysLeft', { n: r.days_remaining });
+                  return (
+                    <tr key={r.id}>
+                      <Td>{r.name || '—'}</Td>
+                      <Td className="max-w-[180px] truncate"><span dir="ltr">{r.email || r.phone || '—'}</span></Td>
+                      <Td className="max-w-[160px] truncate">{r.product || '—'}</Td>
+                      <Td className="capitalize">{trEnum(t, 'status', r.status)}</Td>
+                      <Td>{r.deleted_by_name || '—'}</Td>
+                      <Td>{r.deleted_at ? new Date(r.deleted_at).toLocaleDateString() : '—'}</Td>
+                      <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></Td>
+                      <Td className="text-end whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button disabled={busyId === r.id} onClick={() => recover(r.id)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.recover')}</button>
+                          {isSuperAdmin && (
+                            <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-[#ef4444] hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('oq.deletePermanently')}</button>
+                          )}
+                        </div>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </Shell>

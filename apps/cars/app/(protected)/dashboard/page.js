@@ -59,14 +59,49 @@ export default function DashboardPage() {
   const runningPct = pct(stats.running, stats.totalVehicles);
   const idlePct = pct(stats.idle, stats.totalVehicles);
   const stoppedPct = pct(stats.stopped, stats.totalVehicles);
-  const CATEGORY_COLORS = ['#0C93AE', '#0ea5e9', '#BC6B4E', '#ef4444', '#8b5cf6', '#7FA65C', '#f97316', '#64748b', '#ec4899'];
 
   return (
     <Shell active="/dashboard">
-      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t('nav.vehicles')}</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="truck" tone="brand" label={t('dash.totalVehicles')} value={stats.totalVehicles} sub={t('dash.allVehicles')} href="/vehicles"
-          bars={{ values: [stats.running, stats.idle, stats.stopped], colors: [COLORS.Running, COLORS.Idle, COLORS.Stopped] }} />
+      {/* Quick actions — one-click shortcuts to the pages with a "+ Add"
+          button (the button itself stays admin-gated on each page). */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6 gfade-up">
+        <a href="/vehicles" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
+          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="truck" size={20} bare /></span>
+          <span className="text-sm font-medium truncate">{t('vehicles.addVehicle')}</span>
+        </a>
+        <a href="/drivers" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
+          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="users" size={20} bare /></span>
+          <span className="text-sm font-medium truncate">{t('drivers.addDriver')}</span>
+        </a>
+        <a href="/maintenance" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
+          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="wrench" size={20} bare /></span>
+          <span className="text-sm font-medium truncate">{t('maint.addRecord')}</span>
+        </a>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 gfade-up">
+        <a href="/vehicles" className="glass-card glass-card--pad col-span-2 lg:row-span-2 flex flex-col gap-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--tx-3)]">{t('dash.totalVehicles')}</div>
+              <div className="mt-2 text-5xl lg:text-6xl font-semibold tabular-nums text-[color:var(--tx)] leading-none">{fmt(stats.totalVehicles)}</div>
+              <div className="mt-2 text-sm text-[color:var(--tx-3)]">{t('dash.allVehicles')}</div>
+            </div>
+            <span className="icon-tile icon-tile--lg"><GlassIcon name="truck" size={26} bare /></span>
+          </div>
+          <div className="mt-auto space-y-3">
+            <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-[color:var(--pr-soft)]">
+              <span className="h-full" style={{ width: runningPct + '%', background: COLORS.Running }} />
+              <span className="h-full" style={{ width: idlePct + '%', background: COLORS.Idle }} />
+              <span className="h-full" style={{ width: stoppedPct + '%', background: COLORS.Stopped }} />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <HeroStat color={COLORS.Running} label={t('dash.running')} value={stats.running} />
+              <HeroStat color={COLORS.Idle} label={t('dash.idle')} value={stats.idle} />
+              <HeroStat color={COLORS.Stopped} label={t('dash.stopped')} value={stats.stopped} />
+            </div>
+          </div>
+        </a>
         <StatCard icon="flag" tone="emerald" label={t('dash.running')} value={stats.running} sub={`${runningPct}% ${t('dash.ofTotal')}`} href="/vehicles?status=Running" ringPct={runningPct} />
         <StatCard icon="clock" tone="amber" label={t('dash.idle')} value={stats.idle} sub={`${idlePct}% ${t('dash.ofTotal')}`} href="/vehicles?status=Idle" ringPct={idlePct} />
         <StatCard icon="x" tone="red" label={t('dash.stopped')} value={stats.stopped} sub={`${stoppedPct}% ${t('dash.ofTotal')}`} href="/vehicles?status=Stopped" ringPct={stoppedPct} />
@@ -74,16 +109,27 @@ export default function DashboardPage() {
         <StatCard icon="pin" tone="slate" label={t('dash.totalDistance')} value={fmt(stats.totalDistance) + ' ' + t('common.km')} sub={t('dash.thisPeriod')} />
         <StatCard icon="chart" tone="brand" label={t('dash.totalTrips')} value={stats.totalTrips} sub={t('dash.loggedTrips')} typewriter />
         <StatCard icon="gear" tone="blue" label={t('dash.avgSpeed')} value={stats.avgSpeed != null ? stats.avgSpeed + ' ' + t('common.kmh') : '—'} sub={stats.avgSpeed != null ? t('dash.fromLoggedTrips') : t('dash.noTripsLoggedYet')} />
-        <StatCard icon="bag" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' ' + t('common.liter')} sub={t('dash.thisPeriod')} />
-        <StatCard icon="gem" tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} typewriter />
       </div>
 
-      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t('nav.maintenance')}</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 gfade-up">
+        <StatCard icon="bag" tone="amber" label={t('dash.fuelConsumed')} value={fmt(stats.fuelConsumed) + ' ' + t('common.liter')} sub={t('dash.thisPeriod')} />
+        <StatCard icon="gem" tone="slate" label={t('dash.fuelCost')} value={'SAR ' + fmt(stats.fuelCost)} sub={t('dash.thisPeriod')} typewriter />
         <StatCard icon="wrench" tone="amber" label={t('dash.maintenanceDue')} value={stats.maintenanceDueCount} sub={t('dash.vehicles')} href="/maintenance-schedule" />
         <StatCard icon="bell" tone="red" label={t('dash.activeAlerts')} value={stats.activeAlerts} sub={t('dash.unread')} href="/alerts" />
         <StatCard icon="receipt" tone="slate" label={t('dash.maintenanceCost')} value={'SAR ' + fmt(stats.maintenanceCost)} sub={t('dash.loggedServices')}
           trend={monthlyCostData} trendKey="cost" trendLabelKey="month" />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 gfade-up">
+        <StatCard icon="shield" tone={critical('license') ? 'red' : 'emerald'} label={t('dash.licenseExpiring')} value={critical('license')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="folder" tone={critical('iqama') ? 'red' : 'emerald'} label={t('dash.iqamaExpiring')} value={critical('iqama')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="box" tone={critical('passport') ? 'red' : 'emerald'} label={t('dash.passportExpiring')} value={critical('passport')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="heart" tone={critical('medical') ? 'red' : 'emerald'} label={t('dash.medicalExpiring')} value={critical('medical')} sub={t('dash.within30Days')} href="/drivers" />
+        <StatCard icon="shield" tone={critical('insurance') ? 'red' : 'emerald'} label={t('dash.insuranceExpiring')} value={critical('insurance')} sub={t('dash.within30Days')} href="/vehicles" />
+        <StatCard icon="receipt" tone={critical('registration') ? 'red' : 'emerald'} label={t('dash.registrationExpiring')} value={critical('registration')} sub={t('dash.within30Days')} href="/vehicles" />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 gfade-up">
         <StatCard icon="wrench" tone="brand" label={t('dash.maintenanceRecords')} value={stats.totalMaintenanceRecords} sub={t('dash.allTime')} href="/maintenance" />
         <StatCard icon="receipt" tone="slate" label={t('dash.totalMaintCost')} value={'SAR ' + fmt(stats.totalMaintenanceRecordsCost)} sub={t('dash.allRecords')} href="/maintenance"
           trend={monthlyCostData} trendKey="cost" trendLabelKey="month" />
@@ -94,17 +140,7 @@ export default function DashboardPage() {
         <StatCard icon="gear" tone="amber" label={t('dash.inWorkshop')} value={stats.vehiclesInWorkshop} sub={t('dash.today')} />
       </div>
 
-      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t('dash.expirySummary')}</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="shield" tone={critical('license') ? 'red' : 'emerald'} label={t('dash.licenseExpiring')} value={critical('license')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="folder" tone={critical('iqama') ? 'red' : 'emerald'} label={t('dash.iqamaExpiring')} value={critical('iqama')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="box" tone={critical('passport') ? 'red' : 'emerald'} label={t('dash.passportExpiring')} value={critical('passport')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="heart" tone={critical('medical') ? 'red' : 'emerald'} label={t('dash.medicalExpiring')} value={critical('medical')} sub={t('dash.within30Days')} href="/drivers" />
-        <StatCard icon="shield" tone={critical('insurance') ? 'red' : 'emerald'} label={t('dash.insuranceExpiring')} value={critical('insurance')} sub={t('dash.within30Days')} href="/vehicles" />
-        <StatCard icon="receipt" tone={critical('registration') ? 'red' : 'emerald'} label={t('dash.registrationExpiring')} value={critical('registration')} sub={t('dash.within30Days')} href="/vehicles" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid lg:grid-cols-3 gap-4 mb-6 gfade-up">
         <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.vehiclesStatus')}</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -141,17 +177,17 @@ export default function DashboardPage() {
           <h3 className="font-medium text-sm mb-3">{t('dash.top5Distance')}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={distanceData} layout="vertical" margin={{ left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-              <XAxis type="number" />
-              <YAxis type="category" dataKey="name" width={90} />
-              <Tooltip />
-              <Bar dataKey="distance" fill="#0C93AE" radius={[0, 4, 4, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+              <XAxis type="number" stroke={ct.axis} tick={{ fontSize: 10, fill: ct.axis }} />
+              <YAxis type="category" dataKey="name" width={90} stroke={ct.axis} tick={{ fontSize: 11, fill: ct.axis }} />
+              <Tooltip contentStyle={ct.tooltip} labelStyle={{ color: ct.axis }} itemStyle={{ color: ct.tooltip.color }} cursor={{ fill: ct.primarySoft }} />
+              <Bar dataKey="distance" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid lg:grid-cols-3 gap-4 mb-6 gfade-up">
         <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('dash.driverStatus')}</h3>
           {driverPieData.length === 0 ? <EmptyNote text={t('dash.noDriversYet')} /> : (
@@ -204,11 +240,11 @@ export default function DashboardPage() {
           <h3 className="font-medium text-sm mb-3">{t('dash.monthlyMaintCost')}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={monthlyCostData}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip />
-              <Area type="monotone" dataKey="cost" stroke="#0C93AE" fill="#0C93AE" fillOpacity={0.25} />
+              <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+              <XAxis dataKey="month" stroke={ct.axis} tick={{ fontSize: 10, fill: ct.axis }} />
+              <YAxis stroke={ct.axis} tick={{ fontSize: 10, fill: ct.axis }} />
+              <Tooltip contentStyle={ct.tooltip} labelStyle={{ color: ct.axis }} itemStyle={{ color: ct.tooltip.color }} cursor={{ fill: ct.primarySoft }} />
+              <Area type="monotone" dataKey="cost" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.22} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
