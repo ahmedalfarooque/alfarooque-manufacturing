@@ -8,7 +8,7 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Input, Th, Td, EmptyState } from '@/components/ui';
+import { GlassButton, GlassIconButton } from '@/components/glass';
 
 export const STATUS_BADGE = {
   pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -155,18 +155,18 @@ export default function QuotationRequestsPage() {
                   <div className="flex items-center justify-end gap-2 flex-wrap">
                     {r.status === 'pending' && (
                       <>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')} className="gbtn gbtn-warning gbtn--sm disabled:opacity-50">{t('qr.hold')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
+                        <GlassButton variant="success" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')}>{t('qr.accept')}</GlassButton>
+                        <GlassButton variant="warning" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')}>{t('qr.hold')}</GlassButton>
+                        <GlassButton variant="danger" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')}>{t('qr.reject')}</GlassButton>
                       </>
                     )}
                     {['accepted', 'on_hold'].includes(r.status) && !r.project_id && (
-                      <button disabled={busyId === r.id} onClick={() => startProject(r.id)} className="gbtn gbtn-primary gbtn--sm disabled:opacity-50">{t('qr.projectStart')}</button>
+                      <GlassButton variant="primary" className="text-xs px-2 py-1" disabled={busyId === r.id} onClick={() => startProject(r.id)}>{t('qr.projectStart')}</GlassButton>
                     )}
                     {r.project_id && (
                       <a href={'/projects/' + r.project_id} className="text-xs px-2.5 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors duration-200">↗ {t('qr.openProject')}</a>
                     )}
-                    <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#ef4444] hover:opacity-70 transition-opacity">🗑</button>
+                    <GlassIconButton tone="red" title={t('common.delete')} onClick={() => deleteRequest(r.id)}>🗑</GlassIconButton>
                   </div>
                 </td>
               </tr>
@@ -184,9 +184,9 @@ export default function QuotationRequestsPage() {
           </div>
         </div>
         <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">‹</button>
-          <span className="px-3 py-1.5">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">›</button>
+          <GlassButton variant="ghost" className="px-3 py-1" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</GlassButton>
+          <span className="px-3 py-1">{page} / {totalPages}</span>
+          <GlassButton variant="ghost" className="px-3 py-1" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</GlassButton>
         </div>
       </div>
     </Shell>

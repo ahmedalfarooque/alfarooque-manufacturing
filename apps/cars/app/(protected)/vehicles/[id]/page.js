@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
+import { GlassButton } from '@/components/glass';
 import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { VehicleModal } from '@/app/(protected)/vehicles/page';
@@ -59,8 +60,8 @@ export default function VehicleViewPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span>
-          <Button variant="ghost" onClick={() => window.print()}>🖶 {t('common.print')}</Button>
-          {isAdmin && <Button onClick={() => setEditOpen(true)}>✎ {t('common.edit')}</Button>}
+          <GlassButton variant="secondary" onClick={() => window.print()} className="text-sm">🖶 {t('common.print')}</GlassButton>
+          {isAdmin && <GlassButton variant="primary" onClick={() => setEditOpen(true)} className="text-sm">✎ {t('common.edit')}</GlassButton>}
         </div>
       </div>
 

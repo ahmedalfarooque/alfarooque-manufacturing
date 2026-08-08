@@ -3,8 +3,54 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
+import './login-theme-1.css';
+import './login-theme-2.css';
 
 const API = '/api/auth';
+
+/* Small inline glass-styled icons used only on this page (email / lock /
+   eye-toggle / globe). Kept local rather than added to the shared
+   /public/glass-icons.svg sprite so this redesign stays scoped to the
+   login screen and never touches an asset other pages also depend on. */
+function MailIcon() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2.5" y="5" width="19" height="14" rx="3" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3.5 6.5L12 13L20.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function LockIcon() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="3" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 10.5V7.5a4 4 0 018 0v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+function EyeIcon({ off }) {
+  return off ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M10.6 5.2A10.9 10.9 0 0112 5c5 0 9 4 10.5 7-.6 1.2-1.5 2.5-2.7 3.6M6.7 6.7C4.6 8 3 9.9 1.5 12c1.5 3 5.5 7 10.5 7 1.2 0 2.3-.2 3.4-.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.9 10a3 3 0 004.1 4.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+function GlobeIcon() {
+  return (
+    <svg className="af-login-globe" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M3 12h18M4.5 7.5h15M4.5 16.5h15" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
 
 async function call(action, extra, fallbackError) {
   const res = await fetch(API, {
@@ -36,11 +82,16 @@ export default function LoginPage() {
   const [step, setStep] = useState('credentials'); // 'credentials' | 'otp'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState('');
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [dark, setDark] = useState(false);
+  /* Dark + English are always the login page's initial defaults — this
+     screen intentionally does not read the app's saved theme preference
+     on mount, per the design spec. Users can still toggle for the
+     session; the app's own theme/lang persistence elsewhere is untouched. */
+  const [dark, setDark] = useState(true);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -48,7 +99,7 @@ export default function LoginPage() {
   }, []);
   useEffect(() => () => clearInterval(timerRef.current), []);
   useEffect(() => {
-    try { setDark(localStorage.getItem('af-cars-theme') === 'dark'); } catch (_) {}
+    document.documentElement.classList.add('dark');
   }, []);
 
   function toggleTheme() {
@@ -74,6 +125,7 @@ export default function LoginPage() {
     setStep('credentials');
     setMsg(null);
     setPassword('');
+    setShowPassword(false);
     setCode('');
     clearInterval(timerRef.current);
     setCooldown(0);
@@ -120,79 +172,102 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="glass-card w-full max-w-md p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="AL FAROOQUE" className="h-11 w-11 object-contain shrink-0" />
-            <div>
-              <div className="text-[color:var(--tx)] font-semibold text-lg leading-tight">TrackFleet</div>
-              <div className="text-[color:var(--tx-3)] text-xs">{t('login.tagline')}</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
+    <div className="af-login-page">
+      <div className="af-login-bg" aria-hidden="true">
+        <div className="af-orb af-orb--teal" />
+        <div className="af-orb af-orb--navy" />
+        <div className="af-orb af-orb--gray" />
+        <div className="af-sparkles" />
+      </div>
+      <div className="af-login-card">
+        <div className="af-login-top">
+          <div className="af-login-controls">
+            <button type="button" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+              className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
+              <GlobeIcon />
+            </button>
             <button type="button" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
               className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
               <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'ع'}</span>
             </button>
+          </div>
+          <div className="af-login-controls">
             <button type="button" onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
               <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
             </button>
           </div>
         </div>
 
+        <div className="af-login-brand">
+          <div className="af-login-logo-badge">
+            <img src="/logo.png" alt="AL FAROOQUE" className="af-login-logo" />
+          </div>
+          <div className="af-login-appname">TrackFleet</div>
+          <div className="af-login-tagline">{t('login.tagline')}</div>
+        </div>
+
         {step === 'credentials' && (
-          <div className="gtabs grid grid-cols-2 mb-6">
+          <div className="af-login-tabs">
             <button type="button" onClick={() => switchMode('user')}
-              className={'gtab' + (mode === 'user' ? ' active' : '')}>
+              className={'af-login-tab' + (mode === 'user' ? ' af-login-tab--active' : '')}>
               {t('login.user')}
             </button>
             <button type="button" onClick={() => switchMode('admin')}
-              className={'gtab' + (mode === 'admin' ? ' active' : '')}>
+              className={'af-login-tab' + (mode === 'admin' ? ' af-login-tab--active' : '')}>
               {t('login.admin')}
             </button>
           </div>
         )}
 
         {msg && (
-          <div className={
-            'mb-4 rounded-lg px-3 py-2 text-sm whitespace-pre-line ' +
-            (msg.kind === 'success' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30')
-          }>{msg.text}</div>
+          <div className={'af-login-msg mb-4 ' + (msg.kind === 'success' ? 'af-login-msg--success' : 'af-login-msg--error')}>{msg.text}</div>
         )}
 
         {step === 'credentials' ? (
           <form onSubmit={submitCredentials} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1.5">{t('login.email')}</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="ginput" />
+              <label className="af-login-label">{t('login.email')}</label>
+              <div className="af-login-input-wrap">
+                <span className="af-login-input-icon"><MailIcon /></span>
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                  className="af-login-input" />
+              </div>
             </div>
             {mode === 'admin' && (
               <div>
-                <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1.5">{t('login.password')}</label>
-                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} className="ginput" />
+                <label className="af-login-label">{t('login.password')}</label>
+                <div className="af-login-input-wrap">
+                  <span className="af-login-input-icon"><LockIcon /></span>
+                  <input type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                    className="af-login-input" />
+                  <button type="button" onClick={() => setShowPassword(v => !v)} className="af-login-eye-btn"
+                    aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')} aria-pressed={showPassword}>
+                    <EyeIcon off={showPassword} />
+                  </button>
+                </div>
               </div>
             )}
-            <button disabled={busy} type="submit" className="gbtn gbtn-primary gbtn--block">
+            <button disabled={busy} type="submit" className="af-login-btn-primary">
               {busy ? t('login.signingIn') : t('login.continue')}
             </button>
           </form>
         ) : (
           <form onSubmit={submitOtp} className="space-y-4">
-            <p className="text-[color:var(--tx-3)] text-sm">{t('login.codeSentTo')} <span className="text-[color:var(--tx)]">{email}</span></p>
+            <p className="text-sm" style={{ color: 'var(--al-text-2)' }}>{t('login.codeSentTo')} <span style={{ color: 'var(--al-text)' }}>{email}</span></p>
             <input inputMode="numeric" pattern="[0-9]*" maxLength={6} required value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-              className="ginput text-center tracking-[0.5em] text-lg" />
-            <button disabled={busy} type="submit" className="gbtn gbtn-primary gbtn--block">
+              className="af-login-input af-login-input--otp" />
+            <button disabled={busy} type="submit" className="af-login-btn-primary">
               {busy ? t('login.verifying') : t('login.verifyAndSignIn')}
             </button>
-            <button type="button" disabled={cooldown > 0} onClick={resend} className="gbtn gbtn-secondary gbtn--block">
+            <button type="button" disabled={cooldown > 0} onClick={resend} className="af-login-btn-secondary">
               {cooldown > 0 ? t('login.resendCodeIn', { seconds: cooldown }) : t('login.resendCode')}
             </button>
-            <button type="button" onClick={() => switchMode(mode)}
-              className="w-full text-center text-xs text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{mode === 'admin' ? t('login.backToEmailPassword') : t('login.backToEmail')}</button>
+            <button type="button" onClick={() => switchMode(mode)} className="af-login-link-btn">{mode === 'admin' ? t('login.backToEmailPassword') : t('login.backToEmail')}</button>
           </form>
         )}
+
+        <div className="af-login-footer">© {new Date().getFullYear()} AL FAROOQUE. All rights reserved.</div>
       </div>
     </div>
   );

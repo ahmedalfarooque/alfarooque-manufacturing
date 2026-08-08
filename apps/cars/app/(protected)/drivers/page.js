@@ -2,20 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
-import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
-import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import {
+  GlassPage, GlassButton, GlassDropdown, GlassSearch, GlassStatusChip, GlassAvatar,
+  GlassThead, GlassTr, GlassTd, GlassField, GlassInput, GlassTextarea, GlassModal, GlassEmptyState, GlassLoader,
+} from '@/components/glass';
 
-const STATUS_BADGE = {
-  Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  Inactive: 'bg-slate-500/10 text-[color:var(--tx-3)]',
-  'On Leave': 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  Terminated: 'bg-red-500/10 text-red-600 dark:text-red-400',
-};
+const STATUS_TONE = { Active: 'emerald', Inactive: 'slate', 'On Leave': 'amber', Terminated: 'red' };
 
 const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition-colors';
 
@@ -28,6 +25,9 @@ const EMPTY_FORM = {
   notes: '', assigned_car_id: '', experience_years: '', driving_category: '',
 };
 
+const TH = 'text-start px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-[var(--tx-4)] font-semibold whitespace-nowrap';
+const THsort = TH + ' cursor-pointer select-none hover:text-[var(--pr-2)] transition-colors';
+
 export default function DriversPage() {
   const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
@@ -38,6 +38,7 @@ export default function DriversPage() {
   const [cars, setCars] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const isAdmin = me?.role === 'admin';
   const url = '/api/drivers?' + new URLSearchParams({ search: debouncedSearch, status }).toString();
@@ -84,6 +85,9 @@ export default function DriversPage() {
      driver list (this page paginates client-side), with the same columns
      as the Excel export. */
   async function exportPdf() {
+    if (pdfBusy) return; // guards against a double-click firing two concurrent generations/downloads
+    setPdfBusy(true);
+    try {
     const ar = lang === 'ar';
     const { exportReportPdf } = await import('@/lib/reportPdf');
     await exportReportPdf({
@@ -104,96 +108,117 @@ export default function DriversPage() {
       lang,
       fileName: 'drivers-report.pdf',
     });
+    } finally { setPdfBusy(false); }
   }
+
+  const SortTh = ({ col, label }) => (
+    <th onClick={() => toggleSort(col)} className={THsort}>{label}<SortIndicator column={col} sortKey={sortKey} sortDir={sortDir} /></th>
+  );
+  const ExpiryChip = ({ info }) => (
+    <span className={'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ' + info.className}>{info.dot} {trExpiry(t, info)}</span>
+  );
 
   return (
     <Shell active="/drivers">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">{t('drivers.title')}</h2>
-          <p className="text-xs text-[color:var(--tx-3)]">{t('drivers.breadcrumb')}</p>
+      <GlassPage
+        title={t('drivers.title')}
+        subtitle={t('drivers.breadcrumb')}
+        toolbar={
+          <>
+            <GlassButton variant="ghost" onClick={exportExcel}>⤓ {t('drivers.exportExcel')}</GlassButton>
+            <GlassButton variant="ghost" onClick={exportPdf} disabled={pdfBusy}>⤓ {t('drivers.exportPdf')}</GlassButton>
+            {isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('drivers.addDriver')}</GlassButton>}
+          </>
+        }
+      >
+        <div className="glass-card !rounded-[22px] p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <GlassSearch className="col-span-2" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('drivers.searchPlaceholder')} />
+          <GlassDropdown value={status} onChange={setStatus} options={[['All', t('common.all')], ...['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])]} />
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={exportExcel}>⤓ {t('drivers.exportExcel')}</Button>
-          <Button variant="ghost" onClick={exportPdf}>⤓ {t('drivers.exportPdf')}</Button>
-          {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('drivers.addDriver')}</Button>}
+
+        {error && <div className="text-[#F87171] text-sm">{error}</div>}
+
+        <div className="glass-card !rounded-[22px] overflow-auto max-h-[70vh]">
+          <table className="w-full min-w-[900px]">
+            <GlassThead>
+              <tr>
+                <th className={TH}>{t('drivers.colPhoto')}</th>
+                <SortTh col="full_name" label={t('drivers.colName')} />
+                <SortTh col="phone" label={t('drivers.colPhone')} />
+                <SortTh col="cars" label={t('drivers.colVehicle')} />
+                <SortTh col="license_expiry_date" label={t('drivers.colLicenseExpiry')} />
+                <SortTh col="iqama_expiry_date" label={t('drivers.colIqamaExpiry')} />
+                <SortTh col="status" label={t('drivers.colStatus')} />
+                <th className={TH + ' text-end'}>{t('drivers.colActions')}</th>
+              </tr>
+            </GlassThead>
+            <tbody>
+              {!data ? (
+                <tr><td colSpan={8}><GlassLoader label={t('drivers.loading')} /></td></tr>
+              ) : drivers.length === 0 ? (
+                <tr><td colSpan={8}><GlassEmptyState text={t('drivers.noneYet')} /></td></tr>
+              ) : drivers.map(d => {
+                const lic = expiryInfo(d.license_expiry_date);
+                const iqama = expiryInfo(d.iqama_expiry_date);
+                return (
+                  <GlassTr key={d.id} onClick={() => { window.location.href = '/drivers/' + d.id; }}>
+                    <GlassTd><GlassAvatar name={d.full_name} src={d.profile_photo_url} size={36} /></GlassTd>
+                    <GlassTd className="font-semibold !text-[var(--tx)]">{d.full_name}</GlassTd>
+                    <GlassTd>{d.phone || '—'}</GlassTd>
+                    <GlassTd>{d.cars?.vehicle_number || '—'}</GlassTd>
+                    <GlassTd><ExpiryChip info={lic} /></GlassTd>
+                    <GlassTd><ExpiryChip info={iqama} /></GlassTd>
+                    <GlassTd><GlassStatusChip label={trEnum(t, 'status', d.status)} tone={STATUS_TONE[d.status] || 'slate'} /></GlassTd>
+                    <GlassTd className="text-end whitespace-nowrap">
+                      <span onClick={e => e.stopPropagation()} className="inline-flex items-center gap-1.5">
+                        <IconBtn title={t('drivers.view')} onClick={() => { window.location.href = '/drivers/' + d.id; }}>{'\u{1F441}'}</IconBtn>
+                        {isAdmin && <IconBtn title={t('drivers.edit')} tone="brand" onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })}>✎</IconBtn>}
+                        {isAdmin && <IconBtn title={t('drivers.delete')} tone="red" onClick={() => deleteDriver(d.id)}>🗑</IconBtn>}
+                      </span>
+                    </GlassTd>
+                  </GlassTr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </div>
 
-      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Input placeholder={t('drivers.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
-        <Dropdown value={status} onChange={setStatus} options={[['All', t('common.all')], ...['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])]} />
-      </div>
-
-      {error && <div className="text-[#ef4444] text-sm mb-3">{error}</div>}
-
-      <div className="glass-card overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[900px]">
-          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
-            <tr>
-              <Th>{t('drivers.colPhoto')}</Th>
-              <th onClick={() => toggleSort('full_name')} className={SORT_TH}>{t('drivers.colName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('phone')} className={SORT_TH}>{t('drivers.colPhone')}<SortIndicator column="phone" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('cars')} className={SORT_TH}>{t('drivers.colVehicle')}<SortIndicator column="cars" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('license_expiry_date')} className={SORT_TH}>{t('drivers.colLicenseExpiry')}<SortIndicator column="license_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('iqama_expiry_date')} className={SORT_TH}>{t('drivers.colIqamaExpiry')}<SortIndicator column="iqama_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className={SORT_TH}>{t('drivers.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <Th className="text-end">{t('drivers.colActions')}</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('drivers.loading')}</td></tr>
-            ) : drivers.length === 0 ? (
-              <tr><td colSpan={8}><EmptyState text={t('drivers.noneYet')} /></td></tr>
-            ) : drivers.map(d => {
-              const lic = expiryInfo(d.license_expiry_date);
-              const iqama = expiryInfo(d.iqama_expiry_date);
-              return (
-                <tr key={d.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors"
-                  onClick={() => { window.location.href = '/drivers/' + d.id; }}>
-                  <Td>
-                    {d.profile_photo_url ? (
-                      <img src={d.profile_photo_url} alt="" className="h-9 w-9 rounded-full object-cover" />
-                    ) : (
-                      <div className="h-9 w-9 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-medium">{d.full_name.slice(0, 1).toUpperCase()}</div>
-                    )}
-                  </Td>
-                  <Td className="font-medium">{d.full_name}</Td>
-                  <Td>{d.phone || '—'}</Td>
-                  <Td>{d.cars?.vehicle_number || '—'}</Td>
-                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + lic.className}>{lic.dot} {trExpiry(t, lic)}</span></Td>
-                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {trExpiry(t, iqama)}</span></Td>
-                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span></Td>
-                  <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
-                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} className="text-brand-500 hover:text-brand-600">✎</button>}
-                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('drivers.showingEntries', { from: drivers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + drivers.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('drivers.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+        <div className="flex items-center justify-between text-sm text-[var(--tx-4)] flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <span>{t('drivers.showingEntries', { from: drivers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + drivers.length, total })}</span>
+            <div className="flex items-center gap-1.5">
+              <span>{t('drivers.rows')}</span>
+              <GlassDropdown className="w-24" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <PageBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</PageBtn>
+            <span className="text-[var(--tx-2)]">{page} / {totalPages}</span>
+            <PageBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</PageBtn>
           </div>
         </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">›</button>
-        </div>
-      </div>
+      </GlassPage>
 
       {modal && <DriverModal modal={modal} cars={cars} onClose={() => setModal(null)} onSave={saveDriver} />}
     </Shell>
+  );
+}
+
+function IconBtn({ children, title, onClick, tone }) {
+  const color = tone === 'brand' ? 'text-[var(--pr-2)]' : tone === 'red' ? 'text-[#F87171]' : 'text-[var(--tx-4)]';
+  return (
+    <button onClick={onClick} title={title}
+      className={'h-8 w-8 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl hover:border-[rgba(37,212,255,0.4)] transition-colors flex items-center justify-center ' + color}>
+      {children}
+    </button>
+  );
+}
+function PageBtn({ children, disabled, onClick }) {
+  return (
+    <button disabled={disabled} onClick={onClick}
+      className="h-8 min-w-8 px-2 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl text-[var(--tx-2)] disabled:opacity-40 hover:border-[rgba(37,212,255,0.4)] hover:text-[var(--pr-2)] transition-colors">
+      {children}
+    </button>
   );
 }
 
@@ -213,73 +238,71 @@ export function DriverModal({ modal, cars, onClose, onSave }) {
   }
 
   return (
-    <Modal title={modal.mode === 'add' ? t('drivers.addModalTitle') : t('drivers.editModalTitle')} onClose={onClose} wide>
-      <form onSubmit={submit} className="space-y-5 max-h-[75vh] overflow-y-auto -mx-1 px-1">
-        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
+    <GlassModal wide title={modal.mode === 'add' ? t('drivers.addModalTitle') : t('drivers.editModalTitle')} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-5 max-h-[75vh] overflow-y-auto pe-1">
+        {err && <div className="text-[#F87171] text-sm">{err}</div>}
 
         <Section title={t('drivers.sectionPersonal')}>
-          <Field label={t('fields.fullName')} required><Input value={form.full_name} onChange={set('full_name')} required /></Field>
-          <Field label={t('fields.fullNameAr')}><Input value={form.full_name_ar || ''} onChange={set('full_name_ar')} /></Field>
-          <Field label={t('fields.employeeId')}><Input value={form.employee_id || ''} onChange={set('employee_id')} /></Field>
-          <Field label={t('fields.phone')}><Input value={form.phone || ''} onChange={set('phone')} /></Field>
-          <Field label={t('fields.whatsapp')}><Input value={form.whatsapp || ''} onChange={set('whatsapp')} /></Field>
-          <Field label={t('fields.email')}><Input type="email" value={form.email || ''} onChange={set('email')} /></Field>
-          <Field label={t('fields.nationality')}><Input value={form.nationality || ''} onChange={set('nationality')} /></Field>
-          <Field label={t('fields.dateOfBirth')}><Input type="date" value={form.date_of_birth || ''} onChange={set('date_of_birth')} /></Field>
-          <Field label={t('fields.bloodGroup')}><Input value={form.blood_group || ''} onChange={set('blood_group')} /></Field>
-          <div className="col-span-2"><Field label={t('fields.address')}><Input value={form.address || ''} onChange={set('address')} /></Field></div>
-          <Field label={t('fields.emergencyContact')}><Input value={form.emergency_contact || ''} onChange={set('emergency_contact')} /></Field>
-          <Field label={t('fields.emergencyPhone')}><Input value={form.emergency_phone || ''} onChange={set('emergency_phone')} /></Field>
+          <GlassField label={t('fields.fullName')} required><GlassInput value={form.full_name} onChange={set('full_name')} required /></GlassField>
+          <GlassField label={t('fields.fullNameAr')}><GlassInput value={form.full_name_ar || ''} onChange={set('full_name_ar')} /></GlassField>
+          <GlassField label={t('fields.employeeId')}><GlassInput value={form.employee_id || ''} onChange={set('employee_id')} /></GlassField>
+          <GlassField label={t('fields.phone')}><GlassInput value={form.phone || ''} onChange={set('phone')} /></GlassField>
+          <GlassField label={t('fields.whatsapp')}><GlassInput value={form.whatsapp || ''} onChange={set('whatsapp')} /></GlassField>
+          <GlassField label={t('fields.email')}><GlassInput type="email" value={form.email || ''} onChange={set('email')} /></GlassField>
+          <GlassField label={t('fields.nationality')}><GlassInput value={form.nationality || ''} onChange={set('nationality')} /></GlassField>
+          <GlassField label={t('fields.dateOfBirth')}><GlassInput type="date" value={form.date_of_birth || ''} onChange={set('date_of_birth')} /></GlassField>
+          <GlassField label={t('fields.bloodGroup')}><GlassInput value={form.blood_group || ''} onChange={set('blood_group')} /></GlassField>
+          <GlassField className="col-span-2" label={t('fields.address')}><GlassInput value={form.address || ''} onChange={set('address')} /></GlassField>
+          <GlassField label={t('fields.emergencyContact')}><GlassInput value={form.emergency_contact || ''} onChange={set('emergency_contact')} /></GlassField>
+          <GlassField label={t('fields.emergencyPhone')}><GlassInput value={form.emergency_phone || ''} onChange={set('emergency_phone')} /></GlassField>
         </Section>
 
         <Section title={t('drivers.sectionEmployment')}>
-          <Field label={t('fields.department')}><Input value={form.department || ''} onChange={set('department')} /></Field>
-          <Field label={t('fields.designation')}><Input value={form.designation || ''} onChange={set('designation')} /></Field>
-          <Field label={t('fields.joiningDate')}><Input type="date" value={form.joining_date || ''} onChange={set('joining_date')} /></Field>
-          <Field label={t('fields.status')}>
-            <Dropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])} />
-          </Field>
-          <Field label={t('fields.assignedVehicle')}>
-            <Dropdown value={form.assigned_car_id || ''} onChange={v => setForm(f => ({ ...f, assigned_car_id: v }))} placeholder={t('common.none')}
+          <GlassField label={t('fields.department')}><GlassInput value={form.department || ''} onChange={set('department')} /></GlassField>
+          <GlassField label={t('fields.designation')}><GlassInput value={form.designation || ''} onChange={set('designation')} /></GlassField>
+          <GlassField label={t('fields.joiningDate')}><GlassInput type="date" value={form.joining_date || ''} onChange={set('joining_date')} /></GlassField>
+          <GlassField label={t('fields.status')}>
+            <GlassDropdown value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive', 'On Leave', 'Terminated'].map(s => [s, trEnum(t, 'status', s)])} />
+          </GlassField>
+          <GlassField label={t('fields.assignedVehicle')}>
+            <GlassDropdown value={form.assigned_car_id || ''} onChange={v => setForm(f => ({ ...f, assigned_car_id: v }))} placeholder={t('common.none')}
               options={[['', t('common.none')], ...cars.map(c => [c.id, c.vehicle_number + ' — ' + c.name])]} />
-          </Field>
-          <Field label={t('fields.experienceYears')}><Input type="number" value={form.experience_years ?? ''} onChange={set('experience_years')} /></Field>
-          <Field label={t('fields.drivingCategory')}><Input value={form.driving_category || ''} onChange={set('driving_category')} /></Field>
+          </GlassField>
+          <GlassField label={t('fields.experienceYears')}><GlassInput type="number" value={form.experience_years ?? ''} onChange={set('experience_years')} /></GlassField>
+          <GlassField label={t('fields.drivingCategory')}><GlassInput value={form.driving_category || ''} onChange={set('driving_category')} /></GlassField>
         </Section>
 
         <Section title={t('drivers.sectionLicense')}>
-          <Field label={t('fields.licenseNumber')}><Input value={form.license_number || ''} onChange={set('license_number')} /></Field>
-          <Field label={t('fields.licenseType')}><Input value={form.license_type || ''} onChange={set('license_type')} /></Field>
-          <Field label={t('fields.issueDate')}><Input type="date" value={form.license_issue_date || ''} onChange={set('license_issue_date')} /></Field>
-          <Field label={t('fields.expiryDate')}><Input type="date" value={form.license_expiry_date || ''} onChange={set('license_expiry_date')} /></Field>
+          <GlassField label={t('fields.licenseNumber')}><GlassInput value={form.license_number || ''} onChange={set('license_number')} /></GlassField>
+          <GlassField label={t('fields.licenseType')}><GlassInput value={form.license_type || ''} onChange={set('license_type')} /></GlassField>
+          <GlassField label={t('fields.issueDate')}><GlassInput type="date" value={form.license_issue_date || ''} onChange={set('license_issue_date')} /></GlassField>
+          <GlassField label={t('fields.expiryDate')}><GlassInput type="date" value={form.license_expiry_date || ''} onChange={set('license_expiry_date')} /></GlassField>
         </Section>
 
         <Section title={t('drivers.sectionIqama')}>
-          <Field label={t('fields.iqamaNumber')}><Input value={form.iqama_number || ''} onChange={set('iqama_number')} /></Field>
-          <Field label={t('fields.iqamaExpiry')}><Input type="date" value={form.iqama_expiry_date || ''} onChange={set('iqama_expiry_date')} /></Field>
-          <Field label={t('fields.passportNumber')}><Input value={form.passport_number || ''} onChange={set('passport_number')} /></Field>
-          <Field label={t('fields.passportExpiry')}><Input type="date" value={form.passport_expiry_date || ''} onChange={set('passport_expiry_date')} /></Field>
-          <Field label={t('fields.medicalExpiry')}><Input type="date" value={form.medical_expiry_date || ''} onChange={set('medical_expiry_date')} /></Field>
+          <GlassField label={t('fields.iqamaNumber')}><GlassInput value={form.iqama_number || ''} onChange={set('iqama_number')} /></GlassField>
+          <GlassField label={t('fields.iqamaExpiry')}><GlassInput type="date" value={form.iqama_expiry_date || ''} onChange={set('iqama_expiry_date')} /></GlassField>
+          <GlassField label={t('fields.passportNumber')}><GlassInput value={form.passport_number || ''} onChange={set('passport_number')} /></GlassField>
+          <GlassField label={t('fields.passportExpiry')}><GlassInput type="date" value={form.passport_expiry_date || ''} onChange={set('passport_expiry_date')} /></GlassField>
+          <GlassField label={t('fields.medicalExpiry')}><GlassInput type="date" value={form.medical_expiry_date || ''} onChange={set('medical_expiry_date')} /></GlassField>
         </Section>
 
-        <Field label={t('drivers.notes')}>
-          <Textarea value={form.notes || ''} onChange={set('notes')} rows={2} />
-        </Field>
+        <GlassField label={t('drivers.notes')}><GlassTextarea value={form.notes || ''} onChange={set('notes')} rows={2} /></GlassField>
 
-        <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-[color:var(--nav-bg)] backdrop-blur-xl pb-1">
-          <Button type="button" variant="ghost" onClick={onClose}>{t('drivers.cancel')}</Button>
-          <Button type="submit" disabled={busy}>{busy ? t('drivers.saving') : t('drivers.save')}</Button>
+        <div className="flex justify-end gap-2 pt-1">
+          <GlassButton type="button" variant="ghost" onClick={onClose}>{t('drivers.cancel')}</GlassButton>
+          <GlassButton type="submit" disabled={busy}>{busy ? t('drivers.saving') : t('drivers.save')}</GlassButton>
         </div>
       </form>
-    </Modal>
+    </GlassModal>
   );
 }
 
 function Section({ title, children }) {
   return (
-    <fieldset className="border border-[color:var(--bd)] rounded-xl p-4">
-      <legend className="text-xs font-semibold text-[color:var(--tx-3)] px-1">{title}</legend>
-      <div className="grid grid-cols-2 gap-3 mt-1">{children}</div>
+    <fieldset className="border border-[var(--bd)] rounded-2xl p-4">
+      <legend className="text-[11px] font-semibold text-[var(--tx-4)] uppercase tracking-[0.1em] px-1">{title}</legend>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">{children}</div>
     </fieldset>
   );
 }

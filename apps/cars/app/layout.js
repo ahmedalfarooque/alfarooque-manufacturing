@@ -14,7 +14,7 @@ export default function RootLayout({ children }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{function c(n){var m=document.cookie.match(new RegExp('(?:^|;\\\\s*)'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):null;}var t=c('af_theme')||localStorage.getItem('af-cars-theme');if(t==='dark'){document.documentElement.classList.add('dark');}var l=c('af_lang')||localStorage.getItem('af-cars-lang');if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}}catch(e){}})();`,
+            __html: `(function(){try{function c(n){var m=document.cookie.match(new RegExp('(?:^|;\\\\s*)'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):null;}var t=c('af_theme')||localStorage.getItem('af-cars-theme');if(t!=='light'){document.documentElement.classList.add('dark');}var l=c('af_lang')||localStorage.getItem('af-cars-lang');if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}}catch(e){}})();`,
           }}
         />
       </head>

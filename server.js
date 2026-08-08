@@ -197,7 +197,7 @@ const server = http.createServer((req, res) => {
      serves the card at the root, no /mohammed in the address bar. */
   const host = (req.headers.host || '').split(':')[0];
   if (urlPath === '/' && host === 'mohammed.alfarooque.com') {
-    return serve(path.join(ROOT, 'card/index.html'), res, urlPath);
+    return serve(path.join(ROOT, 'mohammed.html'), res, urlPath);
   }
 
   /* 2. Try route table */

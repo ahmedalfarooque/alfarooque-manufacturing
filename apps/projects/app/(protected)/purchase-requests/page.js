@@ -10,6 +10,7 @@ import StatCard from '@/components/StatCard';
 import { Button, Input, Th, Td } from '@/components/ui';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
+import { GlassButton, GlassIconButton, GlassPagination } from '@/components/glass';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const PIE_COLORS = ['#f59e0b', '#6366f1', '#3b82f6', '#ef4444', '#f97316', '#a855f7', '#06b6d4', '#94a3b8', '#eab308', '#0ea5e9', '#10b981'];
@@ -48,6 +49,7 @@ export default function PurchaseRequestsPage() {
   const [priority, setPriority] = useState('All');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get('status');
@@ -134,6 +136,9 @@ export default function PurchaseRequestsPage() {
      Exports exactly the same rows and columns as the Excel/CSV export
      above, so both formats always carry identical data. */
   async function exportPdf() {
+    if (pdfBusy) return; // guards against a double-click firing two concurrent generations/downloads
+    setPdfBusy(true);
+    try {
     const ar = lang === 'ar';
     const { exportReportPdf } = await import('@/lib/reportPdf');
     await exportReportPdf({
@@ -151,6 +156,7 @@ export default function PurchaseRequestsPage() {
       lang,
       fileName: 'purchase-requests-report.pdf',
     });
+    } finally { setPdfBusy(false); }
   }
 
   function printReport() { window.print(); }
@@ -165,9 +171,9 @@ export default function PurchaseRequestsPage() {
           <p className="text-xs text-[color:var(--tx-3)]">{t('pr.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          <Button variant="ghost" onClick={exportExcel}>⤓ {t('common.exportExcel')}</Button>
-          <Button variant="ghost" onClick={exportPdf}>⤓ {t('common.exportPdf')}</Button>
-          <Button variant="ghost" onClick={printReport}>🖶 {t('common.print')}</Button>
+          <GlassButton onClick={exportExcel} variant="success">⤓ {t('common.exportExcel')}</GlassButton>
+          <GlassButton onClick={exportPdf} variant="secondary" disabled={pdfBusy}>⤓ {t('common.exportPdf')}</GlassButton>
+          <GlassButton onClick={printReport} variant="ghost">🖶 {t('common.print')}</GlassButton>
         </div>
       </div>
 
@@ -190,7 +196,7 @@ export default function PurchaseRequestsPage() {
               <XAxis dataKey="month" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#06B6D4" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="count" stroke="#0C93AE" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -260,18 +266,18 @@ export default function PurchaseRequestsPage() {
               <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[color:var(--tx-3)]">{t('pr.noMatch')}</td></tr>
             ) : pageRows.map((r, i) => (
               <tr key={r.id} onClick={() => { window.location.href = '/purchase-requests/' + r.id; }}
-                className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors duration-150">
-                <Td>{(page - 1) * pageSize + i + 1}</Td>
-                <Td>{r.request_date}</Td>
-                <Td className="max-w-[160px] truncate">{r.project_name}</Td>
-                <Td className="max-w-[220px] truncate">{r.material_description}</Td>
-                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></Td>
-                <Td>{r.requested_by_name || '—'}</Td>
-                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
-                <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
-                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</a>
-                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-600 dark:text-brand-400 hover:underline">↗</a>
-                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#ef4444] hover:underline">🗑</button>
+                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
+                <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
+                <td>{r.request_date}</td>
+                <td className="max-w-[160px] truncate">{r.project_name}</td>
+                <td className="max-w-[220px] truncate">{r.material_description}</td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></td>
+                <td>{r.requested_by_name || '—'}</td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
+                <td className="text-right px-4 space-x-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="af-actionbtn af-actionbtn--neutral af-actionbtn--icononly">{'\u{1F441}'}</a>
+                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="af-actionbtn af-actionbtn--neutral af-actionbtn--icononly">↗</a>
+                  <GlassIconButton onClick={() => deleteRequest(r.id)} title={t('common.delete')} tone="red">🗑</GlassIconButton>
                 </td>
               </tr>
             ))}
@@ -287,11 +293,7 @@ export default function PurchaseRequestsPage() {
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
-        <div className="flex gap-1 items-center">
-          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</Button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</Button>
-        </div>
+        <GlassPagination page={page} pageSize={pageSize} total={total} onPage={setPage} />
       </div>
 
     </Shell>

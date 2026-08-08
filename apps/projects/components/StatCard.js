@@ -4,15 +4,12 @@ import ProgressRing from './ProgressRing';
 import MiniBarChart from './MiniBarChart';
 
 const TONE_COLOR = {
-  slate: '#64748B',
+  slate: '#7C9296',
   emerald: '#10B981',
   amber: '#F59E0B',
   red: '#EF4444',
-  brand: '#06B6D4',
-  cyan: '#06B6D4',
-  blue: '#0EA5E9',
-  violet: '#8B5CF6',
-  teal: '#2DD4BF',
+  brand: '#0C93AE',
+  blue: '#3B82F6',
 };
 
 export default function StatCard({ icon, label, value, sub, tone, href, onClick, trend, trendKey = 'value', trendLabelKey = 'label', ringPct, bars, typewriter }) {
@@ -28,10 +25,10 @@ export default function StatCard({ icon, label, value, sub, tone, href, onClick,
         <GlassIcon name={icon} size={38} bare className="relative" />
       </span>
       <div className="min-w-0">
-        <div className="text-xl font-bold leading-none tracking-tight text-[color:var(--tx)]">{value}</div>
-        <div className="text-[11px] font-medium text-[color:var(--tx-3)] mt-1">{label}</div>
+        <div className="text-xl font-bold leading-none tracking-tight text-[#122A30] dark:text-[#F4F9FA]">{value}</div>
+        <div className="text-[11px] font-medium text-[#5E7579] dark:text-[#9DB3B6] mt-1">{label}</div>
         {sub && (
-          <div className="text-[10px] text-[color:var(--tx-4)] mt-0.5">
+          <div className="text-[10px] text-[#7C9296] mt-0.5">
             {typewriter ? <span key={sub} className="tw-caption">{sub}</span> : sub}
           </div>
         )}
@@ -42,7 +39,7 @@ export default function StatCard({ icon, label, value, sub, tone, href, onClick,
         </div>
       )}
       {ringPct != null && !trend && (
-        <div key={chartKey} className="mt-1 text-[color:var(--tx)]">
+        <div key={chartKey} className="mt-1 text-[#122A30] dark:text-[#F4F9FA]">
           <ProgressRing pct={ringPct} color={color} />
         </div>
       )}

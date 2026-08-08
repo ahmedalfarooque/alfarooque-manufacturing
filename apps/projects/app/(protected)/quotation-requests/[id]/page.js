@@ -6,6 +6,7 @@ import Shell from '@/components/Shell';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button } from '@/components/ui';
 import { STATUS_BADGE } from '../page';
+import { GlassButton } from '@/components/glass';
 
 function money(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }); }
 
@@ -43,24 +44,8 @@ export default function QuotationRequestDetailPage() {
     if (d.project?.id) window.location.href = '/projects/' + d.project.id;
   }
 
-  async function createSalesOrder() {
-    setBusy(true);
-    const res = await fetch('/api/sales-orders', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-      body: JSON.stringify({ quotation_id: row.quotation_id, customer_name: customerNameOf(row) }),
-    }).catch(() => null);
-    const d = res ? await res.json().catch(() => ({})) : {};
-    setBusy(false);
-    if (!res || !res.ok) { alert(d.error || t('common.genericError')); return; }
-    if (d.salesOrder?.id) window.location.href = '/sales-orders/' + d.salesOrder.id;
-  }
-
-  function customerNameOf(r) {
-    return r.customer?.company_name_en || r.customer?.company_name_ar || r.customer?.company_name || 'Unknown Customer';
-  }
-
-  if (error) return <Shell active="/quotation-requests"><div className="text-[#ef4444]">{error}</div></Shell>;
-  if (!row) return <Shell active="/quotation-requests"><div className="text-[color:var(--tx-3)]">{t('common.loading')}</div></Shell>;
+  if (error) return <Shell active="/quotation-requests"><div className="text-red-500">{error}</div></Shell>;
+  if (!row) return <Shell active="/quotation-requests"><div className="text-[#7C9296]">{t('common.loading')}</div></Shell>;
 
   const customerName = row.customer?.company_name_en || row.customer?.company_name_ar || row.customer?.company_name || '—';
 
@@ -88,13 +73,13 @@ export default function QuotationRequestDetailPage() {
         <div className="glass-card glass-card--pad flex flex-wrap items-center gap-2">
           {row.status === 'pending' && (
             <>
-              <button disabled={busy} onClick={() => setStatus('accepted')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
-              <button disabled={busy} onClick={() => setStatus('on_hold')} className="gbtn gbtn-warning gbtn--sm disabled:opacity-50">{t('qr.hold')}</button>
-              <button disabled={busy} onClick={() => setStatus('rejected')} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
+              <GlassButton variant="success" className="text-sm px-3 py-2" disabled={busy} onClick={() => setStatus('accepted')}>{t('qr.accept')}</GlassButton>
+              <GlassButton variant="warning" className="text-sm px-3 py-2" disabled={busy} onClick={() => setStatus('on_hold')}>{t('qr.hold')}</GlassButton>
+              <GlassButton variant="danger" className="text-sm px-3 py-2" disabled={busy} onClick={() => setStatus('rejected')}>{t('qr.reject')}</GlassButton>
             </>
           )}
           {['accepted', 'on_hold'].includes(row.status) && !row.project_id && (
-            <Button disabled={busy} onClick={startProject}>{t('qr.projectStart')}</Button>
+            <GlassButton variant="primary" className="text-sm px-3 py-2" disabled={busy} onClick={startProject}>{t('qr.projectStart')}</GlassButton>
           )}
           {row.project_id && (
             <a href={'/projects/' + row.project_id} className="text-sm px-3 py-2 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors duration-200">↗ {t('qr.openProject')}</a>

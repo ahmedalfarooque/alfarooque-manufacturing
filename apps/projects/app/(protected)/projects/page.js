@@ -8,7 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import { GlassButton, GlassIconButton, GlassPagination } from '@/components/glass';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -28,6 +28,7 @@ export default function ProjectsPage() {
   const [me, setMe] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   /* Always starts at 'All' so server and client render identically
@@ -90,6 +91,9 @@ export default function ProjectsPage() {
      carries the same complete dataset as the Excel export, with the
      same columns. No API changes. */
   async function exportPdf() {
+    if (pdfBusy) return; // guards against a double-click firing two concurrent full-list refetches + generations
+    setPdfBusy(true);
+    try {
     const all = [];
     for (let p = 1; p <= 200; p++) {
       const res = await fetch('/api/projects?' + new URLSearchParams({ status: 'All', page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
@@ -115,6 +119,7 @@ export default function ProjectsPage() {
       lang,
       fileName: 'projects-report.pdf',
     });
+    } finally { setPdfBusy(false); }
   }
 
   function printReport() { window.print(); }
@@ -129,10 +134,10 @@ export default function ProjectsPage() {
           <p className="text-xs text-[color:var(--tx-3)]">{t('projects.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          <Button variant="ghost" onClick={exportExcel}>⤓ {t('common.exportExcel')}</Button>
-          <Button variant="ghost" onClick={exportPdf}>⤓ {t('common.exportPdf')}</Button>
-          <Button variant="ghost" onClick={printReport}>🖶 {t('common.print')}</Button>
-          {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('projects.addProject')}</Button>}
+          <GlassButton onClick={exportExcel} variant="success">⤓ {t('common.exportExcel')}</GlassButton>
+          <GlassButton onClick={exportPdf} variant="secondary" disabled={pdfBusy}>⤓ {t('common.exportPdf')}</GlassButton>
+          <GlassButton onClick={printReport} variant="ghost">🖶 {t('common.print')}</GlassButton>
+          {isAdmin && <GlassButton onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })} variant="primary">{t('projects.addProject')}</GlassButton>}
         </div>
       </div>
 
@@ -149,21 +154,49 @@ export default function ProjectsPage() {
 
       {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
 
-      <div className="glass-card overflow-hidden">
-        <div className="overflow-auto max-h-[70vh]">
-          <table className="w-full text-sm min-w-[950px]">
-            <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
-              <tr>
-                <Th>#</Th>
-                <Th><span onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-                <Th><span onClick={() => toggleSort('company_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-                <Th><span onClick={() => toggleSort('project_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-                <Th>{t('projects.col.assignedUsers')}</Th>
-                <Th><span onClick={() => toggleSort('start_date')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.start')}<SortIndicator column="start_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-                <Th><span onClick={() => toggleSort('end_date')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.end')}<SortIndicator column="end_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-                <Th><span onClick={() => toggleSort('status')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-                <Th><span onClick={() => toggleSort('progress')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.progress')}<SortIndicator column="progress" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-                <Th className="text-end">{t('common.actions')}</Th>
+      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+        <table className="w-full text-sm min-w-[950px]">
+          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+            <tr>
+              <th className="py-3 px-4">#</th>
+              <th onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('company_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('project_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th>{t('projects.col.assignedUsers')}</th>
+              <th onClick={() => toggleSort('start_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.start')}<SortIndicator column="start_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('end_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.end')}<SortIndicator column="end_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('progress')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('projects.col.progress')}<SortIndicator column="progress" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th className="text-right px-4">{t('common.actions')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {!data ? (
+              <tr><td colSpan={10} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
+            ) : rows.length === 0 ? (
+              <tr><td colSpan={10} className="py-8 text-center text-slate-400">{t('projects.noMatch')}</td></tr>
+            ) : rows.map((p, i) => (
+              <tr key={p.id} className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                onClick={() => { window.location.href = '/projects/' + p.id; }}>
+                <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
+                <td className="font-medium">{p.customer_name}</td>
+                <td>{p.company_name || '—'}</td>
+                <td className="max-w-[220px] truncate">{p.project_name}</td>
+                <td><AssigneeChips assignees={p.assignees} /></td>
+                <td>{p.start_date || '—'}</td>
+                <td>{p.end_date || '—'}</td>
+                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[p.status] || '')}>{trEnum(t, 'status', p.status)}</span></td>
+                <td>
+                  <div className="w-24 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                    <div className="h-full bg-brand-500" style={{ width: p.progress + '%' }} />
+                  </div>
+                  <span className="text-xs text-slate-500">{p.progress}%</span>
+                </td>
+                <td className="text-right px-4 space-x-2" onClick={e => e.stopPropagation()}>
+                  <GlassIconButton onClick={() => { window.location.href = '/projects/' + p.id; }} title={t('common.view')} tone="neutral">{'\u{1F441}'}</GlassIconButton>
+                  {isAdmin && <GlassIconButton onClick={() => setModal({ mode: 'edit', data: p })} title={t('common.edit')} tone="cyan">✎</GlassIconButton>}
+                  {isAdmin && <GlassIconButton onClick={() => deleteProject(p.id)} title={t('common.delete')} tone="red">🗑</GlassIconButton>}
+                </td>
               </tr>
             </thead>
             <tbody>
@@ -208,11 +241,7 @@ export default function ProjectsPage() {
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
-        <div className="flex gap-1">
-          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</Button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</Button>
-        </div>
+        <GlassPagination page={page} pageSize={pageSize} total={total} onPage={setPage} />
       </div>
 
       {modal && <ProjectModal modal={modal} onClose={() => setModal(null)} onSave={saveProject} />}
@@ -345,7 +374,7 @@ export function ProjectModal({ modal, onClose, onSave }) {
         <div className="pt-2 border-t border-[color:var(--bd)]">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-semibold">{t('projects.modal.assignedUsers')}</h4>
-            <Button type="button" variant="ghost" onClick={() => setAddUserOpen(true)}>{t('projects.modal.addUser')}</Button>
+            <GlassButton type="button" onClick={() => setAddUserOpen(true)} variant="primary" className="text-xs px-3 py-1.5">{t('projects.modal.addUser')}</GlassButton>
           </div>
           {newUserInfo && (
             <div className="mb-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs space-y-1">
@@ -383,8 +412,8 @@ export function ProjectModal({ modal, onClose, onSave }) {
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>
+          <GlassButton type="button" onClick={onClose} variant="secondary">{t('common.cancel')}</GlassButton>
+          <GlassButton disabled={busy} variant="primary">{busy ? t('common.saving') : t('common.save')}</GlassButton>
         </div>
       </form>
       {addUserOpen && <AddUserModal onClose={() => setAddUserOpen(false)} onSave={submitNewUser} />}
@@ -415,8 +444,8 @@ function AddUserModal({ onClose, onSave }) {
         <Field label={t('projects.addUserModal.email')} required><Input type="email" value={form.email} onChange={set('email')} required /></Field>
         <Field label={t('projects.addUserModal.position')}><Input value={form.position} onChange={set('position')} placeholder={t('projects.addUserModal.positionPlaceholder')} /></Field>
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button type="submit" disabled={busy}>{busy ? t('common.saving') : t('common.save')}</Button>
+          <GlassButton type="button" onClick={onClose} variant="secondary">{t('common.cancel')}</GlassButton>
+          <GlassButton disabled={busy} variant="primary">{busy ? t('common.saving') : t('common.save')}</GlassButton>
         </div>
       </form>
     </Modal>

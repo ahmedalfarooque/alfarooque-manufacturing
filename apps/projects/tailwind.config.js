@@ -9,9 +9,9 @@ module.exports = {
            TrackFleet). Swapped from the old olive family — every existing
            `brand-*` utility re-tints automatically. */
         brand: {
-          50: '#ECFEFF', 100: '#CFFAFE', 200: '#A5F3FC', 300: '#67E8F9',
-          400: '#22D3EE', 500: '#06B6D4', 600: '#0891B2', 700: '#0E7490',
-          800: '#155E75', 900: '#164E63', 950: '#083344',
+          50: '#E6F6FA', 100: '#C0EAF3', 200: '#93DCEC', 300: '#6FE0F2',
+          400: '#34C3E0', 500: '#0EA5C4', 600: '#0C93AE', 700: '#076B80',
+          800: '#054F5F', 900: '#0A2A33', 950: '#06181E',
         },
       },
     },

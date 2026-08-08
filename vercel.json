@@ -20,10 +20,16 @@
     { "source": "/woodworks-ar",  "destination": "/pages/woodworks-ar" },
     { "source": "/steelworks-ar", "destination": "/pages/steelworks-ar" },
     { "source": "/aluminium-ar",  "destination": "/pages/aluminium-ar" },
-    { "source": "/admin",         "destination": "/pages/admin/login" },
-    { "source": "/mohammed",      "destination": "/card" }
+    { "source": "/admin",         "destination": "/pages/admin/login" }
   ],
   "headers": [
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=0, must-revalidate" },
+        { "key": "Vary", "value": "Host" }
+      ]
+    },
     {
       "source": "/",
       "headers": [

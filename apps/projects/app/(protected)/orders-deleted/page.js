@@ -5,10 +5,9 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Input } from '@/components/ui';
+import { GlassButton } from '@/components/glass';
 
 function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
-function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function recoveryBadgeClass(days) {
   if (days > 14) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
   if (days > 3) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
@@ -114,18 +113,20 @@ export default function DeletedOrdersPage() {
                 return (
                   <tr key={r.id} className="border-t border-[color:var(--bd)]">
                     <td className="py-3 px-4" dir="ltr">{r.order_no || r.id.slice(0, 8)}</td>
-                    <td className="px-3 py-2.5 max-w-[160px] truncate">{name}</td>
-                    <td className="px-3 py-2.5 max-w-[180px] truncate" dir="ltr">{email}</td>
-                    <td className="px-3 py-2.5" dir="ltr">{money(r.grand_total)}</td>
-                    <td className="px-3 py-2.5 capitalize">{trEnum(t, 'status', r.status)}</td>
-                    <td className="px-3 py-2.5">{r.deleted_by_name || '—'}</td>
-                    <td className="px-3 py-2.5">{r.deleted_at ? new Date(r.deleted_at).toLocaleDateString() : '—'}</td>
-                    <td className="px-3 py-2.5"><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></td>
-                    <td className="text-right px-4 py-2.5 whitespace-nowrap">
-                      <button disabled={busyId === r.id} onClick={() => recover(r.id)} className="text-brand-600 dark:text-brand-400 hover:underline text-sm me-3 disabled:opacity-50">{t('oq.recover')}</button>
-                      {isSuperAdmin && (
-                        <button disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="text-[#ef4444] hover:underline text-sm disabled:opacity-50">{t('oq.deletePermanently')}</button>
-                      )}
+                    <td className="max-w-[160px] truncate">{name}</td>
+                    <td className="max-w-[180px] truncate" dir="ltr">{email}</td>
+                    <td dir="ltr">{money(r.grand_total)}</td>
+                    <td className="capitalize">{trEnum(t, 'status', r.status)}</td>
+                    <td>{r.deleted_by_name || '—'}</td>
+                    <td>{r.deleted_at ? new Date(r.deleted_at).toLocaleDateString() : '—'}</td>
+                    <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + recoveryBadgeClass(r.days_remaining)}>{daysText}</span></td>
+                    <td className="text-right px-4 whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-2">
+                        <GlassButton variant="success" disabled={busyId === r.id} onClick={() => recover(r.id)} className="!text-xs !px-2 !py-1">{t('oq.recover')}</GlassButton>
+                        {isSuperAdmin && (
+                          <GlassButton variant="danger" disabled={busyId === r.id} onClick={() => permanentDelete(r.id)} className="!text-xs !px-2 !py-1">{t('oq.deletePermanently')}</GlassButton>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

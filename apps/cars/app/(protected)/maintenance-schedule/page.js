@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Shell from '@/components/Shell';
-import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
+import {
+  GlassPage, GlassButton, GlassDropdown, GlassSearch, GlassStatusChip,
+  GlassThead, GlassTr, GlassTd, GlassField, GlassInput, GlassTextarea, GlassModal, GlassEmptyState, GlassLoader,
+} from '@/components/glass';
 
-const STATUS_BADGE = {
-  Healthy: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  Upcoming: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  Overdue: 'bg-red-500/10 text-red-600 dark:text-red-400',
-};
+const STATUS_TONE = { Healthy: 'emerald', Upcoming: 'amber', Overdue: 'red' };
+const TH = 'text-start px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-[var(--tx-4)] font-semibold whitespace-nowrap';
+const THsort = TH + ' cursor-pointer select-none hover:text-[var(--pr-2)] transition-colors';
 
 const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[color:var(--tx)] transition-colors';
 
@@ -39,9 +39,9 @@ export default function MaintenanceSchedulePage() {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
 
-  const filtered = (items || []).filter(m =>
+  const filtered = useMemo(() => (items || []).filter(m =>
     !debouncedSearch || m.vehicle_number?.toLowerCase().includes(debouncedSearch.toLowerCase()) || m.maintenance_type?.toLowerCase().includes(debouncedSearch.toLowerCase())
-  );
+  ), [items, debouncedSearch]);
   const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
   const total = sorted.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -66,71 +66,94 @@ export default function MaintenanceSchedulePage() {
     if (res.ok) load();
   }
 
+  const SortTh = ({ col, label }) => (
+    <th onClick={() => toggleSort(col)} className={THsort}>{label}<SortIndicator column={col} sortKey={sortKey} sortDir={sortDir} /></th>
+  );
+
   return (
     <Shell active="/maintenance-schedule">
-      <h2 className="text-lg font-semibold mb-1">{t('maintSchedule.title')}</h2>
-      <p className="text-xs text-[color:var(--tx-3)] mb-4">{t('maintSchedule.subtitle')}</p>
-      <Input placeholder={t('maintSchedule.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm mb-4" />
-      {error && <div className="text-[#ef4444] text-sm">{error}</div>}
-      <div className="glass-card overflow-auto max-h-[70vh]">
-        <table className="w-full text-sm min-w-[800px]">
-          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
-            <tr>
-              <Th><span onClick={() => toggleSort('vehicle_number')} className={sortHeaderCls}>{t('maintSchedule.colVehicle')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('maintenance_type')} className={sortHeaderCls}>{t('maintSchedule.colType')}<SortIndicator column="maintenance_type" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('last_service_km')} className={sortHeaderCls}>{t('maintSchedule.colLastService')}<SortIndicator column="last_service_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('interval_km')} className={sortHeaderCls}>{t('maintSchedule.colInterval')}<SortIndicator column="interval_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('next_due_km')} className={sortHeaderCls}>{t('maintSchedule.colNextDue')}<SortIndicator column="next_due_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('remaining_km')} className={sortHeaderCls}>{t('maintSchedule.colRemaining')}<SortIndicator column="remaining_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('status')} className={sortHeaderCls}>{t('maintSchedule.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              {isAdmin && <Th className="text-end">{t('maintSchedule.colActions')}</Th>}
-            </tr>
-          </thead>
-          <tbody>
-            {!items ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('maintSchedule.loading')}</td></tr>
-            ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8}><EmptyState text={t('maintSchedule.noMatch')} /></td></tr>
-            ) : pageRows.map(m => (
-              <tr key={m.id} className="hover:bg-[color:var(--pr-soft)]">
-                <Td className="font-medium">{m.vehicle_number}</Td>
-                <Td>{m.maintenance_type}</Td>
-                <Td>{fmt(m.last_service_km)}</Td>
-                <Td>{fmt(m.interval_km)}</Td>
-                <Td>{fmt(m.next_due_km)}</Td>
-                <Td className={m.remaining_km < 0 ? 'text-[#ef4444]' : ''}>{fmt(m.remaining_km)} {t('common.km')}</Td>
-                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{trEnum(t, 'status', m.status)}</span></Td>
-                {isAdmin && (
-                  <Td className="text-end">
-                    <div className="flex items-center justify-end gap-3">
-                      <button onClick={() => setModal(m)} title={t('maintSchedule.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎ {t('maintSchedule.edit')}</button>
-                      <button onClick={() => deleteItem(m.id)} title={t('maintSchedule.delete')} className="text-[#ef4444] hover:underline">🗑 {t('maintSchedule.delete')}</button>
-                    </div>
-                  </Td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <GlassPage title={t('maintSchedule.title')} subtitle={t('maintSchedule.subtitle')}>
+        <GlassSearch className="max-w-sm" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('maintSchedule.searchPlaceholder')} />
+        {error && <div className="text-[#F87171] text-sm">{error}</div>}
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('maintSchedule.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('maintSchedule.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+        <div className="glass-card !rounded-[22px] overflow-auto max-h-[70vh]">
+          <table className="w-full min-w-[800px]">
+            <GlassThead>
+              <tr>
+                <SortTh col="vehicle_number" label={t('maintSchedule.colVehicle')} />
+                <SortTh col="maintenance_type" label={t('maintSchedule.colType')} />
+                <SortTh col="last_service_km" label={t('maintSchedule.colLastService')} />
+                <SortTh col="interval_km" label={t('maintSchedule.colInterval')} />
+                <SortTh col="next_due_km" label={t('maintSchedule.colNextDue')} />
+                <SortTh col="remaining_km" label={t('maintSchedule.colRemaining')} />
+                <SortTh col="status" label={t('maintSchedule.colStatus')} />
+                {isAdmin && <th className={TH + ' text-end'}>{t('maintSchedule.colActions')}</th>}
+              </tr>
+            </GlassThead>
+            <tbody>
+              {!items ? (
+                <tr><td colSpan={8}><GlassLoader label={t('maintSchedule.loading')} /></td></tr>
+              ) : pageRows.length === 0 ? (
+                <tr><td colSpan={8}><GlassEmptyState text={t('maintSchedule.noMatch')} /></td></tr>
+              ) : pageRows.map(m => (
+                <GlassTr key={m.id}>
+                  <GlassTd className="font-semibold !text-[var(--tx)]">{m.vehicle_number}</GlassTd>
+                  <GlassTd>{m.maintenance_type}</GlassTd>
+                  <GlassTd>{fmt(m.last_service_km)}</GlassTd>
+                  <GlassTd>{fmt(m.interval_km)}</GlassTd>
+                  <GlassTd>{fmt(m.next_due_km)}</GlassTd>
+                  <GlassTd className={m.remaining_km < 0 ? '!text-[#F87171]' : ''}>{fmt(m.remaining_km)} {t('common.km')}</GlassTd>
+                  <GlassTd><GlassStatusChip label={trEnum(t, 'status', m.status)} tone={STATUS_TONE[m.status] || 'slate'} /></GlassTd>
+                  {isAdmin && (
+                    <GlassTd className="text-end whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5">
+                        <IconBtn title={t('maintSchedule.edit')} tone="brand" onClick={() => setModal(m)}>✎</IconBtn>
+                        <IconBtn title={t('maintSchedule.delete')} tone="red" onClick={() => deleteItem(m.id)}>🗑</IconBtn>
+                      </span>
+                    </GlassTd>
+                  )}
+                </GlassTr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex items-center justify-between text-sm text-[var(--tx-4)] flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <span>{t('maintSchedule.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
+            <div className="flex items-center gap-1.5">
+              <span>{t('maintSchedule.rows')}</span>
+              <GlassDropdown className="w-24" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <PageBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</PageBtn>
+            <span className="text-[var(--tx-2)]">{page} / {totalPages}</span>
+            <PageBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</PageBtn>
           </div>
         </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">›</button>
-        </div>
-      </div>
+      </GlassPage>
 
       {modal && <ScheduleModal item={modal} onClose={() => setModal(null)} onSave={saveItem} />}
     </Shell>
+  );
+}
+
+function IconBtn({ children, title, onClick, tone }) {
+  const color = tone === 'brand' ? 'text-[var(--pr-2)]' : tone === 'red' ? 'text-[#F87171]' : 'text-[var(--tx-4)]';
+  return (
+    <button onClick={onClick} title={title}
+      className={'h-8 w-8 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl hover:border-[rgba(37,212,255,0.4)] transition-colors flex items-center justify-center ' + color}>
+      {children}
+    </button>
+  );
+}
+function PageBtn({ children, disabled, onClick }) {
+  return (
+    <button disabled={disabled} onClick={onClick}
+      className="h-8 min-w-8 px-2 rounded-lg border border-[var(--bd-2)] bg-[var(--nav-bg)] backdrop-blur-xl text-[var(--tx-2)] disabled:opacity-40 hover:border-[rgba(37,212,255,0.4)] hover:text-[var(--pr-2)] transition-colors">
+      {children}
+    </button>
   );
 }
 
@@ -155,29 +178,21 @@ function ScheduleModal({ item, onClose, onSave }) {
   }
 
   return (
-    <Modal title={t('maintSchedule.editTitle', { vehicle: item.vehicle_number })} onClose={onClose}>
+    <GlassModal title={t('maintSchedule.editTitle', { vehicle: item.vehicle_number })} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('maintSchedule.type')} required className="col-span-2">
-            <Input value={form.maintenance_type} onChange={set('maintenance_type')} required />
-          </Field>
-          <Field label={t('maintSchedule.lastServiceKm')}>
-            <Input type="number" value={form.last_service_km} onChange={set('last_service_km')} />
-          </Field>
-          <Field label={t('maintSchedule.intervalKm')}>
-            <Input type="number" value={form.interval_km} onChange={set('interval_km')} />
-          </Field>
-          <Field label={t('maintSchedule.notes')} className="col-span-2">
-            <Textarea rows={2} value={form.notes} onChange={set('notes')} />
-          </Field>
+        {err && <div className="text-[#F87171] text-sm">{err}</div>}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <GlassField className="sm:col-span-2" label={t('maintSchedule.type')}><GlassInput value={form.maintenance_type} onChange={set('maintenance_type')} required /></GlassField>
+          <GlassField label={t('maintSchedule.lastServiceKm')}><GlassInput type="number" value={form.last_service_km} onChange={set('last_service_km')} /></GlassField>
+          <GlassField label={t('maintSchedule.intervalKm')}><GlassInput type="number" value={form.interval_km} onChange={set('interval_km')} /></GlassField>
+          <GlassField className="sm:col-span-2" label={t('maintSchedule.notes')}><GlassTextarea value={form.notes} onChange={set('notes')} rows={2} /></GlassField>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="ghost" onClick={onClose}>{t('maintSchedule.cancel')}</Button>
-          <Button type="submit" disabled={busy}>{busy ? t('maintSchedule.saving') : t('maintSchedule.save')}</Button>
+          <GlassButton type="button" variant="ghost" onClick={onClose}>{t('maintSchedule.cancel')}</GlassButton>
+          <GlassButton type="submit" disabled={busy}>{busy ? t('maintSchedule.saving') : t('maintSchedule.save')}</GlassButton>
         </div>
       </form>
-    </Modal>
+    </GlassModal>
   );
 }
 

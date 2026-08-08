@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
-import { EmptyState } from '@/components/ui';
+import { GlassPage, GlassButton, GlassEmptyState, GlassLoader, GlassIconTile } from '@/components/glass';
 
 export default function AlertsPage() {
   const { t, formatDateTime } = useLanguage();
@@ -30,30 +30,33 @@ export default function AlertsPage() {
 
   return (
     <Shell active="/alerts">
-      <h2 className="text-lg font-semibold mb-4">{t('nav.alerts')}</h2>
-      {error && <div className="text-[#ef4444] text-sm">{error}</div>}
-      {!alerts ? (
-        <div className="text-[color:var(--tx-3)] text-sm">{t('common.loading')}</div>
-      ) : alerts.length === 0 ? (
-        <div className="glass-card glass-card--pad">
-          <EmptyState text={t('dash.noAlertsYet')} />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {alerts.map(a => (
-            <div key={a.id} className={a.is_read
-              ? 'glass-card glass-card--pad flex items-start justify-between gap-3 opacity-60'
-              : 'rounded-2xl border border-[#ef4444]/30 bg-[#ef4444]/5 p-4 flex items-start justify-between gap-3'}>
-              <div>
-                <div className="font-medium text-sm">{a.title} {a.cars?.vehicle_number && <span className="text-[color:var(--tx-3)]">— {a.cars.vehicle_number}</span>}</div>
-                <div className="text-xs text-[color:var(--tx-3)] mt-1">{a.body}</div>
-                <div className="text-[11px] text-[color:var(--tx-4)] mt-1">{formatDateTime(a.created_at)}</div>
+      <GlassPage title={t('nav.alerts')}>
+        {error && <div className="text-[#F87171] text-sm">{error}</div>}
+        {!alerts ? (
+          <GlassLoader label={t('common.loading')} />
+        ) : alerts.length === 0 ? (
+          <div className="glass-card !rounded-[24px]"><GlassEmptyState text={t('dash.noAlertsYet')} icon="✓" /></div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {alerts.map(a => (
+              <div key={a.id}
+                className={'glass-card !rounded-[22px] p-4 flex items-start gap-3.5 transition-opacity ' + (a.is_read ? 'opacity-55' : '')}>
+                <GlassIconTile icon="bell" tone={a.is_read ? 'slate' : 'red'} size={11} />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm text-[var(--tx)]">
+                    {a.title}{a.cars?.vehicle_number && <span className="text-[var(--tx-4)] font-normal"> — {a.cars.vehicle_number}</span>}
+                  </div>
+                  <div className="text-xs text-[var(--tx-3)] mt-1">{a.body}</div>
+                  <div className="text-[11px] text-[var(--tx-4)] mt-1.5">{formatDateTime(a.created_at)}</div>
+                </div>
+                {isAdmin && !a.is_read && (
+                  <GlassButton variant="ghost" onClick={() => markRead(a.id)} className="!px-3 !py-1 shrink-0">{t('alerts.markRead')}</GlassButton>
+                )}
               </div>
-              {isAdmin && !a.is_read && <button onClick={() => markRead(a.id)} className="text-xs px-2 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors shrink-0">{t('alerts.markRead')}</button>}
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </GlassPage>
     </Shell>
   );
 }
