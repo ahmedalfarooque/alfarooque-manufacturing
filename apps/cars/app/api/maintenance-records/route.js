@@ -75,5 +75,25 @@ export async function POST(req) {
   };
   const { data, error } = await sb.from('car_maintenance_records').insert(row).select().single();
   if (error) { console.error('[maintenance-records] create failed:', error.message); return json({ error: 'Could not add maintenance record.' }, 500); }
+
+  /* Insert structured parts list if provided */
+  const partsList = Array.isArray(body.parts_list) ? body.parts_list : [];
+  if (partsList.length > 0) {
+    const partsRows = partsList
+      .filter(p => p && p.name)
+      .map(p => ({
+        record_id: data.id,
+        inv_product_id: p.inv_product_id || null,
+        name: String(p.name),
+        qty: Number(p.qty) || 1,
+        unit_cost: p.unit_cost ? Number(p.unit_cost) : null,
+      }));
+    if (partsRows.length > 0) {
+      await sb.from('car_maintenance_parts').insert(partsRows).catch(err =>
+        console.error('[maintenance-records] parts insert failed:', err.message)
+      );
+    }
+  }
+
   return json({ record: data }, 201);
 }

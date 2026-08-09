@@ -14,14 +14,14 @@ async function verify(token) {
   }
 }
 
-/* Cross-app SSO fallback (jose — Edge runtime). Accepted ONLY for admin
-   payloads carrying the sso flag, so no other role can cross apps.
-   Mirrors lib/sso.js verifySsoSession. */
+/* Cross-app SSO fallback (jose — Edge runtime). Accepts any authenticated
+   user carrying the sso flag — extended to all roles so non-admin staff
+   can switch apps. Mirrors lib/sso.js verifySsoSession. */
 async function verifySso(token) {
   try {
     const secret = new TextEncoder().encode(process.env.SSO_JWT_SECRET || process.env.JWT_SECRET || '');
     const { payload } = await jwtVerify(token, secret);
-    return payload && payload.sso === true && payload.role === 'admin' ? payload : null;
+    return payload && payload.sso === true ? payload : null;
   } catch (_) {
     return null;
   }
@@ -35,7 +35,7 @@ async function readAnySession(req) {
   return ssoToken ? await verifySso(ssoToken) : null;
 }
 
-const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/quotation-requests', '/users', '/orders', '/orders-deleted', '/quotes', '/quotes-deleted'];
+const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/quotation-requests', '/users', '/orders', '/orders-deleted', '/quotes', '/quotes-deleted', '/sales-orders'];
 const EXTERNAL_BLOCKED_PREFIXES = ['/customers'];
 
 /* This app has no basePath (it lives at the root of
@@ -85,5 +85,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*', '/quotation-requests/:path*', '/users/:path*', '/orders/:path*', '/orders-deleted/:path*', '/quotes/:path*', '/quotes-deleted/:path*'],
+  matcher: ['/dashboard/:path*', '/projects/:path*', '/customers/:path*', '/reports/:path*', '/view/:path*', '/purchase-requests/:path*', '/quotation-requests/:path*', '/users/:path*', '/orders/:path*', '/orders-deleted/:path*', '/quotes/:path*', '/quotes-deleted/:path*', '/sales-orders/:path*'],
 };

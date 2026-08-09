@@ -30,22 +30,29 @@ AL FAROOQUE-website/
 
 ---
 
-## 🚀 How to Use (No build step needed)
+## 🚀 How to Use
 
-This is a **pure HTML/CSS/JS website** — no Node.js, no npm required.
+This is a static HTML/CSS/JS site with a small Node.js API layer (`/api`,
+contact form, email). Its permanent local port is **3000**.
 
-**Option A — Open directly in browser:**
-Double-click `index.html` — works offline, no server needed.
-
-**Option B — Local dev server (recommended for file paths):**
+**Option A — Recommended (runs the real API + auto-starts the Cars/
+Projects/Quotation ERP dev servers alongside it):**
 ```bash
-# Python (built-in)
-python -m http.server 3004
-
-# OR Node.js
-npx serve . -p 3004
+npm install
+npm run dev
 ```
-Then open: http://localhost:3004
+Then open: http://localhost:3000
+
+**Option B — Static-only preview (no API, no ERP apps, e.g. quick layout
+check):**
+```bash
+npx serve . -p 3000
+```
+Then open: http://localhost:3000
+
+See the repo root `CLAUDE.md` and `apps/DEPLOYMENT.md` for the full table of
+permanent ports for every app in this monorepo (Business Card, Cars,
+Projects, Quotation, Inventory, Accounting, CRM).
 
 ---
 

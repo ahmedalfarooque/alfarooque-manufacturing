@@ -8,13 +8,27 @@ Premium corporate website for **AL FAROOQUE Manufacturing** (IAAE - AL FAROOQUE 
 
 ## Running Locally
 
-No build step required. Open `index.html` directly in a browser, or use a local dev server to avoid asset path issues:
+The static site itself needs no build step, but the repo root also ships a zero-dependency Node dev server (`server.js`, `npm run dev`) that serves the site plus its `/api` routes and auto-starts the Cars/Projects/Quotation ERP apps alongside it. Every local service in this monorepo has a **permanent, fixed port** — do not change these:
+
+| Service | Port |
+|---|---|
+| Main Website (this site) | **3000** |
+| Business Card (`card/`) | 3005 |
+| Cars ERP (`apps/cars`) | 3010 |
+| Projects ERP (`apps/projects`) | 3020 |
+| Quotation ERP (`apps/quotation`) | 3030 |
+| Inventory ERP (`apps/inventory`) | 3040 |
+| Accounting ERP (`apps/accounting`) | 3050 |
+| CRM ERP (`apps/crm`) | 3060 |
 
 ```bash
-python -m http.server 3004
-# or
-npx serve . -p 3004
+npm install
+npm run dev          # http://localhost:3000 — starts the site + Cars/Projects/Quotation together
+# or, for a static-only preview with no API:
+npx serve . -p 3000
 ```
+
+See `apps/DEPLOYMENT.md` for the exact command to start each ERP app individually.
 
 ## Architecture
 

@@ -20,7 +20,12 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen font-sans antialiased">
         <GlassIconsLoader />
-        <LanguageProvider>{children}</LanguageProvider>
+        <div className="af-ambient" aria-hidden="true">
+          <div className="af-orb af-orb-1" />
+          <div className="af-orb af-orb-2" />
+          <div className="af-orb af-orb-3" />
+        </div>
+        <LanguageProvider><div className="relative z-[1] min-h-screen">{children}</div></LanguageProvider>
       </body>
     </html>
   );

@@ -68,6 +68,7 @@ export default function PrintPage() {
   /* read ?lang= without useSearchParams — avoids the Suspense-boundary
      requirement next build enforces for that hook */
   const [lang, setLang] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   useEffect(() => {
     try {
       const q = new URLSearchParams(window.location.search).get('lang');
@@ -79,7 +80,12 @@ export default function PrintPage() {
     fetch('/api/quotations/' + id, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : null)
       .then(async d => {
-        if (!d || !d.row) return;
+        /* A deleted (or otherwise missing) quotation resolves here with
+           d === null (404) — without this, `data` stayed null forever and
+           the page below just kept showing "Loading…" with no way out,
+           same failure mode already fixed for the editor/catalogue pages
+           (see quotations/[id]/page.js and catalogue/[id]/page.js). */
+        if (!d || !d.row) { setNotFound(true); return; }
         setData(d);
         /* Fall back to the quotation's own output language ONLY when the
            URL didn't explicitly request one. Checked against the URL
@@ -99,7 +105,7 @@ export default function PrintPage() {
           if (t2 && t2.row) setTerms(t2.row);
         }
       })
-      .catch(() => {});
+      .catch(() => setNotFound(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -256,6 +262,16 @@ export default function PrintPage() {
     }
   }
 
+  if (notFound) {
+    return (
+      <div style={{ padding: 40, fontFamily: 'sans-serif', color: '#888', textAlign: 'center' }}>
+        <div>{lang === 'ar' ? 'لم يتم العثور على عرض السعر هذا — ربما تم حذفه.' : 'This quotation was not found — it may have been deleted.'}</div>
+        <a href={'/quotations/' + id} style={{ color: '#0090A8', display: 'inline-block', marginTop: 12 }}>
+          {lang === 'ar' ? '→ العودة إلى عرض السعر' : '← Back to quotation'}
+        </a>
+      </div>
+    );
+  }
   if (!data) return <div style={{ padding: 40, fontFamily: 'sans-serif', color: '#888' }}>{lang === 'ar' ? 'جارٍ التحميل…' : 'Loading…'}</div>;
 
   return (
@@ -263,7 +279,18 @@ export default function PrintPage() {
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          body, html { background: #fff !important; }
+          html, body {
+            background: #fff !important;
+            color-scheme: light !important;
+          }
+          /* The application shell owns a fixed, viewport-sized navy
+             ambient layer. Fixed elements repeat on every printed page,
+             so leaving it mounted lets that layer paint wherever the
+             finite-height white quotation fragment does not cover the
+             physical A4 sheet (most visibly below the closing section on
+             page 2). It is application chrome, not document content, and
+             must not participate in print layout or paint at all. */
+          .af-ambient { display: none !important; }
           /* The grey on-screen stage must contribute NOTHING to the
              printed page: its min-height:100vh resolves against the
              PRINT page box (297mm) when printing, and together with its
@@ -274,23 +301,9 @@ export default function PrintPage() {
           .print-sheet { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; transform: none !important; }
           .print-sheet-wrap { height: auto !important; overflow: visible !important; transform: none !important; -webkit-transform: none !important; -webkit-mask-image: none !important; }
         }
-        /* Zero browser page margin — the document itself supplies its
-           own 32px/36px padding (~8.5mm) as the visible A4 margin, and
-           its content width (794px) already equals true A4 width at
-           96dpi, so nothing gets scaled or clipped by a second,
-           conflicting page margin.
-           Deliberately no size: value here (page size is controlled
-           purely from the server-side page.pdf() call now, see
-           renderPdfServer.js) — declaring size: A4 on this rule caused
-           a real, reproducible Chrome bug: whenever the requested custom
-           page.pdf({width, height}) had width > height (any quotation
-           shorter than 210mm), Chrome silently SWAPPED the two
-           dimensions in the output PDF, as if "correcting" back to the
-           orientation implied by the CSS-declared A4 size. Confirmed by
-           direct testing: identical width/height values produced a
-           correctly-oriented PDF with this size:A4 declaration removed,
-           and a swapped one with it present. */
-        @page { margin: 0; }
+        /* One authoritative physical page model for browser print and
+           server-side Chromium PDF generation. */
+        @page { size: A4; margin: 0; }
 
         /* ═══ Mobile toolbar — desktop keeps the original fixed
            top-right cluster untouched; below 640px it becomes a

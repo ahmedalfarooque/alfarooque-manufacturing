@@ -92,19 +92,49 @@ dashboard (or CLI) per app, not in code:
 
 ## Local development
 
+Every local service in this monorepo now has a **permanent, fixed port** —
+these never change between runs and are safe to bookmark/reuse in scripts:
+
+| Service | Directory | Port |
+|---|---|---|
+| Main Website | repo root | 3000 |
+| Business Card | `card/` (static, no build) | 3005 |
+| Cars ERP | `apps/cars` | 3010 |
+| Projects ERP | `apps/projects` | 3020 |
+| Quotation ERP | `apps/quotation` | 3030 |
+| Inventory ERP | `apps/inventory` | 3040 |
+| Accounting ERP | `apps/accounting` | 3050 |
+| CRM ERP | `apps/crm` | 3060 |
+
 ```bash
 cd apps/cars      && cp .env.example .env.local   # fill in the values, then:
 npm install && npm run dev     # http://localhost:3010 (root paths — no /cars prefix)
 
 cd apps/projects  && cp .env.example .env.local
 npm install && npm run dev     # http://localhost:3020 (root paths — no /projects prefix)
+
+cd apps/quotation && cp .env.example .env.local
+npm install && npm run dev     # http://localhost:3030
+
+cd apps/inventory && cp .env.example .env.local
+npm install && npm run dev     # http://localhost:3040
+
+cd apps/accounting && cp .env.example .env.local
+npm install && npm run dev     # http://localhost:3050
+
+cd apps/crm       && cp .env.example .env.local
+npm install && npm run dev     # http://localhost:3060
 ```
 
-`server.js` at the repo root auto-starts both dev servers (and also proxies
+`server.js` at the repo root auto-starts the Main Website, Cars, Projects,
+and Quotation dev servers together (and also proxies
 `localhost:3000/cars/*` → `localhost:3010/*` and `localhost:3000/projects/*`
 → `localhost:3020/*`, stripping the prefix) purely as a local convenience,
 since there's no real subdomain to hit on a dev machine. In production there
-is no such proxy — each subdomain reaches its app directly.
+is no such proxy — each subdomain reaches its app directly. Inventory,
+Accounting, and CRM are not (yet) part of that auto-start list — start them
+with their own `npm run dev` as shown above, or see the root `README.md`
+for the exact command to run each app individually.
 
 If `RESEND_API_KEY` is left blank, OTP codes are logged to the terminal
 instead of emailed (`[email:MOCK] ... code: 123456`) — useful for local

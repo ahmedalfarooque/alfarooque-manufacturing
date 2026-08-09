@@ -63,7 +63,8 @@ export async function PATCH(req, { params }) {
     patch.status = body.status;
   }
   ['supplier', 'material_description', 'material_list', 'quantity', 'unit', 'estimated_price',
-   'required_date', 'expected_date', 'priority', 'remarks', 'request_date'].forEach(f => {
+   'required_date', 'expected_date', 'priority', 'remarks', 'request_date',
+   'inv_material_id', 'inv_product_id'].forEach(f => {
     if (body[f] !== undefined) patch[f] = body[f];
   });
   if (Object.keys(patch).length === 0) return json({ error: 'Nothing to update.' }, 400);

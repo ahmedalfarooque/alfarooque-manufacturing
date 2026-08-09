@@ -123,7 +123,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
   const pName = (p) => pick(p, 'name') || loc(p.name);
   const pDesc = (p) => pick(p, 'description') || loc(p.description);
 
-  const box = { border: '1px solid #C7D6D8' };
+  const box = { border: '1px solid #d8d4cc' };
 
   return (
     <div dir={dir} className="qdoc" style={{
@@ -133,7 +133,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
          component rendered outside the app's own root layout), not the
          primary loading mechanism. */
       fontFamily: isAr ? "var(--font-arabic), 'IBM Plex Sans Arabic','Tajawal','Segoe UI',sans-serif" : "'Inter','Segoe UI',sans-serif",
-      color: '#122A30', background: '#fff', maxWidth: 794, margin: '0 auto', padding: '32px 36px 64px', fontSize: 12.5, lineHeight: 1.5,
+      color: '#1a1a18', background: '#fff', maxWidth: 794, margin: '0 auto', padding: '32px 36px 64px', fontSize: 12.5, lineHeight: 1.5,
       position: 'relative', overflow: 'hidden',
     }}>
       {/* Print pagination strategy — thead/tfoot repetition, NOT
@@ -167,7 +167,19 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         .qdoc-layout { width: 100%; border-collapse: collapse; }
         .qdoc-layout > thead > tr > td, .qdoc-layout > tbody > tr > td, .qdoc-layout > tfoot > tr > td { padding: 0; vertical-align: top; }
         @media print {
-          .qdoc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .qdoc {
+            padding-top: 0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          /* A dedicated repeated spacer row reproduces the approved 32px
+             page-top inset without padding the repeated Grid/cell (both
+             are clipped by Chromium on continuation pages). */
+          .qdoc-layout > thead::before {
+            content: '';
+            display: table-row;
+            height: 32px;
+          }
           .qdoc-watermark { position: fixed !important; }
           .qdoc-body table tr { break-inside: avoid; page-break-inside: avoid; }
           /* No forced/artificial page HEIGHT here — the document still
@@ -198,8 +210,29 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
              footer still lines up with the rest of the content.
              qdoc-body gets matching bottom padding so its last content
              (signatures) never renders underneath this fixed footer. */
-          .qdoc-footer { position: fixed !important; bottom: 0; left: 36px; right: 36px; background: #fff; z-index: 2; }
+          .qdoc-footer-screen { display: none !important; }
+          .qdoc-footer-print {
+            display: block !important;
+            position: fixed !important;
+            bottom: 0; left: 36px; right: 36px;
+            background: #fff; z-index: 2;
+          }
           .qdoc-body { padding-bottom: 72px; }
+          /* QR was page-1-only by original design (position:absolute
+             against .qdoc, so it only ever painted on the first natural
+             page of the document's total height). Every other header
+             element (logo/company/title/number-date-validity/teal line)
+             already repeats on every printed page via the native
+             thead-repeat mechanism below — the QR was the one piece of
+             "same header on every page" that didn't. Same fix as the
+             footer/watermark above: position:fixed repeats it at the
+             identical page-relative offset (top/left/right values are
+             unchanged, already set inline below) on every page instead
+             of only the first. The header's reserved spacer column
+             (inside the repeating thead) already leaves the same empty
+             slot on every page regardless — this just paints the QR
+             into that already-reserved slot every time instead of once. */
+          .qdoc-qr { position: fixed !important; }
         }
       `}</style>
 
@@ -253,16 +286,34 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             border: '1px solid #dcd9d2', boxShadow: '0 1px 4px rgba(26,26,24,0.08)',
           }}>
             <img src={qrDataUrl} alt="" width={120} height={120} style={{ display: 'block', borderRadius: 4 }} />
-            <div style={{ fontSize: 8, color: '#7C9296', marginTop: 4, whiteSpace: 'nowrap' }}>{t.scanToVerify}</div>
+            <div style={{ fontSize: 8, color: '#8c8a80', marginTop: 4, whiteSpace: 'nowrap' }}>{t.scanToVerify}</div>
           </div>
         </div>
       )}
 
-      {/* Single-column layout table: thead repeats on every printed page,
-          tfoot renders at (and repeats at) the bottom of every printed
-          page — the browser reserves their real measured height on each
-          page automatically. On screen this renders identically to plain
-          stacked divs. See the print-strategy comment above. */}
+      {/* Print-only copy is intentionally before the fragmented table:
+          Chromium repeats fixed elements on every page only when their
+          source node precedes the paginated content. */}
+      <div className="qdoc-footer-print" style={{
+        display: 'none', paddingTop: 8, borderTop: '1px solid #d8d4cc',
+        fontSize: 9.5, color: '#8c8a80', textAlign: 'center', zIndex: 1,
+      }}>
+        <div style={{ whiteSpace: 'nowrap' }}>
+          {eName}
+          {eAddr && <span> · {eAddr}</span>}
+          {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
+          {entity?.vat_number && <span> · {t.vatNo}: {entity.vat_number}</span>}
+        </div>
+        <div dir="ltr" style={{ whiteSpace: 'nowrap' }}>
+          {entity?.phone && <span>☎ {entity.phone}</span>}
+          {entity?.email && <span> · ✉ {entity.email}</span>}
+          {entity?.website && <span> · {t.website}: {entity.website}</span>}
+        </div>
+      </div>
+
+      {/* Single-column pagination table: thead repeats the approved header
+          on every printed page. The fixed footer is a preceding sibling,
+          independent of the table's fragmentation. */}
       <table className="qdoc-layout">
       <thead><tr><td>
       {/* Header — direction:'ltr' frozen on the grid so column POSITIONS
@@ -283,17 +334,17 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         gridTemplateColumns: isAr
           ? (qrDataUrl ? '138px auto minmax(0, 1fr)' : 'auto minmax(0, 1fr)')
           : (qrDataUrl ? 'minmax(0, 1fr) auto 138px' : 'minmax(0, 1fr) auto'),
-        alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #0C93AE', paddingBottom: 14,
+        alignItems: 'flex-start', gap: 16, borderBottom: '3px solid #006B7A', paddingBottom: 14,
       }}>
-        {isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 150 }} />}
+        {isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 160 }} />}
         {isAr && (
           <div dir="rtl" style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 22, fontWeight: 700 }}>{t.quotation}</div>
             <table style={{ fontSize: 12, marginTop: 6, marginLeft: 'auto' }}>
               <tbody>
-                <tr><td style={{ color: '#5E7579', paddingInlineEnd: 10 }}>{t.number}</td><td style={{ fontWeight: 600 }} dir="ltr">{doc.quote_number}</td></tr>
-                <tr><td style={{ color: '#5E7579', paddingInlineEnd: 10 }}>{t.date}</td><td dir="ltr">{dateStr(doc.quote_date)}</td></tr>
-                <tr><td style={{ color: '#5E7579', paddingInlineEnd: 10 }}>{t.validUntil}</td><td dir="ltr">{dateStr(doc.valid_until)}</td></tr>
+                <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.number}</td><td style={{ fontWeight: 600 }} dir="ltr">{doc.quote_number}</td></tr>
+                <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.date}</td><td dir="ltr">{dateStr(doc.quote_date)}</td></tr>
+                <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.validUntil}</td><td dir="ltr">{dateStr(doc.valid_until)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -308,16 +359,16 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
              algorithm, so numbers remain readable. */
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0, justifyContent: 'flex-end', direction: 'ltr' }}>
             <div dir="rtl" style={{ minWidth: 0, textAlign: 'right' }}>
-              <div style={{ fontSize: 19, fontWeight: 700, color: '#054F5F', lineHeight: 1.15 }}>
+              <div style={{ fontSize: 19, fontWeight: 700, color: '#006B7A', lineHeight: 1.15 }}>
                 {splitCompanyName(eName).map((line, i) => line && <div key={i}>{line}</div>)}
               </div>
-              <div style={{ color: '#5E7579', marginTop: 3 }}>{eAddr}</div>
-              <div style={{ color: '#5E7579', whiteSpace: 'nowrap' }}>
+              <div style={{ color: '#6b6b63', marginTop: 3 }}>{eAddr}</div>
+              <div style={{ color: '#6b6b63', whiteSpace: 'nowrap' }}>
                 {entity?.phone && <span>☎ {entity.phone}</span>}
                 {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
               </div>
               {entity?.vat_number && (
-                <div style={{ color: '#5E7579', whiteSpace: 'nowrap' }}>{t.vatNo}: {entity.vat_number}</div>
+                <div style={{ color: '#6b6b63', whiteSpace: 'nowrap' }}>{t.vatNo}: {entity.vat_number}</div>
               )}
             </div>
             <img src="/logo.png" alt="" style={{ height: 62, width: 'auto', flexShrink: 0 }} />
@@ -326,18 +377,18 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0, direction: 'ltr' }}>
             <img src="/logo.png" alt="" style={{ height: 62, width: 'auto', flexShrink: 0 }} />
             <div dir={dir} style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 19, fontWeight: 700, color: '#054F5F', lineHeight: 1.15 }}>
+              <div style={{ fontSize: 19, fontWeight: 700, color: '#006B7A', lineHeight: 1.15 }}>
                 {splitCompanyName(eName).map((line, i) => line && <div key={i}>{line}</div>)}
               </div>
-              <div style={{ color: '#5E7579', marginTop: 3 }}>{eAddr}</div>
+              <div style={{ color: '#6b6b63', marginTop: 3 }}>{eAddr}</div>
               {/* Phone + CR on ONE line, VAT No. on its own line below —
                   nowrap so neither can ever wrap mid-line. */}
-              <div style={{ color: '#5E7579', whiteSpace: 'nowrap' }} dir="ltr">
+              <div style={{ color: '#6b6b63', whiteSpace: 'nowrap' }} dir="ltr">
                 {entity?.phone && <span>☎ {entity.phone}</span>}
                 {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
               </div>
               {entity?.vat_number && (
-                <div style={{ color: '#5E7579', whiteSpace: 'nowrap' }} dir="ltr">{t.vatNo}: {entity.vat_number}</div>
+                <div style={{ color: '#6b6b63', whiteSpace: 'nowrap' }} dir="ltr">{t.vatNo}: {entity.vat_number}</div>
               )}
             </div>
           </div>
@@ -347,14 +398,14 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 1 }}>{t.quotation}</div>
             <table style={{ fontSize: 12, marginTop: 6, marginLeft: 'auto' }}>
               <tbody>
-                <tr><td style={{ color: '#5E7579', paddingInlineEnd: 10 }}>{t.number}</td><td style={{ fontWeight: 600 }} dir="ltr">{doc.quote_number}</td></tr>
-                <tr><td style={{ color: '#5E7579', paddingInlineEnd: 10 }}>{t.date}</td><td dir="ltr">{dateStr(doc.quote_date)}</td></tr>
-                <tr><td style={{ color: '#5E7579', paddingInlineEnd: 10 }}>{t.validUntil}</td><td dir="ltr">{dateStr(doc.valid_until)}</td></tr>
+                <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.number}</td><td style={{ fontWeight: 600 }} dir="ltr">{doc.quote_number}</td></tr>
+                <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.date}</td><td dir="ltr">{dateStr(doc.quote_date)}</td></tr>
+                <tr><td style={{ color: '#6b6b63', paddingInlineEnd: 10 }}>{t.validUntil}</td><td dir="ltr">{dateStr(doc.valid_until)}</td></tr>
               </tbody>
             </table>
           </div>
         )}
-        {!isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 150 }} />}
+        {!isAr && qrDataUrl && <div aria-hidden="true" style={{ minHeight: 160 }} />}
       </div>
       </td></tr></thead>
 
@@ -362,15 +413,15 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
       <div className="qdoc-body" style={{ position: 'relative', zIndex: 1 }}>
       {/* Customer */}
       <div style={{ ...box, borderRadius: 8, padding: '10px 14px', marginTop: 14, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-        <div><span style={{ color: '#5E7579' }}>{t.customer}: </span><b>{cName}</b></div>
-        {customer?.contact_person && <div><span style={{ color: '#5E7579' }}>{t.contact}: </span>{customer.contact_person}</div>}
-        {customer?.phone && <div dir="ltr"><span style={{ color: '#5E7579' }}>{t.phone}: </span>{customer.phone}</div>}
+        <div><span style={{ color: '#6b6b63' }}>{t.customer}: </span><b>{cName}</b></div>
+        {customer?.contact_person && <div><span style={{ color: '#6b6b63' }}>{t.contact}: </span>{customer.contact_person}</div>}
+        {customer?.phone && <div dir="ltr"><span style={{ color: '#6b6b63' }}>{t.phone}: </span>{customer.phone}</div>}
       </div>
 
       {/* Items */}
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 14 }}>
         <thead>
-          <tr style={{ background: '#054F5F', color: '#fff', fontSize: 11 }}>
+          <tr style={{ background: '#006B7A', color: '#fff', fontSize: 11 }}>
             <th style={{ padding: '7px 8px', textAlign: 'start', width: 26 }}>{t.item}</th>
             <th style={{ padding: '7px 8px', textAlign: 'start' }}>{t.description}</th>
             <th style={{ padding: '7px 8px', width: 52 }}>{t.qty}</th>
@@ -382,8 +433,8 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </thead>
         <tbody>
           {(products || []).map((p, i) => (
-            <tr key={p.id || i} style={{ borderBottom: '1px solid #D9E4E6', verticalAlign: 'top', breakInside: 'avoid' }}>
-              <td style={{ padding: '8px', color: '#5E7579' }}>{i + 1}</td>
+            <tr key={p.id || i} style={{ borderBottom: '1px solid #e5e2dd', verticalAlign: 'top', breakInside: 'avoid' }}>
+              <td style={{ padding: '8px', color: '#6b6b63' }}>{i + 1}</td>
               <td style={{ padding: '8px' }}>
                 <div style={{ fontWeight: 600 }}>{pName(p)}</div>
                 {pDesc(p) && <div style={{ color: '#55534c', whiteSpace: 'pre-wrap', fontSize: 11.5 }}>{pDesc(p)}</div>}
@@ -398,6 +449,11 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </tbody>
       </table>
 
+      {/* Each closing SECTION remains atomic, but the complete closing
+          sequence must not be one giant unbreakable block. Treating it
+          as a single block made Chromium move hundreds of pixels of
+          perfectly fitting totals/bank content to the next page, leaving
+          the large artificial hole visible after the final item row. */}
       {/* Totals + delivery/notes side by side (last page only — this
           simply falls wherever the item table ends, which is always
           the final page since nothing follows it but this section) */}
@@ -413,8 +469,8 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             <Trow label={t.net} value={money(doc.net_total)} />
             <Trow label={`${t.vat} ${Number(doc.vat_rate)}%`} value={money(doc.vat_amount)} />
             <tr>
-              <td style={{ padding: '8px 10px', background: '#054F5F', color: '#fff', fontWeight: 700 }}>{t.grandTotal}</td>
-              <td style={{ padding: '8px 10px', background: '#054F5F', color: '#fff', fontWeight: 700, textAlign: 'end' }} dir="ltr">{money(doc.grand_total)} {t.currency}</td>
+              <td style={{ padding: '8px 10px', background: '#006B7A', color: '#fff', fontWeight: 700 }}>{t.grandTotal}</td>
+              <td style={{ padding: '8px 10px', background: '#006B7A', color: '#fff', fontWeight: 700, textAlign: 'end' }} dir="ltr">{money(doc.grand_total)} {t.currency}</td>
             </tr>
           </tbody>
         </table>
@@ -424,54 +480,59 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           (no heading either) when the field is empty. */}
       {doc.payment_terms && String(doc.payment_terms).trim() && (
         <div style={{ marginTop: 16, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
-          <div style={{ fontWeight: 700, color: '#122A30', marginBottom: 3 }}>{t.paymentTerms}</div>
+          <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 3 }}>{t.paymentTerms}</div>
           <div style={{ whiteSpace: 'pre-wrap' }}>{locProse(doc.payment_terms, isAr)}</div>
         </div>
       )}
 
       {/* Bank Details */}
       <div style={{ ...box, borderRadius: 8, padding: '12px 14px', marginTop: 28, fontSize: 11.5, breakInside: 'avoid' }}>
-        <div style={{ fontWeight: 700, color: '#122A30', marginBottom: 8 }}>{t.bankDetails}</div>
+        <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 8 }}>{t.bankDetails}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 28px' }} dir="ltr">
-          <div><span style={{ color: '#5E7579' }}>{t.bank}: </span><b>{BANK_DETAILS.bank}</b></div>
-          <div><span style={{ color: '#5E7579' }}>{t.accountNumber}: </span><b>{BANK_DETAILS.accountNumber}</b></div>
-          <div><span style={{ color: '#5E7579' }}>{t.iban}: </span><b>{BANK_DETAILS.iban}</b></div>
-          <div><span style={{ color: '#5E7579' }}>{t.accountName}: </span><b>{BANK_DETAILS.accountName}</b></div>
+          <div><span style={{ color: '#6b6b63' }}>{t.bank}: </span><b>{BANK_DETAILS.bank}</b></div>
+          <div><span style={{ color: '#6b6b63' }}>{t.accountNumber}: </span><b>{BANK_DETAILS.accountNumber}</b></div>
+          <div><span style={{ color: '#6b6b63' }}>{t.iban}: </span><b>{BANK_DETAILS.iban}</b></div>
+          <div><span style={{ color: '#6b6b63' }}>{t.accountName}: </span><b>{BANK_DETAILS.accountName}</b></div>
         </div>
       </div>
 
-      {/* Terms & Conditions */}
-      {(doc.terms_body_override || terms) && (
-        <div style={{ marginTop: 28, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
-          <div style={{ fontWeight: 700, color: '#122A30', marginBottom: 6 }}>{t.terms}</div>
-          <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{locProse(doc.terms_body_override || terms.body, isAr)}</div>
-        </div>
-      )}
+      </div>
+      </td></tr>
+
+      {/* A separate outer layout row gives Chromium a legal pagination
+          boundary before signatures. If they do not fit after Terms, the
+          repeating layout-table header is then emitted on the next page;
+          a break inside one giant outer row suppresses that repetition. */}
+      <tr><td>
+      <div className="qdoc-body" style={{ position: 'relative', zIndex: 1, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        {/* Terms & Conditions stay with the signature section on the
+            final page, clear of the independently fixed footer. */}
+        {(doc.terms_body_override || terms) && (
+          <div style={{ marginTop: 28, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
+            <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 6 }}>{t.terms}</div>
+            <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{locProse(doc.terms_body_override || terms.body, isAr)}</div>
+          </div>
+        )}
 
         {/* Signatures */}
         <div style={{ display: 'flex', gap: 20, marginTop: 64, breakInside: 'avoid' }}>
           {[t.preparedBy, t.approvedBy, t.customerSign].map(s => (
             <div key={s} style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #7C9296', paddingTop: 8, fontSize: 11, color: '#5E7579' }}>{s}</div>
+              <div style={{ borderTop: '1px solid #8c8a80', paddingTop: 8, fontSize: 11, color: '#6b6b63' }}>{s}</div>
             </div>
           ))}
         </div>
       </div>
-
       </td></tr></tbody>
+      </table>
 
-      {/* Footer — lives in the layout table's tfoot, so the browser
-          renders (and repeats) it at the bottom of every printed page
-          with its real measured height; on screen it renders in normal
-          flow at the end of the document, same as before.
-          whiteSpace:nowrap on each line keeps company/CR/VAT (line 1)
-          and phone/email/website (line 2) each on ONE single line —
-          the font is small (9.5px) and both lines fit A4's content
-          width; nowrap guarantees no mid-line wrapping either way. */}
-      <tfoot><tr><td>
-      <div className="qdoc-footer" style={{
-        marginTop: 24, paddingTop: 8, borderTop: '1px solid #C7D6D8',
-        fontSize: 9.5, color: '#7C9296', textAlign: 'center', position: 'relative', zIndex: 1,
+      {/* Fixed print-frame footer. It is outside the pagination table so
+          its repetition never depends on whether Chromium emits a tfoot
+          fragment for a particular page. On screen it remains ordinary
+          end-of-document flow with the exact approved styling. */}
+      <div className="qdoc-footer-screen" style={{
+        marginTop: 24, paddingTop: 8, borderTop: '1px solid #d8d4cc',
+        fontSize: 9.5, color: '#8c8a80', textAlign: 'center', position: 'relative', zIndex: 1,
       }}>
         <div style={{ whiteSpace: 'nowrap' }}>
           {eName}
@@ -485,16 +546,14 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           {entity?.website && <span> · {t.website}: {entity.website}</span>}
         </div>
       </div>
-      </td></tr></tfoot>
-      </table>
     </div>
   );
 }
 
 function Trow({ label, value }) {
   return (
-    <tr style={{ borderBottom: '1px solid #D9E4E6' }}>
-      <td style={{ padding: '6px 10px', color: '#5E7579' }}>{label}</td>
+    <tr style={{ borderBottom: '1px solid #e5e2dd' }}>
+      <td style={{ padding: '6px 10px', color: '#6b6b63' }}>{label}</td>
       <td style={{ padding: '6px 10px', textAlign: 'end', fontWeight: 600 }} dir="ltr">{value}</td>
     </tr>
   );

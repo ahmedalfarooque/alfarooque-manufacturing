@@ -20,8 +20,8 @@ function emailHtml({ qn, customerName, link, isAr }) {
     ? { title: 'طلب مشروع جديد', intro: 'تم استلام عرض سعر جاهز للتحويل إلى المشاريع.', number: 'رقم العرض', customer: 'العميل', amount: 'القيمة', btn: 'عرض الطلب' }
     : { title: 'New Project Request', intro: 'A quotation has been received, ready to be transferred to Projects.', number: 'Quotation', customer: 'Customer', amount: 'Value', btn: 'View Request' };
   return `
-  <div dir="${isAr ? 'rtl' : 'ltr'}" style="font-family:Segoe UI,Tahoma,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e5e2dd;border-radius:12px;overflow:hidden">
-    <div style="background:#46512F;color:#fff;padding:18px 22px;font-size:17px;font-weight:700">${L.title}</div>
+  <div dir="${isAr ? 'rtl' : 'ltr'}" style="font-family:Segoe UI,Tahoma,sans-serif;max-width:560px;margin:0 auto;border:1px solid #d6e7ec;border-radius:12px;overflow:hidden">
+    <div style="background:#0E7490;color:#fff;padding:18px 22px;font-size:17px;font-weight:700">${L.title}</div>
     <div style="padding:22px;color:#333;font-size:14px;line-height:1.7">
       <p>${L.intro}</p>
       <table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0">
@@ -30,7 +30,7 @@ function emailHtml({ qn, customerName, link, isAr }) {
         <tr><td style="padding:6px 0;color:#777">${L.amount}</td><td style="text-align:${isAr ? 'left' : 'right'};font-weight:700" dir="ltr">${money(qn.grand_total)} SAR</td></tr>
       </table>
       <p style="text-align:center;margin:22px 0">
-        <a href="${link}" style="background:#6B7A4F;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600;display:inline-block">${L.btn}</a>
+        <a href="${link}" style="background:#0891B2;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600;display:inline-block">${L.btn}</a>
       </p>
     </div>
   </div>`;
@@ -48,8 +48,19 @@ export async function POST(req, { params }) {
   if (qn.status !== 'started') return json({ error: 'Quotation must be Started before it can be sent to Projects.' }, 409);
 
   const { data: existing } = await sb.from('project_requests')
-    .select('id, status').eq('quotation_id', params.id).neq('status', 'rejected').maybeSingle();
-  if (existing) return json({ error: 'This quotation has already been sent to Projects.' }, 409);
+    .select('*').eq('quotation_id', params.id).neq('status', 'rejected').maybeSingle();
+  if (existing && existing.status !== 'on_hold') return json({ error: 'This quotation has already been sent to Projects.' }, 409);
+
+  if (existing && existing.status === 'on_hold') {
+    const { data: reopened, error: reopenError } = await sb.from('project_requests').update({ status: 'pending', note: null, requested_by: session.sub, updated_at: new Date().toISOString() }).eq('id', existing.id).eq('status', 'on_hold').select().maybeSingle();
+    if (reopenError || !reopened) return json({ error: reopenError?.message || 'The request changed. Refresh and try again.' }, 409);
+    await sb.from('qt_quotations').update({ project_status: 'pending', project_request_id: existing.id }).eq('id', params.id);
+    await sb.from('qt_quotation_events').insert({ quotation_id: params.id, event: 'operations_resubmitted', detail: { previous_status: 'on_hold', new_status: 'pending', department: 'Quotation', request_id: existing.id }, actor_id: session.sub });
+    await audit(sb, 'project_requests', existing.id, 'status', { status: 'on_hold' }, { status: 'pending', department: 'Quotation' }, session.sub);
+    const { data: operationsAdmins } = await sb.from('platform_users').select('id').eq('role', 'admin').eq('is_active', true);
+    if (operationsAdmins?.length) await sb.from('notifications').insert(operationsAdmins.map(user => ({ user_id: user.id, type: 'quotation_request', title: 'Quotation resubmitted for review.', body: `Quotation ${qn.quote_number} is waiting for Operations review.`, link: '/quotation-requests/' + existing.id }))).catch(() => {});
+    return json({ row: reopened });
+  }
 
   const { data: reqRow, error } = await sb.from('project_requests').insert({
     quotation_id: params.id,
@@ -61,6 +72,8 @@ export async function POST(req, { params }) {
   if (error) return json({ error: error.message }, 400);
 
   await audit(sb, 'project_requests', reqRow.id, 'insert', null, reqRow, session.sub);
+  await sb.from('qt_quotation_events').insert({ quotation_id: params.id, event: 'sent_to_operations', detail: { previous_status: qn.project_status || null, new_status: 'pending', department: 'Quotation', request_id: reqRow.id }, actor_id: session.sub });
+  await sb.from('qt_quotations').update({ project_status: 'pending', project_request_id: reqRow.id }).eq('id', params.id);
 
   const { data: admins } = await sb.from('platform_users').select('id').eq('role', 'admin').eq('is_active', true);
   if (admins && admins.length) {

@@ -3,17 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
-import { GlassButton } from '@/components/glass';
 import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { VehicleModal } from '@/app/(protected)/vehicles/page';
 import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
+import { Button } from '@/components/ui';
 
 const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   Idle: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Stopped: 'bg-red-500/10 text-red-600 dark:text-red-400',
-  Offline: 'bg-slate-500/10 text-slate-500',
+  Offline: 'bg-slate-500/10 text-[color:var(--tx-3)]',
 };
 
 export default function VehicleViewPage() {
@@ -42,8 +42,8 @@ export default function VehicleViewPage() {
     refresh();
   }
 
-  if (error) return <Shell active="/vehicles"><div className="text-red-500">{error}</div></Shell>;
-  if (!data) return <Shell active="/vehicles"><div className="text-slate-400">{t('common.loading')}</div></Shell>;
+  if (error) return <Shell active="/vehicles"><div className="text-[#ef4444]">{error}</div></Shell>;
+  if (!data) return <Shell active="/vehicles"><div className="text-[color:var(--tx-3)]">{t('common.loading')}</div></Shell>;
 
   const { vehicle: v, maintenance, maintenanceLog, trips, alerts } = data;
   const insurance = expiryInfo(v.insurance_expiry);
@@ -55,25 +55,25 @@ export default function VehicleViewPage() {
         <div>
           <a href="/vehicles" className="text-xs text-brand-500 hover:underline">{t('vehicleView.back')}</a>
           <h2 className="text-lg font-semibold mt-1">{v.vehicle_number}</h2>
-          <p className="text-xs text-slate-500">{t('vehicleView.breadcrumb', { name: v.vehicle_number })}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('vehicleView.breadcrumb', { name: v.vehicle_number })}</p>
         </div>
         <div className="flex items-center gap-2">
           <span className={'px-3 py-1.5 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span>
-          <GlassButton variant="secondary" onClick={() => window.print()} className="text-sm">🖶 {t('common.print')}</GlassButton>
-          {isAdmin && <GlassButton variant="primary" onClick={() => setEditOpen(true)} className="text-sm">✎ {t('common.edit')}</GlassButton>}
+          <Button variant="ghost" onClick={() => window.print()}>🖶 {t('common.print')}</Button>
+          {isAdmin && <Button onClick={() => setEditOpen(true)}>✎ {t('common.edit')}</Button>}
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 flex flex-col items-center text-center">
+        <div className="glass-card glass-card--pad flex flex-col items-center text-center">
           <div className="h-24 w-24 rounded-full bg-slate-700 text-white flex items-center justify-center text-2xl font-medium mb-3">🚚</div>
           <div className="font-semibold">{v.name || v.vehicle_number}</div>
-          <div className="text-xs text-slate-500">{trEnum(t, 'vtype', v.type)} · {trEnum(t, 'fuel', v.fuel_type)}</div>
-          <div className="text-xs text-slate-400 mt-1">{v.drivers?.full_name ? t('vehicleView.driverPrefix', { name: v.drivers.full_name }) : (v.driver || t('vehicleView.noDriver'))}</div>
-          <div className="text-xs text-slate-400 mt-1">{v.location || '—'}</div>
+          <div className="text-xs text-[color:var(--tx-3)]">{trEnum(t, 'vtype', v.type)} · {trEnum(t, 'fuel', v.fuel_type)}</div>
+          <div className="text-xs text-[color:var(--tx-3)] mt-1">{v.drivers?.full_name ? t('vehicleView.driverPrefix', { name: v.drivers.full_name }) : (v.driver || t('vehicleView.noDriver'))}</div>
+          <div className="text-xs text-[color:var(--tx-3)] mt-1">{v.location || '—'}</div>
         </div>
 
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 lg:col-span-2">
+        <div className="glass-card glass-card--pad lg:col-span-2">
           <h3 className="font-medium text-sm mb-3">{t('vehicleView.expiryStatus')}</h3>
           <div className="grid grid-cols-2 gap-3">
             <ExpiryBadge label={t('vehicleView.insurance')} info={insurance} />
@@ -83,7 +83,7 @@ export default function VehicleViewPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('vehicleView.vehicleInfo')}</h3>
           <dl className="space-y-2 text-sm">
             <Row label={t('fields.vehicleNumber')} value={v.vehicle_number} /><Row label={t('fields.name')} value={v.name} />
@@ -94,7 +94,7 @@ export default function VehicleViewPage() {
             <Row label={t('fields.currentKm')} value={v.current_km} /><Row label={t('fields.location')} value={v.location} />
           </dl>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('vehicleView.insuranceRegPurchase')}</h3>
           <dl className="space-y-2 text-sm">
             <Row label={t('fields.insuranceCompany')} value={v.insurance_company} /><Row label={t('fields.insuranceNumber')} value={v.insurance_number} />
@@ -109,34 +109,34 @@ export default function VehicleViewPage() {
       </div>
 
       {v.notes && (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4">
+        <div className="glass-card glass-card--pad mb-4">
           <h3 className="font-medium text-sm mb-2">{t('fields.notes')}</h3>
-          <p className="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-300">{v.notes}</p>
+          <p className="text-sm whitespace-pre-wrap text-[color:var(--tx-2)]">{v.notes}</p>
         </div>
       )}
 
       <div className="grid lg:grid-cols-2 gap-4 mb-4 print:hidden">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('vehicleView.maintHistory')}</h3>
-          {maintenanceLog.length === 0 ? <div className="text-sm text-slate-400">{t('vehicleView.noServiceHistory')}</div> : (
+          {maintenanceLog.length === 0 ? <div className="text-sm text-[color:var(--tx-3)]">{t('vehicleView.noServiceHistory')}</div> : (
             <ul className="space-y-2 text-sm">
               {maintenanceLog.map(m => (
-                <li key={m.id} className="flex justify-between text-slate-600 dark:text-slate-300">
+                <li key={m.id} className="flex justify-between text-[color:var(--tx-2)]">
                   <span>{m.service_type || t('vehicleView.service')}</span>
-                  <span className="text-xs text-slate-400">{m.service_date}</span>
+                  <span className="text-xs text-[color:var(--tx-3)]">{m.service_date}</span>
                 </li>
               ))}
             </ul>
           )}
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('vehicleView.tripHistory')}</h3>
-          {trips.length === 0 ? <div className="text-sm text-slate-400">{t('vehicleView.noTrips')}</div> : (
+          {trips.length === 0 ? <div className="text-sm text-[color:var(--tx-3)]">{t('vehicleView.noTrips')}</div> : (
             <ul className="space-y-2 text-sm">
               {trips.map(tr => (
-                <li key={tr.id} className="flex justify-between text-slate-600 dark:text-slate-300">
+                <li key={tr.id} className="flex justify-between text-[color:var(--tx-2)]">
                   <span>{tr.origin || '—'} → {tr.destination || '—'}</span>
-                  <span className="text-xs text-slate-400">{formatDate(tr.started_at)}</span>
+                  <span className="text-xs text-[color:var(--tx-3)]">{formatDate(tr.started_at)}</span>
                 </li>
               ))}
             </ul>
@@ -145,13 +145,13 @@ export default function VehicleViewPage() {
       </div>
 
       {alerts.length > 0 && (
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 print:hidden">
+        <div className="glass-card glass-card--pad print:hidden">
           <h3 className="font-medium text-sm mb-3">{t('vehicleView.currentAlerts')}</h3>
           <ul className="space-y-2 text-sm">
             {alerts.map(a => (
-              <li key={a.id} className="flex justify-between text-slate-600 dark:text-slate-300">
+              <li key={a.id} className="flex justify-between text-[color:var(--tx-2)]">
                 <span>{a.message}</span>
-                <span className="text-xs text-slate-400">{formatDateTime(a.created_at)}</span>
+                <span className="text-xs text-[color:var(--tx-3)]">{formatDateTime(a.created_at)}</span>
               </li>
             ))}
           </ul>
@@ -183,7 +183,7 @@ function Row({ label, value }) {
   if (value === null || value === undefined || value === '') return null;
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-slate-500">{label}</dt>
+      <dt className="text-[color:var(--tx-3)]">{label}</dt>
       <dd className="font-medium text-right">{value}</dd>
     </div>
   );

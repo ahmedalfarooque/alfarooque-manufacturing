@@ -65,6 +65,7 @@ export default function QuotationEditorPage() {
   const [sendForm, setSendForm] = useState({ to: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [projectRequest, setProjectRequest] = useState(null);
+  const [workflowEvents, setWorkflowEvents] = useState([]);
   const [sendingToProjects, setSendingToProjects] = useState(false);
   const skipNextSave = useRef(true);
 
@@ -87,6 +88,7 @@ export default function QuotationEditorPage() {
         setVersion(d.row.updated_at);
         setProducts((d.products || []).map(p => ({ ...p, cost_params: paramsFromRow(p), _open: false })));
         setProjectRequest(d.projectRequest || null);
+        setWorkflowEvents((d.events || []).filter(e => String(e.event || '').includes('operations') || e.event === 'sent_to_operations'));
         if (d.row.customer) {
           setPickedCustomer(d.row.customer);
           setCustQ(pickL(d.row.customer, 'company_name', d.row.output_lang || 'en') || d.row.customer.company_name || '');
@@ -112,7 +114,7 @@ export default function QuotationEditorPage() {
     const timer = setInterval(() => {
       fetch('/api/quotations/' + id, { credentials: 'same-origin' })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d) setProjectRequest(d.projectRequest || null); })
+        .then(d => { if (d) { setProjectRequest(d.projectRequest || null); setDoc(x => x ? ({ ...x, project_status: d.row?.project_status, project_request_id: d.row?.project_request_id, project_id: d.row?.project_id }) : x); setWorkflowEvents((d.events || []).filter(e => String(e.event || '').includes('operations') || e.event === 'sent_to_operations')); } })
         .catch(() => {});
     }, 20000);
     return () => clearInterval(timer);
@@ -355,7 +357,8 @@ export default function QuotationEditorPage() {
   }
 
   async function sendToProjects() {
-    if (sendingToProjects || projectRequest) return; // guards accidental double-click
+    if (sendingToProjects || (projectRequest && projectRequest.status !== 'on_hold')) return;
+    if (!window.confirm(lang === 'ar' ? 'إرسال عرض السعر هذا إلى قسم المشاريع؟' : 'Send this quotation to the Operations / Project Department?')) return;
     setSendingToProjects(true);
     setStatusMsg(null);
     const res = await fetch(`/api/quotations/${id}/send-to-projects`, {
@@ -365,6 +368,7 @@ export default function QuotationEditorPage() {
     setSendingToProjects(false);
     if (!res || !res.ok) { setStatusMsg('⚠ ' + (d.error || t('common.genericError'))); return; }
     setProjectRequest(d.row);
+    setDoc(x => ({ ...x, project_status: 'pending', project_request_id: d.row.id }));
     setStatusMsg(t('quote.sentToProjects'));
   }
 
@@ -376,7 +380,7 @@ export default function QuotationEditorPage() {
   }
 
   if (!doc || !totals) {
-    return <Shell active="/quotations"><div className="text-sm text-[#7C9296]">{t('shell.loading')}</div></Shell>;
+    return <Shell active="/quotations"><div className="text-sm text-[color:var(--tx-3)]">{t('shell.loading')}</div></Shell>;
   }
 
   const money = (n) => formatNumber(n, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -410,16 +414,16 @@ export default function QuotationEditorPage() {
         {/* ── Header bar ── */}
         <div className="glass-card p-4">
           <div className="flex flex-wrap items-center gap-3">
-            <a href="/quotations" className="text-[#7C9296] hover:underline text-sm">‹</a>
+            <a href="/quotations" className="text-[color:var(--tx-3)] hover:underline text-sm">‹</a>
             <span className="font-semibold" dir="ltr">{doc.quote_number}</span>
             <StatusBadge status={doc.status} />
             {doc.project_id && (
-              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-[#EF4444]/10 text-[#EF4444]" title={t('quote.projectLocked')}>
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444]" title={t('quote.projectLocked')}>
                 🔒 {t('quote.projectLocked')}
               </span>
             )}
-            {doc.entity && <span className="text-[11px] text-[#7C9296]">{lang === 'ar' ? (doc.entity.name_ar || doc.entity.name_en) : doc.entity.name_en}</span>}
-            <span className="text-[11px] text-[#7C9296]">{saveLabel}</span>
+            {doc.entity && <span className="text-[11px] text-[color:var(--tx-3)]">{lang === 'ar' ? (doc.entity.name_ar || doc.entity.name_en) : doc.entity.name_en}</span>}
+            <span className="text-[11px] text-[color:var(--tx-3)]">{saveLabel}</span>
             <div className="flex-1" />
             {editable && <Button onClick={() => doStatus('submit')}>{t('quote.submit')}</Button>}
             {doc.status === 'pending_approval' && (
@@ -466,12 +470,12 @@ export default function QuotationEditorPage() {
                 onFocus={() => setCustOpen(true)}
                 onChange={e => { setCustQ(e.target.value); setCustOpen(true); }} />
               {custOpen && editable && custRows.length > 0 && (
-                <div className="absolute z-40 mt-1 w-full glass-card bg-white dark:bg-[#0F2A36] shadow-xl max-h-56 overflow-y-auto">
+                <div className="absolute z-30 mt-1 w-full glass-card shadow-xl max-h-56 overflow-y-auto">
                   {custRows.slice(0, 8).map(c => (
                     <button key={c.id} type="button"
                       onClick={() => { patchDoc({ customer_id: c.id }); setPickedCustomer(c); setCustQ(custName(c)); setCustOpen(false); }}
-                      className="w-full text-start px-3 py-2 text-sm text-[#122A30] dark:text-[#F4F9FA] hover:bg-[#E4EDEE] dark:hover:bg-white/5 border-b border-[#D9E4E6]/60 dark:border-white/5">
-                      {custName(c)} <span className="text-[11px] text-[#7C9296]" dir="ltr">{c.phone}</span>
+                      className="w-full text-start px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)] border-b border-[color:var(--bd)]">
+                      {custName(c)} <span className="text-[11px] text-[color:var(--tx-3)]" dir="ltr">{c.phone}</span>
                     </button>
                   ))}
                 </div>
@@ -505,19 +509,24 @@ export default function QuotationEditorPage() {
           <div className="glass-card p-4">
             <div className="font-semibold mb-1">{t('quote.projectIntegration')}</div>
             {projectRequest ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[#7C9296]">{t('quote.sentToProjects')}</span>
-                <StatusBadge status={projectStatusBadgeKey(doc.project_status) || 'pr_' + projectRequest.status} />
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-sm text-[color:var(--tx-3)]">{t('quote.sentToProjects')}</span>
+                  <StatusBadge status={projectStatusBadgeKey(doc.project_status || projectRequest.status) || 'pr_' + projectRequest.status} />
+                  {projectRequest.note && <span className="text-sm text-[#d97706]">{projectRequest.note}</span>}
+                  {projectRequest.status === 'on_hold' && <Button disabled={sendingToProjects} onClick={sendToProjects}>{sendingToProjects ? t('common.saving') : (lang === 'ar' ? 'إعادة الإرسال إلى المشاريع' : 'Resubmit to Projects')}</Button>}
                 {doc.project_id && (
                   <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + doc.project_id}
                     target="_blank" rel="noreferrer" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">
                     ↗ {t('quote.openProject')}
                   </a>
                 )}
+                </div>
+                {workflowEvents.length > 0 && <div className="border-t border-[color:var(--bd)] pt-3 space-y-2">{workflowEvents.map((e, i) => <div key={i} className="text-xs"><span className="font-medium capitalize">{String(e.event).replaceAll('_', ' ')}</span><span className="text-[color:var(--tx-3)]"> · {formatDate(e.created_at)}</span>{e.detail?.reason && <div className="text-[color:var(--tx-3)] mt-0.5">{e.detail.reason}</div>}</div>)}</div>}
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-[#7C9296]">{t('quote.readyToTransfer')}</span>
+                <span className="text-sm text-[color:var(--tx-3)]">{t('quote.readyToTransfer')}</span>
                 <Button disabled={sendingToProjects} onClick={sendToProjects}>
                   {sendingToProjects ? t('common.saving') : t('quote.sendToProjects')}
                 </Button>
@@ -532,7 +541,7 @@ export default function QuotationEditorPage() {
             {products.map((p, i) => (
               <div key={i} className="glass-card overflow-hidden">
                 <div className="p-3 flex flex-wrap items-center gap-3">
-                  <span className="text-[11px] text-[#7C9296] w-5">{i + 1}.</span>
+                  <span className="text-[11px] text-[color:var(--tx-3)] w-5">{i + 1}.</span>
                   <div className="flex-1 min-w-[180px]">
                     <Input disabled={!editable} value={productField(p, 'name')} placeholder={t('f.name')}
                       onChange={e => patchProductField(i, 'name', e.target.value)} />
@@ -543,7 +552,7 @@ export default function QuotationEditorPage() {
                     onChange={e => patchProduct(i, { unit: e.target.value })} title={t('f.unit')} />
                   <Input type="number" step="0.01" disabled={!editable} value={p.unit_price} className="w-28"
                     onChange={e => patchProduct(i, { unit_price: e.target.value })} title={t('quote.unitPrice')} />
-                  <label className="flex items-center gap-1 text-[12px] text-[#7C9296]">
+                  <label className="flex items-center gap-1 text-[12px] text-[color:var(--tx-3)]">
                     <input type="checkbox" disabled={!editable} checked={p.taxable !== false}
                       onChange={e => patchProduct(i, { taxable: e.target.checked })} />
                     {t('quote.vat')}
@@ -552,10 +561,10 @@ export default function QuotationEditorPage() {
                     {money((Number(p.qty) || 0) * (Number(p.unit_price) || 0) - (Number(p.line_discount) || 0))}
                   </span>
                   {editable && (
-                    <span className="flex items-center gap-1 text-[#7C9296]">
+                    <span className="flex items-center gap-1 text-[color:var(--tx-3)]">
                       <button onClick={() => moveProduct(i, -1)} className="hover:text-inherit">↑</button>
                       <button onClick={() => moveProduct(i, 1)} className="hover:text-inherit">↓</button>
-                      <button onClick={() => removeProduct(i)} className="text-[#EF4444]">×</button>
+                      <button onClick={() => removeProduct(i)} className="text-[#ef4444]">×</button>
                     </span>
                   )}
                   <button onClick={() => patchProduct(i, { _open: !p._open })}
@@ -567,10 +576,10 @@ export default function QuotationEditorPage() {
                 {/* dimensions — dynamic size pricing */}
                 {(Object.keys(p.base_dimensions || {}).length > 0 || Object.keys(p.dimensions || {}).length > 0) && (
                   <div className="px-3 pb-2 flex flex-wrap items-center gap-2 text-[12px]">
-                    <span className="text-[#7C9296]">{t('quote.size')}:</span>
+                    <span className="text-[color:var(--tx-3)]">{t('quote.size')}:</span>
                     {['length', 'width', 'height', 'thickness'].map(k => (
                       <label key={k} className="flex items-center gap-1">
-                        <span className="text-[#7C9296]">{t('dim.' + k)}</span>
+                        <span className="text-[color:var(--tx-3)]">{t('dim.' + k)}</span>
                         <Input type="number" step="1" disabled={!editable} dir="ltr"
                           value={(p.dimensions && p.dimensions[k]) ?? ''}
                           onChange={e => patchDimension(i, k, e.target.value)}
@@ -579,7 +588,7 @@ export default function QuotationEditorPage() {
                     ))}
                     {specsChanged(p) && (
                       <span className="flex items-center gap-2 ms-2">
-                        <span className="text-[#EF4444]">{t('quote.specsChanged')}</span>
+                        <span className="text-[#ef4444]">{t('quote.specsChanged')}</span>
                         {editable && (
                           <>
                             <button type="button" onClick={() => saveAsNewProduct(p)}
@@ -589,11 +598,11 @@ export default function QuotationEditorPage() {
                             {p.catalogue_product_id && (
                               <button type="button" onClick={() => {
                                 if (window.confirm(t('quote.updateExistingAsk', { name: pname(p) || '' }))) updateExistingProduct(p);
-                              }} className="text-[#7C9296] hover:underline">
+                              }} className="text-[color:var(--tx-3)] hover:underline">
                                 {t('quote.updateExisting')}
                               </button>
                             )}
-                            <button type="button" onClick={() => resetToFormula(i)} className="text-[#7C9296] hover:underline">
+                            <button type="button" onClick={() => resetToFormula(i)} className="text-[color:var(--tx-3)] hover:underline">
                               {t('cost.resetFormula')}
                             </button>
                           </>
@@ -613,7 +622,7 @@ export default function QuotationEditorPage() {
 
                 {/* inline costing */}
                 {p._open && (
-                  <div className="border-t border-[#D9E4E6] dark:border-white/[0.08] p-3 bg-[#EEF3F4]/50 dark:bg-black/10">
+                  <div className="border-t border-[color:var(--bd)] p-3 bg-[color:var(--pr-soft)]">
                     <CostModelEditor markManual lang={lang}
                       lines={p.lines} setLines={fn => { const next = typeof fn === 'function' ? fn(p.lines) : fn; patchProduct(i, { lines: next }); }}
                       params={p.cost_params} setParams={fn => { const next = typeof fn === 'function' ? fn(p.cost_params) : fn; patchProduct(i, { cost_params: next }); }}
@@ -643,9 +652,9 @@ export default function QuotationEditorPage() {
           {/* ── Summary ── */}
           <div className="glass-card p-4 xl:sticky xl:top-20 space-y-2 text-sm">
             <div className="font-semibold">{t('quote.summary')}</div>
-            <div className="flex justify-between"><span className="text-[#7C9296]">{t('quote.subtotal')}</span><span dir="ltr">{money(totals.subtotal)}</span></div>
+            <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('quote.subtotal')}</span><span dir="ltr">{money(totals.subtotal)}</span></div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[#7C9296]">{t('quote.discount')}</span>
+              <span className="text-[color:var(--tx-3)]">{t('quote.discount')}</span>
               <span className="flex items-center gap-1">
                 <Select disabled={!editable} value={doc.discount_type || 'pct'} className="w-16 !py-1"
                   onChange={e => patchDoc({ discount_type: e.target.value })}
@@ -655,9 +664,9 @@ export default function QuotationEditorPage() {
                 <span className="w-20 text-end" dir="ltr">−{money(totals.discountAmount)}</span>
               </span>
             </div>
-            <div className="flex justify-between"><span className="text-[#7C9296]">{t('quote.netTotal')}</span><span dir="ltr">{money(totals.netTotal)}</span></div>
+            <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('quote.netTotal')}</span><span dir="ltr">{money(totals.netTotal)}</span></div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[#7C9296]">{t('quote.vat')}</span>
+              <span className="text-[color:var(--tx-3)]">{t('quote.vat')}</span>
               <span className="flex items-center gap-1">
                 <Input type="number" step="0.1" disabled={!editable} value={doc.vat_rate != null ? doc.vat_rate : 15} className="w-16 !py-1 text-end"
                   onChange={e => patchDoc({ vat_rate: e.target.value })} />%
@@ -668,10 +677,10 @@ export default function QuotationEditorPage() {
               <span className="font-semibold">{t('quote.grandTotal')}</span>
               <span className="font-bold text-lg" dir="ltr">{money(totals.grandTotal)}</span>
             </div>
-            <div className="border-t border-[#D9E4E6] dark:border-white/[0.08] pt-2 text-[12px] text-[#7C9296] space-y-1">
+            <div className="border-t border-[color:var(--bd)] pt-2 text-[12px] text-[color:var(--tx-3)] space-y-1">
               <div className="flex justify-between"><span>{t('quote.internalCost')}</span><span dir="ltr">{money(totals.blendedCost)}</span></div>
               <div className="flex justify-between"><span>{t('cost.profitAmount')}</span><span dir="ltr">{money(totals.profit)}</span></div>
-              <div className={'flex justify-between ' + (Number(totals.blendedMarginPct) < 15 ? 'text-[#EF4444] font-medium' : '')}>
+              <div className={'flex justify-between ' + (Number(totals.blendedMarginPct) < 15 ? 'text-[#ef4444] font-medium' : '')}>
                 <span>{t('quote.blendedMargin')}</span><span>{formatNumber(totals.blendedMarginPct, { maximumFractionDigits: 1 })}%</span>
               </div>
             </div>
@@ -689,15 +698,15 @@ export default function QuotationEditorPage() {
           <div className="mt-2 max-h-80 overflow-y-auto">
             {catRows.map(c => (
               <button key={c.id} type="button" onClick={() => addFromCatalogue(c)}
-                className="w-full text-start px-3 py-2.5 hover:bg-[#E4EDEE] dark:hover:bg-white/5 border-b border-[#D9E4E6]/60 dark:border-white/5">
+                className="w-full text-start px-3 py-2.5 hover:bg-[color:var(--pr-soft)] border-b border-[color:var(--bd)]">
                 <div className="flex justify-between gap-3">
                   <span className="text-sm font-medium truncate">{trL(c, 'name')}</span>
                   <span className="text-sm whitespace-nowrap" dir="ltr">{money(c.standard_price)} {t('common.currencyUnit')} / {c.unit}</span>
                 </div>
-                <div className="text-[11px] text-[#7C9296]">{codeLabel(t, 'cat', c.category)} · {c.code}</div>
+                <div className="text-[11px] text-[color:var(--tx-3)]">{codeLabel(t, 'cat', c.category)} · {c.code}</div>
               </button>
             ))}
-            {catRows.length === 0 && <div className="py-8 text-center text-sm text-[#7C9296]">{t('common.noRecords')}</div>}
+            {catRows.length === 0 && <div className="py-8 text-center text-sm text-[color:var(--tx-3)]">{t('common.noRecords')}</div>}
           </div>
           <div className="pt-3 flex justify-end">
             <Button variant="ghost" onClick={addDetailed}>+ {t('quote.addDetailed')}</Button>
@@ -734,7 +743,7 @@ export default function QuotationEditorPage() {
             <Field label={t('quote.message')}>
               <Textarea value={sendForm.message} onChange={e => setSendForm(s => ({ ...s, message: e.target.value }))} />
             </Field>
-            <div className="text-[11px] text-[#7C9296]">{t('quote.sendNote')}</div>
+            <div className="text-[11px] text-[color:var(--tx-3)]">{t('quote.sendNote')}</div>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setSendOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={sending}>{sending ? t('common.saving') : t('quote.send')}</Button>
@@ -747,12 +756,12 @@ export default function QuotationEditorPage() {
       {variants && (
         <Modal title={t('quote.variantsTitle')} onClose={() => setVariants(null)}>
           <div className="space-y-3">
-            <div className="text-sm text-[#7C9296]">{t('quote.variantsHint')}</div>
+            <div className="text-sm text-[color:var(--tx-3)]">{t('quote.variantsHint')}</div>
             {variants.map((v, k) => {
               const p = products[v.i];
               if (!p) return null;
               return (
-                <div key={v.i} className="rounded-lg border border-[#D9E4E6] dark:border-white/[0.1] p-3">
+                <div key={v.i} className="rounded-lg border border-[color:var(--bd)] p-3">
                   <div className="font-medium text-sm mb-2">{pname(p) || '—'}</div>
                   <div className="flex flex-wrap gap-4 text-sm">
                     {[['new', t('quote.saveAsNewProduct')], ['update', t('quote.updateExisting')], ['skip', t('quote.keepQuotationOnly')]].map(([val, label]) => (

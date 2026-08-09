@@ -26,6 +26,10 @@ const nextConfig = {
      correct and is the documented fix for this exact class of bug with
      puppeteer-core/@sparticuz/chromium under Next.js. */
   experimental: {
+    /* Barrel-optimize heavy UI packages: Next rewrites `import { X } from
+       'recharts'` to direct deep imports at compile time, cutting both dev
+       compile cost and the dashboard bundle without any code change. */
+    optimizePackageImports: ['recharts'],
     serverComponentsExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
     outputFileTracingIncludes: {
       '/app/api/quotations/*/pdf': ['./node_modules/@sparticuz/chromium/bin/**'],

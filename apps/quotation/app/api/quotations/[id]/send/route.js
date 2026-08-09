@@ -18,19 +18,19 @@ function emailHtml({ qn, entityName, link, message, isAr }) {
     ? { greet: 'تحية طيبة،', intro: 'نرفق لكم عرض السعر التالي:', number: 'رقم العرض', total: 'الإجمالي شامل الضريبة', valid: 'صالح حتى', btn: 'عرض / تحميل عرض السعر', thanks: 'شاكرين لكم حسن تعاونكم،' }
     : { greet: 'Dear Sir/Madam,', intro: 'Please find our quotation below:', number: 'Quotation No.', total: 'Grand Total (incl. VAT)', valid: 'Valid until', btn: 'View / Download Quotation', thanks: 'Thank you for your business,' };
   return `
-  <div dir="${isAr ? 'rtl' : 'ltr'}" style="font-family:Segoe UI,Tahoma,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e5e2dd;border-radius:12px;overflow:hidden">
-    <div style="background:#46512F;color:#fff;padding:18px 22px;font-size:17px;font-weight:700">${entityName}</div>
+  <div dir="${isAr ? 'rtl' : 'ltr'}" style="font-family:Segoe UI,Tahoma,sans-serif;max-width:560px;margin:0 auto;border:1px solid #d6e7ec;border-radius:12px;overflow:hidden">
+    <div style="background:#0E7490;color:#fff;padding:18px 22px;font-size:17px;font-weight:700">${entityName}</div>
     <div style="padding:22px;color:#333;font-size:14px;line-height:1.7">
       <p>${L.greet}</p>
       <p>${L.intro}</p>
-      ${message ? `<p style="white-space:pre-wrap;border-inline-start:3px solid #6B7A4F;padding-inline-start:10px;color:#555">${message}</p>` : ''}
+      ${message ? `<p style="white-space:pre-wrap;border-inline-start:3px solid #0891B2;padding-inline-start:10px;color:#555">${message}</p>` : ''}
       <table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0">
         <tr><td style="padding:6px 0;color:#777">${L.number}</td><td style="text-align:${isAr ? 'left' : 'right'};font-weight:600" dir="ltr">${qn.quote_number}</td></tr>
         <tr><td style="padding:6px 0;color:#777">${L.total}</td><td style="text-align:${isAr ? 'left' : 'right'};font-weight:700" dir="ltr">${money(qn.grand_total)} SAR</td></tr>
         <tr><td style="padding:6px 0;color:#777">${L.valid}</td><td style="text-align:${isAr ? 'left' : 'right'}" dir="ltr">${qn.valid_until || '—'}</td></tr>
       </table>
       <p style="text-align:center;margin:22px 0">
-        <a href="${link}" style="background:#6B7A4F;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600;display:inline-block">${L.btn}</a>
+        <a href="${link}" style="background:#0891B2;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600;display:inline-block">${L.btn}</a>
       </p>
       <p>${L.thanks}<br/>${entityName}</p>
     </div>

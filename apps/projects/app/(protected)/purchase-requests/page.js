@@ -7,9 +7,9 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
+import { Button, Input, Th, Td } from '@/components/ui';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
-import { GlassButton, GlassIconButton, GlassPagination } from '@/components/glass';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const PIE_COLORS = ['#f59e0b', '#6366f1', '#3b82f6', '#ef4444', '#f97316', '#a855f7', '#06b6d4', '#94a3b8', '#eab308', '#0ea5e9', '#10b981'];
@@ -48,7 +48,6 @@ export default function PurchaseRequestsPage() {
   const [priority, setPriority] = useState('All');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [pdfBusy, setPdfBusy] = useState(false);
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get('status');
@@ -135,9 +134,6 @@ export default function PurchaseRequestsPage() {
      Exports exactly the same rows and columns as the Excel/CSV export
      above, so both formats always carry identical data. */
   async function exportPdf() {
-    if (pdfBusy) return; // guards against a double-click firing two concurrent generations/downloads
-    setPdfBusy(true);
-    try {
     const ar = lang === 'ar';
     const { exportReportPdf } = await import('@/lib/reportPdf');
     await exportReportPdf({
@@ -155,7 +151,6 @@ export default function PurchaseRequestsPage() {
       lang,
       fileName: 'purchase-requests-report.pdf',
     });
-    } finally { setPdfBusy(false); }
   }
 
   function printReport() { window.print(); }
@@ -167,12 +162,12 @@ export default function PurchaseRequestsPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('pr.title')}</h2>
-          <p className="text-xs text-slate-500">{t('pr.breadcrumb')}</p>
+          <p className="text-xs text-[color:var(--tx-3)]">{t('pr.breadcrumb')}</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          <GlassButton onClick={exportExcel} variant="success">⤓ {t('common.exportExcel')}</GlassButton>
-          <GlassButton onClick={exportPdf} variant="secondary" disabled={pdfBusy}>⤓ {t('common.exportPdf')}</GlassButton>
-          <GlassButton onClick={printReport} variant="ghost">🖶 {t('common.print')}</GlassButton>
+          <Button variant="ghost" onClick={exportExcel}>⤓ {t('common.exportExcel')}</Button>
+          <Button variant="ghost" onClick={exportPdf}>⤓ {t('common.exportPdf')}</Button>
+          <Button variant="ghost" onClick={printReport}>🖶 {t('common.print')}</Button>
         </div>
       </div>
 
@@ -187,7 +182,7 @@ export default function PurchaseRequestsPage() {
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4 mb-6">
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.requestsPerMonth')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={charts.perMonth}>
@@ -195,11 +190,11 @@ export default function PurchaseRequestsPage() {
               <XAxis dataKey="month" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#0C93AE" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="count" stroke="#06B6D4" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.bySupplier')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={charts.bySupplier}>
@@ -211,7 +206,7 @@ export default function PurchaseRequestsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.byProject')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={charts.byProject}>
@@ -223,7 +218,7 @@ export default function PurchaseRequestsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+        <div className="glass-card glass-card--pad">
           <h3 className="font-medium text-sm mb-3">{t('pr.chart.byStatus')}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
@@ -236,48 +231,47 @@ export default function PurchaseRequestsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input placeholder={t('pr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
-          className="col-span-2 rounded-lg border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Input placeholder={t('pr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         <Dropdown value={priority} onChange={setPriority} options={['All', 'Normal', 'Urgent', 'Critical'].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.03] overflow-auto max-h-[70vh]">
+      <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="text-left text-slate-400 text-xs border-b border-black/5 dark:border-white/10 sticky top-0 z-10 bg-white dark:bg-[#0f172a]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
-              <th className="py-3 px-4">#</th>
-              <th onClick={() => toggleSort('request_date')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.date')}<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('project_name')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('pr.col.materials')}</th>
-              <th onClick={() => toggleSort('priority')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('pr.col.priority')}<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th>{t('pr.col.requestedBy')}</th>
-              <th onClick={() => toggleSort('status')} className="cursor-pointer select-none hover:text-slate-600 dark:hover:text-slate-200">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th className="text-right px-4">{t('common.actions')}</th>
+              <Th>#</Th>
+              <th onClick={() => toggleSort('request_date')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('pr.col.date')}<SortIndicator column="request_date" sortKey={sortKey} sortDir={sortDir} /></th>
+              <th onClick={() => toggleSort('project_name')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('pr.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th>{t('pr.col.materials')}</Th>
+              <th onClick={() => toggleSort('priority')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('pr.col.priority')}<SortIndicator column="priority" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th>{t('pr.col.requestedBy')}</Th>
+              <th onClick={() => toggleSort('status')} className="text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition">{t('common.status')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
+              <Th className="text-end">{t('common.actions')}</Th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('common.loading')}</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-400">{t('pr.noMatch')}</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-sm text-center text-[color:var(--tx-3)]">{t('pr.noMatch')}</td></tr>
             ) : pageRows.map((r, i) => (
               <tr key={r.id} onClick={() => { window.location.href = '/purchase-requests/' + r.id; }}
-                className="border-b border-black/5 dark:border-white/5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-150">
-                <td className="py-3 px-4">{(page - 1) * pageSize + i + 1}</td>
-                <td>{r.request_date}</td>
-                <td className="max-w-[160px] truncate">{r.project_name}</td>
-                <td className="max-w-[220px] truncate">{r.material_description}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></td>
-                <td>{r.requested_by_name || '—'}</td>
-                <td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></td>
-                <td className="text-right px-4 space-x-2 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="af-actionbtn af-actionbtn--neutral af-actionbtn--icononly">{'\u{1F441}'}</a>
-                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="af-actionbtn af-actionbtn--neutral af-actionbtn--icononly">↗</a>
-                  <GlassIconButton onClick={() => deleteRequest(r.id)} title={t('common.delete')} tone="red">🗑</GlassIconButton>
+                className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors duration-150">
+                <Td>{(page - 1) * pageSize + i + 1}</Td>
+                <Td>{r.request_date}</Td>
+                <Td className="max-w-[160px] truncate">{r.project_name}</Td>
+                <Td className="max-w-[220px] truncate">{r.material_description}</Td>
+                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PRIORITY_BADGE[r.priority] || '')}>{trEnum(t, 'status', r.priority)}</span></Td>
+                <Td>{r.requested_by_name || '—'}</Td>
+                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
+                <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
+                  <a href={'/purchase-requests/' + r.id} title={t('pr.viewDetails')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</a>
+                  <a href={'/projects/' + r.project_id + '?tab=purchase-requests'} title={t('pr.openProject')} className="text-brand-600 dark:text-brand-400 hover:underline">↗</a>
+                  <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#ef4444] hover:underline">🗑</button>
                 </td>
               </tr>
             ))}
@@ -285,7 +279,7 @@ export default function PurchaseRequestsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-slate-500 flex-wrap gap-3">
+      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
           <div className="flex items-center gap-1.5">
@@ -293,7 +287,11 @@ export default function PurchaseRequestsPage() {
             <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
           </div>
         </div>
-        <GlassPagination page={page} pageSize={pageSize} total={total} onPage={setPage} />
+        <div className="flex gap-1 items-center">
+          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</Button>
+          <span className="px-3 py-1">{page} / {totalPages}</span>
+          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</Button>
+        </div>
       </div>
 
     </Shell>
