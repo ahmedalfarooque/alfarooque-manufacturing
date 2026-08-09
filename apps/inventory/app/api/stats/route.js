@@ -58,9 +58,20 @@ export async function GET(req) {
     value: Number(r.qty_on_hand || 0) * Number(r.avg_cost || 0),
   }));
 
+  let productCount = totalProducts || 0;
+  let materialCount = totalMaterials || 0;
+  if (!productCount || !materialCount) {
+    const [legacyProducts, legacyMaterials] = await Promise.all([
+      sb.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      sb.from('qt_materials').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+    ]);
+    if (!productCount) productCount = legacyProducts.count || 0;
+    if (!materialCount) materialCount = legacyMaterials.count || 0;
+  }
+
   return json({
-    totalProducts: totalProducts || 0,
-    totalMaterials: totalMaterials || 0,
+    totalProducts: productCount,
+    totalMaterials: materialCount,
     stockValue,
     lowStockCount: lowStockItems.length,
     outOfStock,

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Shell from '@/components/Shell';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Button } from '@/components/ui';
+import { Button, Modal, Textarea, Field } from '@/components/ui';
 import { STATUS_BADGE } from '../page';
 
 function money(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }); }
@@ -15,6 +15,8 @@ export default function QuotationRequestDetailPage() {
   const [row, setRow] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [decision, setDecision] = useState(null);
+  const [reason, setReason] = useState('');
 
   const load = useCallback(() => {
     fetch(`/api/quotation-requests/${id}`, { credentials: 'same-origin' })
@@ -24,14 +26,15 @@ export default function QuotationRequestDetailPage() {
   }, [id, t]);
   useEffect(() => { load(); }, [load]);
 
-  async function setStatus(status) {
+  async function setStatus(status, note = '') {
     setBusy(true);
     const res = await fetch(`/api/quotation-requests/${id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, note }),
     }).catch(() => null);
     setBusy(false);
-    if (res && res.ok) load(); else alert(t('common.genericError'));
+    const data = res ? await res.json().catch(() => ({})) : {};
+    if (res && res.ok) { setDecision(null); setReason(''); load(); } else alert(data.error || t('common.genericError'));
   }
 
   async function startProject() {
@@ -83,14 +86,28 @@ export default function QuotationRequestDetailPage() {
           <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('pd.requestedBy')}</span><span>{row.requested_by_name || '—'}</span></div>
           {row.customer?.email && <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('common.email')}</span><span dir="ltr">{row.customer.email}</span></div>}
           {row.customer?.mobile_number && <div className="flex justify-between"><span className="text-[color:var(--tx-3)]">{t('cust.col.mobile')}</span><span dir="ltr">{row.customer.mobile_number}</span></div>}
+          {row.note && <div className="pt-2 border-t border-[color:var(--bd)]"><span className="text-[color:var(--tx-3)]">Reason: </span><span>{row.note}</span></div>}
+        </div>
+
+        <div className="glass-card overflow-hidden">
+          <div className="px-4 py-3 font-semibold border-b border-[color:var(--bd)]">Quotation Items</div>
+          <div className="overflow-x-auto"><table className="gtable w-full"><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Unit</th><th>Unit Price</th></tr></thead><tbody>
+            {(row.products || []).map((p, i) => <tr key={p.id}><td>{i + 1}</td><td>{p.name_en || p.name_ar || p.name || '—'}</td><td dir="ltr">{p.qty}</td><td>{p.unit || '—'}</td><td dir="ltr">{money(p.unit_price)}</td></tr>)}
+            {!(row.products || []).length && <tr><td colSpan={5} className="text-center text-[color:var(--tx-3)] py-6">No quotation items.</td></tr>}
+          </tbody></table></div>
+        </div>
+
+        <div className="glass-card glass-card--pad">
+          <div className="font-semibold mb-3">Workflow History</div>
+          <div className="space-y-3">{(row.history || []).map((e, i) => <div key={i} className="border-s-2 border-[color:var(--bd-2)] ps-3 text-sm"><div className="font-medium capitalize">{String(e.event || '').replaceAll('_', ' ')}</div><div className="text-xs text-[color:var(--tx-3)]">{new Date(e.created_at).toLocaleString()} · {e.actor_name || 'System'}</div>{e.detail?.reason && <div className="mt-1">{e.detail.reason}</div>}</div>)}</div>
         </div>
 
         <div className="glass-card glass-card--pad flex flex-wrap items-center gap-2">
           {row.status === 'pending' && (
             <>
               <button disabled={busy} onClick={() => setStatus('accepted')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
-              <button disabled={busy} onClick={() => setStatus('on_hold')} className="gbtn gbtn-warning gbtn--sm disabled:opacity-50">{t('qr.hold')}</button>
-              <button disabled={busy} onClick={() => setStatus('rejected')} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
+              <button disabled={busy} onClick={() => setDecision('on_hold')} className="gbtn gbtn-warning gbtn--sm disabled:opacity-50">{t('qr.hold')}</button>
+              <button disabled={busy} onClick={() => setDecision('rejected')} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
             </>
           )}
           {['accepted', 'on_hold'].includes(row.status) && !row.project_id && (
@@ -105,6 +122,7 @@ export default function QuotationRequestDetailPage() {
           <a href="/quotation-requests" className="text-sm text-[color:var(--tx-3)] hover:underline ms-auto">‹ {t('qr.title')}</a>
         </div>
       </div>
+      {decision && <Modal title={decision === 'rejected' ? t('qr.reject') : t('qr.hold')} onClose={() => { setDecision(null); setReason(''); }} footer={<><Button variant="secondary" onClick={() => { setDecision(null); setReason(''); }}>{t('common.cancel')}</Button><Button variant={decision === 'rejected' ? 'danger' : 'warning'} disabled={busy || !reason.trim()} onClick={() => setStatus(decision, reason)}>{t('common.save')}</Button></>}><Field label="Reason" required><Textarea autoFocus value={reason} onChange={e => setReason(e.target.value)} rows={4} /></Field></Modal>}
     </Shell>
   );
 }

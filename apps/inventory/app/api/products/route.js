@@ -22,8 +22,18 @@ export async function GET(req) {
   const activeParam = searchParams.get('active');
   if (activeParam !== null) q = q.eq('is_active', activeParam !== 'false');
 
-  const { data, count, error } = await q.order('name', { ascending: true }).range(offset, offset + limit - 1);
+  let { data, count, error } = await q.order('name', { ascending: true }).range(offset, offset + limit - 1);
   if (error) return json({ error: 'Could not load products.' }, 500);
+  if (!count) {
+    let legacy = sb.from('products').select('*', { count: 'exact' });
+    if (search) legacy = legacy.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+    if (activeParam !== null) legacy = legacy.eq('is_active', activeParam !== 'false');
+    const legacyRes = await legacy.order('name').range(offset, offset + limit - 1);
+    if (!legacyRes.error) {
+      data = (legacyRes.data || []).map(row => ({ ...row, selling_price: row.price, qty_on_hand: row.stock || 0, source_table: 'products' }));
+      count = legacyRes.count || 0;
+    }
+  }
   return json({ products: data || [], total: count || 0, page, limit });
 }
 

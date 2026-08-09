@@ -3,6 +3,7 @@
 const bcrypt = require('bcryptjs');
 const { getDb } = require('@/lib/db');
 const { json } = require('@/lib/http');
+const { sendOtpEmail } = require('@/lib/email');
 const {
   APP, COOKIE_NAME, SESSION_TTL_SECONDS,
   sha256Hex, generateOtp, signSession, readSession,
@@ -10,6 +11,14 @@ const {
   isLoginRateLimited, recordLoginAttempt,
 } = require('@/lib/auth');
 const { signSsoSession, ssoCookieHeader, clearSsoCookieHeaders, clearAllAppCookieHeaders, cookieDomainFromReq } = require('@/lib/sso');
+
+function otpEmailHtml(code) {
+  return '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">' +
+    '<h2 style="color:#06B6D4;margin:0 0 12px;">Accounting — Login Code</h2>' +
+    '<p style="color:#333;font-size:14px;line-height:1.6;">Use this code to finish signing in to the AL FAROOQUE Accounting dashboard. It expires in 5 minutes and can only be used once.</p>' +
+    '<div style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f2f2f2;padding:16px 24px;border-radius:8px;text-align:center;margin:20px 0;">' + code + '</div>' +
+    '<p style="color:#888;font-size:12px;">If you did not request this, you can safely ignore this email.</p></div>';
+}
 
 export async function GET(req) {
   const session = readSession(req);
@@ -23,6 +32,22 @@ export async function POST(req) {
   const domain = cookieDomainFromReq(req);
   const ip = req.headers.get('x-forwarded-for') || '';
   const sb = getDb();
+
+  if (action === 'email-login') {
+    const email = String(body.email || '').toLowerCase().trim();
+    const { data: user } = await sb.from('platform_users').select('id, email, is_active, otp_login_enabled').eq('email', email).maybeSingle();
+    if (!user || !user.is_active || user.otp_login_enabled === false) return json({ error: 'Invalid username.' }, 400);
+    const otp = generateOtp();
+    const { error } = await sb.from('platform_otp_codes').insert({
+      user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp),
+      expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+    });
+    if (error) return json({ error: 'Could not start verification. Please try again.' }, 500);
+    try {
+      const result = await sendOtpEmail({ to: email, subject: 'Your Accounting login code', html: otpEmailHtml(otp), mockLabel: 'Accounting email OTP', code: otp });
+      return json({ step: 'otp', email, mocked: !!result.mocked, message: result.mocked ? 'Email not configured — code was logged to the server console.' : 'A 6-digit code has been sent to your email.' });
+    } catch (error) { return json({ error: 'Could not send the verification email. Please try again shortly.' }, 500); }
+  }
 
   if (action === 'login') {
     const email = String(body.email || '').toLowerCase().trim();
@@ -42,12 +67,18 @@ export async function POST(req) {
 
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-    await sb.from('platform_otp_codes').insert({
+    const { error: otpInsertError } = await sb.from('platform_otp_codes').insert({
       user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
     });
+    if (otpInsertError) return json({ error: 'Could not start verification. Please try again.' }, 500);
 
-    console.log(`[accounting/auth] OTP for ${email}: ${otp}`);
-    return json({ message: `A verification code has been sent to ${email}.` });
+    try {
+      const result = await sendOtpEmail({ to: email, subject: 'Your Accounting login code', html: otpEmailHtml(otp), mockLabel: 'Accounting login OTP', code: otp });
+      return json({ step: 'otp', email, mocked: !!result.mocked, message: result.mocked ? 'Email not configured — code was logged to the server console.' : `A verification code has been sent to ${email}.` });
+    } catch (error) {
+      console.error('[accounting/auth] OTP email failed:', error.message);
+      return json({ error: 'Could not send the verification email. Please try again shortly.' }, 500);
+    }
   }
 
   if (action === 'verify-otp') {
@@ -76,6 +107,12 @@ export async function POST(req) {
 
     const sessionUser = { id: user.id, email: user.email, role: appRole };
     const token = signSession(sessionUser);
+    const { error: sessionError } = await sb.from('platform_sessions').insert({
+      user_id: user.id, app: APP, token_hash: sha256Hex(token), ip,
+      user_agent: req.headers.get('user-agent') || '',
+      expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
+    });
+    if (sessionError) return json({ error: 'Could not complete sign-in. Please try again.' }, 500);
     const ssoToken = signSsoSession(sessionUser);
     const headers = new Headers({ 'Content-Type': 'application/json' });
     headers.append('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, domain));
@@ -97,11 +134,16 @@ export async function POST(req) {
     }
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-    await sb.from('platform_otp_codes').insert({
+    const { error: otpInsertError } = await sb.from('platform_otp_codes').insert({
       user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
     });
-    console.log(`[accounting/auth] Resend OTP for ${email}: ${otp}`);
-    return json({ message: 'A new code has been sent.' });
+    if (otpInsertError) return json({ error: 'Could not start verification. Please try again.' }, 500);
+    try {
+      const result = await sendOtpEmail({ to: email, subject: 'Your Accounting login code', html: otpEmailHtml(otp), mockLabel: 'Accounting resend OTP', code: otp });
+      return json({ mocked: !!result.mocked, message: result.mocked ? 'Email not configured — code was logged to the server console.' : 'A new code has been sent.' });
+    } catch (error) {
+      return json({ error: 'Could not send the verification email.' }, 500);
+    }
   }
 
   if (action === 'logout') {

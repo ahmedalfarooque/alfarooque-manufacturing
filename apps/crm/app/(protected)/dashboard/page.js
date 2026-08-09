@@ -23,11 +23,15 @@ export default function DashboardPage() {
         <div className="text-center text-slate-400 py-12">Loading…</div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
             {[
               { label: 'Total Contacts', value: d.totalContacts ?? '—' },
+              { label: 'Leads', value: d.totalLeads ?? '—' },
+              { label: 'Open Opportunities', value: d.openDeals ?? '—' },
               { label: 'Pipeline Value', value: `SAR ${fmt(d.pipelineValue)}` },
               { label: 'Won Deals', value: d.wonDeals ?? '—' },
+              { label: 'Lost Deals', value: d.lostDeals ?? '—' },
+              { label: 'Follow-ups Due', value: d.followUpsDue ?? '—' },
               { label: 'Activities (Month)', value: d.monthActivities ?? '—' },
             ].map(s => (
               <GlassCard key={s.label}>

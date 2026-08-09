@@ -167,7 +167,19 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         .qdoc-layout { width: 100%; border-collapse: collapse; }
         .qdoc-layout > thead > tr > td, .qdoc-layout > tbody > tr > td, .qdoc-layout > tfoot > tr > td { padding: 0; vertical-align: top; }
         @media print {
-          .qdoc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .qdoc {
+            padding-top: 0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          /* A dedicated repeated spacer row reproduces the approved 32px
+             page-top inset without padding the repeated Grid/cell (both
+             are clipped by Chromium on continuation pages). */
+          .qdoc-layout > thead::before {
+            content: '';
+            display: table-row;
+            height: 32px;
+          }
           .qdoc-watermark { position: fixed !important; }
           .qdoc-body table tr { break-inside: avoid; page-break-inside: avoid; }
           /* No forced/artificial page HEIGHT here — the document still
@@ -198,7 +210,13 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
              footer still lines up with the rest of the content.
              qdoc-body gets matching bottom padding so its last content
              (signatures) never renders underneath this fixed footer. */
-          .qdoc-footer { position: fixed !important; bottom: 0; left: 36px; right: 36px; background: #fff; z-index: 2; }
+          .qdoc-footer-screen { display: none !important; }
+          .qdoc-footer-print {
+            display: block !important;
+            position: fixed !important;
+            bottom: 0; left: 36px; right: 36px;
+            background: #fff; z-index: 2;
+          }
           .qdoc-body { padding-bottom: 72px; }
           /* QR was page-1-only by original design (position:absolute
              against .qdoc, so it only ever painted on the first natural
@@ -273,11 +291,29 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </div>
       )}
 
-      {/* Single-column layout table: thead repeats on every printed page,
-          tfoot renders at (and repeats at) the bottom of every printed
-          page — the browser reserves their real measured height on each
-          page automatically. On screen this renders identically to plain
-          stacked divs. See the print-strategy comment above. */}
+      {/* Print-only copy is intentionally before the fragmented table:
+          Chromium repeats fixed elements on every page only when their
+          source node precedes the paginated content. */}
+      <div className="qdoc-footer-print" style={{
+        display: 'none', paddingTop: 8, borderTop: '1px solid #d8d4cc',
+        fontSize: 9.5, color: '#8c8a80', textAlign: 'center', zIndex: 1,
+      }}>
+        <div style={{ whiteSpace: 'nowrap' }}>
+          {eName}
+          {eAddr && <span> · {eAddr}</span>}
+          {entity?.cr_number && <span> · {t.cr}: {entity.cr_number}</span>}
+          {entity?.vat_number && <span> · {t.vatNo}: {entity.vat_number}</span>}
+        </div>
+        <div dir="ltr" style={{ whiteSpace: 'nowrap' }}>
+          {entity?.phone && <span>☎ {entity.phone}</span>}
+          {entity?.email && <span> · ✉ {entity.email}</span>}
+          {entity?.website && <span> · {t.website}: {entity.website}</span>}
+        </div>
+      </div>
+
+      {/* Single-column pagination table: thead repeats the approved header
+          on every printed page. The fixed footer is a preceding sibling,
+          independent of the table's fragmentation. */}
       <table className="qdoc-layout">
       <thead><tr><td>
       {/* Header — direction:'ltr' frozen on the grid so column POSITIONS
@@ -413,16 +449,11 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </tbody>
       </table>
 
-      {/* Totals through Signatures are one atomic closing group: if the
-          whole block doesn't fit in the remaining space on the current
-          page, it moves ENTIRELY to the next one. Each section below
-          also has its own breakInside:avoid (belt and suspenders / self-
-          contained if this wrapper is ever removed), but that alone
-          would only stop each section from splitting internally — it
-          would NOT stop e.g. Bank Details landing on page 2 while Terms
-          gets pushed to page 3. Wrapping them together is what makes
-          "totals/bank/terms/signature stay together" actually hold. */}
-      <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+      {/* Each closing SECTION remains atomic, but the complete closing
+          sequence must not be one giant unbreakable block. Treating it
+          as a single block made Chromium move hundreds of pixels of
+          perfectly fitting totals/bank content to the next page, leaving
+          the large artificial hole visible after the final item row. */}
       {/* Totals + delivery/notes side by side (last page only — this
           simply falls wherever the item table ends, which is always
           the final page since nothing follows it but this section) */}
@@ -465,13 +496,23 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </div>
       </div>
 
-      {/* Terms & Conditions */}
-      {(doc.terms_body_override || terms) && (
-        <div style={{ marginTop: 28, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
-          <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 6 }}>{t.terms}</div>
-          <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{locProse(doc.terms_body_override || terms.body, isAr)}</div>
-        </div>
-      )}
+      </div>
+      </td></tr>
+
+      {/* A separate outer layout row gives Chromium a legal pagination
+          boundary before signatures. If they do not fit after Terms, the
+          repeating layout-table header is then emitted on the next page;
+          a break inside one giant outer row suppresses that repetition. */}
+      <tr><td>
+      <div className="qdoc-body" style={{ position: 'relative', zIndex: 1, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        {/* Terms & Conditions stay with the signature section on the
+            final page, clear of the independently fixed footer. */}
+        {(doc.terms_body_override || terms) && (
+          <div style={{ marginTop: 28, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
+            <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 6 }}>{t.terms}</div>
+            <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{locProse(doc.terms_body_override || terms.body, isAr)}</div>
+          </div>
+        )}
 
         {/* Signatures */}
         <div style={{ display: 'flex', gap: 20, marginTop: 64, breakInside: 'avoid' }}>
@@ -481,21 +522,15 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             </div>
           ))}
         </div>
-      </div>{/* /closing-group */}
       </div>
-
       </td></tr></tbody>
+      </table>
 
-      {/* Footer — lives in the layout table's tfoot, so the browser
-          renders (and repeats) it at the bottom of every printed page
-          with its real measured height; on screen it renders in normal
-          flow at the end of the document, same as before.
-          whiteSpace:nowrap on each line keeps company/CR/VAT (line 1)
-          and phone/email/website (line 2) each on ONE single line —
-          the font is small (9.5px) and both lines fit A4's content
-          width; nowrap guarantees no mid-line wrapping either way. */}
-      <tfoot><tr><td>
-      <div className="qdoc-footer" style={{
+      {/* Fixed print-frame footer. It is outside the pagination table so
+          its repetition never depends on whether Chromium emits a tfoot
+          fragment for a particular page. On screen it remains ordinary
+          end-of-document flow with the exact approved styling. */}
+      <div className="qdoc-footer-screen" style={{
         marginTop: 24, paddingTop: 8, borderTop: '1px solid #d8d4cc',
         fontSize: 9.5, color: '#8c8a80', textAlign: 'center', position: 'relative', zIndex: 1,
       }}>
@@ -511,8 +546,6 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
           {entity?.website && <span> · {t.website}: {entity.website}</span>}
         </div>
       </div>
-      </td></tr></tfoot>
-      </table>
     </div>
   );
 }

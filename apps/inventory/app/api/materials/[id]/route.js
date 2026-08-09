@@ -8,10 +8,15 @@ export async function GET(req, { params }) {
   const { response } = requireSession(req);
   if (response) return response;
   const sb = getDb();
-  const { data, error } = await sb.from('inv_materials')
+  let { data, error } = await sb.from('inv_materials')
     .select('*, inv_categories(name), inv_units(name, symbol)')
     .eq('id', params.id).maybeSingle();
   if (error) return json({ error: 'Could not load material.' }, 500);
+  if (!data) {
+    const legacy = await sb.from('qt_materials').select('*').eq('id', params.id).is('deleted_at', null).maybeSingle();
+    if (legacy.error) return json({ error: 'Could not load material.' }, 500);
+    if (legacy.data) data = { ...legacy.data, material_code: legacy.data.code, cost_price: legacy.data.latest_price || 0, qty_on_hand: 0, source_table: 'qt_materials' };
+  }
   if (!data) return json({ error: 'Material not found.' }, 404);
 
   const { data: stock } = await sb.from('inv_stock')

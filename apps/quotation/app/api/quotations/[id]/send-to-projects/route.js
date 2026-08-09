@@ -48,8 +48,19 @@ export async function POST(req, { params }) {
   if (qn.status !== 'started') return json({ error: 'Quotation must be Started before it can be sent to Projects.' }, 409);
 
   const { data: existing } = await sb.from('project_requests')
-    .select('id, status').eq('quotation_id', params.id).neq('status', 'rejected').maybeSingle();
-  if (existing) return json({ error: 'This quotation has already been sent to Projects.' }, 409);
+    .select('*').eq('quotation_id', params.id).neq('status', 'rejected').maybeSingle();
+  if (existing && existing.status !== 'on_hold') return json({ error: 'This quotation has already been sent to Projects.' }, 409);
+
+  if (existing && existing.status === 'on_hold') {
+    const { data: reopened, error: reopenError } = await sb.from('project_requests').update({ status: 'pending', note: null, requested_by: session.sub, updated_at: new Date().toISOString() }).eq('id', existing.id).eq('status', 'on_hold').select().maybeSingle();
+    if (reopenError || !reopened) return json({ error: reopenError?.message || 'The request changed. Refresh and try again.' }, 409);
+    await sb.from('qt_quotations').update({ project_status: 'pending', project_request_id: existing.id }).eq('id', params.id);
+    await sb.from('qt_quotation_events').insert({ quotation_id: params.id, event: 'operations_resubmitted', detail: { previous_status: 'on_hold', new_status: 'pending', department: 'Quotation', request_id: existing.id }, actor_id: session.sub });
+    await audit(sb, 'project_requests', existing.id, 'status', { status: 'on_hold' }, { status: 'pending', department: 'Quotation' }, session.sub);
+    const { data: operationsAdmins } = await sb.from('platform_users').select('id').eq('role', 'admin').eq('is_active', true);
+    if (operationsAdmins?.length) await sb.from('notifications').insert(operationsAdmins.map(user => ({ user_id: user.id, type: 'quotation_request', title: 'Quotation resubmitted for review.', body: `Quotation ${qn.quote_number} is waiting for Operations review.`, link: '/quotation-requests/' + existing.id }))).catch(() => {});
+    return json({ row: reopened });
+  }
 
   const { data: reqRow, error } = await sb.from('project_requests').insert({
     quotation_id: params.id,
@@ -61,6 +72,8 @@ export async function POST(req, { params }) {
   if (error) return json({ error: error.message }, 400);
 
   await audit(sb, 'project_requests', reqRow.id, 'insert', null, reqRow, session.sub);
+  await sb.from('qt_quotation_events').insert({ quotation_id: params.id, event: 'sent_to_operations', detail: { previous_status: qn.project_status || null, new_status: 'pending', department: 'Quotation', request_id: reqRow.id }, actor_id: session.sub });
+  await sb.from('qt_quotations').update({ project_status: 'pending', project_request_id: reqRow.id }).eq('id', params.id);
 
   const { data: admins } = await sb.from('platform_users').select('id').eq('role', 'admin').eq('is_active', true);
   if (admins && admins.length) {

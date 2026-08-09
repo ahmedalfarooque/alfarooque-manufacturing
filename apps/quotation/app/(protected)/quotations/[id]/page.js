@@ -65,6 +65,7 @@ export default function QuotationEditorPage() {
   const [sendForm, setSendForm] = useState({ to: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [projectRequest, setProjectRequest] = useState(null);
+  const [workflowEvents, setWorkflowEvents] = useState([]);
   const [sendingToProjects, setSendingToProjects] = useState(false);
   const skipNextSave = useRef(true);
 
@@ -87,6 +88,7 @@ export default function QuotationEditorPage() {
         setVersion(d.row.updated_at);
         setProducts((d.products || []).map(p => ({ ...p, cost_params: paramsFromRow(p), _open: false })));
         setProjectRequest(d.projectRequest || null);
+        setWorkflowEvents((d.events || []).filter(e => String(e.event || '').includes('operations') || e.event === 'sent_to_operations'));
         if (d.row.customer) {
           setPickedCustomer(d.row.customer);
           setCustQ(pickL(d.row.customer, 'company_name', d.row.output_lang || 'en') || d.row.customer.company_name || '');
@@ -112,7 +114,7 @@ export default function QuotationEditorPage() {
     const timer = setInterval(() => {
       fetch('/api/quotations/' + id, { credentials: 'same-origin' })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d) setProjectRequest(d.projectRequest || null); })
+        .then(d => { if (d) { setProjectRequest(d.projectRequest || null); setDoc(x => x ? ({ ...x, project_status: d.row?.project_status, project_request_id: d.row?.project_request_id, project_id: d.row?.project_id }) : x); setWorkflowEvents((d.events || []).filter(e => String(e.event || '').includes('operations') || e.event === 'sent_to_operations')); } })
         .catch(() => {});
     }, 20000);
     return () => clearInterval(timer);
@@ -355,7 +357,8 @@ export default function QuotationEditorPage() {
   }
 
   async function sendToProjects() {
-    if (sendingToProjects || projectRequest) return; // guards accidental double-click
+    if (sendingToProjects || (projectRequest && projectRequest.status !== 'on_hold')) return;
+    if (!window.confirm(lang === 'ar' ? 'إرسال عرض السعر هذا إلى قسم المشاريع؟' : 'Send this quotation to the Operations / Project Department?')) return;
     setSendingToProjects(true);
     setStatusMsg(null);
     const res = await fetch(`/api/quotations/${id}/send-to-projects`, {
@@ -365,6 +368,7 @@ export default function QuotationEditorPage() {
     setSendingToProjects(false);
     if (!res || !res.ok) { setStatusMsg('⚠ ' + (d.error || t('common.genericError'))); return; }
     setProjectRequest(d.row);
+    setDoc(x => ({ ...x, project_status: 'pending', project_request_id: d.row.id }));
     setStatusMsg(t('quote.sentToProjects'));
   }
 
@@ -505,15 +509,20 @@ export default function QuotationEditorPage() {
           <div className="glass-card p-4">
             <div className="font-semibold mb-1">{t('quote.projectIntegration')}</div>
             {projectRequest ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[color:var(--tx-3)]">{t('quote.sentToProjects')}</span>
-                <StatusBadge status={projectStatusBadgeKey(doc.project_status) || 'pr_' + projectRequest.status} />
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-sm text-[color:var(--tx-3)]">{t('quote.sentToProjects')}</span>
+                  <StatusBadge status={projectStatusBadgeKey(doc.project_status || projectRequest.status) || 'pr_' + projectRequest.status} />
+                  {projectRequest.note && <span className="text-sm text-[#d97706]">{projectRequest.note}</span>}
+                  {projectRequest.status === 'on_hold' && <Button disabled={sendingToProjects} onClick={sendToProjects}>{sendingToProjects ? t('common.saving') : (lang === 'ar' ? 'إعادة الإرسال إلى المشاريع' : 'Resubmit to Projects')}</Button>}
                 {doc.project_id && (
                   <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + doc.project_id}
                     target="_blank" rel="noreferrer" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">
                     ↗ {t('quote.openProject')}
                   </a>
                 )}
+                </div>
+                {workflowEvents.length > 0 && <div className="border-t border-[color:var(--bd)] pt-3 space-y-2">{workflowEvents.map((e, i) => <div key={i} className="text-xs"><span className="font-medium capitalize">{String(e.event).replaceAll('_', ' ')}</span><span className="text-[color:var(--tx-3)]"> · {formatDate(e.created_at)}</span>{e.detail?.reason && <div className="text-[color:var(--tx-3)] mt-0.5">{e.detail.reason}</div>}</div>)}</div>}
               </div>
             ) : (
               <div className="flex items-center gap-3">

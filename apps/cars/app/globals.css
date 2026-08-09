@@ -457,6 +457,49 @@ html.dark .glass-card:hover {
 .ginput:focus { border-color: var(--pr); box-shadow: 0 0 0 3px var(--pr-soft); background: var(--bg-card); }
 .ginput:disabled { opacity: 0.55; cursor: not-allowed; }
 
+/* Native select popups are painted by the browser/OS and do not reliably
+   inherit the glass control background. Keep their palette explicit so an
+   opened list can never combine a light popup with light text. */
+select.ginput { color-scheme: light; }
+select.ginput option,
+select.ginput optgroup {
+  background-color: #ffffff;
+  color: #172033;
+}
+select.ginput option:checked {
+  background: #8fc0f3 linear-gradient(0deg, #8fc0f3 0%, #8fc0f3 100%);
+  color: #10233b;
+}
+select.ginput option:hover,
+select.ginput option:focus {
+  background-color: #d7e9fb;
+  color: #10233b;
+}
+select.ginput option:disabled {
+  background-color: #f1f5f9;
+  color: #7b8798;
+}
+html.dark select.ginput { color-scheme: dark; }
+html.dark select.ginput option,
+html.dark select.ginput optgroup {
+  background-color: #132238;
+  color: #e8f2f8;
+}
+html.dark select.ginput option:checked {
+  background: #0e879b linear-gradient(0deg, #0e879b 0%, #0e879b 100%);
+  color: #ffffff;
+}
+html.dark select.ginput option:hover,
+html.dark select.ginput option:focus {
+  background-color: #164a5d;
+  color: #ffffff;
+}
+html.dark select.ginput option:disabled {
+  background-color: #101b2c;
+  color: #718096;
+}
+
+
 .gfield { position: relative; }
 .gfield-float > label {
   position: absolute;

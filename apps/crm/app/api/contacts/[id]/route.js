@@ -10,8 +10,13 @@ export async function GET(req, { params }) {
   if (response) return response;
 
   const sb = getDb();
-  const { data, error } = await sb.from('crm_contacts').select('*').eq('id', params.id).maybeSingle();
+  let { data, error } = await sb.from('crm_contacts').select('*').eq('id', params.id).maybeSingle();
   if (error) return json({ error: 'Could not load contact.' }, 500);
+  if (!data) {
+    const legacy = await sb.from('customers').select('*').eq('id', params.id).is('deleted_at', null).maybeSingle();
+    if (legacy.error) return json({ error: 'Could not load contact.' }, 500);
+    if (legacy.data) data = { ...legacy.data, name: legacy.data.full_name, phone: legacy.data.mobile_number, company: legacy.data.company_name, contact_type: legacy.data.customer_type || 'Customer', source_table: 'customers' };
+  }
   if (!data) return json({ error: 'Contact not found.' }, 404);
 
   const [deals, activities] = await Promise.all([

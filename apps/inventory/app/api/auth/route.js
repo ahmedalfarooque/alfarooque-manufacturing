@@ -55,6 +55,7 @@ export async function POST(req) {
     const ip = getIp(req), ua = getUa(req);
 
     if (action === 'login') return await handleLogin(sb, body, ip);
+    if (action === 'email-login') return await handleEmailLogin(sb, body);
     if (action === 'verify-otp') return await handleVerifyOtp(sb, body, ip, ua, req);
     if (action === 'resend-otp') return await handleResendOtp(sb, body);
     if (action === 'logout') return handleLogout(sb, req);
@@ -62,6 +63,25 @@ export async function POST(req) {
   } catch (err) {
     console.error('[inventory/auth]', action, err);
     return json({ error: 'Server error. Please try again.' }, 500);
+  }
+}
+
+async function handleEmailLogin(sb, body) {
+  const email = String(body.email || '').trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) return json({ error: 'Invalid username.' }, 400);
+  const { data: user } = await sb.from('platform_users').select('*').eq('email', email).maybeSingle();
+  if (!user || !user.is_active || user.otp_login_enabled === false) return json({ error: 'Invalid username.' }, 400);
+  const code = generateOtp();
+  const { error } = await sb.from('platform_otp_codes').insert({
+    user_id: user.id, app: APP, code_hash: sha256Hex(code), purpose: 'login',
+    expires_at: new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString(),
+  });
+  if (error) return json({ error: 'Could not start verification. Please try again.' }, 500);
+  try {
+    const result = await sendOtpEmail({ to: email, subject: 'Your Inventory login code', html: otpEmailHtml(code), mockLabel: 'Inventory email OTP', code });
+    return json({ step: 'otp', email, mocked: !!result.mocked, message: result.mocked ? 'Email not configured — code was logged to the server console.' : 'A 6-digit code has been sent to your email.' });
+  } catch (error) {
+    return json({ error: 'Could not send the verification email. Please try again shortly.' }, 500);
   }
 }
 

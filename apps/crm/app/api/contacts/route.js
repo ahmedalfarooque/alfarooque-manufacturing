@@ -20,8 +20,18 @@ export async function GET(req) {
   if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%,phone.ilike.%${search}%`);
   query = query.order('created_at', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
 
-  const { data, error, count } = await query;
+  let { data, error, count } = await query;
   if (error) { console.error('[crm/contacts] list failed:', error.message); return json({ error: 'Could not load contacts.' }, 500); }
+  if (!count) {
+    let legacy = sb.from('customers').select('*', { count: 'exact' }).is('deleted_at', null);
+    if (type) legacy = legacy.eq('customer_type', type);
+    if (search) legacy = legacy.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%,mobile_number.ilike.%${search}%`);
+    const legacyRes = await legacy.order('created_at', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
+    if (!legacyRes.error) {
+      data = (legacyRes.data || []).map(row => ({ ...row, name: row.full_name, phone: row.mobile_number, company: row.company_name, contact_type: row.customer_type || 'Customer', source_table: 'customers' }));
+      count = legacyRes.count || 0;
+    }
+  }
   return json({ contacts: data || [], total: count || 0, page, pageSize });
 }
 

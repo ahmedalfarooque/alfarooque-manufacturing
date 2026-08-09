@@ -18,8 +18,17 @@ export async function GET(req) {
   if (search) q = q.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
   const activeParam = searchParams.get('active');
   if (activeParam !== null) q = q.eq('is_active', activeParam !== 'false');
-  const { data, count, error } = await q.order('name', { ascending: true }).range(offset, offset + limit - 1);
+  let { data, count, error } = await q.order('name', { ascending: true }).range(offset, offset + limit - 1);
   if (error) return json({ error: 'Could not load suppliers.' }, 500);
+  if (!count) {
+    let legacy = sb.from('qt_suppliers').select('*', { count: 'exact' }).is('deleted_at', null);
+    if (search) legacy = legacy.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+    const legacyRes = await legacy.order('name').range(offset, offset + limit - 1);
+    if (!legacyRes.error) {
+      data = (legacyRes.data || []).map(row => ({ ...row, is_active: row.status !== 'inactive', source_table: 'qt_suppliers' }));
+      count = legacyRes.count || 0;
+    }
+  }
   return json({ suppliers: data || [], total: count || 0, page, limit });
 }
 

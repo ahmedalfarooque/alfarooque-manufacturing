@@ -8,8 +8,13 @@ export async function GET(req, { params }) {
   const { response } = requireSession(req);
   if (response) return response;
   const sb = getDb();
-  const { data, error } = await sb.from('inv_suppliers').select('*').eq('id', params.id).maybeSingle();
+  let { data, error } = await sb.from('inv_suppliers').select('*').eq('id', params.id).maybeSingle();
   if (error) return json({ error: 'Could not load supplier.' }, 500);
+  if (!data) {
+    const legacy = await sb.from('qt_suppliers').select('*').eq('id', params.id).is('deleted_at', null).maybeSingle();
+    if (legacy.error) return json({ error: 'Could not load supplier.' }, 500);
+    if (legacy.data) data = { ...legacy.data, source_table: 'qt_suppliers' };
+  }
   if (!data) return json({ error: 'Supplier not found.' }, 404);
   return json({ supplier: data });
 }

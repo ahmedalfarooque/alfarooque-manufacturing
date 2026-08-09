@@ -2,6 +2,7 @@
 
 const { getDb } = require('@/lib/db');
 const { json } = require('@/lib/http');
+const { sendOtpEmail } = require('@/lib/email');
 const bcrypt = require('bcryptjs');
 const {
   APP, COOKIE_NAME, SESSION_TTL_SECONDS, OTP_TTL_MINUTES, OTP_RESEND_COOLDOWN_SECONDS,
@@ -10,6 +11,14 @@ const {
 } = require('@/lib/auth');
 const { SSO_COOKIE_NAME, signSsoSession, ssoCookieHeader, clearSsoCookieHeader } = require('@/lib/sso');
 const { isSuperAdminEmail } = require('@/lib/superAdmin');
+
+function otpEmailHtml(code) {
+  return '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">' +
+    '<h2 style="color:#06B6D4;margin:0 0 12px;">CRM — Login Code</h2>' +
+    '<p style="color:#333;font-size:14px;line-height:1.6;">Use this code to finish signing in to the AL FAROOQUE CRM dashboard. It expires in ' + OTP_TTL_MINUTES + ' minutes and can only be used once.</p>' +
+    '<div style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f2f2f2;padding:16px 24px;border-radius:8px;text-align:center;margin:20px 0;">' + code + '</div>' +
+    '<p style="color:#888;font-size:12px;">If you did not request this, you can safely ignore this email.</p></div>';
+}
 
 export async function GET(req) {
   const session = readSession(req);
@@ -21,6 +30,22 @@ export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const { action } = body;
   const sb = getDb();
+
+  if (action === 'email-login') {
+    const email = String(body.email || '').trim().toLowerCase();
+    const { data: user } = await sb.from('platform_users').select('id, email, is_active, otp_login_enabled').eq('email', email).maybeSingle();
+    if (!user || !user.is_active || user.otp_login_enabled === false) return json({ error: 'Invalid username.' }, 400);
+    const otp = generateOtp();
+    const { error } = await sb.from('platform_otp_codes').insert({
+      user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp),
+      expires_at: new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString(),
+    });
+    if (error) return json({ error: 'Could not start verification. Please try again.' }, 500);
+    try {
+      const result = await sendOtpEmail({ to: email, subject: 'Your CRM login code', html: otpEmailHtml(otp), mockLabel: 'CRM email OTP', code: otp });
+      return json({ step: 'otp', email, mocked: !!result.mocked, message: result.mocked ? 'Email not configured — code was logged to the server console.' : 'A 6-digit code has been sent to your email.' });
+    } catch (error) { return json({ error: 'Could not send the verification email. Please try again shortly.' }, 500); }
+  }
 
   if (action === 'login') {
     const email = String(body.email || '').trim().toLowerCase();
@@ -46,16 +71,22 @@ export async function POST(req) {
     await recordLoginAttempt(email, ip, true);
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
-    await sb.from('platform_otp_codes').insert({
+    const { error: otpInsertError } = await sb.from('platform_otp_codes').insert({
       user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
     });
-    console.log(`[crm] OTP for ${email}: ${otp}`);
-    return json({ ok: true, message: `OTP sent to ${email}` });
+    if (otpInsertError) return json({ error: 'Could not start verification. Please try again.' }, 500);
+    try {
+      const result = await sendOtpEmail({ to: email, subject: 'Your CRM login code', html: otpEmailHtml(otp), mockLabel: 'CRM login OTP', code: otp });
+      return json({ step: 'otp', email, mocked: !!result.mocked, message: result.mocked ? 'Email not configured — code was logged to the server console.' : `OTP sent to ${email}` });
+    } catch (error) {
+      console.error('[crm/auth] OTP email failed:', error.message);
+      return json({ error: 'Could not send the verification email. Please try again shortly.' }, 500);
+    }
   }
 
   if (action === 'verify-otp') {
     const email = String(body.email || '').trim().toLowerCase();
-    const otp = String(body.otp || '').trim();
+    const otp = String(body.code || body.otp || '').trim();
     if (!email || !otp) return json({ error: 'Email and OTP are required.' }, 400);
 
     const { data: user } = await sb.from('platform_users').select('id, email, role').eq('email', email).maybeSingle();
@@ -85,6 +116,13 @@ export async function POST(req) {
 
     const sessionUser = { id: user.id, email: user.email, role };
     const token = signSession(sessionUser);
+    const ip = req.headers.get('x-forwarded-for') || '';
+    const { error: sessionError } = await sb.from('platform_sessions').insert({
+      user_id: user.id, app: APP, token_hash: sha256Hex(token), ip,
+      user_agent: req.headers.get('user-agent') || '',
+      expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
+    });
+    if (sessionError) return json({ error: 'Could not complete sign-in. Please try again.' }, 500);
     const ssoToken = signSsoSession(sessionUser);
     const headers = new Headers({ 'Content-Type': 'application/json' });
     headers.append('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS));
@@ -106,11 +144,16 @@ export async function POST(req) {
     }
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
-    await sb.from('platform_otp_codes').insert({
+    const { error: otpInsertError } = await sb.from('platform_otp_codes').insert({
       user_id: user.id, app: APP, purpose: 'login', code_hash: sha256Hex(otp), expires_at: expiresAt,
     });
-    console.log(`[crm] Resend OTP for ${email}: ${otp}`);
-    return json({ ok: true });
+    if (otpInsertError) return json({ error: 'Could not start verification. Please try again.' }, 500);
+    try {
+      const result = await sendOtpEmail({ to: email, subject: 'Your CRM login code', html: otpEmailHtml(otp), mockLabel: 'CRM resend OTP', code: otp });
+      return json({ ok: true, mocked: !!result.mocked, message: result.mocked ? 'Email not configured — code was logged to the server console.' : 'A new code has been sent.' });
+    } catch (error) {
+      return json({ error: 'Could not send the verification email.' }, 500);
+    }
   }
 
   if (action === 'logout') {

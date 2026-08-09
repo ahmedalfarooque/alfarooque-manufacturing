@@ -8,10 +8,15 @@ export async function GET(req, { params }) {
   const { response } = requireSession(req);
   if (response) return response;
   const sb = getDb();
-  const { data, error } = await sb.from('inv_products')
+  let { data, error } = await sb.from('inv_products')
     .select('*, inv_categories(name), inv_subcategories(name), inv_brands(name), inv_units(name, symbol)')
     .eq('id', params.id).maybeSingle();
   if (error) return json({ error: 'Could not load product.' }, 500);
+  if (!data) {
+    const legacy = await sb.from('products').select('*').eq('id', params.id).maybeSingle();
+    if (legacy.error) return json({ error: 'Could not load product.' }, 500);
+    if (legacy.data) data = { ...legacy.data, selling_price: legacy.data.price, qty_on_hand: legacy.data.stock || 0, source_table: 'products' };
+  }
   if (!data) return json({ error: 'Product not found.' }, 404);
 
   const { data: stock } = await sb.from('inv_stock')

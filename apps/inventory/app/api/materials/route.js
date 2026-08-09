@@ -22,8 +22,17 @@ export async function GET(req) {
   const activeParam = searchParams.get('active');
   if (activeParam !== null) q = q.eq('is_active', activeParam !== 'false');
 
-  const { data, count, error } = await q.order('name', { ascending: true }).range(offset, offset + limit - 1);
+  let { data, count, error } = await q.order('name', { ascending: true }).range(offset, offset + limit - 1);
   if (error) return json({ error: 'Could not load materials.' }, 500);
+  if (!count) {
+    let legacy = sb.from('qt_materials').select('*', { count: 'exact' }).is('deleted_at', null);
+    if (search) legacy = legacy.or(`name.ilike.%${search}%,code.ilike.%${search}%`);
+    const legacyRes = await legacy.order('name').range(offset, offset + limit - 1);
+    if (!legacyRes.error) {
+      data = (legacyRes.data || []).map(row => ({ ...row, material_code: row.code, cost_price: row.latest_price || 0, is_active: row.status !== 'inactive', qty_on_hand: 0, source_table: 'qt_materials' }));
+      count = legacyRes.count || 0;
+    }
+  }
   return json({ materials: data || [], total: count || 0, page, limit });
 }
 

@@ -20,8 +20,18 @@ export async function GET(req) {
   if (search) query = query.or(`invoice_number.ilike.%${search}%,customer_name.ilike.%${search}%`);
   query = query.order('invoice_date', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
 
-  const { data, error, count } = await query;
+  let { data, error, count } = await query;
   if (error) { console.error('[invoices] list failed:', error.message); return json({ error: 'Could not load invoices.' }, 500); }
+  if (!count) {
+    let legacy = sb.from('orders').select('*', { count: 'exact' }).eq('is_deleted', false);
+    if (search) legacy = legacy.or(`order_no.ilike.%${search}%,guest_name.ilike.%${search}%`);
+    if (status) legacy = legacy.eq('payment_status', status);
+    const legacyRes = await legacy.order('created_at', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
+    if (!legacyRes.error) {
+      data = (legacyRes.data || []).map(row => ({ ...row, invoice_number: row.order_no, customer_name: row.guest_name, customer_email: row.guest_email, invoice_date: row.created_at, total_amount: row.grand_total, status: row.payment_status || row.status, source_table: 'orders' }));
+      count = legacyRes.count || 0;
+    }
+  }
   return json({ invoices: data || [], total: count || 0, page, pageSize });
 }
 
