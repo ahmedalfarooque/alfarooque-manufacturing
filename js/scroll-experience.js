@@ -16,9 +16,10 @@
   const desktopMq = window.matchMedia('(min-width: 992px)');
   const HAS_LIBS = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined' && typeof window.Lenis !== 'undefined';
 
-  function revealEverythingNow() {
-    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
-    document.querySelectorAll('[data-reveal]').forEach(el => {
+  function revealEverythingNow(root) {
+    const scope = root || document;
+    scope.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    scope.querySelectorAll('[data-reveal]').forEach(el => {
       el.style.opacity = '1';
       el.style.transform = 'none';
       el.style.filter = 'none';
@@ -94,14 +95,26 @@
   document.addEventListener('click', nativeAnchorHandler);
 
   /* Libraries missing (CDN outage/blocked) → premium layer degrades,
-     core UX above keeps working. */
-  if (!HAS_LIBS) { revealEverythingNow(); return; }
+     core UX above keeps working. `revealNew` still exposed so
+     dynamically-loaded content (product cards fetched after this
+     script already ran) is guaranteed visible instead of silently
+     staying hidden — see the full explanation on the GSAP path's
+     `revealNew` below. */
+  if (!HAS_LIBS) {
+    revealEverythingNow();
+    window.ScrollExperience = { revealNew: (root) => revealEverythingNow(root) };
+    return;
+  }
 
   const gsap = window.gsap;
   const ScrollTrigger = window.ScrollTrigger;
   gsap.registerPlugin(ScrollTrigger);
 
-  if (REDUCED_MOTION) { revealEverythingNow(); return; }
+  if (REDUCED_MOTION) {
+    revealEverythingNow();
+    window.ScrollExperience = { revealNew: (root) => revealEverythingNow(root) };
+    return;
+  }
 
   /* ═══ LENIS — native-scroll smoothing (documentElement.scrollTop
      really moves; nothing here uses a transformed wrapper div, since
@@ -138,21 +151,20 @@
      IntersectionObserver version (opacity 0→1, translateY 32→0 via
      the existing CSS transition + `.in` class), just triggered by
      ScrollTrigger instead, so it shares one scroll-observation system
-     with everything else on the page. ═══ */
-  document.querySelectorAll('.reveal').forEach(el => {
-    ScrollTrigger.create({
-      trigger: el,
-      start: 'top 90%',
-      once: true,
-      onEnter: () => el.classList.add('in'),
-    });
-  });
+     with everything else on the page.
 
-  /* ═══ NEW `[data-reveal]` VARIANT ENGINE ═══
-     Separate, richer reveal system for newly-designed premium
-     sections. Never combine with `.reveal` on the same element.
-     Batched per-variant so elements entering the viewport together
-     stagger naturally (sequential card reveal) without extra markup. */
+     `bindReveal`/`bindDataReveal` are factored out (not just an inline
+     forEach) because pages that inject content AFTER this script has
+     already run — product cards fetched from /api/products and
+     rendered by js/products.js and js/products-categories.js — need
+     the exact same binding applied to elements that didn't exist yet
+     at the point of the one-time querySelectorAll below. Without this,
+     any `.reveal`/`[data-reveal]` card added post-load never gets a
+     ScrollTrigger and stays permanently at its hidden (opacity:0)
+     starting state — invisible forever, not just "mid-animation" —
+     since ScrollTrigger.refresh() only recalculates existing triggers'
+     positions, it does not discover new elements. `data-reveal-bound`
+     guards against double-binding the same element twice. ═══ */
   const REVEAL_PRESETS = {
     'fade-up':    { from: { opacity: 0, y: 46 },                                    to: { opacity: 1, y: 0 } },
     'fade-left':  { from: { opacity: 0, x: IS_RTL ? -70 : 70 },                      to: { opacity: 1, x: 0 } },
@@ -161,22 +173,56 @@
     'blur':       { from: { opacity: 0, filter: 'blur(16px)' },                     to: { opacity: 1, filter: 'blur(0px)' } },
     'mask':       { from: { opacity: 1, clipPath: 'inset(0 0 100% 0)' },            to: { opacity: 1, clipPath: 'inset(0 0 0% 0)' } },
   };
-  Object.keys(REVEAL_PRESETS).forEach(variant => {
-    const els = document.querySelectorAll('[data-reveal="' + variant + '"]');
-    if (!els.length) return;
-    const preset = REVEAL_PRESETS[variant];
-    ScrollTrigger.batch(els, {
-      start: 'top 88%',
+
+  function bindReveal(el) {
+    if (el.dataset.revealBound) return;
+    el.dataset.revealBound = '1';
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 90%',
       once: true,
-      onEnter: batch => gsap.fromTo(batch, preset.from, {
-        ...preset.to,
-        duration: 0.95,
-        ease: 'power3.out',
-        stagger: 0.12,
-        overwrite: 'auto',
-      }),
+      onEnter: () => el.classList.add('in'),
     });
-  });
+  }
+
+  /* Batched per-variant (same as the original single pass) so a group
+     of cards entering the viewport together still stagger — this is
+     what gives a freshly-rendered product grid its sequential reveal
+     instead of every card popping in at once. `scope` lets a re-scan
+     (see `revealNew` below) batch only the newly-added elements. */
+  function bindDataRevealBatch(scope) {
+    Object.keys(REVEAL_PRESETS).forEach(variant => {
+      const els = [...scope.querySelectorAll('[data-reveal="' + variant + '"]')]
+        .filter(el => !el.dataset.revealBound);
+      if (!els.length) return;
+      els.forEach(el => { el.dataset.revealBound = '1'; });
+      const preset = REVEAL_PRESETS[variant];
+      ScrollTrigger.batch(els, {
+        start: 'top 88%',
+        once: true,
+        onEnter: batch => gsap.fromTo(batch, preset.from, {
+          ...preset.to,
+          duration: 0.95,
+          ease: 'power3.out',
+          stagger: 0.12,
+          overwrite: 'auto',
+        }),
+      });
+    });
+  }
+
+  /* Initial page-load scan — identical triggers/timing to before. */
+  document.querySelectorAll('.reveal').forEach(bindReveal);
+  bindDataRevealBatch(document);
+
+  /* Re-scan hook for dynamically-injected content (see comment above).
+     Exposed on window.ScrollExperience.revealNew — call it with the
+     newly-inserted container right after adding cards to the DOM. */
+  function revealNew(root) {
+    const scope = root || document;
+    scope.querySelectorAll('.reveal').forEach(bindReveal);
+    bindDataRevealBatch(scope);
+  }
 
   /* ═══ `[data-parallax]` / `[data-parallax-speed]` — vertical layer
      depth. Negative speed = moves opposite to scroll (background),
@@ -287,5 +333,6 @@
     isRtl: IS_RTL,
     isDesktop: () => desktopMq.matches,
     refresh: () => ScrollTrigger.refresh(),
+    revealNew,
   };
 })();

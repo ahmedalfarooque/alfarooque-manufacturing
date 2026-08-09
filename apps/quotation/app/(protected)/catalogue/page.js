@@ -204,7 +204,7 @@ export default function CataloguePage() {
                     <Td dir="ltr" className="whitespace-nowrap">{r.code}</Td>
                     <Td>
                       <div className="font-medium">{name(r)}</div>
-                      
+
                     </Td>
                     <Td className="whitespace-nowrap">
                       {r.category ? codeLabel(t, 'cat', r.category) : '—'}
