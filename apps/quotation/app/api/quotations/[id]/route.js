@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite } = require('@/lib/http');
+const { json, requireSession, requireWrite, requireDelete } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 const { isSuperAdminEmail } = require('@/lib/superAdmin');
 
@@ -41,7 +41,7 @@ export async function GET(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { session, response } = await requireWrite(req);
+  const { session, response } = await requireDelete(req);
   if (!session) return response;
   const sb = getDb();
   const { data: before } = await sb.from('qt_quotations').select('status, quote_number').eq('id', params.id).single();

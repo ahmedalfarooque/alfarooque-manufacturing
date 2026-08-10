@@ -22,7 +22,7 @@ function generateTempPassword() {
   return out;
 }
 
-const ADMIN_FIELDS = 'id, full_name, email, position, role, is_active, phone, department, photo_url, company, status, otp_login_enabled';
+const ADMIN_FIELDS = 'id, full_name, email, position, role, is_active, is_approved, phone, department, photo_url, company, status, otp_login_enabled';
 const BASIC_FIELDS = 'id, full_name, email, position, role, is_active';
 
 export async function GET(req) {
@@ -84,6 +84,7 @@ export async function POST(req) {
     password_hash: passwordHash,
     must_change_password: role === 'admin',
     is_active: true,
+    is_approved: role === 'admin',
   }).select(ADMIN_FIELDS).single();
 
   if (error) {

@@ -8,7 +8,7 @@ const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 
 export async function GET(req) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = requireSession(req);
   if (response) return response;
 
   const sb = getDb();

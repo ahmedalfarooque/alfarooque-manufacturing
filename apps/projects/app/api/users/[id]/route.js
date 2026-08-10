@@ -9,7 +9,7 @@ const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
 const { isSuperAdminEmail } = require('@/lib/superAdmin');
 
-const EDITABLE = ['full_name', 'position', 'phone', 'department', 'company', 'photo_url', 'status', 'otp_login_enabled', 'is_active'];
+const EDITABLE = ['full_name', 'position', 'phone', 'department', 'company', 'photo_url', 'status', 'otp_login_enabled', 'is_active', 'is_approved'];
 const ROLES = ['admin', 'viewer', 'external'];
 const STATUSES = ['Active', 'Inactive', 'Blocked'];
 
@@ -30,7 +30,7 @@ export async function PATCH(req, { params }) {
 
   const sb = getDb();
   const { data, error } = await sb.from('platform_users').update(patch).eq('id', params.id)
-    .select('id, full_name, email, position, role, is_active, phone, department, photo_url, company, status, otp_login_enabled').maybeSingle();
+    .select('id, full_name, email, position, role, is_active, is_approved, phone, department, photo_url, company, status, otp_login_enabled').maybeSingle();
   if (error) { console.error('[users] update failed:', error.message); return json({ error: 'Could not update user.' }, 500); }
   if (!data) return json({ error: 'User not found.' }, 404);
   return json({ user: data });

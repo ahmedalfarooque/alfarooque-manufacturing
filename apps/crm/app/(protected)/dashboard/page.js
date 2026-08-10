@@ -86,6 +86,10 @@ export default function DashboardPage() {
               )}
             </GlassCard>
           </div>
+          <GlassCard className="p-5">
+            <div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-semibold text-[color:var(--tx-2)]">Integration Health</h3><p className="text-xs text-[color:var(--tx-4)]">Live status from the central integration layer</p></div><Link href="/integrations" className="text-xs text-cyan-400">Manage integrations →</Link></div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">{(d.integrations || []).map(item => <div key={item.integration_key} className="rounded-xl border border-[color:var(--bd)] p-3"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium text-[color:var(--tx)]">{item.name}</span><GlassBadge tone={item.status === 'connected' ? 'emerald' : item.status === 'error' ? 'red' : 'amber'}>{item.status.replaceAll('_',' ')}</GlassBadge></div>{item.last_error && <p className="mt-2 truncate text-xs text-red-400" title={item.last_error}>{item.last_error}</p>}</div>)}</div>
+          </GlassCard>
         </>
       )}
     </div>

@@ -88,7 +88,7 @@ export async function GET(req) {
   /* ── Quotation Requests widget (Update 1: dashboard cards) ── */
   const qrs = qrsRes.data;
   const qrPending = (qrs || []).filter(r => r.status === 'pending').length;
-  const qrAccepted = (qrs || []).filter(r => r.status === 'accepted').length;
+  const qrAccepted = (qrs || []).filter(r => r.status === 'approved').length;
   const qrOnHold = (qrs || []).filter(r => r.status === 'on_hold').length;
   const qrRejected = (qrs || []).filter(r => r.status === 'rejected').length;
 

@@ -2,6 +2,7 @@ import './globals.css';
 import { IBM_Plex_Sans_Arabic } from 'next/font/google';
 import { LanguageProvider } from '@/lib/i18n';
 import GlassIconsLoader from '@/components/GlassIcons';
+import DeletePermissionGate from '../../shared/DeletePermissionGate';
 
 /* Self-hosted via next/font/google: the font files are downloaded ONCE
    at build time and served from this app's own domain — no runtime
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen font-sans antialiased">
         <GlassIconsLoader />
+        <DeletePermissionGate />
         <div className="af-ambient" aria-hidden="true">
           <div className="af-orb af-orb-1" />
           <div className="af-orb af-orb-2" />

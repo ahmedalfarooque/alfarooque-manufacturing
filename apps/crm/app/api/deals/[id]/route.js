@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
 
 const EDITABLE = ['title', 'contact_id', 'value', 'currency', 'stage', 'status', 'probability', 'expected_close_date', 'description', 'assigned_to', 'linked_quotation_id', 'linked_project_id'];
 const VALID_STATUSES = ['Open', 'Won', 'Lost', 'On Hold'];
@@ -56,7 +56,7 @@ export async function PATCH(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireDelete(req);
   if (response) return response;
 
   const sb = getDb();

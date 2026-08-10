@@ -1,9 +1,14 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
+const { readSmartLife } = require('../../../../../shared/integrationPlatform');
 
 const EDITABLE = ['name', 'email', 'phone', 'company', 'job_title', 'contact_type', 'source', 'address', 'notes', 'tags', 'assigned_to', 'status'];
+
+const clean = value => String(value || '').trim().toLowerCase();
+const phone = value => String(value || '').replace(/\D/g, '');
+const amount = value => Number(value || 0) || 0;
 
 export async function GET(req, { params }) {
   const { response } = requireSession(req);
@@ -19,12 +24,46 @@ export async function GET(req, { params }) {
   }
   if (!data) return json({ error: 'Contact not found.' }, 404);
 
-  const [deals, activities] = await Promise.all([
+  const identityRes = await sb.from('crm_customer_identities').select('*').eq('crm_contact_id', params.id).maybeSingle();
+  const identity = identityRes.data || null;
+  const mappingsRes = identity ? await sb.from('crm_record_mappings').select('*').eq('customer_identity_id', identity.id).order('source_system') : { data: [] };
+  const mappings = mappingsRes.data || [];
+  const sourceIds = source => mappings.filter(m => m.source_system === source).map(m => m.source_record_id);
+  const quotationCustomerIds = sourceIds('quotation');
+  const projectIds = sourceIds('projects');
+
+  const [deals, activities, timeline, quotations, projects] = await Promise.all([
     sb.from('crm_deals').select('id, title, value, status').eq('contact_id', params.id).order('created_at', { ascending: false }),
     sb.from('crm_activities').select('*').eq('contact_id', params.id).order('activity_date', { ascending: false }).limit(10),
+    identity ? sb.from('crm_timeline_events').select('*').eq('customer_identity_id', identity.id).order('occurred_at', { ascending: false }).limit(50) : Promise.resolve({ data: [] }),
+    quotationCustomerIds.length ? sb.from('qt_quotations').select('id,quote_number,status,grand_total,created_at,project_id,customer_approval_status').in('customer_id', quotationCustomerIds).order('created_at', { ascending: false }) : Promise.resolve({ data: [] }),
+    projectIds.length ? sb.from('pm_projects').select('id,project_name,status,progress_percent,created_at,quotation_id').in('id', projectIds).order('created_at', { ascending: false }) : Promise.resolve({ data: [] }),
   ]);
 
-  return json({ contact: data, deals: deals.data || [], activities: activities.data || [] });
+  let smartErp = { connected: false, customers: [], suppliers: [], invoices: [], summary: { invoiced: 0, paid: 0, outstanding: 0 } };
+  try {
+    const [customerResult, supplierResult, salesResult] = await Promise.all([
+      readSmartLife(sb, 'customers'),
+      readSmartLife(sb, 'suppliers'),
+      readSmartLife(sb, 'sales-invoices'),
+    ]);
+    const mappedIds = new Set(mappings.filter(mapping => ['smartlife','smarterp'].includes(clean(mapping.source_system))).map(mapping => String(mapping.source_record_id)));
+    const email = clean(data.email);
+    const mobile = phone(data.phone || data.mobile_number);
+    const names = new Set([clean(data.name), clean(data.company)].filter(Boolean));
+    const matches = record => mappedIds.has(String(record?.id)) || (email && clean(record?.email) === email) || (mobile.length >= 6 && phone(record?.phone || record?.mobile) === mobile);
+    const customers = customerResult.records.filter(matches);
+    const suppliers = supplierResult.records.filter(matches);
+    const externalIds = new Set([...mappedIds, ...customers.map(record => String(record?.id)), ...suppliers.map(record => String(record?.id))]);
+    const invoices = salesResult.records.filter(record => externalIds.has(String(record?.customer_id)) || names.has(clean(record?.customer)));
+    const invoiced = invoices.reduce((sum, record) => sum + amount(record?.grand_total ?? record?.total_amount ?? record?.total), 0);
+    const paid = invoices.reduce((sum, record) => sum + amount(record?.paid), 0);
+    smartErp = { connected: true, customers, suppliers, invoices, summary: { invoiced, paid, outstanding: Math.max(0, invoiced - paid) } };
+  } catch (_) {
+    // Customer 360 remains available when the external read-only service is offline.
+  }
+
+  return json({ contact: data, deals: deals.data || [], activities: activities.data || [], customer360: { identity, mappings, timeline: timeline.data || [], quotations: quotations.data || [], projects: projects.data || [], smartErp } });
 }
 
 export async function PATCH(req, { params }) {
@@ -44,7 +83,7 @@ export async function PATCH(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireDelete(req);
   if (response) return response;
 
   const sb = getDb();

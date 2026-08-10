@@ -58,5 +58,13 @@ export async function POST(req) {
     created_by: session.sub,
   }).select().single();
   if (error) { console.error('[crm/contacts] create failed:', error.message); return json({ error: 'Could not create contact.' }, 500); }
+  await sb.from('crm_customer_identities').insert({
+    crm_contact_id: data.id,
+    display_name: data.name,
+    normalized_email: data.email ? String(data.email).trim().toLowerCase() : null,
+    normalized_phone: data.phone ? String(data.phone).replace(/\D/g, '') : null,
+    company_name: data.company || null,
+    created_by: session.sub,
+  });
   return json({ contact: data }, 201);
 }

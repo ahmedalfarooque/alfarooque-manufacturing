@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin, requireDelete } = require('@/lib/http');
 
 const BUCKET = 'project-documents';
 const MIME_BY_EXT = {
@@ -40,7 +40,7 @@ export async function GET(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireDelete(req);
   if (response) return response;
 
   const sb = getDb();

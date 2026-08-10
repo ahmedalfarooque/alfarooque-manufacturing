@@ -4,7 +4,7 @@
    against the shared public.customers table. */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite } = require('@/lib/http');
+const { json, requireSession, requireWrite, requireDelete } = require('@/lib/http');
 const { audit, applyBilingual } = require('@/lib/crud');
 
 const UI_FIELDS = ['code', 'company_name', 'company_name_en', 'company_name_ar',
@@ -56,7 +56,7 @@ export async function PATCH(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { session, response } = await requireWrite(req);
+  const { session, response } = await requireDelete(req);
   if (!session) return response;
   const sb = getDb();
   const { data: before } = await sb.from('customers').select('*').eq('id', params.id).single();

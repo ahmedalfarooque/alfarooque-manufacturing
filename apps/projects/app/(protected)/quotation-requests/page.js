@@ -12,11 +12,10 @@ import { Input, Th, Td, EmptyState } from '@/components/ui';
 
 export const STATUS_BADGE = {
   pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  accepted: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  on_hold: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+  approved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   rejected: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
-const ALL_STATUSES = ['pending', 'accepted', 'on_hold', 'rejected'];
+const ALL_STATUSES = ['pending', 'approved', 'rejected'];
 const REFRESH_MS = 15000;
 
 const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-medium whitespace-nowrap cursor-pointer select-none hover:text-[color:var(--tx)] transition-colors';
@@ -33,6 +32,7 @@ export default function QuotationRequestsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [busyId, setBusyId] = useState(null);
+  const [canDelete, setCanDelete] = useState(false);
 
   const isAdmin = me?.role === 'admin';
   const { data, error, refresh } = useLiveData('/api/quotation-requests', REFRESH_MS);
@@ -67,37 +67,29 @@ export default function QuotationRequestsPage() {
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
+    fetch('/api/app-permissions', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => setCanDelete(!!d?.can_delete)).catch(() => {});
   }, []);
   useEffect(() => { setPage(1); }, [debouncedSearch, status]);
 
-  async function setRequestStatus(id, next) {
+  async function setRequestStatus(id, next, note = '') {
     setBusyId(id);
     const res = await fetch(`/api/quotation-requests/${id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-      body: JSON.stringify({ status: next }),
+      body: JSON.stringify({ status: next, note }),
     }).catch(() => null);
     setBusyId(null);
     if (res && res.ok) refresh();
   }
 
-  async function startProject(id) {
-    if (busyId) return; // guard against double-click while a request is already in flight
-    setBusyId(id);
-    const res = await fetch(`/api/quotation-requests/${id}/start-project`, { method: 'POST', credentials: 'same-origin' }).catch(() => null);
-    const d = res ? await res.json().catch(() => ({})) : {};
+  async function deleteRequest(row) {
+    if (!window.confirm(`Delete Quotation Approval Request ${row.quote_number}?`)) return;
+    setBusyId(row.id);
+    const res = await fetch(`/api/quotation-requests/${row.id}`, { method: 'DELETE', credentials: 'same-origin' }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setBusyId(null);
-    if (!res || !res.ok) { alert(d.error || t('common.genericError')); return; }
+    if (!res || !res.ok) { alert(data.error || t('common.genericError')); return; }
     refresh();
-    if (d.project?.id) window.location.href = '/projects/' + d.project.id;
   }
-
-  async function deleteRequest(id) {
-    if (!confirm(t('qr.deleteConfirm'))) return;
-    const res = await fetch(`/api/quotation-requests/${id}`, { method: 'DELETE', credentials: 'same-origin' });
-    if (res.ok) refresh();
-  }
-
-  if (!isAdmin && me) return <Shell active="/quotation-requests"><div className="text-[#ef4444] text-sm">{t('qr.adminOnly')}</div></Shell>;
 
   return (
     <Shell active="/quotation-requests">
@@ -110,8 +102,7 @@ export default function QuotationRequestsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <StatCard icon="clock" tone="amber" label={t('qr.kpi.pending')} value={kpis.pending} onClick={() => setStatus('pending')} />
-        <StatCard icon="target" tone="emerald" label={t('qr.kpi.accepted')} value={kpis.accepted} onClick={() => setStatus('accepted')} />
-        <StatCard icon="clock" tone="amber" label={t('qr.kpi.onHold')} value={kpis.on_hold} onClick={() => setStatus('on_hold')} />
+        <StatCard icon="target" tone="emerald" label={t('qr.kpi.accepted')} value={kpis.approved} onClick={() => setStatus('approved')} />
         <StatCard icon="x" tone="red" label={t('qr.kpi.rejected')} value={kpis.rejected} onClick={() => setStatus('rejected')} />
       </div>
 
@@ -153,20 +144,18 @@ export default function QuotationRequestsPage() {
                 <Td><span className={'px-2 py-1 rounded-full text-xs font-medium capitalize ' + (STATUS_BADGE[r.status] || '')}>{trEnum(t, 'status', r.status)}</span></Td>
                 <td className={ACTION_TD} onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2 flex-wrap">
-                    {r.status === 'pending' && (
+                    {isAdmin && r.status === 'pending' && (
                       <>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'accepted')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'on_hold')} className="gbtn gbtn-warning gbtn--sm disabled:opacity-50">{t('qr.hold')}</button>
-                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'rejected')} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
+                        <button disabled={busyId === r.id} onClick={() => setRequestStatus(r.id, 'approved')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
+                        <button disabled={busyId === r.id} onClick={() => { const reason = window.prompt('Rejection reason:'); if (reason?.trim()) setRequestStatus(r.id, 'rejected', reason.trim()); }} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
                       </>
-                    )}
-                    {['accepted', 'on_hold'].includes(r.status) && !r.project_id && (
-                      <button disabled={busyId === r.id} onClick={() => startProject(r.id)} className="gbtn gbtn-primary gbtn--sm disabled:opacity-50">{t('qr.projectStart')}</button>
                     )}
                     {r.project_id && (
                       <a href={'/projects/' + r.project_id} className="text-xs px-2.5 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors duration-200">↗ {t('qr.openProject')}</a>
                     )}
-                    <button onClick={() => deleteRequest(r.id)} title={t('common.delete')} className="text-[#ef4444] hover:opacity-70 transition-opacity">🗑</button>
+                    {canDelete && !r.project_id && (
+                      <button data-delete-control="true" disabled={busyId === r.id} onClick={() => deleteRequest(r)} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('common.delete')}</button>
+                    )}
                   </div>
                 </td>
               </tr>

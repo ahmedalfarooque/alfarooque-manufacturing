@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
 
 const EDITABLE = [
   'full_name', 'full_name_ar', 'employee_id', 'phone', 'whatsapp', 'email', 'nationality',
@@ -46,7 +46,7 @@ export async function PATCH(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireDelete(req);
   if (response) return response;
   const sb = getDb();
   const { error } = await sb.from('drivers').delete().eq('id', params.id);

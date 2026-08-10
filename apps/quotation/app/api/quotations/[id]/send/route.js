@@ -1,9 +1,7 @@
 'use strict';
 
-/* Emails the quotation to the customer via Resend: branded HTML summary
-   + button linking to the public read-only view (which is also the
-   print/PDF page for them). Transitions approved → sent and logs a
-   quotation event with the recipient. Body: { to, subject?, message? } */
+/* Emails the quotation without replacing its workflow state. Production
+   approval remains authoritative while delivery is recorded as an event. */
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession, requireWrite } = require('@/lib/http');
@@ -47,8 +45,8 @@ export async function POST(req, { params }) {
     .select('*, entity:qt_entities(name_en, name_ar), customer:customers(email, company_name)')
     .eq('id', params.id).is('deleted_at', null).single();
   if (!qn) return json({ error: 'Not found' }, 404);
-  if (!['approved', 'sent'].includes(qn.status)) {
-    return json({ error: 'Quotation must be approved before sending.' }, 409);
+  if (qn.status !== 'quotation_approved') {
+    return json({ error: 'Quotation Approval is required before sending.' }, 409);
   }
 
   const to = (body.to || (qn.customer && qn.customer.email) || '').trim();
@@ -75,10 +73,7 @@ export async function POST(req, { params }) {
     return json({ error: 'Email failed: ' + e.message }, 502);
   }
 
-  if (qn.status !== 'sent') {
-    await sb.from('qt_quotations').update({ status: 'sent', updated_by: session.sub, updated_at: new Date().toISOString() }).eq('id', params.id);
-  }
   await logEvent(sb, params.id, 'sent_email', { to, subject }, session.sub);
-  await audit(sb, 'qt_quotations', params.id, 'status', { status: qn.status }, { status: 'sent', to }, session.sub);
-  return json({ ok: true, status: 'sent', link });
+  await audit(sb, 'qt_quotations', params.id, 'email', null, { status: qn.status, to }, session.sub);
+  return json({ ok: true, status: qn.status, link });
 }

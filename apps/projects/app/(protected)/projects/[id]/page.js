@@ -50,6 +50,7 @@ const DU_REVIEW_ACTIONS = ['Approved', 'Rejected', 'Need Revision', 'Published']
 const TABS = [
   { key: 'overview', labelKey: 'pd.tab.overview' },
   { key: 'purchase-requests', labelKey: 'pd.tab.purchaseRequests' },
+  { key: 'financials', labelKey: 'pd.tab.financials' },
   { key: 'daily-updates', labelKey: 'pd.tab.dailyUpdates' },
   { key: 'documents', labelKey: 'pd.tab.documents' },
   { key: 'assigned-people', labelKey: 'pd.tab.assignedPeople' },
@@ -126,6 +127,7 @@ export default function ProjectViewPage() {
 
       {tab === 'overview' && <OverviewTab p={p} c={c} hasValue={hasValue} assignees={assignees || []} />}
       {tab === 'purchase-requests' && <PurchaseRequestsTab projectId={id} canCreate={canCreate} isAdmin={isAdmin} />}
+      {tab === 'financials' && <FinancialsTab projectId={id} canCreate={canCreate} />}
       {tab === 'daily-updates' && <DailyUpdatesTab projectId={id} canCreate={canCreate} isAdmin={isAdmin} meId={me?.id} />}
       {tab === 'documents' && <DocumentsTab projectId={id} documents={documents} isAdmin={isAdmin} refresh={refresh} />}
       {tab === 'assigned-people' && <AssignedPeopleTab assignees={assignees || []} isAdmin={isAdmin} onEdit={() => setEditOpen(true)} />}
@@ -933,6 +935,27 @@ function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
 }
 
 /* ══════════════════════════════ ACTIVITY ══════════════════════════════ */
+
+function FinancialsTab({ projectId, canCreate }) {
+  const { data, error, refresh } = useLiveData(`/api/projects/${projectId}/financials`, 15000);
+  const [open,setOpen] = useState(false);
+  const [busy,setBusy] = useState(false);
+  const [err,setErr] = useState('');
+  const [form,setForm] = useState({source_record_id:'',amount:'',payment_date:new Date().toISOString().slice(0,10),payment_method:'bank_transfer',reference:'',notes:''});
+  const invoices=data?.invoices||[]; const summary=data?.summary||{};
+  const money=value=>`${Number(value||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} SAR`;
+  async function submit(e){e.preventDefault();setBusy(true);setErr('');try{const r=await fetch(`/api/projects/${projectId}/financials`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({action:'add-payment',...form})});const p=await r.json();if(!r.ok)throw new Error(p.error);setOpen(false);setForm({source_record_id:'',amount:'',payment_date:new Date().toISOString().slice(0,10),payment_method:'bank_transfer',reference:'',notes:''});refresh();}catch(x){setErr(x.message)}finally{setBusy(false)}}
+  return <div className="space-y-4">
+    {error&&<div className="text-sm text-red-500">{error}</div>}
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><FinancialMetric label="Revenue" value={money(summary.revenue)}/><FinancialMetric label="Payments received" value={money(summary.payments_received)}/><FinancialMetric label="Outstanding receivables" value={money(summary.receivables)}/><FinancialMetric label="Profit / cost summary" value={money(summary.profit)}/><FinancialMetric label="Purchases" value={money(summary.purchases)}/><FinancialMetric label="Payments made" value={money(summary.payments_made)}/><FinancialMetric label="Outstanding payables" value={money(summary.payables)}/></div>
+    <div className="glass-card p-4"><div className="mb-3 flex items-center justify-between"><div><h3 className="font-medium">Connected invoices and payments</h3><p className="text-xs text-[color:var(--tx-3)]">SmartLife source values remain read-only. Project connections and local payments belong to AL FAROOQUE ERP.</p></div>{canCreate&&invoices.length>0&&<Button onClick={()=>setOpen(true)}>Add Payment</Button>}</div>
+      {!invoices.length?<EmptyState text="No SmartERP invoices are connected to this project."/>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><Th>Invoice</Th><Th>Type</Th><Th>Total</Th><Th>SmartLife paid</Th><Th>ERP payments</Th><Th>Remaining</Th><Th>Status</Th></tr></thead><tbody>{invoices.map(row=><tr key={row.id}><Td>{row.source_reference||row.external_id}</Td><Td>{row.record_type.replaceAll('_',' ')}</Td><Td>{money(row.total_amount)}</Td><Td>{money(row.source_paid)}</Td><Td>{money(row.local_paid)}</Td><Td>{money(row.reflected_balance)}</Td><Td>{row.payment_status}</Td></tr>)}</tbody></table></div>}
+    </div>
+    {open&&<Modal title="Add Project Payment" onClose={()=>setOpen(false)}><form onSubmit={submit} className="space-y-4">{err&&<div className="text-sm text-red-500">{err}</div>}<Field label="Related invoice"><select className="ginput" value={form.source_record_id} onChange={e=>setForm(f=>({...f,source_record_id:e.target.value}))} required><option value="">Select invoice…</option>{invoices.map(row=><option key={row.id} value={row.id}>{row.source_reference||row.external_id} · {money(row.total_amount)} · remaining {money(row.reflected_balance)}</option>)}</select></Field><div className="grid grid-cols-2 gap-3"><Field label="Amount"><Input type="number" min="0.01" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} required/></Field><Field label="Payment date"><Input type="date" value={form.payment_date} onChange={e=>setForm(f=>({...f,payment_date:e.target.value}))} required/></Field><Field label="Payment method"><select className="ginput" value={form.payment_method} onChange={e=>setForm(f=>({...f,payment_method:e.target.value}))}><option value="bank_transfer">Bank transfer</option><option value="cash">Cash</option><option value="cheque">Cheque</option><option value="card">Card</option><option value="other">Other</option></select></Field><Field label="Reference"><Input value={form.reference} onChange={e=>setForm(f=>({...f,reference:e.target.value}))}/></Field></div><Field label="Notes"><Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}/></Field><div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-300">This payment is stored only in AL FAROOQUE ERP and is never sent to SmartLife.</div><div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={()=>setOpen(false)}>Cancel</Button><Button type="submit" disabled={busy}>{busy?'Saving…':'Add Payment'}</Button></div></form></Modal>}
+  </div>;
+}
+
+function FinancialMetric({label,value}){return <div className="glass-card p-4"><div className="text-xs text-[color:var(--tx-3)]">{label}</div><div className="mt-2 text-lg font-bold">{value}</div></div>}
 
 function ActivityTab({ projectId }) {
   const { t, formatDate } = useLanguage();

@@ -12,7 +12,7 @@
    POST { action:'permanent-delete', id } -> real delete, Super Admin only */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
 const {
   RECOVERY_WINDOW_DAYS, isSuperAdmin, hasSoftDelete, logError, daysRemaining,
   attachActorNames, attachCustomerInfo,
@@ -89,6 +89,8 @@ export async function POST(req) {
   const sb = getDb();
 
   if (body.action === 'delete') {
+    const deletion = await requireDelete(req);
+    if (deletion.response) return deletion.response;
     if (!(await hasSoftDelete(sb, 'orders'))) return json({ error: 'Soft Delete feature has not been enabled yet.', softDeleteEnabled: false }, 409);
     const { data: existing, error: fetchError } = await sb.from('orders').select('id, order_no, is_deleted').eq('id', id).maybeSingle();
     if (fetchError) return json({ error: logError('orders', fetchError, 'Orders') }, 500);
@@ -132,6 +134,8 @@ export async function POST(req) {
   }
 
   if (body.action === 'permanent-delete') {
+    const deletion = await requireDelete(req);
+    if (deletion.response) return deletion.response;
     if (!isSuperAdmin(session)) return json({ error: 'Only a Super Admin can permanently delete an order.' }, 403);
     if (!(await hasSoftDelete(sb, 'orders'))) return json({ error: 'Soft Delete feature has not been enabled yet.', softDeleteEnabled: false }, 409);
     const { data: existing, error: fetchError } = await sb.from('orders').select('id, order_no, is_deleted').eq('id', id).maybeSingle();

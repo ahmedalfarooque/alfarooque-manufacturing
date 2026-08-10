@@ -5,19 +5,22 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AppSwitcherButtons from './AppSwitcherButtons';
 import { GlassToastHost } from './glass';
+import { useLang } from '@/lib/i18n';
 
 const NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { href: '/contacts', label: 'Contacts', icon: '👥' },
-  { href: '/deals', label: 'Deals', icon: '🤝' },
-  { href: '/activities', label: 'Activities', icon: '📅' },
-  { href: '/pipeline', label: 'Pipeline', icon: '📈' },
-  { href: '/reports', label: 'Reports', icon: '📋' },
-  { href: '/settings', label: 'Settings', icon: '⚙️' },
+  { href: '/dashboard', key: 'dashboard', icon: '📊' },
+  { href: '/contacts', key: 'contacts', icon: '👥' },
+  { href: '/deals', key: 'deals', icon: '🤝' },
+  { href: '/activities', key: 'activities', icon: '📅' },
+  { href: '/pipeline', key: 'pipeline', icon: '📈' },
+  { href: '/integrations', key: 'integrations', icon: '🔗' },
+  { href: '/reports', key: 'reports', icon: '📋' },
+  { href: '/settings', key: 'settings', icon: '⚙️' },
 ];
 
 export default function Shell({ children, session }) {
   const pathname = usePathname();
+  const { lang, t, setLang } = useLang();
   const [showApps, setShowApps] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -27,9 +30,8 @@ export default function Shell({ children, session }) {
   }
 
   function toggleTheme() {
-    const isLight = document.documentElement.classList.toggle('light');
-    document.body.classList.toggle('light', isLight);
-    localStorage.setItem('af-crm-theme', isLight ? 'light' : 'dark');
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('af-crm-theme', isDark ? 'dark' : 'light');
   }
 
   return (
@@ -49,7 +51,7 @@ export default function Shell({ children, session }) {
               <Link key={item.href} href={item.href}
                 className={`flex items-center gap-3 px-3 py-2 mx-2 rounded-lg text-sm transition-colors ${active ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
                 <span>{item.icon}</span>
-                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && <span>{t(item.key)}</span>}
               </Link>
             );
           })}
@@ -75,16 +77,19 @@ export default function Shell({ children, session }) {
       <div className="flex flex-col flex-1 overflow-hidden">
         <header className="flex items-center justify-between px-4 py-3 bg-[#0d1526]/60 border-b border-white/8">
           <div className="flex items-center gap-2">
+            <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-white/5 transition-colors">
+              {lang === 'en' ? 'عربي' : 'English'}
+            </button>
             <span className="text-xs text-slate-500">AL FAROOQUE</span>
             <span className="text-slate-700">|</span>
             <span className="text-xs text-slate-400">CRM</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={toggleTheme} className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-white/5 transition-colors">
-              Theme
+              {t('theme')}
             </button>
             <button onClick={logout} className="text-xs text-slate-400 hover:text-rose-400 px-2 py-1 rounded hover:bg-white/5 transition-colors">
-              Logout
+              {t('logout')}
             </button>
           </div>
         </header>

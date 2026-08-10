@@ -6,10 +6,14 @@ import { LanguageProvider } from '@/lib/i18n';
 
 async function getSession() {
   const cookieStore = cookies();
-  const token = cookieStore.get('af_crm_session')?.value || cookieStore.get('af_sso_session')?.value;
+  const appToken = cookieStore.get('af_crm_session')?.value;
+  const ssoToken = cookieStore.get('af_sso_session')?.value;
+  const token = appToken || ssoToken;
   if (!token || !process.env.JWT_SECRET) return null;
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
+    const secret = ssoToken && !appToken ? (process.env.SSO_JWT_SECRET || process.env.JWT_SECRET) : process.env.JWT_SECRET;
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+    if (ssoToken && !appToken && payload.sso !== true) return null;
     return payload;
   } catch (_) { return null; }
 }

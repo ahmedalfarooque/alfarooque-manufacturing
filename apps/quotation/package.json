@@ -10,7 +10,11 @@
     "start": "next start -p 3030",
     "lint": "next lint",
     "migrate": "node scripts/migrate.js",
-    "verify:db": "node scripts/verify-db.js"
+    "verify:db": "node scripts/verify-db.js",
+    "test:workflow": "node --test lib/quotationWorkflow.test.js",
+    "verify:workflow-db": "node scripts/verify-workflow-db.js",
+    "test:workflow-db": "node scripts/verify-quotation-approval-state-machine.js",
+    "test:workflow-localhost": "node scripts/verify-localhost-quotation-workflow.js"
   },
   "dependencies": {
     "@sparticuz/chromium": "^131.0.1",
@@ -24,6 +28,7 @@
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "next": "^14.2.15",
+    "pg": "^8.16.3",
     "puppeteer-core": "^23.11.1",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",

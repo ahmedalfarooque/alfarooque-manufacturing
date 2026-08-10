@@ -17,6 +17,8 @@ export default function QuotationRequestDetailPage() {
   const [busy, setBusy] = useState(false);
   const [decision, setDecision] = useState(null);
   const [reason, setReason] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
 
   const load = useCallback(() => {
     fetch(`/api/quotation-requests/${id}`, { credentials: 'same-origin' })
@@ -25,6 +27,10 @@ export default function QuotationRequestDetailPage() {
       .catch(() => setError(t('common.genericError')));
   }, [id, t]);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => setIsAdmin(d?.user?.role === 'admin')).catch(() => {});
+    fetch('/api/app-permissions', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => setCanDelete(!!d?.can_delete)).catch(() => {});
+  }, []);
 
   async function setStatus(status, note = '') {
     setBusy(true);
@@ -37,29 +43,14 @@ export default function QuotationRequestDetailPage() {
     if (res && res.ok) { setDecision(null); setReason(''); load(); } else alert(data.error || t('common.genericError'));
   }
 
-  async function startProject() {
+  async function deleteRequest() {
+    if (!window.confirm(`Delete Quotation Approval Request ${row.quote_number}?`)) return;
     setBusy(true);
-    const res = await fetch(`/api/quotation-requests/${id}/start-project`, { method: 'POST', credentials: 'same-origin' }).catch(() => null);
-    const d = res ? await res.json().catch(() => ({})) : {};
+    const res = await fetch(`/api/quotation-requests/${id}`, { method: 'DELETE', credentials: 'same-origin' }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setBusy(false);
-    if (!res || !res.ok) { alert(d.error || t('common.genericError')); return; }
-    if (d.project?.id) window.location.href = '/projects/' + d.project.id;
-  }
-
-  async function createSalesOrder() {
-    setBusy(true);
-    const res = await fetch('/api/sales-orders', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-      body: JSON.stringify({ quotation_id: row.quotation_id, customer_name: customerNameOf(row) }),
-    }).catch(() => null);
-    const d = res ? await res.json().catch(() => ({})) : {};
-    setBusy(false);
-    if (!res || !res.ok) { alert(d.error || t('common.genericError')); return; }
-    if (d.salesOrder?.id) window.location.href = '/sales-orders/' + d.salesOrder.id;
-  }
-
-  function customerNameOf(r) {
-    return r.customer?.company_name_en || r.customer?.company_name_ar || r.customer?.company_name || 'Unknown Customer';
+    if (!res || !res.ok) { alert(data.error || t('common.genericError')); return; }
+    window.location.href = '/quotation-requests';
   }
 
   if (error) return <Shell active="/quotation-requests"><div className="text-[#ef4444]">{error}</div></Shell>;
@@ -103,26 +94,22 @@ export default function QuotationRequestDetailPage() {
         </div>
 
         <div className="glass-card glass-card--pad flex flex-wrap items-center gap-2">
-          {row.status === 'pending' && (
+          {isAdmin && row.status === 'pending' && (
             <>
-              <button disabled={busy} onClick={() => setStatus('accepted')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
-              <button disabled={busy} onClick={() => setDecision('on_hold')} className="gbtn gbtn-warning gbtn--sm disabled:opacity-50">{t('qr.hold')}</button>
+              <button disabled={busy} onClick={() => setStatus('approved')} className="gbtn gbtn-success gbtn--sm disabled:opacity-50">{t('qr.accept')}</button>
               <button disabled={busy} onClick={() => setDecision('rejected')} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('qr.reject')}</button>
             </>
-          )}
-          {['accepted', 'on_hold'].includes(row.status) && !row.project_id && (
-            <Button disabled={busy} onClick={startProject}>{t('qr.projectStart')}</Button>
           )}
           {row.project_id && (
             <a href={'/projects/' + row.project_id} className="text-sm px-3 py-2 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors duration-200">↗ {t('qr.openProject')}</a>
           )}
-          {row.status === 'accepted' && (
-            <button disabled={busy} onClick={createSalesOrder} className="gbtn gbtn--sm disabled:opacity-50">{t('so.new').replace(/^\+\s*/, '')}</button>
+          {canDelete && !row.project_id && (
+            <button data-delete-control="true" disabled={busy} onClick={deleteRequest} className="gbtn gbtn-danger gbtn--sm disabled:opacity-50">{t('common.delete')}</button>
           )}
           <a href="/quotation-requests" className="text-sm text-[color:var(--tx-3)] hover:underline ms-auto">‹ {t('qr.title')}</a>
         </div>
       </div>
-      {decision && <Modal title={decision === 'rejected' ? t('qr.reject') : t('qr.hold')} onClose={() => { setDecision(null); setReason(''); }} footer={<><Button variant="secondary" onClick={() => { setDecision(null); setReason(''); }}>{t('common.cancel')}</Button><Button variant={decision === 'rejected' ? 'danger' : 'warning'} disabled={busy || !reason.trim()} onClick={() => setStatus(decision, reason)}>{t('common.save')}</Button></>}><Field label="Reason" required><Textarea autoFocus value={reason} onChange={e => setReason(e.target.value)} rows={4} /></Field></Modal>}
+      {decision && <Modal title={t('qr.reject')} onClose={() => { setDecision(null); setReason(''); }} footer={<><Button variant="secondary" onClick={() => { setDecision(null); setReason(''); }}>{t('common.cancel')}</Button><Button variant="danger" disabled={busy || !reason.trim()} onClick={() => setStatus('rejected', reason)}>{t('common.save')}</Button></>}><Field label="Reason" required><Textarea autoFocus value={reason} onChange={e => setReason(e.target.value)} rows={4} /></Field></Modal>}
     </Shell>
   );
 }

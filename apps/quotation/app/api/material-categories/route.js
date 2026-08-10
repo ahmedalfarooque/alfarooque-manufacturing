@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite } = require('@/lib/http');
+const { json, requireSession, requireWrite, requireDelete } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 
 export async function GET(req) {
@@ -51,7 +51,7 @@ export async function PATCH(req) {
 }
 
 export async function DELETE(req) {
-  const { session, response } = await requireWrite(req);
+  const { session, response } = await requireDelete(req);
   if (!session) return response;
   const sb = getDb();
   const body = await req.json().catch(() => ({}));

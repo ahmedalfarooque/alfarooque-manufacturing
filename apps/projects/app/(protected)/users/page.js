@@ -9,7 +9,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
-const EMPTY_FORM = { full_name: '', email: '', position: '', role: 'viewer', phone: '', department: '', company: '', status: 'Active', otp_login_enabled: true };
+const EMPTY_FORM = { full_name: '', email: '', position: '', role: 'viewer', phone: '', department: '', company: '', status: 'Active', otp_login_enabled: true, is_approved: false };
 const APP_ACCESS_OPTIONS = [
   { id: 'quotation', label: 'QuotePro' },
   { id: 'projects', label: 'Projects' },
@@ -160,18 +160,30 @@ function UserModal({ modal, onClose, onSave }) {
   const [err, setErr] = useState(null);
   const [tempPassword, setTempPassword] = useState(null);
   const [appAccess, setAppAccess] = useState([]);
+  const [deleteAccess, setDeleteAccess] = useState([]);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   useEffect(() => {
     if (modal.mode !== 'edit' || !modal.data.id) return;
     fetch(`/api/app-permissions?user_id=${modal.data.id}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : null)
-      .then(d => d && setAppAccess(d.apps || []))
+      .then(d => {
+        if (!d) return;
+        setAppAccess(d.apps || []);
+        setDeleteAccess(d.delete_apps || []);
+        setForm(f => ({ ...f, is_approved: !!d.is_approved }));
+      })
       .catch(() => {});
   }, [modal.mode, modal.data.id]);
 
   function toggleApp(id) {
     setAppAccess(list => list.includes(id) ? list.filter(a => a !== id) : [...list, id]);
+    if (appAccess.includes(id)) setDeleteAccess(list => list.filter(a => a !== id));
+  }
+
+  function toggleDelete(id) {
+    if (!appAccess.includes(id)) return;
+    setDeleteAccess(list => list.includes(id) ? list.filter(a => a !== id) : [...list, id]);
   }
 
   async function submit(e) {
@@ -183,7 +195,7 @@ function UserModal({ modal, onClose, onSave }) {
       if (userId) {
         await fetch('/api/app-permissions', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-          body: JSON.stringify({ user_id: userId, apps: appAccess }),
+          body: JSON.stringify({ user_id: userId, apps: appAccess, delete_apps: deleteAccess }),
         }).catch(() => {});
       }
       if (result?.temp_password) setTempPassword(result.temp_password);
@@ -218,6 +230,14 @@ function UserModal({ modal, onClose, onSave }) {
             <Dropdown value={form.status || 'Active'} onChange={v => setForm(f => ({ ...f, status: v }))}
               options={[['Active', t('users.status.active')], ['Inactive', t('users.status.inactive')], ['Blocked', t('users.status.blocked')]]} />
           </Field>
+          {form.role !== 'admin' && (
+            <Field label="Admin Approved">
+              <label className="flex items-center gap-2 h-10 text-sm cursor-pointer">
+                <input type="checkbox" checked={!!form.is_approved} onChange={e => setForm(f => ({ ...f, is_approved: e.target.checked }))} />
+                Approved user
+              </label>
+            </Field>
+          )}
           <Field label={t('users.modal.phone')}><Input value={form.phone || ''} onChange={set('phone')} /></Field>
           <Field label={t('users.modal.position')}><Input value={form.position || ''} onChange={set('position')} /></Field>
           <Field label={t('users.modal.department')}><Input value={form.department || ''} onChange={set('department')} /></Field>
@@ -228,13 +248,19 @@ function UserModal({ modal, onClose, onSave }) {
         )}
         {form.role !== 'admin' && (
           <div>
-            <p className="text-xs font-medium text-[color:var(--tx-3)] mb-2">App Access (Application Switcher) — admins always see every app</p>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-xs font-medium text-[color:var(--tx-3)] mb-2">App Access and Delete Permission — delete also requires Admin Approval</p>
+            <div className="grid grid-cols-[1fr_auto] gap-2">
               {APP_ACCESS_OPTIONS.map(a => (
-                <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={appAccess.includes(a.id)} onChange={() => toggleApp(a.id)} />
-                  {a.label}
-                </label>
+                <div key={a.id} className="contents">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={appAccess.includes(a.id)} onChange={() => toggleApp(a.id)} />
+                    {a.label}
+                  </label>
+                  <label className="flex items-center gap-2 text-xs cursor-pointer">
+                    <input type="checkbox" disabled={!appAccess.includes(a.id) || !form.is_approved} checked={deleteAccess.includes(a.id)} onChange={() => toggleDelete(a.id)} />
+                    Delete
+                  </label>
+                </div>
               ))}
             </div>
           </div>

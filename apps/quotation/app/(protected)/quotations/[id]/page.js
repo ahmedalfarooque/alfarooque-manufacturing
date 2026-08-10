@@ -66,7 +66,6 @@ export default function QuotationEditorPage() {
   const [sending, setSending] = useState(false);
   const [projectRequest, setProjectRequest] = useState(null);
   const [workflowEvents, setWorkflowEvents] = useState([]);
-  const [sendingToProjects, setSendingToProjects] = useState(false);
   const skipNextSave = useRef(true);
 
   const editable = doc && doc.status === 'draft';
@@ -114,7 +113,7 @@ export default function QuotationEditorPage() {
     const timer = setInterval(() => {
       fetch('/api/quotations/' + id, { credentials: 'same-origin' })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d) { setProjectRequest(d.projectRequest || null); setDoc(x => x ? ({ ...x, project_status: d.row?.project_status, project_request_id: d.row?.project_request_id, project_id: d.row?.project_id }) : x); setWorkflowEvents((d.events || []).filter(e => String(e.event || '').includes('operations') || e.event === 'sent_to_operations')); } })
+        .then(d => { if (d) { setProjectRequest(d.projectRequest || null); setDoc(x => x ? ({ ...x, status: d.row?.status || x.status, project_status: d.row?.project_status, project_request_id: d.row?.project_request_id, pm_project_id: d.row?.pm_project_id }) : x); setWorkflowEvents((d.events || []).filter(e => /quotation|project_created|contract/.test(String(e.event || '')))); } })
         .catch(() => {});
     }, 20000);
     return () => clearInterval(timer);
@@ -349,27 +348,11 @@ export default function QuotationEditorPage() {
     }).catch(() => null);
     const d = res ? await res.json().catch(() => ({})) : {};
     if (!res || !res.ok) { setStatusMsg('⚠ ' + (d.error || t('common.genericError'))); return; }
-    setDoc(x => ({ ...x, status: d.status }));
+    setDoc(x => ({ ...x, status: d.status, pm_project_id: d.detail?.project_id || x.pm_project_id }));
     if (action === 'submit') {
-      setStatusMsg(d.status === 'approved' ? t('quote.autoApproved') : t('quote.sentForApproval'));
+      setStatusMsg(t('quote.waitingProductionApproval'));
     }
     setDecision(null); setDecisionReason('');
-  }
-
-  async function sendToProjects() {
-    if (sendingToProjects || (projectRequest && projectRequest.status !== 'on_hold')) return;
-    if (!window.confirm(lang === 'ar' ? 'إرسال عرض السعر هذا إلى قسم المشاريع؟' : 'Send this quotation to the Operations / Project Department?')) return;
-    setSendingToProjects(true);
-    setStatusMsg(null);
-    const res = await fetch(`/api/quotations/${id}/send-to-projects`, {
-      method: 'POST', credentials: 'same-origin',
-    }).catch(() => null);
-    const d = res ? await res.json().catch(() => ({})) : {};
-    setSendingToProjects(false);
-    if (!res || !res.ok) { setStatusMsg('⚠ ' + (d.error || t('common.genericError'))); return; }
-    setProjectRequest(d.row);
-    setDoc(x => ({ ...x, project_status: 'pending', project_request_id: d.row.id }));
-    setStatusMsg(t('quote.sentToProjects'));
   }
 
   async function clone(kind) {
@@ -417,7 +400,7 @@ export default function QuotationEditorPage() {
             <a href="/quotations" className="text-[color:var(--tx-3)] hover:underline text-sm">‹</a>
             <span className="font-semibold" dir="ltr">{doc.quote_number}</span>
             <StatusBadge status={doc.status} />
-            {doc.project_id && (
+            {doc.pm_project_id && (
               <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444]" title={t('quote.projectLocked')}>
                 🔒 {t('quote.projectLocked')}
               </span>
@@ -426,13 +409,7 @@ export default function QuotationEditorPage() {
             <span className="text-[11px] text-[color:var(--tx-3)]">{saveLabel}</span>
             <div className="flex-1" />
             {editable && <Button onClick={() => doStatus('submit')}>{t('quote.submit')}</Button>}
-            {doc.status === 'pending_approval' && (
-              <>
-                <Button onClick={() => doStatus('approve')}>{t('quote.approve')}</Button>
-                <Button variant="danger" onClick={() => doStatus('reject', { reason: window.prompt(t('quote.rejectReason')) || '' })}>{t('quote.sendBack')}</Button>
-              </>
-            )}
-            {['approved', 'sent'].includes(doc.status) && (
+            {doc.status === 'quotation_approved' && (
               <>
                 <Button onClick={() => { setSendForm({ to: (doc.customer && doc.customer.email) || '', subject: '', message: '' }); setSendOpen(true); }}>
                   ✉ {t('quote.sendEmail')}
@@ -447,11 +424,8 @@ export default function QuotationEditorPage() {
                 <Button variant="danger" onClick={() => setDecision('decline')}>{t('quote.markRejected')}</Button>
               </>
             )}
-            {doc.status === 'accepted' && (
+            {doc.status === 'customer_approved' && (
               <Button onClick={() => doStatus('contract')}>{t('quote.markContracted')}</Button>
-            )}
-            {doc.status === 'contracted' && (
-              <Button onClick={() => doStatus('start')}>{t('quote.startProject')}</Button>
             )}
             <Button variant="ghost" onClick={() => window.open('/quotations/' + id + '/print?lang=' + (doc.output_lang || 'en'), '_blank')}>
               ⤓ {t('quote.print')}
@@ -504,19 +478,17 @@ export default function QuotationEditorPage() {
           </div>
         </div>
 
-        {/* ── Project Integration (Part 4): only once Status = Started ── */}
-        {doc.status === 'started' && (
+        {/* Existing quotation-request integration, now automatic on submit. */}
+        {projectRequest && (
           <div className="glass-card p-4">
             <div className="font-semibold mb-1">{t('quote.projectIntegration')}</div>
-            {projectRequest ? (
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-sm text-[color:var(--tx-3)]">{t('quote.sentToProjects')}</span>
+                  <span className="text-sm text-[color:var(--tx-3)]">{doc.status === 'waiting_quotation_approval' ? t('quote.waitingQuotationApproval') : t('status.' + doc.status)}</span>
                   <StatusBadge status={projectStatusBadgeKey(doc.project_status || projectRequest.status) || 'pr_' + projectRequest.status} />
                   {projectRequest.note && <span className="text-sm text-[#d97706]">{projectRequest.note}</span>}
-                  {projectRequest.status === 'on_hold' && <Button disabled={sendingToProjects} onClick={sendToProjects}>{sendingToProjects ? t('common.saving') : (lang === 'ar' ? 'إعادة الإرسال إلى المشاريع' : 'Resubmit to Projects')}</Button>}
-                {doc.project_id && (
-                  <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + doc.project_id}
+                {doc.pm_project_id && (
+                  <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + doc.pm_project_id}
                     target="_blank" rel="noreferrer" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">
                     ↗ {t('quote.openProject')}
                   </a>
@@ -524,14 +496,6 @@ export default function QuotationEditorPage() {
                 </div>
                 {workflowEvents.length > 0 && <div className="border-t border-[color:var(--bd)] pt-3 space-y-2">{workflowEvents.map((e, i) => <div key={i} className="text-xs"><span className="font-medium capitalize">{String(e.event).replaceAll('_', ' ')}</span><span className="text-[color:var(--tx-3)]"> · {formatDate(e.created_at)}</span>{e.detail?.reason && <div className="text-[color:var(--tx-3)] mt-0.5">{e.detail.reason}</div>}</div>)}</div>}
               </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[color:var(--tx-3)]">{t('quote.readyToTransfer')}</span>
-                <Button disabled={sendingToProjects} onClick={sendToProjects}>
-                  {sendingToProjects ? t('common.saving') : t('quote.sendToProjects')}
-                </Button>
-              </div>
-            )}
           </div>
         )}
 

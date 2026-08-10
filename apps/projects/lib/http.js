@@ -40,4 +40,15 @@ async function isAssignedOrAdmin(session, projectId) {
   return !!data;
 }
 
-module.exports = { json, requireSession, isAssignedOrAdmin };
+async function requireDelete(req) {
+  setRequestIp(req);
+  const session = readSession(req);
+  if (!session) return { response: json({ error: 'Not authenticated.' }, 401) };
+  const { getDb } = require('./db');
+  const { getDeleteAuthorization } = require('../../shared/authorization');
+  const authorization = await getDeleteAuthorization(getDb(), session, 'projects');
+  if (!authorization.allowed) return { response: json({ error: 'Delete permission required.' }, 403) };
+  return { session, authorization };
+}
+
+module.exports = { json, requireSession, isAssignedOrAdmin, requireDelete };

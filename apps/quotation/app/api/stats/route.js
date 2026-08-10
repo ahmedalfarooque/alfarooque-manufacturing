@@ -31,10 +31,10 @@ export async function GET(req) {
   const [total, draft, pending, sent, accepted, expiring, customers, materials, monthlyRes, recentRes] = await Promise.all([
     count(sb, 'qt_quotations'),
     count(sb, 'qt_quotations', q => q.eq('status', 'draft')),
-    count(sb, 'qt_quotations', q => q.eq('status', 'pending_approval')),
-    count(sb, 'qt_quotations', q => q.eq('status', 'sent')),
-    count(sb, 'qt_quotations', q => q.eq('status', 'accepted')),
-    count(sb, 'qt_quotations', q => q.in('status', ['approved', 'sent']).gte('valid_until', today).lte('valid_until', in3days)),
+    count(sb, 'qt_quotations', q => q.in('status', ['pending_approval', 'waiting_quotation_approval'])),
+    count(sb, 'qt_quotations', q => q.in('status', ['sent', 'quotation_approved'])),
+    count(sb, 'qt_quotations', q => q.in('status', ['accepted', 'customer_approved', 'project_created'])),
+    count(sb, 'qt_quotations', q => q.in('status', ['approved', 'sent', 'quotation_approved']).gte('valid_until', today).lte('valid_until', in3days)),
     count(sb, 'customers'),
     count(sb, 'qt_materials'),
     sb.from('qt_quotations')
@@ -64,7 +64,7 @@ export async function GET(req) {
       const o = byMonth.get(k);
       if (!o) continue;
       o.quoted += Number(r.grand_total || 0);
-      if (r.status === 'accepted') o.accepted += Number(r.grand_total || 0);
+      if (['accepted', 'customer_approved', 'project_created'].includes(r.status)) o.accepted += Number(r.grand_total || 0);
       if (String(r.created_at) >= monthStart) quotedMonth += Number(r.grand_total || 0);
     }
     monthly.push(...byMonth.values());

@@ -8,16 +8,11 @@ import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
 
 const NAV = [
-  { href: '/dashboard',         label: 'Dashboard',         labelAr: 'لوحة التحكم',     icon: 'dashboard' },
-  { href: '/chart-of-accounts', label: 'Chart of Accounts', labelAr: 'دليل الحسابات',   icon: 'layers' },
-  { href: '/journal-entries',   label: 'Journal Entries',   labelAr: 'القيود اليومية',   icon: 'file-text' },
-  { href: '/invoices',          label: 'Invoices',          labelAr: 'الفواتير',          icon: 'receipt' },
-  { href: '/bills',             label: 'Bills',             labelAr: 'المستحقات',         icon: 'clipboard' },
-  { href: '/payments',          label: 'Payments',          labelAr: 'المدفوعات',         icon: 'credit-card' },
-  { href: '/banking',           label: 'Banking',           labelAr: 'البنوك',             icon: 'bank' },
-  { href: '/expenses',          label: 'Expenses',          labelAr: 'المصروفات',         icon: 'trending-up' },
-  { href: '/assets',            label: 'Assets',            labelAr: 'الأصول',            icon: 'box' },
-  { href: '/reports',           label: 'Reports',           labelAr: 'التقارير',          icon: 'bar-chart' },
+  { href: '/smartlife/sales-invoices', label: 'Sales Invoices', labelAr: 'فواتير المبيعات', icon: 'receipt' },
+  { href: '/smartlife/purchase-invoices', label: 'Purchase Invoices', labelAr: 'فواتير المشتريات', icon: 'receipt' },
+  { href: '/smartlife/payments', label: 'Payments', labelAr: 'المدفوعات', icon: 'receipt' },
+  { href: '/smartlife/expenses', label: 'Expenses', labelAr: 'المصروفات', icon: 'receipt' },
+  { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'receipt' },
   { href: '/settings',          label: 'Settings',          labelAr: 'الإعدادات',         icon: 'settings' },
 ];
 

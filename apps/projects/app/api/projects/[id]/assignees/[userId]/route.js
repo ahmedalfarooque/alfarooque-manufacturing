@@ -1,10 +1,10 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
 
 export async function DELETE(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireDelete(req);
   if (response) return response;
 
   const sb = getDb();

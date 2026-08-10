@@ -13,7 +13,7 @@
    POST { action:'convert-to-order', id } */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
 const { RECOVERY_WINDOW_DAYS, isSuperAdmin, hasSoftDelete, logError, daysRemaining, attachActorNames } = require('@/lib/ordersQuotesCore');
 const { notifyOrdersQuotes } = require('@/lib/notifyOrdersQuotes');
 const mailer = require('@/lib/email');
@@ -162,6 +162,8 @@ export async function POST(req) {
   if (body.action === 'reply') return replyToCustomer(sb, session, body);
 
   if (body.action === 'delete') {
+    const deletion = await requireDelete(req);
+    if (deletion.response) return deletion.response;
     if (!id) return json({ error: 'Missing quote id.' }, 400);
     if (!(await hasSoftDelete(sb, 'quotes'))) return json({ error: 'Soft Delete feature has not been enabled yet.', softDeleteEnabled: false }, 409);
     const { data: existing, error: fetchError } = await sb.from('quotes').select('id, name, email, is_deleted').eq('id', id).maybeSingle();
@@ -207,6 +209,8 @@ export async function POST(req) {
   }
 
   if (body.action === 'permanent-delete') {
+    const deletion = await requireDelete(req);
+    if (deletion.response) return deletion.response;
     if (!id) return json({ error: 'Missing quote id.' }, 400);
     if (!isSuperAdmin(session)) return json({ error: 'Only a Super Admin can permanently delete a quote.' }, 403);
     if (!(await hasSoftDelete(sb, 'quotes'))) return json({ error: 'Soft Delete feature has not been enabled yet.', softDeleteEnabled: false }, 409);

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 const COOKIE_NAME = 'af_crm_session';
 const SSO_COOKIE_NAME = 'af_sso_session';
 
-const PROTECTED = ['/dashboard', '/contacts', '/deals', '/activities', '/pipeline', '/reports', '/settings'];
+const PROTECTED = ['/dashboard', '/contacts', '/deals', '/activities', '/pipeline', '/integrations', '/reports', '/settings'];
 const ADMIN_ONLY = ['/settings'];
 
 export async function middleware(req) {
@@ -49,4 +49,4 @@ export async function middleware(req) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/dashboard/:path*', '/contacts/:path*', '/deals/:path*', '/activities/:path*', '/pipeline/:path*', '/reports/:path*', '/settings/:path*'] };
+export const config = { matcher: ['/dashboard/:path*', '/contacts/:path*', '/deals/:path*', '/activities/:path*', '/pipeline/:path*', '/integrations/:path*', '/reports/:path*', '/settings/:path*'] };

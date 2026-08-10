@@ -21,7 +21,13 @@ export default function ContactDetailPage() {
   if (loading) return <div className="text-center text-slate-400 py-12">Loading…</div>;
   if (!data) return <div className="text-center text-slate-400 py-12">Contact not found.</div>;
 
-  const { contact, deals, activities } = data;
+  const { contact, deals, activities, customer360 = {} } = data;
+
+  async function initializeIdentity() {
+    const res = await fetch(`/api/contacts/${id}/identity`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (res.ok) { toast('Customer identity initialized', 'success'); refresh(); }
+    else toast('Could not initialize customer identity', 'error');
+  }
 
   async function convertType(type) {
     const res = await fetch(`/api/contacts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contact_type: type }) });
@@ -166,6 +172,15 @@ export default function ContactDetailPage() {
             </div>
           )}
         </GlassCard>
+      </div>
+
+      <div className="flex items-center justify-between pt-2"><div><h2 className="text-xl font-bold text-[color:var(--tx)]">Customer 360</h2><p className="text-xs text-[color:var(--tx-3)]">Relationship data remains linked to each source system</p></div>{!customer360.identity && <GlassButton onClick={initializeIdentity}>Initialize master identity</GlassButton>}</div>
+      <div className="grid lg:grid-cols-2 xl:grid-cols-5 gap-4">
+        <GlassCard className="p-4"><h3 className="font-semibold text-[color:var(--tx)]">System identity</h3><p className="mt-2 text-sm text-[color:var(--tx-3)]">{customer360.identity?.mapping_status || 'Not initialized'}</p><div className="mt-3 flex flex-wrap gap-2">{(customer360.mappings || []).map(m => <GlassBadge key={m.id} tone={m.sync_status === 'synced' || m.sync_status === 'mapped' ? 'emerald' : 'amber'}>{m.source_system}: {m.sync_status}</GlassBadge>)}</div></GlassCard>
+        <GlassCard className="p-4"><h3 className="font-semibold text-[color:var(--tx)]">Quotations</h3><p className="mt-1 text-2xl font-bold text-cyan-400">{(customer360.quotations || []).length}</p><div className="mt-3 space-y-2">{(customer360.quotations || []).slice(0,3).map(q => <div key={q.id} className="text-xs"><span className="text-[color:var(--tx-2)]">{q.quote_number}</span><span className="float-end text-[color:var(--tx-3)]">{q.status}</span></div>)}</div></GlassCard>
+        <GlassCard className="p-4"><h3 className="font-semibold text-[color:var(--tx)]">Projects</h3><p className="mt-1 text-2xl font-bold text-cyan-400">{(customer360.projects || []).length}</p><div className="mt-3 space-y-2">{(customer360.projects || []).slice(0,3).map(p => <div key={p.id} className="text-xs"><span className="text-[color:var(--tx-2)]">{p.project_name}</span><span className="float-end text-[color:var(--tx-3)]">{p.status}</span></div>)}</div></GlassCard>
+        <GlassCard className="p-4"><div className="flex items-center justify-between"><h3 className="font-semibold text-[color:var(--tx)]">Finance — SmartERP</h3><GlassBadge tone={customer360.smartErp?.connected ? 'emerald' : 'amber'}>{customer360.smartErp?.connected ? 'Live' : 'Offline'}</GlassBadge></div><p className="mt-2 text-2xl font-bold text-cyan-400">{(customer360.smartErp?.invoices || []).length}</p><p className="text-xs text-[color:var(--tx-3)]">Sales invoices</p><dl className="mt-3 space-y-1 text-xs"><div className="flex justify-between"><dt>Invoiced</dt><dd>SAR {fmt(customer360.smartErp?.summary?.invoiced)}</dd></div><div className="flex justify-between"><dt>Paid</dt><dd>SAR {fmt(customer360.smartErp?.summary?.paid)}</dd></div><div className="flex justify-between font-semibold"><dt>Outstanding</dt><dd>SAR {fmt(customer360.smartErp?.summary?.outstanding)}</dd></div></dl></GlassCard>
+        <GlassCard className="p-4"><h3 className="font-semibold text-[color:var(--tx)]">Timeline</h3><p className="mt-1 text-2xl font-bold text-cyan-400">{(customer360.timeline || []).length}</p><div className="mt-3 space-y-2">{(customer360.timeline || []).slice(0,3).map(event => <div key={event.id} className="text-xs"><p className="text-[color:var(--tx-2)]">{event.title}</p><p className="text-[color:var(--tx-4)]">{event.source_system}</p></div>)}</div></GlassCard>
       </div>
     </div>
   );

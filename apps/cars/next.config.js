@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   reactStrictMode: true,
   /* Barrel-optimize heavy UI packages (recharts): Next rewrites the barrel
      import to direct deep imports at compile time — faster dev compile and

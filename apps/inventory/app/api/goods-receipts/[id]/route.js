@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
 const { getInvRole, can } = require('@/lib/perms');
 const { syncItemQty } = require('@/lib/stockSync');
 
@@ -18,7 +18,7 @@ export async function GET(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireDelete(req);
   if (response) return response;
   const sb = getDb();
   const invRole = await getInvRole(sb, session);

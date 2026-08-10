@@ -11,7 +11,7 @@ export async function GET(req) {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
-  const [contactsRes, leadsRes, dealsRes, activitiesRes, dueActivitiesRes, pipelineRes, recentContacts, recentDeals] = await Promise.all([
+  const [contactsRes, leadsRes, dealsRes, activitiesRes, dueActivitiesRes, pipelineRes, recentContacts, recentDeals, integrationsRes] = await Promise.all([
     sb.from('crm_contacts').select('id', { count: 'exact', head: true }),
     sb.from('crm_contacts').select('id', { count: 'exact', head: true }).eq('contact_type', 'Lead'),
     sb.from('crm_deals').select('id, value, status'),
@@ -20,6 +20,7 @@ export async function GET(req) {
     sb.from('crm_deals').select('status, value').neq('status', 'Lost').neq('status', 'Won'),
     sb.from('crm_contacts').select('id, name, company, email, created_at').order('created_at', { ascending: false }).limit(5),
     sb.from('crm_deals').select('id, title, value, status, contact_id').order('created_at', { ascending: false }).limit(5),
+    sb.from('crm_integrations').select('integration_key,name,status,last_sync_at,last_error').order('name'),
   ]);
 
   const deals = dealsRes.data || [];
@@ -50,5 +51,6 @@ export async function GET(req) {
     pipelineValue,
     recentContacts: dashboardContacts,
     recentDeals: recentDeals.data || [],
+    integrations: integrationsRes.data || [],
   });
 }

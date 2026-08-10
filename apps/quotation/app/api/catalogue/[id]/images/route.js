@@ -6,7 +6,7 @@
    POST (multipart file[]) · PATCH {url} set primary · DELETE {url}.    */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite } = require('@/lib/http');
+const { json, requireSession, requireWrite, requireDelete } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 
 export const runtime = 'nodejs';
@@ -70,7 +70,7 @@ export async function PATCH(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { session, response } = await requireWrite(req);
+  const { session, response } = await requireDelete(req);
   if (!session) return response;
   const sb = getDb();
   const body = await req.json().catch(() => ({}));

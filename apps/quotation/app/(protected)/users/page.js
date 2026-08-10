@@ -51,6 +51,16 @@ export default function UsersPage() {
     else setMsg('⚠ ' + t('common.genericError'));
   }
 
+  async function setSecurity(user, field, value) {
+    setMsg(null);
+    const res = await fetch('/api/admin/users', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+      body: JSON.stringify({ user_id: user.id, [field]: value }),
+    }).catch(() => null);
+    if (res && res.ok) load();
+    else setMsg('⚠ ' + t('common.genericError'));
+  }
+
   return (
     <Shell active="/users">
       <div className="space-y-4">
@@ -60,13 +70,13 @@ export default function UsersPage() {
             <table className="w-full">
               <thead><tr>
                 <Th>{t('f.name')}</Th><Th>{t('f.email')}</Th><Th>{t('users.platformRole')}</Th>
-                <Th>{t('users.qrole')}</Th><Th>{t('users.since')}</Th><Th className="text-end">{t('common.actions')}</Th>
+                <Th>{t('users.qrole')}</Th><Th>Admin Approved</Th><Th>Delete</Th><Th>{t('users.since')}</Th><Th className="text-end">{t('common.actions')}</Th>
               </tr></thead>
               <tbody>
                 {rows === null ? (
-                  <tr><Td colSpan={6} className="text-center text-[color:var(--tx-3)]">{t('shell.loading')}</Td></tr>
+                  <tr><Td colSpan={8} className="text-center text-[color:var(--tx-3)]">{t('shell.loading')}</Td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={6}><EmptyState text={t('common.noRecords')} /></td></tr>
+                  <tr><td colSpan={8}><EmptyState text={t('common.noRecords')} /></td></tr>
                 ) : rows.map(u => (
                   <tr key={u.id}>
                     <Td>{u.full_name || '—'}</Td>
@@ -79,6 +89,12 @@ export default function UsersPage() {
                         <Select value={u.qrole} onChange={e => setRole(u, e.target.value)} className="max-w-[180px] !py-1"
                           options={ROLES.map(r => ({ value: r, label: t('qrole.' + r) }))} />
                       )}
+                    </Td>
+                    <Td className="text-center">
+                      <input type="checkbox" disabled={u.platform_admin} checked={u.platform_admin || !!u.is_approved} onChange={e => setSecurity(u, 'is_approved', e.target.checked)} />
+                    </Td>
+                    <Td className="text-center">
+                      <input type="checkbox" disabled={u.platform_admin || !u.is_approved} checked={u.platform_admin || !!u.can_delete} onChange={e => setSecurity(u, 'can_delete', e.target.checked)} />
                     </Td>
                     <Td className="text-[12px] text-[color:var(--tx-3)] whitespace-nowrap">{formatDate(u.created_at)}</Td>
                     <Td className="text-end whitespace-nowrap">

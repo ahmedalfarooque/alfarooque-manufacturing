@@ -1,6 +1,7 @@
 import './globals.css';
 import { LanguageProvider } from '@/lib/i18n';
 import GlassIconsLoader from '@/components/GlassIcons';
+import DeletePermissionGate from '../../shared/DeletePermissionGate';
 
 export const metadata = {
   title: 'TrackFleet — AL FAROOQUE Cars Tracking',
@@ -20,6 +21,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen font-sans antialiased">
         <GlassIconsLoader />
+        <DeletePermissionGate />
         <div className="af-ambient" aria-hidden="true">
           <div className="af-orb af-orb-1" />
           <div className="af-orb af-orb-2" />

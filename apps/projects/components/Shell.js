@@ -194,13 +194,6 @@ export default function Shell({ children, active }) {
                           {n.body && <div className="text-xs text-[color:var(--tx-3)] whitespace-pre-line">{n.body}</div>}
                           <div className="text-[11px] text-[color:var(--tx-4)] mt-0.5">{formatDate(n.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</div>
                         </button>
-                        {n.type === 'quotation_request' && !n.is_read && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <button onClick={(e) => actOnQuotationRequest(e, n, 'accepted')} className="gbtn gbtn-success gbtn--sm">{t('qr.accept')}</button>
-                            <button onClick={(e) => actOnQuotationRequest(e, n, 'on_hold')} className="gbtn gbtn-warning gbtn--sm">{t('qr.hold')}</button>
-                            <button onClick={(e) => actOnQuotationRequest(e, n, 'rejected')} className="gbtn gbtn-danger gbtn--sm">{t('qr.reject')}</button>
-                          </div>
-                        )}
                         <button onClick={(e) => deleteNotification(e, n.id)} className="text-[11px] text-[color:var(--tx-4)] hover:text-[#ef4444] mt-1">{t('common.delete')}</button>
                       </div>
                     ))}

@@ -35,7 +35,7 @@ async function readAnySession(req) {
   return ssoToken ? await verifySso(ssoToken) : null;
 }
 
-const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/quotation-requests', '/users', '/orders', '/orders-deleted', '/quotes', '/quotes-deleted', '/sales-orders'];
+const ADMIN_ONLY_PREFIXES = ['/projects/new', '/projects/edit', '/purchase-requests', '/users', '/orders', '/orders-deleted', '/quotes', '/quotes-deleted', '/sales-orders'];
 const EXTERNAL_BLOCKED_PREFIXES = ['/customers'];
 
 /* This app has no basePath (it lives at the root of

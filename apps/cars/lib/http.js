@@ -20,4 +20,14 @@ function requireSession(req, { adminOnly } = {}) {
   return { session };
 }
 
-module.exports = { json, requireSession };
+async function requireDelete(req) {
+  const session = readSession(req);
+  if (!session) return { response: json({ error: 'Not authenticated.' }, 401) };
+  const { getDb } = require('./db');
+  const { getDeleteAuthorization } = require('../../shared/authorization');
+  const authorization = await getDeleteAuthorization(getDb(), session, 'cars');
+  if (!authorization.allowed) return { response: json({ error: 'Delete permission required.' }, 403) };
+  return { session, authorization };
+}
+
+module.exports = { json, requireSession, requireDelete };

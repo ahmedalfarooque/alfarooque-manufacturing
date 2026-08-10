@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession, requireDelete } = require('@/lib/http');
 
 const EDITABLE = ['full_name', 'company_name', 'email', 'mobile_number', 'vat_number', 'cr_number', 'address', 'city', 'country', 'notes'];
 
@@ -33,7 +33,7 @@ export async function PATCH(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireDelete(req);
   if (response) return response;
   const sb = getDb();
   /* Soft-delete: customers are shared with apps/quotation, and existing

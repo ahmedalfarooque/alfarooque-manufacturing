@@ -58,6 +58,15 @@ const ORDER = [
   'apps-schema-v11-quotation-project-sync.sql', // project_status/project_request_id/project_id sync-back columns — cross-app
   'quotation-schema-v9-ww03-rename.sql', // Wood Works entity code/quote_prefix 'WW' -> 'WW-03'
   'quotation-schema-v10-pdf-system.sql', // qt_entities.website + strip hardcoded payment clause from terms templates
+  'migrations/20260809105205_quotation_production_workflow.sql', // legacy workflow foundation + one-project-per-quotation invariant
+  'migrations/20260809111509_unified_user_delete_permissions.sql', // shared approval state + app-scoped delete grants
+  'migrations/20260809143000_quotation_approval_state_machine.sql', // atomic quotation approval transitions + terminology
+  'migrations/20260809144500_quotation_rejection_audit_fields.sql', // rejection synchronization audit fields
+  'migrations/20260809151500_quotation_pm_project_correlation.sql', // separate Projects-app correlation from legacy qt_projects
+  'migrations/20260809153500_atomic_delete_quotation_approval.sql', // unlink + event + delete in one transaction
+  'migrations/20260809155500_delete_legacy_quotation_approval_links.sql', // unlink shared legacy revision references
+  'migrations/20260810100000_crm_central_integration_platform.sql', // CRM identities, integrations, sync, webhook and audit foundation
+  'migrations/20260810113000_consolidate_internal_erp_integration.sql', // one AL FAROOQUE ERP integration with four separate modules
 ];
 
 async function main() {

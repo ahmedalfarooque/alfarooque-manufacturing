@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin, requireDelete } = require('@/lib/http');
 const { autoProjectName } = require('@/lib/autoProjectName');
 
 const EDITABLE = ['customer_id', 'customer_name', 'company_name', 'contact_person', 'contact_email', 'contact_phone',
@@ -61,7 +61,8 @@ export async function PATCH(req, { params }) {
        was created from one (Part 10) — same Postgres instance, direct
        write, no HTTP call needed. No-op (0 rows) for manually-created
        projects with no linked quotation. */
-    await sb.from('qt_quotations').update({ project_status: patch.status }).eq('project_id', params.id).catch(() => {});
+    const { error: syncError } = await sb.from('qt_quotations').update({ project_status: patch.status }).eq('pm_project_id', params.id);
+    if (syncError) console.warn('[projects] quotation status sync skipped:', syncError.message);
   }
   if ('progress' in patch) await sb.from('pm_project_logs').insert({ project_id: params.id, activity: `Completion changed to ${patch.progress}%` });
   const otherFieldsChanged = Object.keys(patch).some(k => k !== 'status' && k !== 'progress');
@@ -71,11 +72,12 @@ export async function PATCH(req, { params }) {
   const notifyIds = (assignees || []).map(a => a.user_id).filter(id => id !== session.sub);
   if (notifyIds.length) {
     const summary = patch.status ? `Status changed to ${patch.status}` : 'Project details updated';
-    await sb.from('notifications').insert(notifyIds.map(uid => ({
+    const { error: notificationError } = await sb.from('notifications').insert(notifyIds.map(uid => ({
       user_id: uid, type: 'project_updated', project_id: params.id,
       title: 'Project Updated', body: summary,
       link: `/projects/${params.id}`,
-    }))).catch(() => {});
+    })));
+    if (notificationError) console.warn('[projects] notification skipped:', notificationError.message);
   }
 
   return json({ project: data });
@@ -87,7 +89,7 @@ async function getExistingDetails(sb, id) {
 }
 
 export async function DELETE(req, { params }) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireDelete(req);
   if (response) return response;
 
   const sb = getDb();
@@ -95,7 +97,7 @@ export async function DELETE(req, { params }) {
      Running, On Hold, Completed, Cancelled, …).
 
      Why deletes used to fail for Running/Completed projects: those are
-     typically created from a quotation, so qt_quotations.project_id and
+     typically created from a quotation, so qt_quotations.pm_project_id and
      project_requests.project_id point at them — both plain FKs with NO
      cascade. Postgres rejected the delete with an FK violation, which
      surfaced as a generic "Could not delete project." and looked like a
@@ -107,8 +109,8 @@ export async function DELETE(req, { params }) {
      FKs, exactly as before. Non-admins never reach this handler —
      requireSession(adminOnly) above is unchanged. */
   const { error: qErr } = await sb.from('qt_quotations')
-    .update({ project_id: null, project_status: null })
-    .eq('project_id', params.id);
+    .update({ pm_project_id: null, project_status: null })
+    .eq('pm_project_id', params.id);
   if (qErr) { console.error('[projects] delete: unlink quotation failed:', qErr.message); return json({ error: 'Could not delete project.' }, 500); }
 
   const { error: rErr } = await sb.from('project_requests')

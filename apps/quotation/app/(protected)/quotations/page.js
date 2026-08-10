@@ -10,7 +10,7 @@ import { Button, Input, Select, Field, Modal, EmptyState, Th, Td, Pagination } f
 import { isSuperAdminEmail } from '@/lib/superAdmin';
 import { pickDefaultEntityId } from '@/lib/defaultEntity';
 
-const TABS = ['', 'draft', 'pending_approval', 'approved', 'sent', 'accepted', 'expired'];
+const TABS = ['', 'draft', 'waiting_quotation_approval', 'quotation_approved', 'quotation_rejected', 'customer_approved', 'customer_rejected', 'project_created', 'expired'];
 
 export default function QuotationsPage() {
   const { t, tr, trL, lang, formatNumber, formatDate } = useLanguage();
@@ -130,12 +130,12 @@ export default function QuotationsPage() {
                   <Td>{r.entity ? r.entity.code : '—'}</Td>
                   <Td dir="ltr" className="whitespace-nowrap font-medium">{formatNumber(r.grand_total, { minimumFractionDigits: 2 })}</Td>
                   <Td>{r.blended_margin_pct != null ? formatNumber(r.blended_margin_pct, { maximumFractionDigits: 1 }) + '%' : '—'}</Td>
-                  <Td onClick={e => r.project_id && e.stopPropagation()}>
+                  <Td onClick={e => r.pm_project_id && e.stopPropagation()}>
                     <div className="flex flex-wrap items-center gap-1">
                       <StatusBadge status={r.status} />
                       {r.project_status && (
-                        r.project_id ? (
-                          <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + r.project_id}
+                        r.pm_project_id ? (
+                          <a href={(process.env.NEXT_PUBLIC_PROJECTS_APP_URL || 'https://projects.alfarooque.com') + '/projects/' + r.pm_project_id}
                             target="_blank" rel="noreferrer" title={t('quote.openProject')}>
                             <StatusBadge status={projectStatusBadgeKey(r.project_status)} />
                           </a>
