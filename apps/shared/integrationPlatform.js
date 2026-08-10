@@ -10,9 +10,35 @@ const SMARTLIFE_RESOURCES = Object.freeze({
   suppliers: 'suppliers/index',
   'sales-invoices': 'sales/index',
   expenses: 'expenses/index',
+  categories: 'categories/index',
+  brands: 'brands/index',
+  units: 'units/index',
+  warehouses: 'warehouses/index',
+  tax: 'tax/index',
 });
 
-const QUERY_FIELDS = new Set(['id', 'search', 'page', 'limit', 'date', 'date_from', 'date_to', 'from', 'to', 'status']);
+/* SmartERP v1.0 ignores list filters supplied as query-string parameters — it
+   reads them from the form-encoded POST body only (proven against the live
+   API: passing start_period in the query echoes back an empty `filters`
+   object, while passing it in the body echoes the value AND changes `total`).
+   Sending an empty body is why sales/index reported total=0 and
+   suppliers/index returned 20 of 177 rows: the server fell back to its own
+   default (unfiltered, limit 0). token+company must stay in the query string —
+   moving them into the body fails authentication. */
+const BODY_FIELDS = new Set([
+  'q', 'code', 'page', 'limit',
+  'reference_no', 'start_period', 'end_period',
+  'customer', 'customer_id', 'warehouse_id', 'biller', 'biller_id',
+  'sale_status', 'payment_status', 'created_by',
+  'company', 'name', 'category_id', 'brand_id',
+  'cf1', 'cf2', 'cf3', 'cf4', 'cf5', 'cf6',
+]);
+const DEFAULT_PAGE_LIMIT = 500;
+/* Ascending page sizes tried by readAllSmartLife. 500 is the largest value the
+   live API honours for sales/index (1000 returns zero rows). */
+const PAGE_LIMIT_LADDER = [200, 500];
+const SALES_PERIOD_REQUIRED = new Set(['sales-invoices']);
+const EARLIEST_SALES_PERIOD = '2000-01-01';
 const TOKEN_TTL_MS = 4 * 60 * 1000;
 const SMARTERP_WRITE_AUTHORIZATION_PHRASE = 'AUTHORIZE SMARTERP CHANGE';
 let tokenCache = null;
@@ -141,16 +167,35 @@ async function getSmartLifeConfig(sb) {
   return { row, ...config, baseUrl: base.toString() };
 }
 
-function resourceUrl(config, resource, token, query = {}) {
+function resourceUrl(config, resource, token) {
   const endpoint = SMARTLIFE_RESOURCES[resource];
   if (!endpoint) throw new IntegrationConfigurationError('Unsupported SmartERP read-only resource.');
   const url = new URL(endpoint, config.baseUrl);
   url.searchParams.set('token', token);
   url.searchParams.set('company', config.company);
-  for (const [key, value] of Object.entries(query || {})) {
-    if (QUERY_FIELDS.has(key) && value !== undefined && value !== null && String(value).trim()) url.searchParams.set(key, String(value).trim());
-  }
   return url;
+}
+
+/* Documented list filters, form-encoded into the POST body. `limit` defaults to
+   DEFAULT_PAGE_LIMIT so a caller that asks for no pagination still receives a
+   full page instead of the server's truncated default. */
+function resourceBody(resource, query = {}) {
+  const body = new URLSearchParams();
+  for (const [key, value] of Object.entries(query || {})) {
+    if (BODY_FIELDS.has(key) && value !== undefined && value !== null && String(value).trim()) {
+      body.set(key, String(value).trim());
+    }
+  }
+  if (!body.has('limit')) body.set('limit', String(DEFAULT_PAGE_LIMIT));
+  /* sales/index returns total=0 unless start_period is supplied — verified
+     against the live API: start_period alone yields all 488 sales, while
+     limit-only or end_period-only yields 0. Default to an open-ended lower
+     bound so the invoice list is complete when the caller supplies no range;
+     an explicit start_period from the caller always wins. */
+  if (SALES_PERIOD_REQUIRED.has(resource) && !body.has('start_period')) {
+    body.set('start_period', EARLIEST_SALES_PERIOD);
+  }
+  return body;
 }
 
 function recordsFrom(payload) {
@@ -190,24 +235,75 @@ async function authenticateSmartErp(config, force = false) {
   return payload.token;
 }
 
+/* Walks every SmartERP page for a resource instead of returning only the first.
+   SmartERP reports the full match count in `total` while returning at most
+   `limit` rows, so a single read would silently store a fraction of the data
+   (e.g. 200 of 488 sales). Deduplicates by SmartERP id across pages and stops
+   as soon as a page repeats or `total` is reached, so it terminates even if the
+   provider ignores `page`. */
+async function readAllSmartLife(sb, resource, query = {}, { maxPages = 50 } = {}) {
+  const seen = new Set();
+  const records = [];
+  const absorb = (batch) => {
+    let added = 0;
+    for (const record of batch || []) {
+      const id = record?.id ?? record?.reference_no ?? record?.code ?? null;
+      const key = id == null ? crypto.createHash('sha256').update(JSON.stringify(record)).digest('hex') : String(id);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      records.push(record);
+      added += 1;
+    }
+    return added;
+  };
+
+  /* Escalate `limit` on a single unpaged request first. SmartERP honours large
+     limits (500 returns all 488 sales in one call) but rejects over-large ones
+     by returning zero rows, and adding `page` to sales/index also returns zero —
+     so an unpaged high-limit read is both the most complete and the most
+     reliable path. Never treat a zero-row response as "no data" when a smaller
+     limit already returned rows. */
+  let total = null;
+  for (const limit of PAGE_LIMIT_LADDER) {
+    const result = await readSmartLife(sb, resource, { ...query, limit: String(limit) });
+    const batch = result.records || [];
+    const reported = Number(result.providerPayload?.total);
+    if (!batch.length) continue;
+    if (Number.isFinite(reported) && reported > 0) total = reported;
+    if (batch.length > records.length) { seen.clear(); records.length = 0; absorb(batch); }
+    if (total !== null && records.length >= total) return { records, total };
+  }
+  if (total === null) total = records.length;
+  if (records.length >= total) return { records, total };
+
+  /* Still short: fall back to page walking, but abandon it the moment a page
+     yields nothing new so a provider that ignores//rejects `page` cannot spin. */
+  for (let page = 2; page <= maxPages; page += 1) {
+    const result = await readSmartLife(sb, resource, { ...query, page: String(page), limit: String(PAGE_LIMIT_LADDER[0]) });
+    if (!absorb(result.records)) break;
+    if (records.length >= total) break;
+  }
+  return { records, total };
+}
+
 async function readSmartLife(sb, resource, query = {}) {
   const config = await getSmartLifeConfig(sb);
   let token = await authenticateSmartErp(config);
   try {
-    const payload = await requestJson(resourceUrl(config, resource, token, query), {
+    const payload = await requestJson(resourceUrl(config, resource, token), {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(),
+      body: resourceBody(resource, query),
     });
     return { records: recordsFrom(payload), providerPayload: payload };
   } catch (error) {
     if (!/HTTP 401|HTTP 403|rejected/.test(error?.message || '')) throw error;
     tokenCache = null;
     token = await authenticateSmartErp(config, true);
-    const payload = await requestJson(resourceUrl(config, resource, token, query), {
+    const payload = await requestJson(resourceUrl(config, resource, token), {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(),
+      body: resourceBody(resource, query),
     });
     return { records: recordsFrom(payload), providerPayload: payload };
   }
@@ -225,5 +321,5 @@ module.exports = {
   smartErpWritePermissionNotice, requireSmartErpWriteAuthorization, auditSmartErpWriteAuthorization,
   encryptSecrets, decryptSecrets,
   getIntegration, getSmartLifeConfig, hasSmartErpEnvironment, recordsFrom,
-  authenticateSmartErp, readSmartLife, auditIntegration, clearSmartErpTokenForTests,
+  authenticateSmartErp, readSmartLife, readAllSmartLife, auditIntegration, clearSmartErpTokenForTests,
 };

@@ -25,7 +25,7 @@ function normalizeSmartErpFinancialRecord(resource, record) {
   const recordType = RESOURCE_TYPES[resource];
   if (!recordType || !record || typeof record !== 'object') return null;
   const raw = JSON.parse(JSON.stringify(record));
-  const explicitId = first(record, ['id','invoice_id','expense_id','uuid','number','invoice_number','reference']);
+  const explicitId = first(record, ['id','invoice_id','expense_id','uuid','reference_no','number','invoice_number','reference']);
   const externalId = explicitId == null
     ? crypto.createHash('sha256').update(JSON.stringify(raw)).digest('hex')
     : String(explicitId);
@@ -34,13 +34,18 @@ function normalizeSmartErpFinancialRecord(resource, record) {
   const explicitBalance = first(record, ['balance_amount','remaining_balance','balance','due_amount']);
   return {
     tenant_id: 'alfarooque', source_system: 'smartlife', record_type: recordType, external_id: externalId,
-    source_reference: String(first(record, ['invoice_number','number','reference','code']) || externalId),
-    party_name: first(record, ['customer_name','supplier_name','vendor_name','party_name','customer','supplier']),
-    record_date: date(record, ['invoice_date','expense_date','date','created_at']),
+    source_reference: String(first(record, ['reference_no','invoice_number','number','reference','code']) || externalId),
+    party_name: first(record, ['customer','supplier','customer_name','supplier_name','vendor_name','party_name']),
+    record_date: date(record, ['date','invoice_date','expense_date','created_at']),
     due_date: date(record, ['due_date','payment_due_date']),
     currency: String(first(record, ['currency','currency_code']) || 'SAR'),
-    subtotal: amount(record, ['subtotal','sub_total','net_amount']),
-    vat_amount: amount(record, ['vat_amount','tax_amount','vat','tax']),
+    /* SmartERP's documented Sale object names these `total` (net, pre-tax) and
+       `total_tax` — verified against the live API, where `total_tax` carries
+       the real VAT and the generic guesses below never matched, so every
+       stored vat_amount silently normalized to 0 despite invoices having real
+       tax on their line items. */
+    subtotal: amount(record, ['total','subtotal','sub_total','net_amount']),
+    vat_amount: amount(record, ['total_tax','vat_amount','tax_amount','vat','tax']),
     total_amount: total, paid_amount: paid,
     balance_amount: explicitBalance == null ? Math.max(total - paid, 0) : Number(explicitBalance) || 0,
     source_status: first(record, ['payment_status','status','invoice_status']), raw_payload: raw,

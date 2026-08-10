@@ -18,21 +18,47 @@ function endpointFor(resource, query = {}) {
   return url;
 }
 
-async function readSmartLife(resource, sessionToken, query = {}) {
-  if (!sessionToken) throw new SmartLifeConfigurationError('Authenticated ERP session is required.');
+/* Builds the Cookie header forwarded to the central CRM integration service.
+   Accounting's own readSession accepts either the app cookie OR the shared
+   parent-domain SSO cookie, so this must forward whichever the caller actually
+   has — previously only the app cookie was forwarded, so an admin signed in
+   through a sibling app (SSO only, no af_accounting_session) hit
+   "Authenticated ERP session is required" even though the page authorized fine.
+   CRM's readSession accepts the same two credentials, so no new auth path is
+   introduced and no bypass exists: with neither cookie present this still
+   throws. */
+function forwardedCookieHeader(credential) {
+  const { appToken, ssoToken } = typeof credential === 'string'
+    ? { appToken: credential, ssoToken: null }
+    : (credential || {});
+  const parts = [];
+  if (appToken) parts.push(`af_crm_session=${encodeURIComponent(appToken)}`);
+  if (ssoToken) parts.push(`af_sso_session=${encodeURIComponent(ssoToken)}`);
+  return parts.join('; ');
+}
+
+async function readSmartLife(resource, credential, query = {}) {
+  const cookieHeader = forwardedCookieHeader(credential);
+  if (!cookieHeader) throw new SmartLifeConfigurationError('Authenticated ERP session is required.');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     const response = await fetch(endpointFor(resource, query), {
       method: 'GET',
-      headers: { Accept: 'application/json', Cookie: `af_crm_session=${encodeURIComponent(sessionToken)}` },
+      headers: { Accept: 'application/json', Cookie: cookieHeader },
       cache: 'no-store',
       signal: controller.signal,
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `Central SmartERP service returned HTTP ${response.status}.`);
-    return { records: recordsFrom(payload.records || payload), providerPayload: payload };
+    const records = recordsFrom(payload.records || payload);
+    return {
+      records, providerPayload: payload,
+      total: Number(payload.total) || records.length,
+      page: Number(payload.page) || 0,
+      limit: Number(payload.limit) || 0,
+    };
   } finally { clearTimeout(timeout); }
 }
 
-module.exports = { RESOURCES, SmartLifeConfigurationError, endpointFor, recordsFrom, readSmartLife };
+module.exports = { RESOURCES, SmartLifeConfigurationError, endpointFor, recordsFrom, readSmartLife, forwardedCookieHeader };

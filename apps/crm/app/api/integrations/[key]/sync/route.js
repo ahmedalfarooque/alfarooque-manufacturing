@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
 const { json, requireSession } = require('@/lib/http');
-const { SMARTLIFE_RESOURCES, getIntegration, readSmartLife, auditIntegration } = require('../../../../../../shared/integrationPlatform');
+const { SMARTLIFE_RESOURCES, getIntegration, readAllSmartLife, auditIntegration } = require('../../../../../../shared/integrationPlatform');
 const { upsertSmartErpFinancialRecords } = require('../../../../../../shared/financialRecords');
 
 export async function POST(req, { params }) {
@@ -18,7 +18,7 @@ export async function POST(req, { params }) {
     let total = 0;
     if (params.key === 'smartlife') {
       for (const resource of Object.keys(SMARTLIFE_RESOURCES)) {
-        const result = await readSmartLife(sb, resource);
+        const result = await readAllSmartLife(sb, resource);
         total += result.records.length;
         await upsertSmartErpFinancialRecords(sb, resource, result.records);
         const rows = result.records.map((record, index) => {
