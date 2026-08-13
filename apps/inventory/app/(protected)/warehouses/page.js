@@ -53,6 +53,7 @@ export default function WarehousesPage() {
         <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('warehouses.addWarehouse')}</button>
       </div>
       <div className="glass-card overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-[color:var(--bd)] bg-[color:var(--bg-card)]">
             <tr>
@@ -87,6 +88,7 @@ export default function WarehousesPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {modal && (

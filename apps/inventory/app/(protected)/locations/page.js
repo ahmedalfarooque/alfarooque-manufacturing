@@ -73,6 +73,7 @@ export default function LocationsPage() {
       </div>
 
       <div className="glass-card overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-[color:var(--bd)] bg-[color:var(--bg-card)]">
             <tr>
@@ -107,6 +108,7 @@ export default function LocationsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {modal && (

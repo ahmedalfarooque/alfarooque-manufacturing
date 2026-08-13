@@ -93,6 +93,7 @@ export default function CategoriesPage() {
             <button onClick={() => open('category')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('cats.addCategory')}</button>
           </div>
           <div className="glass-card overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-[color:var(--bd)] bg-[color:var(--bg-card)]">
                 <tr>
@@ -119,6 +120,7 @@ export default function CategoriesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </>
       )}
@@ -129,6 +131,7 @@ export default function CategoriesPage() {
             <button onClick={() => open('subcategory')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('cats.addSubcategory')}</button>
           </div>
           <div className="glass-card overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-[color:var(--bd)] bg-[color:var(--bg-card)]">
                 <tr>
@@ -155,6 +158,7 @@ export default function CategoriesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </>
       )}
@@ -165,6 +169,7 @@ export default function CategoriesPage() {
             <button onClick={() => open('unit')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('cats.addUnit')}</button>
           </div>
           <div className="glass-card overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-[color:var(--bd)] bg-[color:var(--bg-card)]">
                 <tr>
@@ -189,6 +194,7 @@ export default function CategoriesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </>
       )}
