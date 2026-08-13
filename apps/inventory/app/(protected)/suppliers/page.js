@@ -115,39 +115,39 @@ export default function SuppliersPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassInput value={form.name || ''} onChange={v => setForm(f => ({ ...f, name: v }))} />
+              <GlassInput value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.contactPerson')}</label>
-              <GlassInput value={form.contact_person || ''} onChange={v => setForm(f => ({ ...f, contact_person: v }))} />
+              <GlassInput value={form.contact_person || ''} onChange={e => setForm(f => ({ ...f, contact_person: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.email')}</label>
-              <GlassInput type="email" value={form.email || ''} onChange={v => setForm(f => ({ ...f, email: v }))} />
+              <GlassInput type="email" value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.phone')}</label>
-              <GlassInput value={form.phone || ''} onChange={v => setForm(f => ({ ...f, phone: v }))} />
+              <GlassInput value={form.phone || ''} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.vatNumber')}</label>
-              <GlassInput value={form.vat_number || ''} onChange={v => setForm(f => ({ ...f, vat_number: v }))} />
+              <GlassInput value={form.vat_number || ''} onChange={e => setForm(f => ({ ...f, vat_number: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.city')}</label>
-              <GlassInput value={form.city || ''} onChange={v => setForm(f => ({ ...f, city: v }))} />
+              <GlassInput value={form.city || ''} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.country')}</label>
-              <GlassInput value={form.country || ''} onChange={v => setForm(f => ({ ...f, country: v }))} />
+              <GlassInput value={form.country || ''} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} />
             </div>
             <div className="col-span-2">
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.address')}</label>
-              <GlassTextarea value={form.address || ''} onChange={v => setForm(f => ({ ...f, address: v }))} rows={2} />
+              <GlassTextarea value={form.address || ''} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} rows={2} />
             </div>
             <div className="col-span-2">
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.notes')}</label>
-              <GlassTextarea value={form.notes || ''} onChange={v => setForm(f => ({ ...f, notes: v }))} rows={2} />
+              <GlassTextarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">

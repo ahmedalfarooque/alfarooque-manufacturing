@@ -105,7 +105,7 @@ export default function PurchaseOrdersPage() {
     <Shell active="/purchase-orders">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <GlassSelect value={statusFilter} onChange={v => { setStatusFilter(v); setPage(1); }} options={statusOptions} />
+        <GlassSelect value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={statusOptions} />
         <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('po.addOrder')}</button>
       </div>
 
@@ -167,19 +167,19 @@ export default function PurchaseOrdersPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('nav.suppliers')} *</label>
-                <GlassSelect value={form.supplier_id} onChange={v => setForm(f => ({ ...f, supplier_id: v }))} options={supplierOptions} />
+                <GlassSelect value={form.supplier_id} onChange={e => setForm(f => ({ ...f, supplier_id: e.target.value }))} options={supplierOptions} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('po.expectedDelivery')}</label>
-                <GlassInput type="date" value={form.expected_delivery || ''} onChange={v => setForm(f => ({ ...f, expected_delivery: v }))} />
+                <GlassInput type="date" value={form.expected_delivery || ''} onChange={e => setForm(f => ({ ...f, expected_delivery: e.target.value }))} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.currency')}</label>
-                <GlassSelect value={form.currency} onChange={v => setForm(f => ({ ...f, currency: v }))} options={[{ value: 'SAR', label: 'SAR' }, { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' }]} />
+                <GlassSelect value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))} options={[{ value: 'SAR', label: 'SAR' }, { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' }]} />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.notes')}</label>
-                <GlassTextarea value={form.notes || ''} onChange={v => setForm(f => ({ ...f, notes: v }))} rows={2} />
+                <GlassTextarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
               </div>
             </div>
 
@@ -192,16 +192,16 @@ export default function PurchaseOrdersPage() {
                 {form.items.map((item, i) => (
                   <div key={i} className="grid grid-cols-12 gap-2 items-center">
                     <div className="col-span-4">
-                      <GlassSelect value={getItemRef(item)} onChange={v => updateItem(i, 'item_ref', v)} options={allItemOptions} />
+                      <GlassSelect value={getItemRef(item)} onChange={e => updateItem(i, 'item_ref', e.target.value)} options={allItemOptions} />
                     </div>
                     <div className="col-span-3">
-                      <GlassInput value={item.description || ''} onChange={v => updateItem(i, 'description', v)} placeholder={t('common.description')} />
+                      <GlassInput value={item.description || ''} onChange={e => updateItem(i, 'description', e.target.value)} placeholder={t('common.description')} />
                     </div>
                     <div className="col-span-2">
-                      <GlassInput type="number" value={item.qty_ordered} onChange={v => updateItem(i, 'qty_ordered', v)} placeholder={t('common.qty')} />
+                      <GlassInput type="number" value={item.qty_ordered} onChange={e => updateItem(i, 'qty_ordered', e.target.value)} placeholder={t('common.qty')} />
                     </div>
                     <div className="col-span-2">
-                      <GlassInput type="number" value={item.unit_cost} onChange={v => updateItem(i, 'unit_cost', v)} placeholder={t('stock.unitCost')} />
+                      <GlassInput type="number" value={item.unit_cost} onChange={e => updateItem(i, 'unit_cost', e.target.value)} placeholder={t('stock.unitCost')} />
                     </div>
                     <button onClick={() => removeItem(i)} disabled={form.items.length <= 1} className="col-span-1 gbtn gbtn-ghost gbtn--icon gbtn--sm text-red-500">
                       <GlassIcon name="x" size={14} bare />

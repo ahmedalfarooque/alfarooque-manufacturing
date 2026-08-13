@@ -71,8 +71,8 @@ export default function StockPage() {
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder={t('stock.searchPlaceholder')} className="ginput flex-1 max-w-xs" />
-        <GlassSelect value={type} onChange={v => { setType(v); setPage(1); }} options={typeOptions} />
-        <GlassSelect value={warehouseId} onChange={v => { setWarehouseId(v); setPage(1); }} options={whOptions} />
+        <GlassSelect value={type} onChange={e => { setType(e.target.value); setPage(1); }} options={typeOptions} />
+        <GlassSelect value={warehouseId} onChange={e => { setWarehouseId(e.target.value); setPage(1); }} options={whOptions} />
         <div className="ms-auto text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</div>
       </div>
 
@@ -137,19 +137,19 @@ export default function StockPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('stock.adjustment')} * <span className="text-[color:var(--tx-3)]">({t('stock.useNegative')})</span></label>
-              <GlassInput type="number" value={form.qty_adjustment} onChange={v => setForm(f => ({ ...f, qty_adjustment: v }))} placeholder="+10 or -5" />
+              <GlassInput type="number" value={form.qty_adjustment} onChange={e => setForm(f => ({ ...f, qty_adjustment: e.target.value }))} placeholder="+10 or -5" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('stock.unitCost')}</label>
-              <GlassInput type="number" value={form.cost || ''} onChange={v => setForm(f => ({ ...f, cost: v }))} placeholder="0.00" />
+              <GlassInput type="number" value={form.cost || ''} onChange={e => setForm(f => ({ ...f, cost: e.target.value }))} placeholder="0.00" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.reference')}</label>
-              <GlassInput value={form.reference || ''} onChange={v => setForm(f => ({ ...f, reference: v }))} placeholder="REF-001" />
+              <GlassInput value={form.reference || ''} onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} placeholder="REF-001" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.notes')}</label>
-              <GlassTextarea value={form.notes || ''} onChange={v => setForm(f => ({ ...f, notes: v }))} rows={2} />
+              <GlassTextarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">

@@ -113,7 +113,7 @@ export default function PurchaseRequestsPage() {
     <Shell active="/purchase-requests">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <GlassSelect value={statusFilter} onChange={v => { setStatusFilter(v); setPage(1); }} options={statusOptions} />
+        <GlassSelect value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={statusOptions} />
         <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('pr.addRequest')}</button>
       </div>
 
@@ -175,19 +175,19 @@ export default function PurchaseRequestsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.title')} *</label>
-                <GlassInput value={form.title} onChange={v => setForm(f => ({ ...f, title: v }))} placeholder={t('pr.titlePlaceholder')} />
+                <GlassInput value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder={t('pr.titlePlaceholder')} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('pr.priority')}</label>
-                <GlassSelect value={form.priority} onChange={v => setForm(f => ({ ...f, priority: v }))} options={priorityOptions} />
+                <GlassSelect value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))} options={priorityOptions} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('pr.neededBy')}</label>
-                <GlassInput type="date" value={form.needed_by || ''} onChange={v => setForm(f => ({ ...f, needed_by: v }))} />
+                <GlassInput type="date" value={form.needed_by || ''} onChange={e => setForm(f => ({ ...f, needed_by: e.target.value }))} />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.notes')}</label>
-                <GlassTextarea value={form.notes || ''} onChange={v => setForm(f => ({ ...f, notes: v }))} rows={2} />
+                <GlassTextarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
               </div>
             </div>
 
@@ -200,13 +200,13 @@ export default function PurchaseRequestsPage() {
                 {form.items.map((item, i) => (
                   <div key={i} className="grid grid-cols-12 gap-2 items-center">
                     <div className="col-span-5">
-                      <GlassSelect value={getItemRef(item)} onChange={v => updateItem(i, 'item_ref', v)} options={allItemOptions} />
+                      <GlassSelect value={getItemRef(item)} onChange={e => updateItem(i, 'item_ref', e.target.value)} options={allItemOptions} />
                     </div>
                     <div className="col-span-3">
-                      <GlassInput type="number" value={item.qty_requested} onChange={v => updateItem(i, 'qty_requested', v)} placeholder={t('common.qty')} />
+                      <GlassInput type="number" value={item.qty_requested} onChange={e => updateItem(i, 'qty_requested', e.target.value)} placeholder={t('common.qty')} />
                     </div>
                     <div className="col-span-3">
-                      <GlassInput type="number" value={item.unit_cost} onChange={v => updateItem(i, 'unit_cost', v)} placeholder={t('stock.unitCost')} />
+                      <GlassInput type="number" value={item.unit_cost} onChange={e => updateItem(i, 'unit_cost', e.target.value)} placeholder={t('stock.unitCost')} />
                     </div>
                     <button onClick={() => removeItem(i)} disabled={form.items.length <= 1} className="col-span-1 gbtn gbtn-ghost gbtn--icon gbtn--sm text-red-500">
                       <GlassIcon name="x" size={14} bare />
@@ -229,7 +229,7 @@ export default function PurchaseRequestsPage() {
           {modal === 'reject' && (
             <div className="mb-4">
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('pr.rejectReason')}</label>
-              <GlassTextarea value={rejectNote} onChange={setRejectNote} rows={2} />
+              <GlassTextarea value={rejectNote} onChange={e => setRejectNote(e.target.value)} rows={2} />
             </div>
           )}
           <div className="flex justify-end gap-2">

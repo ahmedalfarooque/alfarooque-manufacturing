@@ -125,7 +125,7 @@ export default function SettingsPage() {
                       {myRole === 'admin' ? (
                         <GlassSelect
                           value={u.inv_role || ''}
-                          onChange={v => saveRole(u.id, v)}
+                          onChange={e => saveRole(u.id, e.target.value)}
                           options={[{ value: '', label: t('settings.noAccess') }, ...roleOptions]}
                         />
                       ) : (
@@ -260,7 +260,7 @@ export default function SettingsPage() {
             <div className="text-sm font-semibold mb-4">{t('settings.language')}</div>
             <GlassSelect
               value={lang}
-              onChange={setLang}
+              onChange={e => setLang(e.target.value)}
               options={[{ value: 'en', label: 'English' }, { value: 'ar', label: 'العربية' }]}
             />
           </div>
@@ -280,11 +280,11 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassInput value={form.name || ''} onChange={v => setForm(f => ({ ...f, name: v }))} />
+              <GlassInput value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.description')}</label>
-              <GlassInput value={form.description || ''} onChange={v => setForm(f => ({ ...f, description: v }))} />
+              <GlassInput value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -299,11 +299,11 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassInput value={form.name || ''} onChange={v => setForm(f => ({ ...f, name: v }))} />
+              <GlassInput value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('units.symbol')}</label>
-              <GlassInput value={form.symbol || ''} onChange={v => setForm(f => ({ ...f, symbol: v }))} placeholder="kg, pcs, m²" />
+              <GlassInput value={form.symbol || ''} onChange={e => setForm(f => ({ ...f, symbol: e.target.value }))} placeholder="kg, pcs, m²" />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -318,11 +318,11 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassInput value={form.name || ''} onChange={v => setForm(f => ({ ...f, name: v }))} />
+              <GlassInput value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.description')}</label>
-              <GlassInput value={form.description || ''} onChange={v => setForm(f => ({ ...f, description: v }))} />
+              <GlassInput value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">

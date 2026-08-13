@@ -68,7 +68,7 @@ export default function LocationsPage() {
     <Shell active="/locations">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <GlassSelect value={selectedWarehouse} onChange={setSelectedWarehouse} options={whOptions} />
+        <GlassSelect value={selectedWarehouse} onChange={e => setSelectedWarehouse(e.target.value)} options={whOptions} />
         <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('locations.addLocation')}</button>
       </div>
 
@@ -114,19 +114,19 @@ export default function LocationsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('nav.warehouses')} *</label>
-              <GlassSelect value={form.warehouse_id || ''} onChange={v => setForm(f => ({ ...f, warehouse_id: v }))} options={whFormOptions} />
+              <GlassSelect value={form.warehouse_id || ''} onChange={e => setForm(f => ({ ...f, warehouse_id: e.target.value }))} options={whFormOptions} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassInput value={form.name || ''} onChange={v => setForm(f => ({ ...f, name: v }))} placeholder="Row A, Shelf B1..." />
+              <GlassInput value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Row A, Shelf B1..." />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('locations.code')}</label>
-              <GlassInput value={form.code || ''} onChange={v => setForm(f => ({ ...f, code: v }))} placeholder="LOC-001" />
+              <GlassInput value={form.code || ''} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} placeholder="LOC-001" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.type')}</label>
-              <GlassSelect value={form.type || ''} onChange={v => setForm(f => ({ ...f, type: v }))} options={typeOptions} />
+              <GlassSelect value={form.type || ''} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} options={typeOptions} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">

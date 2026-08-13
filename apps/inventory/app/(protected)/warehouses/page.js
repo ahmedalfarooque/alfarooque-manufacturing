@@ -94,19 +94,19 @@ export default function WarehousesPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassInput value={form.name || ''} onChange={v => setForm(f => ({ ...f, name: v }))} />
+              <GlassInput value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('warehouses.code')}</label>
-              <GlassInput value={form.code || ''} onChange={v => setForm(f => ({ ...f, code: v }))} placeholder="WH-01" />
+              <GlassInput value={form.code || ''} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} placeholder="WH-01" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.city')}</label>
-              <GlassInput value={form.city || ''} onChange={v => setForm(f => ({ ...f, city: v }))} />
+              <GlassInput value={form.city || ''} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('suppliers.address')}</label>
-              <GlassTextarea value={form.address || ''} onChange={v => setForm(f => ({ ...f, address: v }))} rows={2} />
+              <GlassTextarea value={form.address || ''} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} rows={2} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">

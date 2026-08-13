@@ -164,7 +164,7 @@ export default function ReportsPage() {
           ))}
         </div>
         <div className="ms-auto flex items-center gap-3">
-          <GlassSelect value={warehouseId} onChange={setWarehouseId} options={whOptions} />
+          <GlassSelect value={warehouseId} onChange={e => setWarehouseId(e.target.value)} options={whOptions} />
           <GlassButton variant="secondary" onClick={exportPdf}>{t('reports.exportPdf')}</GlassButton>
         </div>
       </div>

@@ -94,7 +94,7 @@ export default function ReservationsPage() {
     <Shell active="/reservations">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <GlassSelect value={status} onChange={v => { setStatus(v); setPage(1); }} options={statusOptions} />
+        <GlassSelect value={status} onChange={e => { setStatus(e.target.value); setPage(1); }} options={statusOptions} />
         <div className="ms-auto">
           <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('resv.addReservation')}</button>
         </div>
@@ -151,27 +151,27 @@ export default function ReservationsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassSelect value={getItemRef()} onChange={setItemRef} options={allItemOptions} />
+              <GlassSelect value={getItemRef()} onChange={e => setItemRef(e.target.value)} options={allItemOptions} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('nav.warehouses')} *</label>
-              <GlassSelect value={form.warehouse_id} onChange={v => setForm(f => ({ ...f, warehouse_id: v }))} options={warehouseOptions} />
+              <GlassSelect value={form.warehouse_id} onChange={e => setForm(f => ({ ...f, warehouse_id: e.target.value }))} options={warehouseOptions} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('resv.qty')} *</label>
-              <GlassInput type="number" value={form.qty} onChange={v => setForm(f => ({ ...f, qty: v }))} />
+              <GlassInput type="number" value={form.qty} onChange={e => setForm(f => ({ ...f, qty: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('gi.refType')}</label>
-              <GlassSelect value={form.reference_type} onChange={v => setForm(f => ({ ...f, reference_type: v }))} options={refTypeOptions} />
+              <GlassSelect value={form.reference_type} onChange={e => setForm(f => ({ ...f, reference_type: e.target.value }))} options={refTypeOptions} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('resv.referenceLabel')}</label>
-              <GlassInput value={form.reference_label || ''} onChange={v => setForm(f => ({ ...f, reference_label: v }))} placeholder={t('resv.referenceLabelPlaceholder')} />
+              <GlassInput value={form.reference_label || ''} onChange={e => setForm(f => ({ ...f, reference_label: e.target.value }))} placeholder={t('resv.referenceLabelPlaceholder')} />
             </div>
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.notes')}</label>
-              <GlassTextarea value={form.notes || ''} onChange={v => setForm(f => ({ ...f, notes: v }))} rows={2} />
+              <GlassTextarea value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">

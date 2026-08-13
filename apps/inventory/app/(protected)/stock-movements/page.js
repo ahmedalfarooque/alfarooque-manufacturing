@@ -45,8 +45,8 @@ export default function StockMovementsPage() {
   return (
     <Shell active="/stock-movements">
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <GlassSelect value={type} onChange={v => { setType(v); setPage(1); }} options={typeOptions} />
-        <GlassSelect value={warehouseId} onChange={v => { setWarehouseId(v); setPage(1); }} options={whOptions} />
+        <GlassSelect value={type} onChange={e => { setType(e.target.value); setPage(1); }} options={typeOptions} />
+        <GlassSelect value={warehouseId} onChange={e => { setWarehouseId(e.target.value); setPage(1); }} options={whOptions} />
         <div className="ms-auto text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</div>
       </div>
 

@@ -202,17 +202,17 @@ export default function CategoriesPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.name')} *</label>
-              <GlassInput value={form.name || ''} onChange={v => setForm(f => ({ ...f, name: v }))} />
+              <GlassInput value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             {modal === 'category' && (
               <>
                 <div>
                   <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.type')}</label>
-                  <GlassSelect value={form.type || ''} onChange={v => setForm(f => ({ ...f, type: v }))} options={typeOptions} />
+                  <GlassSelect value={form.type || ''} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} options={typeOptions} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.description')}</label>
-                  <GlassTextarea value={form.description || ''} onChange={v => setForm(f => ({ ...f, description: v }))} rows={2} />
+                  <GlassTextarea value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
                 </div>
               </>
             )}
@@ -220,18 +220,18 @@ export default function CategoriesPage() {
               <>
                 <div>
                   <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.category')} *</label>
-                  <GlassSelect value={form.category_id || ''} onChange={v => setForm(f => ({ ...f, category_id: v }))} options={catOptions} />
+                  <GlassSelect value={form.category_id || ''} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} options={catOptions} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('common.description')}</label>
-                  <GlassTextarea value={form.description || ''} onChange={v => setForm(f => ({ ...f, description: v }))} rows={2} />
+                  <GlassTextarea value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
                 </div>
               </>
             )}
             {modal === 'unit' && (
               <div>
                 <label className="block text-xs font-medium text-[color:var(--tx-3)] mb-1">{t('units.symbol')}</label>
-                <GlassInput value={form.symbol || ''} onChange={v => setForm(f => ({ ...f, symbol: v }))} placeholder="kg, m, pcs..." />
+                <GlassInput value={form.symbol || ''} onChange={e => setForm(f => ({ ...f, symbol: e.target.value }))} placeholder="kg, m, pcs..." />
               </div>
             )}
           </div>
