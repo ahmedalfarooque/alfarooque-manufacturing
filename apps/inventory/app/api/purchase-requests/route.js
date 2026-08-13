@@ -1,11 +1,10 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
-const { getInvRole, can } = require('@/lib/perms');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
   const { searchParams } = new URL(req.url);
@@ -24,11 +23,9 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
   const sb = getDb();
-  const invRole = await getInvRole(sb, session);
-  if (!can(invRole, 'write')) return json({ error: 'Insufficient permissions.' }, 403);
 
   const body = await req.json().catch(() => ({}));
   const items = Array.isArray(body.items) ? body.items : [];

@@ -1,11 +1,10 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
-const { getInvRole, can } = require('@/lib/perms');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
   const { data, error } = await sb.from('inv_warehouses').select('*, inv_locations(*)').eq('id', params.id).maybeSingle();
@@ -15,11 +14,9 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
   const sb = getDb();
-  const invRole = await getInvRole(sb, session);
-  if (!can(invRole, 'admin')) return json({ error: 'Admin access required.' }, 403);
 
   const body = await req.json().catch(() => ({}));
   const { error } = await sb.from('inv_warehouses').update({
@@ -38,8 +35,6 @@ export async function DELETE(req, { params }) {
   const { response, session } = await requireDelete(req);
   if (response) return response;
   const sb = getDb();
-  const invRole = await getInvRole(sb, session);
-  if (!can(invRole, 'admin')) return json({ error: 'Admin access required.' }, 403);
 
   const { error } = await sb.from('inv_warehouses').update({ is_active: false }).eq('id', params.id);
   if (error) return json({ error: 'Could not deactivate warehouse.' }, 500);

@@ -1,11 +1,10 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
-const { getInvRole, can } = require('@/lib/perms');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
   const { data, error } = await sb.from('inv_warehouses').select('*').order('name', { ascending: true });
@@ -14,11 +13,9 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
   const sb = getDb();
-  const invRole = await getInvRole(sb, session);
-  if (!can(invRole, 'admin')) return json({ error: 'Admin access required.' }, 403);
 
   const body = await req.json().catch(() => ({}));
   const name = String(body.name || '').trim();

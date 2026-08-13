@@ -1,16 +1,13 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
-const { getInvRole, can } = require('@/lib/perms');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { syncItemQty } = require('@/lib/stockSync');
 
 export async function PATCH(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
   const sb = getDb();
-  const invRole = await getInvRole(sb, session);
-  if (!can(invRole, 'write')) return json({ error: 'Insufficient permissions.' }, 403);
 
   const body = await req.json().catch(() => ({}));
   const action = body.action; // 'release' | 'fulfill'

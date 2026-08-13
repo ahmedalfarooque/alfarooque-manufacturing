@@ -1,12 +1,11 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
-const { getInvRole, can } = require('@/lib/perms');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
 const { syncItemQty } = require('@/lib/stockSync');
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
   const { data, error } = await sb.from('inv_goods_receipts')
@@ -21,8 +20,6 @@ export async function DELETE(req, { params }) {
   const { response, session } = await requireDelete(req);
   if (response) return response;
   const sb = getDb();
-  const invRole = await getInvRole(sb, session);
-  if (!can(invRole, 'admin')) return json({ error: 'Admin access required.' }, 403);
 
   const { data: gr } = await sb.from('inv_goods_receipts').select('id, gr_number, warehouse_id').eq('id', params.id).maybeSingle();
   if (!gr) return json({ error: 'Goods receipt not found.' }, 404);

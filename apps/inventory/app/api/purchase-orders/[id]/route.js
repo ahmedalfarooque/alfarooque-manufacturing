@@ -1,11 +1,11 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
 const { getInvRole, can } = require('@/lib/perms');
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
   const { data, error } = await sb.from('inv_purchase_orders')
@@ -17,7 +17,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
   const sb = getDb();
   const invRole = await getInvRole(sb, session);
@@ -38,7 +38,6 @@ export async function PUT(req, { params }) {
     return json({ ok: true });
   }
 
-  if (!can(invRole, 'write')) return json({ error: 'Insufficient permissions.' }, 403);
   if (!['pending'].includes(po.status)) return json({ error: 'Cannot edit a processed order.' }, 400);
 
   const items = Array.isArray(body.items) ? body.items : null;
@@ -78,8 +77,6 @@ export async function DELETE(req, { params }) {
   const { response, session } = await requireDelete(req);
   if (response) return response;
   const sb = getDb();
-  const invRole = await getInvRole(sb, session);
-  if (!can(invRole, 'admin')) return json({ error: 'Admin access required.' }, 403);
 
   await sb.from('inv_purchase_order_items').delete().eq('po_id', params.id);
   const { error } = await sb.from('inv_purchase_orders').delete().eq('id', params.id);
