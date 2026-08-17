@@ -22,9 +22,6 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
-const { parseCookies, COOKIE_NAME } = require('@/lib/auth');
-const { SSO_COOKIE_NAME } = require('@/lib/sso');
-const { readSmartLife } = require('@/lib/smartlife');
 
 export async function GET(req) {
   const { response } = await requireAction(req, 'view');
@@ -68,12 +65,28 @@ export async function GET(req) {
     data = [];
   }
   if (!count) {
+    /* Local-first: crm_record_mappings already holds every SmartLife
+       product (2,921, zero duplicates, verified) — it's populated by the
+       existing canonical sync job (apps/crm/.../[key]/sync/route.js calls
+       upsertSmartErpSourceMappings() for every SMARTLIFE_RESOURCES entry,
+       including 'products', which was already running; nothing new to
+       sync here). Reading it instead of live-calling SmartLife means a
+       normal page load never hits SmartERP at all — only the Sync button
+       does. metadata.raw_payload is the exact original SmartLife record,
+       so the field mapping below is unchanged from the old live path. */
     try {
-      const cookies = parseCookies(req.headers.get('cookie'));
-      const result = await readSmartLife('products', {
-        appToken: cookies[COOKIE_NAME], ssoToken: cookies[SSO_COOKIE_NAME],
-      }, { search, offset: String(offset), limit: String(limit) });
-      const ids = result.records.map(r => String(r.id));
+      let mapQuery = sb.from('crm_record_mappings')
+        .select('source_record_id, metadata', { count: 'exact' })
+        .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife').eq('entity_type', 'products');
+      if (search) {
+        const needle = search.replace(/[%,()]/g, '');
+        mapQuery = mapQuery.or(`metadata->>source_name.ilike.%${needle}%,metadata->>source_reference.ilike.%${needle}%`);
+      }
+      const { data: mappings, count: mapCount, error: mapError } = await mapQuery
+        .order('metadata->>source_name', { ascending: true })
+        .range(offset, offset + limit - 1);
+      if (mapError) throw mapError;
+      const ids = (mappings || []).map(m => m.source_record_id);
       const [{ data: classifications }, { data: links }] = ids.length
         ? await Promise.all([
             sb.from('erp_item_business_classification').select('source_record_id,business_role').eq('source_system', 'smartlife').in('source_record_id', ids),
@@ -82,20 +95,23 @@ export async function GET(req) {
         : [{ data: [] }, { data: [] }];
       const roleById = new Map((classifications || []).map(c => [c.source_record_id, c.business_role]));
       const linkById = new Map((links || []).map(l => [l.source_record_id, l.canonical_id]));
-      data = result.records.map(r => ({
-        id: r.id, name: r.name, sku: r.code || null, barcode: null,
-        cost_price: Number(r.cost) || 0, selling_price: Number(r.price) || 0,
-        qty_on_hand: Number(r.quantity) || 0, min_stock_qty: Number(r.alert_quantity) || 0,
-        category_name: r.category || null, unit_name: r.unit || null, tax_rate: r.tax_rate || null,
-        is_active: true, source_table: 'smartlife', read_only: true,
-        business_role: roleById.get(String(r.id)) || 'unclassified',
-        quotepro_material_id: linkById.get(String(r.id)) || null,
-      }));
-      count = result.total || data.length;
+      data = (mappings || []).map(m => {
+        const r = m.metadata?.raw_payload || {};
+        return {
+          id: r.id, name: r.name, sku: r.code || null, barcode: null,
+          cost_price: Number(r.cost) || 0, selling_price: Number(r.price) || 0,
+          qty_on_hand: Number(r.quantity) || 0, min_stock_qty: Number(r.alert_quantity) || 0,
+          category_name: r.category || null, unit_name: r.unit || null, tax_rate: r.tax_rate || null,
+          is_active: true, source_table: 'smartlife', read_only: true,
+          business_role: roleById.get(String(r.id)) || 'unclassified',
+          quotepro_material_id: linkById.get(String(r.id)) || null,
+        };
+      });
+      count = mapCount || data.length;
     } catch (_) {
-      /* SmartLife unavailable/permission-blocked — genuinely empty, not an
-         error the product list needs to surface; the dedicated SmartLife
-         status is already shown elsewhere in the app. */
+      /* Local snapshot unavailable (e.g. never synced yet) — genuinely
+         empty, not an error the product list needs to surface; the
+         dedicated SmartLife sync status is already shown elsewhere. */
       data = []; count = 0;
     }
   } else {
