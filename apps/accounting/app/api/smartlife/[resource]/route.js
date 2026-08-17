@@ -23,6 +23,33 @@ const { getDb } = require('@/lib/db');
    it just serves the last successfully synced snapshot. */
 const LOCAL_FIRST_RECORD_TYPES = Object.freeze({ purchases: 'purchase_invoice', 'sales-invoices': 'sales_invoice' });
 
+/* Account Balances (Trial Balance's data source) — separate additive
+   table (erp_smartlife_account_balances), since this resource's real
+   shape (id/account_number/account_name/balance) doesn't fit the
+   invoice-shaped erp_financial_source_records table. Same sync job
+   (apps/crm/.../[key]/sync/route.js) now also populates this one. Ordered
+   by account_number, matching the chart-of-accounts sequence already
+   verified as this endpoint's own native (unsorted) order — no date
+   field exists on this resource to sort by. */
+async function readLocalFirstAccountBalances(req) {
+  const sb = getDb();
+  const params = new URL(req.url).searchParams;
+  const offset = Math.max(0, parseInt(params.get('offset'), 10) || 0);
+  const limit = Math.min(500, Math.max(1, parseInt(params.get('limit'), 10) || 100));
+  const search = (params.get('search') || '').trim().replace(/[%,()]/g, '');
+  let query = sb.from('erp_smartlife_account_balances')
+    .select('raw_payload', { count: 'exact' })
+    .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife');
+  if (search) query = query.or(`account_number.ilike.%${search}%,account_name.ilike.%${search}%`);
+  const { data, count, error } = await query.order('account_number', { ascending: true }).range(offset, offset + limit - 1);
+  if (error) throw error;
+  return json({
+    source: 'SmartERP (local synchronized snapshot)', connected: true,
+    records: (data || []).map(row => row.raw_payload),
+    total: count || 0, page: Math.floor(offset / limit) + 1, offset, limit,
+  });
+}
+
 async function readLocalFirst(req, recordType) {
   const sb = getDb();
   const params = new URL(req.url).searchParams;
@@ -60,6 +87,12 @@ export async function GET(req, { params }) {
       /* Falls through to the existing live path below — never a hard
          failure just because the local snapshot table had a transient
          issue; SmartERP itself is still the ultimate source of truth. */
+    }
+  }
+  if (params.resource === 'account-balances') {
+    try { return await readLocalFirstAccountBalances(req); }
+    catch (error) {
+      console.error('[smartlife] local-first account-balances read failed, falling back to live SmartERP:', error && error.message);
     }
   }
   try {

@@ -3,8 +3,36 @@
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
-const { SMARTLIFE_RESOURCES, getIntegration, readAllSmartLife, upsertSmartErpSourceMappings, auditIntegration, classifySmartErpError } = require('../../../../../../shared/integrationPlatform');
+const { SMARTLIFE_RESOURCES, getIntegration, readAllSmartLife, readAccountBalances, totalFrom, upsertSmartErpSourceMappings, auditIntegration, classifySmartErpError } = require('../../../../../../shared/integrationPlatform');
 const { upsertSmartErpFinancialRecords } = require('../../../../../../shared/financialRecords');
+const { upsertSmartErpAccountBalances } = require('../../../../../../shared/accountBalanceSnapshot');
+
+/* account-balances is a SMARTLIFE_MISC_READ endpoint, not one of the
+   generic list resources in SMARTLIFE_RESOURCES, so readAllSmartLife
+   (which only knows that map) can't walk it directly — this mirrors its
+   own page-walking logic (short-page-or-reported-total stop condition)
+   for this one endpoint using the existing readAccountBalances/totalFrom
+   helpers. Not a second connector: same auth, same rate limits, same
+   underlying readSmartLifePath() call. */
+async function readAllAccountBalances(sb, { maxPages = 100 } = {}) {
+  const limit = 100;
+  let offset = 0; let total = null; const records = []; const seen = new Set();
+  for (let page = 0; page < maxPages; page += 1) {
+    const result = await readAccountBalances(sb, { offset: String(offset), limit: String(limit) });
+    const batch = result.records || [];
+    const reported = totalFrom(result.providerPayload);
+    if (reported !== null && reported > 0) total = reported;
+    for (const record of batch) {
+      const key = String(record?.id ?? '');
+      if (!key || seen.has(key)) continue;
+      seen.add(key); records.push(record);
+    }
+    if (!batch.length || batch.length < limit) break;
+    if (total !== null && records.length >= total) break;
+    offset += limit;
+  }
+  return { records, total: total ?? records.length };
+}
 
 async function upsertModuleStatus(sb, integrationId, moduleKey, patch) {
   await sb.from('crm_integration_module_status').upsert({
@@ -66,6 +94,25 @@ export async function POST(req, { params }) {
           moduleErrors.push({ resource, status: classification, message });
           await upsertModuleStatus(sb, integration.id, resource, { status: dbStatus, last_error: classification === 'other_error' ? message : `[${classification}] ${message}` });
         }
+      }
+      /* Account Balances (Trial Balance's data source) — same isolated
+         try/catch-per-resource pattern as the loop above, tracked under
+         its own module-status row. */
+      try {
+        const result = await readAllAccountBalances(sb);
+        total += result.records.length;
+        await upsertSmartErpAccountBalances(sb, result.records);
+        anyModuleConnected = true;
+        await upsertModuleStatus(sb, integration.id, 'account-balances', {
+          status: 'connected', records_read: result.records.length, records_inserted: result.records.length,
+          last_synced_at: new Date().toISOString(), last_error: null,
+        });
+      } catch (moduleError) {
+        const message = moduleError?.message || 'Synchronization failed.';
+        const classification = classifySmartErpError(moduleError);
+        const dbStatus = classification === 'permission_required' ? 'permission_required' : 'error';
+        moduleErrors.push({ resource: 'account-balances', status: classification, message });
+        await upsertModuleStatus(sb, integration.id, 'account-balances', { status: dbStatus, last_error: classification === 'other_error' ? message : `[${classification}] ${message}` });
       }
     }
     const completedAt = new Date().toISOString();
