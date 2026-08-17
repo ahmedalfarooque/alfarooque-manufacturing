@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useLang } from '@/lib/i18n';
 import { GlassBadge, GlassSkeletonRows } from '@/components/glass';
 import { SectionCard, CRMEmptyRow } from '@/components/CRMWidgets';
+import { getAppUrl } from '@/lib/appLinks';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
 
@@ -32,7 +33,7 @@ export default function DocumentsPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-[color:var(--tx)]">{t('documents')}</h1>
 
-      <SectionCard title="Quotations" subtitle="From QuotePro" action="Open QuotePro" actionHref="/deals">
+      <SectionCard title="Quotations" subtitle="From QuotePro" action="Open QuotePro" actionHref={`${getAppUrl('quotation')}/quotations`}>
         {quotations === null ? <GlassSkeletonRows rows={4} cols={3} /> : !quotations.length ? (
           <CRMEmptyRow text="No quotations found." />
         ) : (
