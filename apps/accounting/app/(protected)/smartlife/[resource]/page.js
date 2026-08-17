@@ -303,11 +303,16 @@ export default function SmartLifeResourcePage({ params }) {
        IDs with no account name. Verified against actual SmartERP records. */
     if (resource === 'accounts') return ['account_number', 'account_name'];
     if (resource === 'account-balances') return ['account_number', 'account_name', 'balance'];
+    /* Tax Rates: real fields are id/code/name/rate/type — the generic
+       `preferred` list below has no 'rate'/'type' entries, so it silently
+       dropped the rate value entirely (the entire point of this report).
+       Verified against actual SmartERP tax records. */
+    if (resource === 'tax') return ['code', 'name', 'rate'];
     const preferred = ['id','number','reference','code','name','english_name','company','customer_name','supplier_name','phone','email','city','date','status','quantity','price','total','amount','balance','currency'];
     const present = new Set(records.flatMap(r => r && typeof r === 'object' ? Object.keys(r) : []));
     return preferred.filter(k => present.has(k)).slice(0,8).length ? preferred.filter(k => present.has(k)).slice(0,8) : [...present].slice(0,8);
   },[records,resource,isInvoiceWorkspace]);
-  const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name' };
+  const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate' };
   function resetInvoiceFilters() { setSearch(''); setCustomerFilter(''); setPaymentStatusFilter(''); setSaleStatusFilter(''); setDateFilter({ preset:'all', from:null, to:null }); }
 
   const relationshipRecordType = resource === 'purchases' ? 'purchase_invoice' : resource === 'sales-invoices' ? 'sales_invoice' : null;
