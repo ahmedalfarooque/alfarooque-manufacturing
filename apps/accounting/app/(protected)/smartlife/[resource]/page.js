@@ -177,7 +177,7 @@ export default function SmartLifeResourcePage({ params }) {
     if (search.trim()) query.set('search',search.trim());
     if (resource === 'sales-invoices' || resource === 'purchases') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
     return `/api/smartlife/${backendResource}?${query}`;
-  },[resource,backendResource,page,search]);
+  },[resource,backendResource,page,pageSize,search]);
   const { data,error,loading,refresh } = useLiveData(dataUrl,supported?30000:0);
   const { data:syncData,refresh:refreshSync } = useLiveData('/api/smartlife/sync',15000);
   const records = Array.isArray(data?.records) ? data.records : [];
@@ -541,11 +541,22 @@ export default function SmartLifeResourcePage({ params }) {
           <Metric label="This page — Total Credit" value={money(credit)}/>
         </div>;
       })()}
+      {/* Summary must reflect the COMPLETE filtered dataset, never just the
+         current 25/50/100/500 visible page — reuses filterUniverse (already
+         background-fetched for isInvoiceWorkspace regardless of filters, so
+         no extra request here) filtered with the exact same
+         matchesActiveFilters() predicate the complete-dataset export uses,
+         guaranteeing the summary, the export, and "Showing X of N" all agree
+         on one definition of "the current dataset". Gated on
+         filterUniverse.length so it never briefly shows a page-only total
+         while the complete set is still loading. */}
       {isInvoiceWorkspace&&!loading&&!!filtered.length&&(()=>{
-        const rows=filtered.map(r=>invoiceView(r,resource)); const currency=rows[0]?.currency||'SAR';
+        if(!filterUniverse.length) return <div className="mb-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm text-[color:var(--tx-3)] print:hidden">Loading complete totals…</div>;
+        const summarySource=filterUniverse.filter(matchesActiveFilters);
+        const rows=summarySource.map(r=>invoiceView(r,resource)); const currency=rows[0]?.currency||filtered[0]?.currency||'SAR';
         const sum=key=>rows.reduce((acc,v)=>acc+(Number(v[key])||0),0);
         return <div className="mb-3 grid grid-cols-2 gap-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm sm:grid-cols-4 print:hidden">
-          <Metric label="This page — Subtotal" value={money(sum('subtotal'),currency)}/>
+          <Metric label="Subtotal" value={money(sum('subtotal'),currency)}/>
           <Metric label="VAT" value={money(sum('vat'),currency)}/>
           <Metric label="Total" value={money(sum('total'),currency)}/>
           <Metric label="Paid / Balance" value={`${money(sum('paid'),currency)} / ${money(sum('balance'),currency)}`}/>
