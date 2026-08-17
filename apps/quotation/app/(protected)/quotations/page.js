@@ -38,6 +38,7 @@ export default function QuotationsPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [me, setMe] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   useEffect(() => {
     fetch('/api/me', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
@@ -102,6 +103,52 @@ export default function QuotationsPage() {
 
   const custName = (c) => trL(c, 'company_name');
 
+  /* Fetches every page of the current search/status/date-filtered result
+     set (the table itself only ever holds one 25/50/100/500-row page) so
+     Print/PDF reflects the full filtered dataset, not just what's on
+     screen — same pattern as fetchAllCustomers() in the Customers page. */
+  async function fetchAllQuotations() {
+    const { from: rFrom, to: rTo } = dateFilter.preset === 'custom' ? dateFilter : presetRange(dateFilter.preset);
+    const range = (rFrom ? `&from=${rFrom}` : '') + (rTo ? `&to=${rTo}` : '');
+    const all = [];
+    let p = 1, runningTotal = Infinity;
+    while (all.length < runningTotal) {
+      const res = await fetch(`/api/quotations?q=${encodeURIComponent(dq)}&status=${tab}&page=${p}&pageSize=100${range}`, { credentials: 'same-origin' });
+      const d = res.ok ? await res.json() : { rows: [], total: 0 };
+      if (!d.rows || d.rows.length === 0) break;
+      all.push(...d.rows);
+      runningTotal = d.total || 0;
+      p++;
+    }
+    return all;
+  }
+
+  /* Prints/exports the full search/status/date-filtered result set — not
+     just the page currently rendered — using the shared AL FAROOQUE report
+     engine (same engine as every other Print/PDF button in this app). */
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const allRows = await fetchAllQuotations();
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.quotations') || t('quote.number'),
+        columns: [
+          { key: 'number', header: t('quote.number') }, { key: 'customer', header: t('nav.customers') },
+          { key: 'entity', header: t('quote.entity') }, { key: 'total', header: t('quote.grandTotal') },
+          { key: 'status', header: t('quote.status') }, { key: 'validUntil', header: t('quote.validUntil') },
+        ],
+        rows: allRows.map(r => ({
+          number: r.quote_number, customer: r.customer ? custName(r.customer) : '—',
+          entity: r.entity ? r.entity.code : '—', total: formatNumber(r.grand_total, { minimumFractionDigits: 2 }),
+          status: t('status.' + r.status), validUntil: r.valid_until ? formatDate(r.valid_until) : '—',
+        })),
+        lang, fileName: 'quotations-report.pdf', action,
+      });
+    } catch (e2) { setErr(e2.message || 'Could not generate report.'); }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/quotations">
       <div className="glass-card overflow-hidden">
@@ -118,6 +165,8 @@ export default function QuotationsPage() {
           <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
           <div className="flex-1" />
           <a href={'/api/export/quotations?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!rows?.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!rows?.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           <Button onClick={() => { setNewOpen(true); setCustomerId(''); setCustQ(''); setErr(null); }}>+ {t('quote.new')}</Button>
         </div>
         <div className="overflow-x-auto">

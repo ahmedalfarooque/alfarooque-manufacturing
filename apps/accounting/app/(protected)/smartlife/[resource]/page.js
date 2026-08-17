@@ -185,19 +185,20 @@ export default function SmartLifeResourcePage({ params }) {
   const localFiltersActive = isInvoiceWorkspace
     ? !!(customerFilter || paymentStatusFilter || saleStatusFilter || (dateFilter?.preset && dateFilter.preset !== 'all'))
     : resource === 'products' && !!(categoryFilter || unitFilter || typeFilter);
-  /* SmartERP's sort_by=date/sort_type=desc query params are honored by some
-     list endpoints but silently ignored by others (confirmed live: Purchases
-     returned rows in upload order regardless of these params). Rather than
-     trust per-resource upstream sort support, invoice-workspace resources
-     always paginate the already-fetched complete dataset (filterUniverse,
-     loaded below for filtering anyway) sorted newest-first client-side —
-     correct regardless of what the upstream endpoint does with sort params. */
-  const usingCompleteFilterSet = filterUniverse.length > 0 && (localFiltersActive || isInvoiceWorkspace);
-  const sortedFilterUniverse = useMemo(() => {
-    if (!isInvoiceWorkspace) return filterUniverse;
-    return [...filterUniverse].sort((a, b) => String(invoiceView(b, resource).date || '').localeCompare(String(invoiceView(a, resource).date || '')));
-  }, [filterUniverse, isInvoiceWorkspace, resource]);
-  const candidateRecords = usingCompleteFilterSet ? (isInvoiceWorkspace ? sortedFilterUniverse : filterUniverse) : records;
+  /* SmartLife-backed lists must preserve SmartERP's own record order, never
+     an opinionated client-side re-sort — sort_by=date&sort_type=desc is sent
+     upstream (honored by some endpoints, silently ignored by others) and
+     whatever order comes back is shown as-is. Complete-dataset fetching
+     (filterUniverse) exists only so client-side filters (date range, party,
+     status) can see the full set SmartERP doesn't expose as query params —
+     it is used ONLY while a filter is actually active, filtered with a plain
+     .filter() that preserves source order, never re-sorted. Without an
+     active filter, the page renders the single already-fetched `records`
+     page directly, so there is no flicker from a slower complete-dataset
+     fetch reordering rows after the fact, and no redundant full-dataset
+     fetch/sort on every unfiltered page load. */
+  const usingCompleteFilterSet = localFiltersActive && filterUniverse.length > 0;
+  const candidateRecords = usingCompleteFilterSet ? filterUniverse : records;
   const filteredRecords = useMemo(() => candidateRecords.filter(record => {
     if (isInvoiceWorkspace) {
       const view = invoiceView(record, resource);
