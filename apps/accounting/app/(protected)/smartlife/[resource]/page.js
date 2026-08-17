@@ -159,13 +159,27 @@ export default function SmartLifeResourcePage({ params }) {
   const [dateFilter,setDateFilter] = useState({ preset:'all', from:null, to:null });
   const [customerFilter,setCustomerFilter] = useState(''); const [paymentStatusFilter,setPaymentStatusFilter] = useState(''); const [saleStatusFilter,setSaleStatusFilter] = useState('');
   const [categoryFilter,setCategoryFilter] = useState(''); const [unitFilter,setUnitFilter] = useState(''); const [typeFilter,setTypeFilter] = useState('');
-  /* Trial Balance column toggles — real, working switches over the one
-     real `balance` field SmartERP exposes (id/account_number/account_name/
-     balance only). Debit/Credit/Balance are genuine alternate views of the
-     same real number, toggle instantly, and are picked up by Print/PDF/
-     Excel automatically since runReport() already builds its export
-     columns from this same `columns` array. */
-  const [tbShowDebit,setTbShowDebit] = useState(true); const [tbShowCredit,setTbShowCredit] = useState(true); const [tbShowBalance,setTbShowBalance] = useState(false);
+  /* Trial Balance column-group toggles, matching SmartLife's own report
+     interaction model (one checkbox per group: Beginning of period /
+     Period balance / Current balance / Balance) instead of separate
+     Debit/Credit checkboxes. Toggling a group always adds/removes its
+     Debit+Credit columns from the table immediately — that part of the
+     interaction is real regardless of which group.
+     What differs is the DATA behind each group: SmartERP's account_balances
+     resource (the only real source this report has — confirmed across four
+     separate investigations, see the ENGINEERING NOTE below) is a flat,
+     point-in-time snapshot with exactly one number per account. Current
+     balance + Balance are that real number and its accounting-convention
+     Debit/Credit split — genuinely correct. Beginning-of-period and
+     Period-balance would require a dated ledger/journal history (opening
+     balance as of a date, and net movement across a date range) that this
+     endpoint does not carry, so their columns render but show an explicit
+     "N/A" marker rather than a fabricated figure — never a real-looking
+     number with nothing real behind it. */
+  const [tbShowBeginning,setTbShowBeginning] = useState(false);
+  const [tbShowPeriod,setTbShowPeriod] = useState(false);
+  const [tbShowCurrent,setTbShowCurrent] = useState(true);
+  const [tbShowBalance,setTbShowBalance] = useState(false);
   /* Show parents / Show customers / Show suppliers — real structural
      filters derived from the actual account_number hierarchy already
      synced (never fabricated): a "parent" account is simply one that has
@@ -416,13 +430,17 @@ export default function SmartLifeResourcePage({ params }) {
        IDs with no account name. Verified against actual SmartERP records. */
     if (resource === 'accounts') return ['account_number', 'account_name'];
     if (resource === 'account-balances') return ['account_number', 'account_name', 'balance'];
-    /* Trial Balance: same account_number/account_name/balance real fields
-       as Account Balances, split into standard Debit/Credit columns by
-       cell() below — a display convention (positive balance = debit side,
-       negative = credit side), not an invented figure. Column set responds
-       live to the toggle switches in the toolbar. */
+    /* Trial Balance: column set responds live to the group toggles, in
+       SmartLife's own left-to-right group order (Beginning / Period /
+       Current / Balance). Current+Balance are the real balance split by
+       cell() below; Beginning/Period render but their cells show an
+       explicit "N/A" (see cell()) since no real dated-ledger source exists
+       for them. */
     if (resource === 'trial-balance') return ['account_number', 'account_name',
-      ...(tbShowDebit ? ['debit'] : []), ...(tbShowCredit ? ['credit'] : []), ...(tbShowBalance ? ['balance'] : [])];
+      ...(tbShowBeginning ? ['beginning_debit','beginning_credit'] : []),
+      ...(tbShowPeriod ? ['period_debit','period_credit'] : []),
+      ...(tbShowCurrent ? ['debit','credit'] : []),
+      ...(tbShowBalance ? ['balance'] : [])];
     /* Tax Rates: real fields are id/code/name/rate/type — the generic
        `preferred` list below has no 'rate'/'type' entries, so it silently
        dropped the rate value entirely (the entire point of this report).
@@ -431,8 +449,14 @@ export default function SmartLifeResourcePage({ params }) {
     const preferred = ['id','number','reference','code','name','english_name','company','customer_name','supplier_name','phone','email','city','date','status','quantity','price','total','amount','balance','currency'];
     const present = new Set(records.flatMap(r => r && typeof r === 'object' ? Object.keys(r) : []));
     return preferred.filter(k => present.has(k)).slice(0,8).length ? preferred.filter(k => present.has(k)).slice(0,8) : [...present].slice(0,8);
-  },[records,resource,isInvoiceWorkspace,tbShowDebit,tbShowCredit,tbShowBalance]);
-  const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate', debit:'Debit', credit:'Credit' };
+  },[records,resource,isInvoiceWorkspace,tbShowBeginning,tbShowPeriod,tbShowCurrent,tbShowBalance]);
+  const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate', debit:'Debit', credit:'Credit', beginning_debit:'Debit', beginning_credit:'Credit', period_debit:'Debit', period_credit:'Credit' };
+  /* Export (Print/PDF/Excel) is a flat table with no visual group headers,
+     so "Debit"/"Credit" repeated three times would be ambiguous there —
+     use distinct labels only for that flat context; the on-screen table
+     keeps the generic sub-labels since the group header above them already
+     supplies the context, matching SmartLife's own screen layout. */
+  const TRIAL_BALANCE_EXPORT_LABELS = { beginning_debit:'Beginning Debit', beginning_credit:'Beginning Credit', period_debit:'Period Debit', period_credit:'Period Credit', debit:'Current Debit', credit:'Current Credit', balance:'Balance', account_number:'Account Number', account_name:'Account Name' };
   function resetInvoiceFilters() { setSearch(''); setCustomerFilter(''); setPaymentStatusFilter(''); setSaleStatusFilter(''); setDateFilter({ preset:'all', from:null, to:null }); }
 
   const relationshipRecordType = resource === 'purchases' ? 'purchase_invoice' : resource === 'sales-invoices' ? 'sales_invoice' : null;
@@ -475,6 +499,8 @@ export default function SmartLifeResourcePage({ params }) {
           ]
         : (resource === 'financial-reports'
           ? [{ key: 'report', header: 'Report' }, { key: 'amount', header: 'Amount' }, { key: 'currency', header: 'Currency' }, { key: 'status', header: 'Source' }]
+          : resource === 'trial-balance'
+          ? columns.map(c => ({ key: c, header: TRIAL_BALANCE_EXPORT_LABELS[c] || c.replaceAll('_', ' ') }))
           : columns.map(c => ({ key: c, header: COLUMN_LABELS[c] || c.replaceAll('_', ' ') })));
       const reportRows = DOCUMENT_RESOURCES.has(resource)
         ? exportRows.map(r => { const v = invoiceView(r, resource); return { invoice_number: v.invoice_number, customer: v.customer, date: professionalDate(v.date), total: money(v.total, v.currency), paid: money(v.paid, v.currency), balance: money(v.balance, v.currency), status: resource === 'purchases' ? `${v.paymentStatus} · ${v.saleStatus || '—'}` : v.status }; })
@@ -558,6 +584,14 @@ export default function SmartLifeResourcePage({ params }) {
       if (column === 'debit') return balance >= 0 && balance !== 0 ? money(balance) : display(null);
       if (column === 'credit') return balance < 0 ? money(Math.abs(balance)) : display(null);
       if (column === 'balance') return money(balance);
+      /* Beginning/Period columns render (the interaction is real — toggling
+         adds/removes them exactly like Current/Balance) but no real dated-
+         ledger source exists to fill them (see the toggle-state comment
+         above), so every cell is an explicit "N/A" — never a number that
+         looks real. A plain string (not JSX) so it also comes through
+         correctly in the Excel/PDF export, which calls this same cell()
+         function to build row data, not just screen markup. */
+      if (column === 'beginning_debit' || column === 'beginning_credit' || column === 'period_debit' || column === 'period_credit') return 'N/A';
       return display(record?.[column]);
     }
     if(!DOCUMENT_RESOURCES.has(resource)) return display(record?.[column]);
@@ -631,8 +665,9 @@ export default function SmartLifeResourcePage({ params }) {
             <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCustomers} onChange={e=>setTbShowCustomers(e.target.checked)}/> Show customers</label>
             <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowSuppliers} onChange={e=>setTbShowSuppliers(e.target.checked)}/> Show suppliers</label>
             <span className="mx-1 h-4 border-s border-[color:var(--bd)]"/>
-            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowDebit} onChange={e=>setTbShowDebit(e.target.checked)}/> Current balance: Debit</label>
-            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCredit} onChange={e=>setTbShowCredit(e.target.checked)}/> Current balance: Credit</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]" title="Column structure only — SmartLife's own opening-balance/journal data for this group is not exposed by the accessible API, so its cells show N/A"><input type="checkbox" checked={tbShowBeginning} onChange={e=>setTbShowBeginning(e.target.checked)}/> Beginning of period<span className="text-[color:var(--tx-4)]">ⓘ</span></label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]" title="Column structure only — SmartLife's own period-movement/journal data for this group is not exposed by the accessible API, so its cells show N/A"><input type="checkbox" checked={tbShowPeriod} onChange={e=>setTbShowPeriod(e.target.checked)}/> Period balance<span className="text-[color:var(--tx-4)]">ⓘ</span></label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCurrent} onChange={e=>setTbShowCurrent(e.target.checked)}/> Current balance</label>
             <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowBalance} onChange={e=>setTbShowBalance(e.target.checked)}/> Balance</label>
             <GlassButton variant="secondary" size="sm" onClick={()=>{setSearch('');setTbShowParents(false);setTbShowCustomers(false);setTbShowSuppliers(false);}}>Reset</GlassButton>
           </>) : (!['customers','suppliers','warehouses'].includes(resource) && <GlassSelect value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{statusValues.map(s=><option key={s}>{s}</option>)}</GlassSelect>)}
@@ -697,17 +732,24 @@ export default function SmartLifeResourcePage({ params }) {
         </div>;
       })()}
       {!!filtered.length&&<div className="overflow-auto"><table className="w-full text-sm"><thead>
-        {/* Trial Balance groups Debit/Credit under a "Current Balance"
-           header, matching SmartLife's own report layout (Beginning-of-
-           period/Period-balance groups are NOT shown here since no real
-           SmartLife source provides that data — see the ENGINEERING NOTE
-           above; only the group SmartLife's own real account_balances data
-           actually supports is rendered). */}
+        {/* Grouped header row, same left-to-right order as SmartLife's own
+           report (Beginning of period / Period balance / Current balance /
+           Balance) and the same interaction: each group's header appears
+           only while its toggle is on. Beginning/Period render with real
+           column structure even though their cells show "N/A" (see cell())
+           — the group being visually present but data-less is what "keep
+           unsupported values clearly unavailable" means here, not hiding
+           the group entirely. */}
         {resource==='trial-balance'&&(()=>{
-          const balanceGroupSpan=(tbShowDebit?1:0)+(tbShowCredit?1:0);
+          const groups=[
+            tbShowBeginning&&{label:'Beginning of Period',span:2},
+            tbShowPeriod&&{label:'Period Balance',span:2},
+            tbShowCurrent&&{label:'Current Balance',span:2},
+          ].filter(Boolean);
+          if(!groups.length&&!tbShowBalance) return null;
           return <tr className="border-b border-[color:var(--bd)]">
             <th colSpan={2}/>
-            {balanceGroupSpan>0&&<th colSpan={balanceGroupSpan} className="p-2 text-center text-xs uppercase text-[color:var(--tx-3)] border-s border-[color:var(--bd)]">Current Balance</th>}
+            {groups.map(g=><th key={g.label} colSpan={g.span} className="p-2 text-center text-xs uppercase text-[color:var(--tx-3)] border-s border-[color:var(--bd)]">{g.label}</th>)}
             {tbShowBalance&&<th className="border-s border-[color:var(--bd)]"/>}
             <th className="print:hidden"/>
           </tr>;
@@ -715,7 +757,8 @@ export default function SmartLifeResourcePage({ params }) {
         <tr className="border-b border-[color:var(--bd)]">{columns.map(c=><th key={c} className={`p-3 text-xs uppercase text-[color:var(--tx-3)] ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end':'text-start'}`}>{c==='customer'?partyLabel:(COLUMN_LABELS[c] || c.replaceAll('_',' '))}</th>)}<th className="print:hidden">Actions</th></tr></thead><tbody>{filtered.map((record,index)=>{
           const isParent=resource==='trial-balance'&&trialBalanceParentNumbers&&trialBalanceParentNumbers.has(String(record?.account_number||''));
           const depth=resource==='trial-balance'&&trialBalanceDepth?(trialBalanceDepth.get(String(record?.account_number||''))||0):0;
-          return <tr key={externalId(record)||index} className={`border-b border-[color:var(--bd)] ${isParent?'bg-[color:var(--pr-soft)] font-semibold':''}`}>{columns.map(c=><td key={c} className={`max-w-64 truncate p-3 ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end tabular-nums':''}`} style={resource==='trial-balance'&&c==='account_name'?{paddingInlineStart:`${12+depth*20}px`}:undefined}>{cell(record,c)}</td>)}<td className="p-3 print:hidden"><div className="flex gap-1"><GlassButton variant="secondary" size="sm" onClick={()=>setSelected(record)}>View</GlassButton>{DOCUMENT_RESOURCES.has(resource)&&<a href={`${printBase}/${externalId(record)}/print`} target="_blank" rel="noreferrer"><GlassButton variant="secondary" size="sm">PDF</GlassButton></a>}{DOCUMENT_RESOURCES.has(resource)&&<GlassButton size="sm" onClick={()=>{setSelected(record);setProjectId('');setConnectOpen(true);}}>Connect Project</GlassButton>}</div></td></tr>;
+          const naColumns=new Set(['beginning_debit','beginning_credit','period_debit','period_credit']);
+          return <tr key={externalId(record)||index} className={`border-b border-[color:var(--bd)] ${isParent?'bg-[color:var(--pr-soft)] font-semibold':''}`}>{columns.map(c=><td key={c} className={`max-w-64 truncate p-3 ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end tabular-nums':''} ${resource==='trial-balance'&&naColumns.has(c)?'italic text-[color:var(--tx-4)]':''}`} title={resource==='trial-balance'&&naColumns.has(c)?'Not available from SmartLife — no dated ledger/journal source is exposed by the accessible API':undefined} style={resource==='trial-balance'&&c==='account_name'?{paddingInlineStart:`${12+depth*20}px`}:undefined}>{cell(record,c)}</td>)}<td className="p-3 print:hidden"><div className="flex gap-1"><GlassButton variant="secondary" size="sm" onClick={()=>setSelected(record)}>View</GlassButton>{DOCUMENT_RESOURCES.has(resource)&&<a href={`${printBase}/${externalId(record)}/print`} target="_blank" rel="noreferrer"><GlassButton variant="secondary" size="sm">PDF</GlassButton></a>}{DOCUMENT_RESOURCES.has(resource)&&<GlassButton size="sm" onClick={()=>{setSelected(record);setProjectId('');setConnectOpen(true);}}>Connect Project</GlassButton>}</div></td></tr>;
         })}</tbody></table></div>}
       {resource!=='financial-reports'&&resource!=='product-balances'&&totalRecords>0&&<div className="mt-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="text-xs text-[color:var(--tx-3)] flex items-center gap-3 flex-wrap">
