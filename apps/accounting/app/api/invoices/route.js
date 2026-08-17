@@ -11,13 +11,17 @@ export async function GET(req) {
   const q = url.searchParams;
   const search = (q.get('search') || '').trim();
   const status = q.get('status') || '';
+  const dateFrom = q.get('dateFrom') || '';
+  const dateTo = q.get('dateTo') || '';
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
 
   const sb = getDb();
   let query = sb.from('acc_invoices').select('*', { count: 'exact' });
   if (status) query = query.eq('status', status);
   if (search) query = query.or(`invoice_number.ilike.%${search}%,customer_name.ilike.%${search}%`);
+  if (dateFrom) query = query.gte('invoice_date', dateFrom);
+  if (dateTo) query = query.lte('invoice_date', dateTo);
   query = query.order('invoice_date', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
 
   let { data, error, count } = await query;
@@ -26,6 +30,12 @@ export async function GET(req) {
     let legacy = sb.from('orders').select('*', { count: 'exact' }).eq('is_deleted', false);
     if (search) legacy = legacy.or(`order_no.ilike.%${search}%,guest_name.ilike.%${search}%`);
     if (status) legacy = legacy.eq('payment_status', status);
+    /* Legacy `orders` has no invoice_date column of its own — it's mapped
+       from created_at (a timestamptz) below, so the end bound is pushed to
+       the last instant of that local calendar date, same convention as
+       every other route here, to avoid silently dropping same-day rows. */
+    if (dateFrom) legacy = legacy.gte('created_at', dateFrom);
+    if (dateTo) legacy = legacy.lte('created_at', `${dateTo}T23:59:59.999`);
     const legacyRes = await legacy.order('created_at', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
     if (!legacyRes.error) {
       data = (legacyRes.data || []).map(row => ({ ...row, invoice_number: row.order_no, customer_name: row.guest_name, customer_email: row.guest_email, invoice_date: row.created_at, total_amount: row.grand_total, status: row.payment_status || row.status, source_table: 'orders' }));

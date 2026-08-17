@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
 import { exportReportPdf } from '@/lib/reportPdf';
+import DateFilter, { dateFilterLabel } from '@/components/DateFilter';
+import { resolveDateRange } from '@/lib/resolveDateRange';
+import ListPagination from '@/components/ListPagination';
+import { useLanguage } from '@/lib/i18n';
 
 const STATUSES = ['Draft', 'Unpaid', 'Paid', 'Overdue', 'Cancelled', 'Partially Paid'];
 const DESTINATIONS = [
@@ -18,9 +22,12 @@ function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractio
 const emptyLine = () => ({ description: '', qty: 1, unit_price: '', tax_rate: 15, inv_product_id: '', inv_material_id: '' });
 
 export default function BillsPage() {
+  const { t, lang } = useLanguage();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({});
   const [lines, setLines] = useState([emptyLine()]);
@@ -29,28 +36,32 @@ export default function BillsPage() {
   const [itemQuery, setItemQuery] = useState({});
   const [itemResults, setItemResults] = useState({});
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
-  const params = new URLSearchParams({ page, pageSize });
-  if (search) params.set('search', search);
-  if (status) params.set('status', status);
+  const params = useMemo(() => {
+    const p = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search) p.set('search', search);
+    if (status) p.set('status', status);
+    if (dateFrom) p.set('dateFrom', dateFrom);
+    if (dateTo) p.set('dateTo', dateTo);
+    return p;
+  }, [page, pageSize, search, status, dateFrom, dateTo]);
   const { data, refresh } = useLiveData(`/api/bills?${params}`, 15000);
   const bills = data?.bills || [];
+  const total = Number(data?.total) || 0;
 
   /* Same shared A4 report engine as the rest of Accounting. Walks every
-     server page (100 at a time) under the active filters instead of only
+     server page (500 at a time) under the active filters instead of only
      exporting the currently visible page. */
   async function fetchAllBills() {
     const all = [];
     for (let p = 1, guard = 0; guard < 100; guard += 1) {
-      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
-      if (search) qp.set('search', search);
-      if (status) qp.set('status', status);
+      const qp = new URLSearchParams(params); qp.set('page', String(p)); qp.set('pageSize', '500');
       const res = await fetch(`/api/bills?${qp}`, { credentials: 'same-origin' });
       const body = await res.json().catch(() => ({}));
       const batch = Array.isArray(body.bills) ? body.bills : [];
       all.push(...batch);
-      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      if (!batch.length || batch.length < 500 || all.length >= Number(body.total || 0)) break;
       p += 1;
     }
     return all;
@@ -61,7 +72,7 @@ export default function BillsPage() {
     try {
       const all = await fetchAllBills();
       await exportReportPdf({
-        title: 'Bills Report' + (status ? ` — ${status}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
+        title: 'Bills Report' + (status ? ` — ${status}` : '') + (dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
         columns: [
           { key: 'bill_number', header: 'Number' }, { key: 'vendor_name', header: 'Vendor' },
           { key: 'bill_date', header: 'Date' }, { key: 'due_date', header: 'Due' },
@@ -151,8 +162,9 @@ export default function BillsPage() {
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
-          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
-          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">
@@ -192,7 +204,7 @@ export default function BillsPage() {
           </tbody>
         </table>
 
-        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
+        <ListPagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }} label="bills" />
       </GlassCard>
 
       {showForm && (

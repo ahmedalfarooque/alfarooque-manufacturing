@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassTh, GlassTd, toast } from '@/components/glass';
+import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassTh, GlassTd, toast } from '@/components/glass';
 import { exportReportPdf } from '@/lib/reportPdf';
+import DateFilter, { dateFilterLabel } from '@/components/DateFilter';
+import { resolveDateRange } from '@/lib/resolveDateRange';
+import ListPagination from '@/components/ListPagination';
+import { useLanguage } from '@/lib/i18n';
 
 const STATUSES = ['Draft', 'Posted', 'Voided'];
 
@@ -12,32 +16,39 @@ function statusTone(s) { return s === 'Posted' ? 'success' : s === 'Voided' ? 'e
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
 
 export default function JournalEntriesPage() {
+  const { t, lang } = useLanguage();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
-  const params = new URLSearchParams({ page, pageSize });
-  if (search) params.set('search', search);
-  if (status) params.set('status', status);
+  const params = useMemo(() => {
+    const p = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search) p.set('search', search);
+    if (status) p.set('status', status);
+    if (dateFrom) p.set('dateFrom', dateFrom);
+    if (dateTo) p.set('dateTo', dateTo);
+    return p;
+  }, [page, pageSize, search, status, dateFrom, dateTo]);
   const { data } = useLiveData(`/api/journal-entries?${params}`, 15000);
   const entries = data?.entries || [];
+  const total = Number(data?.total) || 0;
 
   /* Same shared A4 report engine as the rest of Accounting. Walks every
-     server page (100 at a time) under the active filters instead of only
+     server page (500 at a time) under the active filters instead of only
      exporting the currently visible page. */
   async function fetchAllEntries() {
     const all = [];
     for (let p = 1, guard = 0; guard < 100; guard += 1) {
-      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
-      if (search) qp.set('search', search);
-      if (status) qp.set('status', status);
+      const qp = new URLSearchParams(params); qp.set('page', String(p)); qp.set('pageSize', '500');
       const res = await fetch(`/api/journal-entries?${qp}`, { credentials: 'same-origin' });
       const body = await res.json().catch(() => ({}));
       const batch = Array.isArray(body.entries) ? body.entries : [];
       all.push(...batch);
-      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      if (!batch.length || batch.length < 500 || all.length >= Number(body.total || 0)) break;
       p += 1;
     }
     return all;
@@ -48,7 +59,7 @@ export default function JournalEntriesPage() {
     try {
       const all = await fetchAllEntries();
       await exportReportPdf({
-        title: 'Journal Entries Report' + (status ? ` — ${status}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
+        title: 'Journal Entries Report' + (status ? ` — ${status}` : '') + (dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
         columns: [
           { key: 'journal_number', header: 'Number' }, { key: 'entry_date', header: 'Date' },
           { key: 'description', header: 'Description' }, { key: 'debitText', header: 'Debit' }, { key: 'status', header: 'Status' },
@@ -77,8 +88,9 @@ export default function JournalEntriesPage() {
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
-          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
-          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">
@@ -113,7 +125,7 @@ export default function JournalEntriesPage() {
           </tbody>
         </table>
 
-        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
+        <ListPagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }} label="journal entries" />
       </GlassCard>
     </div>
   );

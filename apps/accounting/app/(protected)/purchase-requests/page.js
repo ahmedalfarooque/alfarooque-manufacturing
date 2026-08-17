@@ -8,10 +8,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassBadge, GlassButton, GlassCard, GlassInput, GlassModal, GlassSelect, toast } from '@/components/glass';
-import DateFilter, { inDateFilter, dateFilterLabel } from '@/components/DateFilter';
+import DateFilter, { dateFilterLabel } from '@/components/DateFilter';
+import { resolveDateRange } from '@/lib/resolveDateRange';
 import { exportReportPdf } from '@/lib/reportPdf';
 import PageHeader from '@/components/PageHeader';
 import ListToolbar from '@/components/ListToolbar';
+import ListPagination from '@/components/ListPagination';
 import { useLanguage } from '@/lib/i18n';
 
 /* Kept identical to Projects' own status set (apps/projects — PR_ACTIONS /
@@ -32,15 +34,46 @@ function money(value, currency = 'SAR') {
 
 export default function PurchaseRequestsPage() {
   const { t, lang } = useLanguage();
-  const { data, error, loading, refresh } = useLiveData('/api/purchase-requests', 30000);
-  const requests = Array.isArray(data?.purchaseRequests) ? data.purchaseRequests : [];
-
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('');
   const [projectFilter, setProjectFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
+
+  /* Server-paginated + server-filtered, same as every other Accounting
+     local-DB list — this used to fetch the ENTIRE pm_purchase_requests
+     table unfiltered on every load and paginate/filter it all client-side,
+     which doesn't scale and was the one page in this pass still doing that. */
+  const listParams = useMemo(() => {
+    const p = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search.trim()) p.set('search', search.trim());
+    if (statusFilter) p.set('status', statusFilter);
+    if (priorityFilter) p.set('priority', priorityFilter);
+    if (supplierFilter.trim()) p.set('supplier', supplierFilter.trim());
+    if (projectFilter) p.set('project', projectFilter);
+    if (dateFrom) p.set('dateFrom', dateFrom);
+    if (dateTo) p.set('dateTo', dateTo);
+    return p;
+  }, [page, pageSize, search, statusFilter, priorityFilter, supplierFilter, projectFilter, dateFrom, dateTo]);
+  const { data, error, loading, refresh } = useLiveData(`/api/purchase-requests?${listParams}`, 30000);
+  const requests = Array.isArray(data?.purchaseRequests) ? data.purchaseRequests : [];
+  const total = Number(data?.total) || 0;
+
+  /* Full project list for the filter dropdown (not just names present on
+     the current page of requests) — the same read-only endpoint already
+     used to populate the "Connect Project" picker. */
+  const [projectFilterOptions, setProjectFilterOptions] = useState([]);
+  useEffect(() => {
+    fetch('/api/smartlife/relationships', { credentials: 'same-origin' }).then(r => r.json())
+      .then(p => setProjectFilterOptions((p.projects || []).map(pr => pr.project_name).filter(Boolean).sort()))
+      .catch(() => {});
+  }, []);
+  useEffect(() => { setPage(1); }, [search, statusFilter, priorityFilter, supplierFilter, projectFilter, dateFilter]);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -105,23 +138,25 @@ export default function PurchaseRequestsPage() {
     } catch (e) { toast(e.message, 'red'); } finally { setAddItemBusy(false); }
   }
 
-  /* Search is field-scoped (Material/Supplier/Project) — never the entire
-     raw record — matching the same convention just fixed on Sales/Purchases. */
-  const projectOptions = useMemo(() => [...new Set(requests.map(r => r.project_name).filter(Boolean))].sort(), [requests]);
-  const filtered = useMemo(() => requests.filter(r => {
-    if (statusFilter && r.status !== statusFilter) return false;
-    if (priorityFilter && r.priority !== priorityFilter) return false;
-    if (supplierFilter && !String(r.supplier || '').toLowerCase().includes(supplierFilter.toLowerCase())) return false;
-    if (projectFilter && r.project_name !== projectFilter) return false;
-    if (!inDateFilter(dateFilter, r.request_date)) return false;
-    if (search.trim()) {
-      const haystack = `${r.material_description || ''} ${r.supplier || ''} ${r.project_name || ''}`.toLowerCase();
-      if (!haystack.includes(search.trim().toLowerCase())) return false;
-    }
-    return true;
-  }), [requests, search, statusFilter, priorityFilter, supplierFilter, projectFilter, dateFilter]);
+  function resetFilters() { setSearch(''); setStatusFilter(''); setSupplierFilter(''); setProjectFilter(''); setPriorityFilter(''); setDateFilter({ preset: 'all', from: null, to: null }); setPage(1); }
 
-  function resetFilters() { setSearch(''); setStatusFilter(''); setSupplierFilter(''); setProjectFilter(''); setPriorityFilter(''); setDateFilter({ preset: 'all', from: null, to: null }); }
+  /* Walks every server page (500 at a time, the API's cap) under the
+     currently active filters so Print/PDF always exports the complete
+     filtered dataset, never only the page currently on screen — same
+     convention as Invoices/Bills/Expenses/etc. in this app. */
+  async function fetchAllRequests() {
+    const all = [];
+    for (let p = 1, guard = 0; guard < 100; guard += 1) {
+      const qp = new URLSearchParams(listParams); qp.set('page', String(p)); qp.set('pageSize', '500');
+      const res = await fetch(`/api/purchase-requests?${qp}`, { credentials: 'same-origin' });
+      const body = await res.json().catch(() => ({}));
+      const batch = Array.isArray(body.purchaseRequests) ? body.purchaseRequests : [];
+      all.push(...batch);
+      if (!batch.length || batch.length < 500 || all.length >= Number(body.total || 0)) break;
+      p += 1;
+    }
+    return all;
+  }
 
   async function loadDetail(id) {
     setDetail(null);
@@ -175,6 +210,7 @@ export default function PurchaseRequestsPage() {
       if (priorityFilter) filterParts.push(`Priority: ${priorityFilter}`);
       if (statusFilter) filterParts.push(`Status: ${statusFilter}`);
       if (search.trim()) filterParts.push(`Search: "${search.trim()}"`);
+      const all = await fetchAllRequests();
       await exportReportPdf({
         title: `AL FAROOQUE ERP — Purchase Requests — ${filterParts.join(' · ')}`,
         columns: [
@@ -183,9 +219,9 @@ export default function PurchaseRequestsPage() {
           { key: 'estimated_price', header: 'Estimated Amount' }, { key: 'priority', header: 'Priority' },
           { key: 'project_name', header: 'Project' }, { key: 'status', header: 'Status' },
         ],
-        rows: filtered.map(r => ({ ...r, estimated_price: money(r.estimated_price) || 'Unknown', project_name: r.project_name || '—' })),
+        rows: all.map(r => ({ ...r, estimated_price: money(r.estimated_price) || 'Unknown', project_name: r.project_name || '—' })),
         period: dateFilterLabel(dateFilter, t, lang), source: 'AL FAROOQUE ERP local purchase-request records',
-        totals: [['Exported requests', String(filtered.length)]], lang,
+        totals: [['Exported requests', String(all.length)]], lang,
         fileName: 'purchase-requests-report.pdf', action,
       });
     } catch (e) { toast(e.message || 'Could not generate report.', 'red'); }
@@ -277,7 +313,7 @@ export default function PurchaseRequestsPage() {
         <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
         <GlassInput className="min-w-40" placeholder="Supplier…" value={supplierFilter} onChange={e => setSupplierFilter(e.target.value)} />
         <GlassSelect value={projectFilter} onChange={e => setProjectFilter(e.target.value)}>
-          <option value="">All projects</option>{projectOptions.map(p => <option key={p}>{p}</option>)}
+          <option value="">All projects</option>{projectFilterOptions.map(p => <option key={p}>{p}</option>)}
         </GlassSelect>
         <GlassSelect value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
           <option value="">All priorities</option>{['Normal', 'Urgent', 'Critical'].map(p => <option key={p}>{p}</option>)}
@@ -286,14 +322,14 @@ export default function PurchaseRequestsPage() {
           <option value="">All statuses</option>{STATUSES.map(s => <option key={s}>{s}</option>)}
         </GlassSelect>
         <GlassButton variant="secondary" size="sm" onClick={resetFilters}>Reset</GlassButton>
-        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!filtered.length || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
-        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!filtered.length || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : '⤓ Download PDF'}</GlassButton>
+        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : '⤓ Download PDF'}</GlassButton>
       </ListToolbar>
 
       {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">Could not load purchase requests.</div>}
       {loading && <div className="py-8 text-center text-[color:var(--tx-3)]">Loading…</div>}
-      {!loading && !filtered.length && <div className="py-8 text-center text-[color:var(--tx-3)]">No purchase requests found.</div>}
-      {!!filtered.length && <div className="overflow-auto">
+      {!loading && !requests.length && <div className="py-8 text-center text-[color:var(--tx-3)]">No purchase requests found.</div>}
+      {!!requests.length && <div className="overflow-auto">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-[color:var(--bd)]">
             <th className="p-3 text-start text-xs uppercase text-[color:var(--tx-3)]">Date</th>
@@ -306,7 +342,7 @@ export default function PurchaseRequestsPage() {
             <th className="p-3 text-start text-xs uppercase text-[color:var(--tx-3)]">Status</th>
             <th className="p-3 text-start text-xs uppercase text-[color:var(--tx-3)]">Actions</th>
           </tr></thead>
-          <tbody>{filtered.map(r => <tr key={r.id} className="border-b border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)]">
+          <tbody>{requests.map(r => <tr key={r.id} className="border-b border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)]">
             <td className="p-3">{r.request_date}</td>
             <td className="max-w-64 truncate p-3">{r.material_description}{r.linked_item_name && <div className="text-xs text-[color:var(--tx-4)]">🔗 {r.linked_item_name}</div>}</td>
             <td className="p-3">{r.project_name || <span className="text-[color:var(--tx-4)]">Not connected</span>}</td>
@@ -323,6 +359,7 @@ export default function PurchaseRequestsPage() {
           </tr>)}</tbody>
         </table>
       </div>}
+      <ListPagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }} label="purchase requests" />
     </GlassCard>
 
     {createOpen && <GlassModal title={editing ? 'Edit Purchase Request' : 'New Purchase Request'} onClose={() => { setCreateOpen(false); setEditing(null); }}

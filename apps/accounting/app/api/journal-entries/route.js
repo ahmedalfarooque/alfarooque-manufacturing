@@ -11,14 +11,18 @@ export async function GET(req) {
   const q = url.searchParams;
   const search = (q.get('search') || '').trim();
   const status = q.get('status') || '';
+  const dateFrom = q.get('dateFrom') || '';
+  const dateTo = q.get('dateTo') || '';
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
 
   const sb = getDb();
   let query = sb.from('acc_journal_entries')
     .select('*, platform_users!acc_journal_entries_created_by_fkey(full_name, email)', { count: 'exact' });
   if (status) query = query.eq('status', status);
   if (search) query = query.or(`journal_number.ilike.%${search}%,description.ilike.%${search}%`);
+  if (dateFrom) query = query.gte('entry_date', dateFrom);
+  if (dateTo) query = query.lte('entry_date', dateTo);
   query = query.order('entry_date', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
 
   const { data, error, count } = await query;

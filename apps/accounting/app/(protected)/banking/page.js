@@ -1,44 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
 import { exportReportPdf } from '@/lib/reportPdf';
+import DateFilter, { dateFilterLabel } from '@/components/DateFilter';
+import { resolveDateRange } from '@/lib/resolveDateRange';
+import ListPagination from '@/components/ListPagination';
+import { useLanguage } from '@/lib/i18n';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
 
 export default function BankingPage() {
+  const { t, lang } = useLanguage();
   const [selectedAccount, setSelectedAccount] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [txPage, setTxPage] = useState(1);
+  const [txPageSize, setTxPageSize] = useState(25);
   const [showAccountForm, setShowAccountForm] = useState(false);
   const [accountForm, setAccountForm] = useState({ currency: 'SAR' });
   const [showTxForm, setShowTxForm] = useState(false);
   const [txForm, setTxForm] = useState({ transaction_type: 'credit' });
   const [saving, setSaving] = useState(false);
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
   const { data: bankData, refresh: refreshAccounts } = useLiveData('/api/banking', 0);
   const accounts = bankData?.accounts || [];
 
-  const txParams = new URLSearchParams({ page: txPage, pageSize });
-  if (selectedAccount) txParams.set('account_id', selectedAccount);
+  const txParams = useMemo(() => {
+    const p = new URLSearchParams({ page: String(txPage), pageSize: String(txPageSize) });
+    if (selectedAccount) p.set('account_id', selectedAccount);
+    if (dateFrom) p.set('dateFrom', dateFrom);
+    if (dateTo) p.set('dateTo', dateTo);
+    return p;
+  }, [txPage, txPageSize, selectedAccount, dateFrom, dateTo]);
   const { data: txData, refresh: refreshTx } = useLiveData(`/api/banking/transactions?${txParams}`, 15000);
   const transactions = txData?.transactions || [];
+  const txTotal = Number(txData?.total) || 0;
 
   /* Same shared A4 report engine as the rest of Accounting. Walks every
-     server page (100 at a time) under the currently selected account
-     instead of only exporting the currently visible page. */
+     server page (500 at a time) under the currently selected account/date
+     filter instead of only exporting the currently visible page. */
   async function fetchAllTransactions() {
     const all = [];
     for (let p = 1, guard = 0; guard < 100; guard += 1) {
-      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
-      if (selectedAccount) qp.set('account_id', selectedAccount);
+      const qp = new URLSearchParams(txParams); qp.set('page', String(p)); qp.set('pageSize', '500');
       const res = await fetch(`/api/banking/transactions?${qp}`, { credentials: 'same-origin' });
       const body = await res.json().catch(() => ({}));
       const batch = Array.isArray(body.transactions) ? body.transactions : [];
       all.push(...batch);
-      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      if (!batch.length || batch.length < 500 || all.length >= Number(body.total || 0)) break;
       p += 1;
     }
     return all;
@@ -50,7 +62,7 @@ export default function BankingPage() {
       const all = await fetchAllTransactions();
       const accountName = selectedAccount ? accounts.find(a => a.id === selectedAccount)?.name : null;
       await exportReportPdf({
-        title: 'Banking Transactions Report' + (accountName ? ` — ${accountName}` : ''),
+        title: 'Banking Transactions Report' + (accountName ? ` — ${accountName}` : '') + (dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : ''),
         columns: [
           { key: 'transaction_date', header: 'Date' }, { key: 'transaction_type', header: 'Type' },
           { key: 'accountName', header: 'Account' }, { key: 'description', header: 'Description' },
@@ -110,7 +122,7 @@ export default function BankingPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {accounts.map(a => (
           <GlassCard key={a.id} className={`cursor-pointer transition-all ${selectedAccount === a.id ? 'ring-2 ring-cyan-400' : ''}`}
-            onClick={() => setSelectedAccount(selectedAccount === a.id ? '' : a.id)}>
+            onClick={() => { setSelectedAccount(selectedAccount === a.id ? '' : a.id); setTxPage(1); }}>
             <p className="text-xs text-slate-400">{a.bank_name || 'Bank'}</p>
             <p className="text-white font-semibold">{a.name}</p>
             <p className="text-lg font-bold text-cyan-400 mt-1">SAR {fmt(a.current_balance)}</p>
@@ -127,10 +139,11 @@ export default function BankingPage() {
           <h3 className="text-sm font-semibold text-slate-300">
             {selectedAccount ? `Transactions — ${accounts.find(a => a.id === selectedAccount)?.name}` : 'All Transactions'}
           </h3>
-          <div className="flex gap-2">
-            {selectedAccount && <GlassButton variant="secondary" size="sm" onClick={() => setSelectedAccount('')}>Show All</GlassButton>}
-            <GlassButton variant="secondary" size="sm" onClick={() => runReport('print')} disabled={!txData?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
-            <GlassButton variant="secondary" size="sm" onClick={() => runReport('save')} disabled={!txData?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedAccount && <GlassButton variant="secondary" size="sm" onClick={() => { setSelectedAccount(''); setTxPage(1); }}>Show All</GlassButton>}
+            <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setTxPage(1); }} t={t} lang={lang} />
+            <GlassButton variant="secondary" size="sm" onClick={() => runReport('print')} disabled={!txTotal || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+            <GlassButton variant="secondary" size="sm" onClick={() => runReport('save')} disabled={!txTotal || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
           </div>
         </div>
 
@@ -164,7 +177,7 @@ export default function BankingPage() {
           </tbody>
         </table>
 
-        <GlassPagination page={txPage} pageSize={pageSize} total={txData?.total || 0} onPage={setTxPage} />
+        <ListPagination page={txPage} pageSize={txPageSize} total={txTotal} onPage={setTxPage} onPageSize={v => { setTxPageSize(v); setTxPage(1); }} label="transactions" />
       </GlassCard>
 
       {showAccountForm && (

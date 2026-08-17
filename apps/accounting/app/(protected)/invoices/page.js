@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
 import { exportReportPdf } from '@/lib/reportPdf';
+import DateFilter, { dateFilterLabel } from '@/components/DateFilter';
+import { resolveDateRange } from '@/lib/resolveDateRange';
+import ListPagination from '@/components/ListPagination';
+import { useLanguage } from '@/lib/i18n';
 
 const STATUSES = ['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled', 'Partially Paid'];
 function statusTone(s) { return s === 'Paid' ? 'success' : s === 'Overdue' ? 'error' : s === 'Sent' ? 'info' : 'neutral'; }
@@ -12,38 +16,45 @@ function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractio
 const emptyLine = () => ({ description: '', qty: 1, unit_price: '', tax_rate: 15 });
 
 export default function InvoicesPage() {
+  const { t, lang } = useLanguage();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({});
   const [lines, setLines] = useState([emptyLine()]);
   const [saving, setSaving] = useState(false);
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
-  const params = new URLSearchParams({ page, pageSize });
-  if (search) params.set('search', search);
-  if (status) params.set('status', status);
+  const params = useMemo(() => {
+    const p = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search) p.set('search', search);
+    if (status) p.set('status', status);
+    if (dateFrom) p.set('dateFrom', dateFrom);
+    if (dateTo) p.set('dateTo', dateTo);
+    return p;
+  }, [page, pageSize, search, status, dateFrom, dateTo]);
   const { data, refresh } = useLiveData(`/api/invoices?${params}`, 15000);
   const invoices = data?.invoices || [];
+  const total = Number(data?.total) || 0;
 
   /* Reuses the same shared A4 report engine as VAT/Purchase Requests/
-     Inventory — no second PDF renderer. The list itself is server-paginated
-     (25/page), so the report walks every page (100 at a time, the API's
-     cap) under the currently active search/status filter rather than only
-     exporting the visible page. */
+     Inventory — no second PDF renderer. The list itself is server-paginated,
+     so the report walks every page (500 at a time, the API's cap) under the
+     currently active search/status/date filters rather than only exporting
+     the visible page. */
   async function fetchAllInvoices() {
     const all = [];
     for (let p = 1, guard = 0; guard < 100; guard += 1) {
-      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
-      if (search) qp.set('search', search);
-      if (status) qp.set('status', status);
+      const qp = new URLSearchParams(params); qp.set('page', String(p)); qp.set('pageSize', '500');
       const res = await fetch(`/api/invoices?${qp}`, { credentials: 'same-origin' });
       const body = await res.json().catch(() => ({}));
       const batch = Array.isArray(body.invoices) ? body.invoices : [];
       all.push(...batch);
-      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      if (!batch.length || batch.length < 500 || all.length >= Number(body.total || 0)) break;
       p += 1;
     }
     return all;
@@ -54,7 +65,7 @@ export default function InvoicesPage() {
     try {
       const all = await fetchAllInvoices();
       await exportReportPdf({
-        title: 'Invoices Report' + (status ? ` — ${status}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
+        title: 'Invoices Report' + (status ? ` — ${status}` : '') + (dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
         columns: [
           { key: 'invoice_number', header: 'Number' }, { key: 'customer_name', header: 'Customer' },
           { key: 'invoice_date', header: 'Date' }, { key: 'due_date', header: 'Due' },
@@ -119,8 +130,9 @@ export default function InvoicesPage() {
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
-          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
-          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">
@@ -160,7 +172,7 @@ export default function InvoicesPage() {
           </tbody>
         </table>
 
-        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
+        <ListPagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }} label="invoices" />
       </GlassCard>
 
       {showForm && (

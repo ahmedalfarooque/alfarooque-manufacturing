@@ -13,11 +13,42 @@ export async function GET(req) {
   const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
-  const { data, error } = await sb
-    .from('pm_purchase_requests')
-    .select('*, pm_projects(id, project_name, customer_name), inv_products(name), inv_materials(name)')
-    .order('created_at', { ascending: false });
-  if (error) return json({ error: 'Could not load purchase requests.' }, 500);
+
+  const url = new URL(req.url);
+  const q = url.searchParams;
+  const search = (q.get('search') || '').trim();
+  const status = q.get('status') || '';
+  const priority = q.get('priority') || '';
+  const supplier = (q.get('supplier') || '').trim();
+  const project = (q.get('project') || '').trim();
+  const dateFrom = q.get('dateFrom') || '';
+  const dateTo = q.get('dateTo') || '';
+  const page = Math.max(1, parseInt(q.get('page') || '1', 10));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
+
+  let query = sb.from('pm_purchase_requests')
+    .select('*, pm_projects(id, project_name, customer_name), inv_products(name), inv_materials(name)', { count: 'exact' });
+  if (status) query = query.eq('status', status);
+  if (priority) query = query.eq('priority', priority);
+  if (supplier) query = query.ilike('supplier', `%${supplier}%`);
+  /* project comes from the client's exact-match dropdown (its options are
+     the distinct project_name values already on-screen), but project_name
+     itself lives on the joined pm_projects row, not a column of
+     pm_purchase_requests — so it's resolved to project_id(s) first, same
+     as any other FK-backed filter, rather than attempting an embedded-
+     resource filter here. */
+  if (project) {
+    const { data: matchingProjects } = await sb.from('pm_projects').select('id').eq('project_name', project);
+    const ids = (matchingProjects || []).map(p => p.id);
+    query = ids.length ? query.in('project_id', ids) : query.eq('project_id', '00000000-0000-0000-0000-000000000000');
+  }
+  if (search) query = query.or(`material_description.ilike.%${search}%,supplier.ilike.%${search}%`);
+  if (dateFrom) query = query.gte('request_date', dateFrom);
+  if (dateTo) query = query.lte('request_date', dateTo);
+  query = query.order('request_date', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
+
+  const { data, error, count } = await query;
+  if (error) { console.error('[purchase-requests] list failed:', error.message); return json({ error: 'Could not load purchase requests.' }, 500); }
   const requests = (data || []).map(r => ({
     ...r,
     project_name: r.pm_projects?.project_name || null,
@@ -25,7 +56,7 @@ export async function GET(req) {
     linked_item_name: r.inv_products?.name || r.inv_materials?.name || null,
     pm_projects: undefined, inv_products: undefined, inv_materials: undefined,
   }));
-  return json({ purchaseRequests: requests });
+  return json({ purchaseRequests: requests, total: count || 0, page, pageSize });
 }
 
 export async function POST(req) {

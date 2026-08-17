@@ -10,13 +10,17 @@ export async function GET(req) {
   const url = new URL(req.url);
   const q = url.searchParams;
   const category = q.get('category') || '';
+  const dateFrom = q.get('dateFrom') || '';
+  const dateTo = q.get('dateTo') || '';
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
 
   const sb = getDb();
   let query = sb.from('acc_expenses')
     .select('*, platform_users!acc_expenses_created_by_fkey(full_name)', { count: 'exact' });
   if (category) query = query.eq('category', category);
+  if (dateFrom) query = query.gte('expense_date', dateFrom);
+  if (dateTo) query = query.lte('expense_date', dateTo);
   query = query.order('expense_date', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
 
   const { data, error, count } = await query;
