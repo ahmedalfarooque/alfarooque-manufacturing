@@ -6,6 +6,8 @@ import Dropdown from '@/components/Dropdown';
 import { ShopModal, EMPTY_FORM as EMPTY_SHOP_FORM } from '@/app/(protected)/maintenance-shops/page';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { ListPagination } from '@/components/ListPagination';
+import DateFilter, { presetRange } from '@/components/DateFilter';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
 
@@ -41,8 +43,13 @@ export default function MaintenanceRecordsPage() {
   const [shopId, setShopId] = useState('');
   const [category, setCategory] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  /* Preset-driven date-range filter (All/Today/Yesterday/This Week/This
+     Month/This Year/Custom Range), local-calendar semantics via
+     components/DateFilter.js — real service dates make this the
+     highest-value dated list in Cars. dateFrom/dateTo are derived so the
+     rest of this page (API query, PDF export) is unchanged. */
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
+  const { from: dateFrom, to: dateTo } = dateFilter.preset === 'custom' ? dateFilter : presetRange(dateFilter.preset);
   const [costMin, setCostMin] = useState('');
   const [costMax, setCostMax] = useState('');
   const [loading, setLoading] = useState(true);
@@ -61,7 +68,7 @@ export default function MaintenanceRecordsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const q = new URLSearchParams({
-      search: debouncedSearch, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax,
+      search: debouncedSearch, carId, driverId, shopId, category, paymentStatus, dateFrom: dateFrom || '', dateTo: dateTo || '', costMin, costMax,
       page: String(page), pageSize: String(pageSize),
     });
     try {
@@ -98,7 +105,7 @@ export default function MaintenanceRecordsPage() {
   async function runReport(action) {
     setReportBusy(action);
     try {
-      const q = { search: debouncedSearch, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax };
+      const q = { search: debouncedSearch, carId, driverId, shopId, category, paymentStatus, dateFrom: dateFrom || '', dateTo: dateTo || '', costMin, costMax };
       const all = [];
       for (let p = 1; p <= 200; p++) {
         const res = await fetch('/api/maintenance-records?' + new URLSearchParams({ ...q, page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
@@ -133,8 +140,6 @@ export default function MaintenanceRecordsPage() {
     finally { setReportBusy(''); }
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
   return (
     <Shell active="/maintenance">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -156,11 +161,7 @@ export default function MaintenanceRecordsPage() {
         <Dropdown value={shopId} onChange={v => { setPage(1); setShopId(v); }} placeholder={t('maint.allShops')} options={shops.map(s => [s.id, s.name])} />
         <Dropdown value={category} onChange={v => { setPage(1); setCategory(v); }} placeholder={t('maint.allCategories')} options={categories.map(c => [c.name, c.name])} />
         <Dropdown value={paymentStatus} onChange={v => { setPage(1); setPaymentStatus(v); }} placeholder={t('maint.allPaymentStatus')} options={['Paid', 'Unpaid', 'Partial'].map(p => [p, trEnum(t, 'payment', p)])} />
-        <div className="flex items-center gap-1">
-          <Input type="date" value={dateFrom} onChange={e => { setPage(1); setDateFrom(e.target.value); }} />
-          <span className="text-[color:var(--tx-3)] text-xs">{t('maint.to')}</span>
-          <Input type="date" value={dateTo} onChange={e => { setPage(1); setDateTo(e.target.value); }} />
-        </div>
+        <DateFilter value={dateFilter} onChange={v => { setPage(1); setDateFilter(v); }} t={t} lang={lang} />
         <div className="flex items-center gap-1">
           <Input type="number" placeholder={t('maint.minCost')} value={costMin} onChange={e => { setPage(1); setCostMin(e.target.value); }} />
           <span className="text-[color:var(--tx-3)] text-xs">–</span>
@@ -218,20 +219,12 @@ export default function MaintenanceRecordsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('maint.showingEntries', { from: records.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + records.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('maint.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">›</button>
-        </div>
-      </div>
+      <ListPagination
+        page={page} pageSize={pageSize} total={total} count={records.length}
+        onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }}
+        showingLabel={({ from, to, total }) => t('maint.showingEntries', { from, to, total })}
+        rowsLabel={t('maint.rows')}
+      />
 
       {modal && (
         <RecordModal modal={modal} cars={cars} drivers={drivers} shops={shops} categories={categories}

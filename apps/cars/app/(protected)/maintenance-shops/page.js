@@ -5,6 +5,7 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { ListPagination } from '@/components/ListPagination';
 import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
 
@@ -38,7 +39,6 @@ export default function MaintenanceShopsPage() {
 
   const { sorted, sortKey, sortDir, toggleSort } = useSortableData(shops);
   const total = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
@@ -134,20 +134,12 @@ export default function MaintenanceShopsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('shops.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('shops.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-[color:var(--pr-soft)]">›</button>
-        </div>
-      </div>
+      <ListPagination
+        page={page} pageSize={pageSize} total={total} count={pageRows.length}
+        onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }}
+        showingLabel={({ from, to, total }) => t('shops.showingEntries', { from, to, total })}
+        rowsLabel={t('shops.rows')}
+      />
 
       {modal && <ShopModal modal={modal} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
     </Shell>

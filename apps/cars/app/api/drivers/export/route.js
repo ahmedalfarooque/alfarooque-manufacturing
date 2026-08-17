@@ -21,8 +21,19 @@ export async function GET(req) {
   const { response } = await requireAction(req, 'view');
   if (response) return response;
 
+  /* Must reflect the CURRENTLY FILTERED list on screen — same
+     search/status filters as /api/drivers — not the unconditional full
+     table. */
+  const url = new URL(req.url);
+  const search = (url.searchParams.get('search') || '').trim();
+  const status = url.searchParams.get('status') || 'All';
+
   const sb = getDb();
-  const { data, error } = await sb.from('drivers').select('*').order('full_name', { ascending: true });
+  let query = sb.from('drivers').select('*').order('full_name', { ascending: true });
+  if (search) query = query.or(`full_name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%,license_number.ilike.%${search}%,iqama_number.ilike.%${search}%,employee_id.ilike.%${search}%`);
+  if (status !== 'All') query = query.eq('status', status);
+
+  const { data, error } = await query;
   if (error) return new Response('Export failed', { status: 500 });
 
   const wb = new ExcelJS.Workbook();

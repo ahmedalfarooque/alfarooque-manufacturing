@@ -5,6 +5,7 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { ListPagination } from '@/components/ListPagination';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
@@ -92,16 +93,26 @@ export default function VehiclesPage() {
     if (res.ok) load();
   }
 
-  function exportExcel() { window.location.href = '/api/cars/export'; }
+  /* Both exports must reflect the CURRENTLY FILTERED dataset, not just
+     the on-screen page — previously exportPdf ignored search/status/type/
+     fuelType/assignment entirely (always exported everything) and
+     exportExcel hit a filter-blind endpoint. Both now carry the exact
+     same filter params as the on-screen list query. */
+  const currentFilters = { search: debouncedSearch, status, type, fuelType, assignment };
+
+  function exportExcel() {
+    window.location.href = '/api/cars/export?' + new URLSearchParams(currentFilters).toString();
+  }
 
   /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same
-     as the QuotePro and Projects apps. Fetches ALL vehicles through the
-     existing list API (pages of 100 — its max) so the PDF carries the
-     same complete dataset and columns as the Excel export. */
+     as the QuotePro and Projects apps. Fetches ALL vehicles matching the
+     current filters through the existing list API (pages of 100 — its
+     max) so the PDF carries the complete filtered dataset, not just the
+     current on-screen page. */
   async function exportPdf() {
     const all = [];
     for (let p = 1; p <= 200; p++) {
-      const res = await fetch('/api/cars?' + new URLSearchParams({ page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
+      const res = await fetch('/api/cars?' + new URLSearchParams({ ...currentFilters, page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
       const d = res && res.ok ? await res.json() : null;
       if (!d || !Array.isArray(d.vehicles) || d.vehicles.length === 0) break;
       all.push(...d.vehicles);
@@ -127,8 +138,6 @@ export default function VehiclesPage() {
       fileName: 'vehicles-report.pdf',
     });
   }
-
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <Shell active="/vehicles">
@@ -196,20 +205,12 @@ export default function VehiclesPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('vehicles.showingEntries', { from: vehicles.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + vehicles.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('vehicles.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">›</button>
-        </div>
-      </div>
+      <ListPagination
+        page={page} pageSize={pageSize} total={total} count={vehicles.length}
+        onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }}
+        showingLabel={({ from, to, total }) => t('vehicles.showingEntries', { from, to, total })}
+        rowsLabel={t('vehicles.rows')}
+      />
 
       {modal && <VehicleModal modal={modal} drivers={drivers} onClose={() => setModal(null)} onSave={saveVehicle} />}
       {importOpen && <ImportModal onClose={() => setImportOpen(false)} onDone={() => { setImportOpen(false); load(); }} />}

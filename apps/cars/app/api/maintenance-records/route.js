@@ -20,7 +20,7 @@ export async function GET(req) {
   const costMin = q.get('costMin') || '';
   const costMax = q.get('costMax') || '';
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
 
   const sb = getDb();
   let query = sb.from('car_maintenance_records')

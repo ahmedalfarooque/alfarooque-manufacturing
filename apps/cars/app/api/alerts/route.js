@@ -8,8 +8,18 @@ export async function GET(req) {
   if (response) return response;
   const sb = getDb();
   const url = new URL(req.url);
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') || '50', 10));
-  const { data, error } = await sb.from('car_alerts').select('*, cars(vehicle_number)').order('created_at', { ascending: false }).limit(limit);
+  const q = url.searchParams;
+  /* Raised from 100 to 1000 so the list page's date-range filter and
+     page-size selector (up to 500 rows/page) can operate over the
+     complete recent dataset instead of silently truncating it. */
+  const limit = Math.min(1000, parseInt(q.get('limit') || '50', 10));
+  const dateFrom = q.get('dateFrom') || '';
+  const dateTo = q.get('dateTo') || '';
+  let query = sb.from('car_alerts').select('*, cars(vehicle_number)').order('created_at', { ascending: false });
+  if (dateFrom) query = query.gte('created_at', dateFrom);
+  if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59.999');
+  query = query.limit(limit);
+  const { data, error } = await query;
   if (error) { console.error('[alerts] list failed:', error.message); return json({ error: 'Could not load alerts.' }, 500); }
   return json({ alerts: data || [] });
 }

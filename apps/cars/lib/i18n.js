@@ -348,6 +348,8 @@ export const translations = {
 
     // Alerts page
     'alerts.markRead': 'Mark read',
+    'alerts.showingEntries': 'Showing {from} to {to} of {total} entries',
+    'alerts.rows': 'Rows:',
 
     // Shared form/detail field labels
     'fields.vehicleNumber': 'Vehicle Number',
@@ -865,6 +867,8 @@ export const translations = {
 
     // Alerts page
     'alerts.markRead': 'وضع كمقروء',
+    'alerts.showingEntries': 'عرض {from} إلى {to} من {total} سجل',
+    'alerts.rows': 'الصفوف:',
 
     // Shared form/detail field labels
     'fields.vehicleNumber': 'رقم المركبة',

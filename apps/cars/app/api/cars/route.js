@@ -23,7 +23,7 @@ export async function GET(req) {
   const assignment = q.get('assignment') || 'All'; // Assigned|Unassigned|All
   const sort = SORTS[q.get('sort')] || SORTS.latest;
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '10', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
 
   const sb = getDb();
   let query = sb.from('cars').select('*', { count: 'exact' }).eq('is_active', true);

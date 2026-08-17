@@ -7,6 +7,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { expiryInfo } from '@/lib/expiry';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
+import { ListPagination } from '@/components/ListPagination';
 import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
 import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 
@@ -48,7 +49,6 @@ export default function DriversPage() {
     iqama_expiry_date: d => d.iqama_expiry_date || '',
   });
   const total = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const drivers = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => { setPage(1); }, [debouncedSearch, status]);
@@ -77,7 +77,9 @@ export default function DriversPage() {
     if (res.ok) refresh();
   }
 
-  function exportExcel() { window.location.href = '/api/drivers/export'; }
+  /* Must carry the CURRENTLY FILTERED dataset — same search/status as
+     the on-screen list — not an unconditional full-table export. */
+  function exportExcel() { window.location.href = '/api/drivers/export?' + new URLSearchParams({ search: debouncedSearch, status }).toString(); }
 
   /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same
      as the QuotePro and Projects apps. `sorted` already holds the FULL
@@ -177,20 +179,12 @@ export default function DriversPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('drivers.showingEntries', { from: drivers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + drivers.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('drivers.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] disabled:opacity-40 hover:bg-[color:var(--pr-soft)] transition-colors">›</button>
-        </div>
-      </div>
+      <ListPagination
+        page={page} pageSize={pageSize} total={total} count={drivers.length}
+        onPage={setPage} onPageSize={v => { setPageSize(v); setPage(1); }}
+        showingLabel={({ from, to, total }) => t('drivers.showingEntries', { from, to, total })}
+        rowsLabel={t('drivers.rows')}
+      />
 
       {modal && <DriverModal modal={modal} cars={cars} onClose={() => setModal(null)} onSave={saveDriver} />}
     </Shell>
