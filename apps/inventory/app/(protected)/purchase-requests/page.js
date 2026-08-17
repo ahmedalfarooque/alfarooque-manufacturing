@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
+import { useAllPages } from '@/lib/useAllPages';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import DateFilter, { inDateFilter } from '@/components/DateFilter';
+import Pagination from '@/components/Pagination';
 
 const REFRESH_MS = 20000;
 const STATUS_COLORS = { pending: 'text-amber-500 bg-amber-500/10', approved: 'text-emerald-500 bg-emerald-500/10', rejected: 'text-red-500 bg-red-500/10', ordered: 'text-blue-500 bg-blue-500/10' };
@@ -14,7 +17,9 @@ const PRIORITY_COLORS = { low: 'text-slate-400', normal: 'text-[color:var(--tx-3
 export default function PurchaseRequestsPage() {
   const { t, lang } = useLanguage();
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
   const [form, setForm] = useState({ title: '', priority: 'normal', items: [{ product_id: '', material_id: '', qty_requested: 1, unit_cost: 0, notes: '' }] });
@@ -23,14 +28,19 @@ export default function PurchaseRequestsPage() {
   const [rejectNote, setRejectNote] = useState('');
   const [reportBusy, setReportBusy] = useState('');
 
-  const params = new URLSearchParams({ page, limit: 50 });
-  if (statusFilter) params.set('status', statusFilter);
-  const { data: pd, mutate } = useLiveData(`/api/purchase-requests?${params}`, REFRESH_MS);
+  const extraParams = {};
+  if (statusFilter) extraParams.status = statusFilter;
+  const { rows: allRequests, mutate } = useAllPages('/api/purchase-requests', extraParams, 'requests', { intervalMs: REFRESH_MS, pageLimit: 200 });
   const { data: prods } = useLiveData('/api/products?limit=200', 0);
   const { data: mats } = useLiveData('/api/materials?limit=200', 0);
 
-  const requests = pd?.requests || [];
-  const total = pd?.total || 0;
+  const filtered = useMemo(() => {
+    const rows = allRequests.filter(r => inDateFilter(dateFilter, r.created_at));
+    rows.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    return rows;
+  }, [allRequests, dateFilter]);
+  const total = filtered.length;
+  const requests = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const statusOptions = [
     { value: '', label: t('common.allStatuses') },
@@ -110,42 +120,37 @@ export default function PurchaseRequestsPage() {
     } finally { setBusy(false); }
   }, [mutate, rejectNote, t]);
 
-  /* PDF must export the full filtered result set, not just the current
-     50-row page — walks every server page under the active status filter. */
-  async function fetchAllRequests() {
-    const q = new URLSearchParams({ page: 1, limit: 200 });
-    if (statusFilter) q.set('status', statusFilter);
-    const first = await fetch(`/api/purchase-requests?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-    let rows = first.requests || [];
-    const totalRows = first.total || rows.length;
-    const totalPages = Math.ceil(totalRows / 200);
-    for (let p = 2; p <= totalPages; p++) {
-      q.set('page', p);
-      const next = await fetch(`/api/purchase-requests?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-      rows = rows.concat(next.requests || []);
-    }
-    return rows;
+  const reportColumns = [
+    { key: 'number', header: t('common.number') }, { key: 'title', header: t('common.title') },
+    { key: 'priority', header: t('pr.priority') }, { key: 'requestedBy', header: t('common.requestedBy') },
+    { key: 'status', header: t('common.status') }, { key: 'date', header: t('common.date') },
+  ];
+  function toReportRow(r) {
+    return {
+      number: r.pr_number || r.id.slice(0, 8), title: r.title || '—', priority: trEnum(t, 'priority', r.priority),
+      requestedBy: r.platform_users?.full_name || '—', status: trEnum(t, 'prStatus', r.status),
+      date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '—',
+    };
   }
 
   async function runReport(action) {
     setReportBusy(action);
     try {
-      const allRequests = await fetchAllRequests();
+      const rows = filtered.map(toReportRow);
+      if (action === 'excel') {
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: t('nav.purchaseRequests') || 'Purchase Requests', columns: reportColumns, rows, filename: 'purchase-requests-report.xlsx' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'purchase-requests-report.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({
-        title: t('nav.purchaseRequests') || 'Purchase Requests',
-        columns: [
-          { key: 'number', header: t('common.number') }, { key: 'title', header: t('common.title') },
-          { key: 'priority', header: t('pr.priority') }, { key: 'requestedBy', header: t('common.requestedBy') },
-          { key: 'status', header: t('common.status') }, { key: 'date', header: t('common.date') },
-        ],
-        rows: allRequests.map(r => ({
-          number: r.pr_number || r.id.slice(0, 8), title: r.title || '—', priority: trEnum(t, 'priority', r.priority),
-          requestedBy: r.platform_users?.full_name || '—', status: trEnum(t, 'prStatus', r.status),
-          date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '—',
-        })),
-        lang, fileName: 'purchase-requests-report.pdf', action,
-      });
+      await exportReportPdf({ title: t('nav.purchaseRequests') || 'Purchase Requests', columns: reportColumns, rows, lang, fileName: 'purchase-requests-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -154,10 +159,15 @@ export default function PurchaseRequestsPage() {
     <Shell active="/purchase-requests">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <GlassSelect value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={statusOptions} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <GlassSelect value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={statusOptions} />
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
+        </div>
         <div className="flex items-center gap-2">
+          <span className="text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</span>
           <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!requests.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
           <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!requests.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('excel')} disabled={!requests.length || !!reportBusy}>{reportBusy === 'excel' ? '…' : 'Download Excel'}</GlassButton>
           <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('pr.addRequest')}</button>
         </div>
       </div>
@@ -203,15 +213,7 @@ export default function PurchaseRequestsPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal === 'add' && (

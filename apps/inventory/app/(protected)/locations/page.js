@@ -6,6 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassModal, GlassInput, GlassSelect, GlassToast, GlassButton } from '@/components/glass';
+import Pagination from '@/components/Pagination';
 
 const LOCATION_TYPES = [
   { value: 'zone', label: 'Zone' },
@@ -23,6 +24,8 @@ export default function LocationsPage() {
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const { data: wd } = useLiveData('/api/warehouses', 0);
   const { data: ld, mutate } = useLiveData(
@@ -30,6 +33,7 @@ export default function LocationsPage() {
   );
   const warehouses = wd?.warehouses || [];
   const locations = ld?.locations || [];
+  const pagedLocations = locations.slice((page - 1) * pageSize, page * pageSize);
 
   const whOptions = [{ value: '', label: t('common.allWarehouses') }, ...warehouses.map(w => ({ value: w.id, label: w.name }))];
   const whFormOptions = [{ value: '', label: t('warehouses.selectWarehouse') }, ...warehouses.map(w => ({ value: w.id, label: w.name }))];
@@ -90,7 +94,7 @@ export default function LocationsPage() {
     <Shell active="/locations">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <GlassSelect value={selectedWarehouse} onChange={e => setSelectedWarehouse(e.target.value)} options={whOptions} />
+        <GlassSelect value={selectedWarehouse} onChange={e => { setSelectedWarehouse(e.target.value); setPage(1); }} options={whOptions} />
         <div className="flex items-center gap-2 ms-auto">
           <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!locations.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
           <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!locations.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
@@ -113,7 +117,7 @@ export default function LocationsPage() {
           </thead>
           <tbody className="divide-y divide-[color:var(--bd)]">
             {locations.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>}
-            {locations.map(l => (
+            {pagedLocations.map(l => (
               <tr key={l.id} className="hover:bg-[color:var(--pr-soft)] transition-colors">
                 <td className="px-4 py-3 font-medium">{l.name}</td>
                 <td className="px-4 py-3 text-[color:var(--tx-3)]">{l.code || '—'}</td>
@@ -135,6 +139,7 @@ export default function LocationsPage() {
           </tbody>
         </table>
         </div>
+        <Pagination page={page} pageSize={pageSize} total={locations.length} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal && (

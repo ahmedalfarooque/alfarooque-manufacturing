@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
+import { useAllPages } from '@/lib/useAllPages';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import DateFilter, { inDateFilter } from '@/components/DateFilter';
+import Pagination from '@/components/Pagination';
 
 const REFRESH_MS = 20000;
 const STATUS_COLORS = { pending: 'text-amber-500 bg-amber-500/10', ordered: 'text-blue-500 bg-blue-500/10', partial: 'text-orange-500 bg-orange-500/10', received: 'text-emerald-500 bg-emerald-500/10', cancelled: 'text-red-500 bg-red-500/10' };
@@ -13,7 +16,9 @@ const STATUS_COLORS = { pending: 'text-amber-500 bg-amber-500/10', ordered: 'tex
 export default function PurchaseOrdersPage() {
   const { t, lang } = useLanguage();
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
   const [form, setForm] = useState({ supplier_id: '', currency: 'SAR', items: [{ product_id: '', material_id: '', description: '', qty_ordered: 1, unit_cost: 0 }] });
@@ -21,15 +26,20 @@ export default function PurchaseOrdersPage() {
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
 
-  const params = new URLSearchParams({ page, limit: 50 });
-  if (statusFilter) params.set('status', statusFilter);
-  const { data: pod, mutate } = useLiveData(`/api/purchase-orders?${params}`, REFRESH_MS);
+  const extraParams = {};
+  if (statusFilter) extraParams.status = statusFilter;
+  const { rows: allOrders, mutate } = useAllPages('/api/purchase-orders', extraParams, 'orders', { intervalMs: REFRESH_MS, pageLimit: 200 });
   const { data: sd } = useLiveData('/api/suppliers?limit=200', 0);
   const { data: prods } = useLiveData('/api/products?limit=200', 0);
   const { data: mats } = useLiveData('/api/materials?limit=200', 0);
 
-  const orders = pod?.orders || [];
-  const total = pod?.total || 0;
+  const filtered = useMemo(() => {
+    const rows = allOrders.filter(o => inDateFilter(dateFilter, o.created_at));
+    rows.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    return rows;
+  }, [allOrders, dateFilter]);
+  const total = filtered.length;
+  const orders = filtered.slice((page - 1) * pageSize, page * pageSize);
   const suppliers = sd?.suppliers || [];
 
   const statusOptions = [
@@ -102,41 +112,38 @@ export default function PurchaseOrdersPage() {
     } finally { setBusy(false); }
   }, [mutate, t]);
 
-  async function fetchAllOrders() {
-    const q = new URLSearchParams({ page: 1, limit: 200 });
-    if (statusFilter) q.set('status', statusFilter);
-    const first = await fetch(`/api/purchase-orders?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-    let rows = first.orders || [];
-    const totalRows = first.total || rows.length;
-    const totalPages = Math.ceil(totalRows / 200);
-    for (let p = 2; p <= totalPages; p++) {
-      q.set('page', p);
-      const next = await fetch(`/api/purchase-orders?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-      rows = rows.concat(next.orders || []);
-    }
-    return rows;
+  const reportColumns = [
+    { key: 'number', header: t('common.number') }, { key: 'supplier', header: t('nav.suppliers') },
+    { key: 'amount', header: t('common.amount') }, { key: 'expectedDelivery', header: t('po.expectedDelivery') },
+    { key: 'status', header: t('common.status') }, { key: 'date', header: t('common.date') },
+  ];
+  function toReportRow(o) {
+    return {
+      number: o.po_number || o.id.slice(0, 8), supplier: o.inv_suppliers?.name || '—',
+      amount: 'SAR ' + Number(o.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      expectedDelivery: o.expected_delivery || '—', status: trEnum(t, 'poStatus', o.status),
+      date: o.created_at ? new Date(o.created_at).toLocaleDateString() : '—',
+    };
   }
 
   async function runReport(action) {
     setReportBusy(action);
     try {
-      const allOrders = await fetchAllOrders();
+      const rows = filtered.map(toReportRow);
+      if (action === 'excel') {
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: t('nav.purchaseOrders') || 'Purchase Orders', columns: reportColumns, rows, filename: 'purchase-orders-report.xlsx' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'purchase-orders-report.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({
-        title: t('nav.purchaseOrders') || 'Purchase Orders',
-        columns: [
-          { key: 'number', header: t('common.number') }, { key: 'supplier', header: t('nav.suppliers') },
-          { key: 'amount', header: t('common.amount') }, { key: 'expectedDelivery', header: t('po.expectedDelivery') },
-          { key: 'status', header: t('common.status') }, { key: 'date', header: t('common.date') },
-        ],
-        rows: allOrders.map(o => ({
-          number: o.po_number || o.id.slice(0, 8), supplier: o.inv_suppliers?.name || '—',
-          amount: 'SAR ' + Number(o.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          expectedDelivery: o.expected_delivery || '—', status: trEnum(t, 'poStatus', o.status),
-          date: o.created_at ? new Date(o.created_at).toLocaleDateString() : '—',
-        })),
-        lang, fileName: 'purchase-orders-report.pdf', action,
-      });
+      await exportReportPdf({ title: t('nav.purchaseOrders') || 'Purchase Orders', columns: reportColumns, rows, lang, fileName: 'purchase-orders-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -145,10 +152,15 @@ export default function PurchaseOrdersPage() {
     <Shell active="/purchase-orders">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <GlassSelect value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={statusOptions} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <GlassSelect value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={statusOptions} />
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
+        </div>
         <div className="flex items-center gap-2">
+          <span className="text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</span>
           <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!orders.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
           <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!orders.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('excel')} disabled={!orders.length || !!reportBusy}>{reportBusy === 'excel' ? '…' : 'Download Excel'}</GlassButton>
           <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('po.addOrder')}</button>
         </div>
       </div>
@@ -194,15 +206,7 @@ export default function PurchaseOrdersPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal === 'add' && (

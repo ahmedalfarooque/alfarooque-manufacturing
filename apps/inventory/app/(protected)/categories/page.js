@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import Pagination from '@/components/Pagination';
 
 const TYPE_OPTIONS = [
   { value: 'product', label: 'Product' },
@@ -21,6 +22,12 @@ export default function CategoriesPage() {
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
+  /* Each tab is its own list — resetting to page 1 on tab switch avoids
+     landing on an out-of-range page carried over from a different tab. */
+  useEffect(() => { setPage(1); }, [activeTab]);
 
   const { data: catData, mutate: mutateCats } = useLiveData('/api/categories', 0);
   const { data: subData, mutate: mutateSubs } = useLiveData('/api/subcategories', 0);
@@ -51,6 +58,7 @@ export default function CategoriesPage() {
   }
 
   const activeRows = activeTab === 'categories' ? categories : activeTab === 'subcategories' ? subcategories : units;
+  const pagedRows = activeRows.slice((page - 1) * pageSize, page * pageSize);
 
   function open(type, item = {}) { setForm({ _type: type, ...item }); setModal(type); }
   function closeModal() { setModal(null); setForm({}); }
@@ -130,7 +138,7 @@ export default function CategoriesPage() {
               </thead>
               <tbody className="divide-y divide-[color:var(--bd)]">
                 {categories.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>}
-                {categories.map(c => (
+                {pagedRows.map(c => (
                   <tr key={c.id} className="hover:bg-[color:var(--pr-soft)]">
                     <td className="px-4 py-3 font-medium">{c.name}</td>
                     <td className="px-4 py-3 text-[color:var(--tx-3)] capitalize">{c.type || '—'}</td>
@@ -146,6 +154,7 @@ export default function CategoriesPage() {
               </tbody>
             </table>
             </div>
+            <Pagination page={page} pageSize={pageSize} total={categories.length} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
           </div>
         </>
       )}
@@ -168,7 +177,7 @@ export default function CategoriesPage() {
               </thead>
               <tbody className="divide-y divide-[color:var(--bd)]">
                 {subcategories.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>}
-                {subcategories.map(s => (
+                {pagedRows.map(s => (
                   <tr key={s.id} className="hover:bg-[color:var(--pr-soft)]">
                     <td className="px-4 py-3 font-medium">{s.name}</td>
                     <td className="px-4 py-3 text-[color:var(--tx-3)]">{s.inv_categories?.name || '—'}</td>
@@ -184,6 +193,7 @@ export default function CategoriesPage() {
               </tbody>
             </table>
             </div>
+            <Pagination page={page} pageSize={pageSize} total={subcategories.length} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
           </div>
         </>
       )}
@@ -205,7 +215,7 @@ export default function CategoriesPage() {
               </thead>
               <tbody className="divide-y divide-[color:var(--bd)]">
                 {units.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>}
-                {units.map(u => (
+                {pagedRows.map(u => (
                   <tr key={u.id} className="hover:bg-[color:var(--pr-soft)]">
                     <td className="px-4 py-3 font-medium">{u.name}</td>
                     <td className="px-4 py-3 text-[color:var(--tx-3)]">{u.symbol || '—'}</td>
@@ -220,6 +230,7 @@ export default function CategoriesPage() {
               </tbody>
             </table>
             </div>
+            <Pagination page={page} pageSize={pageSize} total={units.length} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
           </div>
         </>
       )}

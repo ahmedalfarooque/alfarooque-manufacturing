@@ -1,31 +1,41 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
+import { useAllPages } from '@/lib/useAllPages';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import DateFilter, { inDateFilter } from '@/components/DateFilter';
+import Pagination from '@/components/Pagination';
 
 const REFRESH_MS = 20000;
 
 export default function GoodsReceiptsPage() {
   const { t, lang } = useLanguage();
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ supplier_id: '', warehouse_id: '', receipt_date: new Date().toISOString().slice(0, 10), items: [{ product_id: '', material_id: '', qty_received: 1, unit_cost: 0 }] });
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
 
-  const { data: grd, mutate } = useLiveData(`/api/goods-receipts?page=${page}&limit=50`, REFRESH_MS);
+  const { rows: allReceipts, mutate } = useAllPages('/api/goods-receipts', {}, 'receipts', { intervalMs: REFRESH_MS, pageLimit: 200 });
   const { data: sd } = useLiveData('/api/suppliers?limit=200', 0);
   const { data: wd } = useLiveData('/api/warehouses', 0);
   const { data: prods } = useLiveData('/api/products?limit=200', 0);
   const { data: mats } = useLiveData('/api/materials?limit=200', 0);
 
-  const receipts = grd?.receipts || [];
-  const total = grd?.total || 0;
+  const filtered = useMemo(() => {
+    const rows = allReceipts.filter(r => inDateFilter(dateFilter, r.receipt_date));
+    rows.sort((a, b) => new Date(b.receipt_date || 0) - new Date(a.receipt_date || 0));
+    return rows;
+  }, [allReceipts, dateFilter]);
+  const total = filtered.length;
+  const receipts = filtered.slice((page - 1) * pageSize, page * pageSize);
   const suppliers = sd?.suppliers || [];
   const warehouses = wd?.warehouses || [];
 
@@ -76,39 +86,37 @@ export default function GoodsReceiptsPage() {
     } finally { setBusy(false); }
   }, [form, mutate, t]);
 
-  async function fetchAllReceipts() {
-    const q = new URLSearchParams({ page: 1, limit: 200 });
-    const first = await fetch(`/api/goods-receipts?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-    let rows = first.receipts || [];
-    const totalRows = first.total || rows.length;
-    const totalPages = Math.ceil(totalRows / 200);
-    for (let p = 2; p <= totalPages; p++) {
-      q.set('page', p);
-      const next = await fetch(`/api/goods-receipts?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-      rows = rows.concat(next.receipts || []);
-    }
-    return rows;
+  const reportColumns = [
+    { key: 'number', header: t('gr.grNumber') }, { key: 'supplier', header: t('nav.suppliers') },
+    { key: 'warehouse', header: t('nav.warehouses') }, { key: 'date', header: t('gr.receiptDate') },
+    { key: 'invoice', header: t('gr.invoiceNumber') }, { key: 'receivedBy', header: t('common.receivedBy') },
+  ];
+  function toReportRow(r) {
+    return {
+      number: r.gr_number || r.id.slice(0, 8), supplier: r.inv_suppliers?.name || '—',
+      warehouse: r.inv_warehouses?.name || '—', date: r.receipt_date || '—',
+      invoice: r.invoice_number || '—', receivedBy: r.platform_users?.full_name || '—',
+    };
   }
 
   async function runReport(action) {
     setReportBusy(action);
     try {
-      const allReceipts = await fetchAllReceipts();
+      const rows = filtered.map(toReportRow);
+      if (action === 'excel') {
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: t('nav.goodsReceipts') || 'Goods Receipts', columns: reportColumns, rows, filename: 'goods-receipts-report.xlsx' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'goods-receipts-report.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({
-        title: t('nav.goodsReceipts') || 'Goods Receipts',
-        columns: [
-          { key: 'number', header: t('gr.grNumber') }, { key: 'supplier', header: t('nav.suppliers') },
-          { key: 'warehouse', header: t('nav.warehouses') }, { key: 'date', header: t('gr.receiptDate') },
-          { key: 'invoice', header: t('gr.invoiceNumber') }, { key: 'receivedBy', header: t('common.receivedBy') },
-        ],
-        rows: allReceipts.map(r => ({
-          number: r.gr_number || r.id.slice(0, 8), supplier: r.inv_suppliers?.name || '—',
-          warehouse: r.inv_warehouses?.name || '—', date: r.receipt_date || '—',
-          invoice: r.invoice_number || '—', receivedBy: r.platform_users?.full_name || '—',
-        })),
-        lang, fileName: 'goods-receipts-report.pdf', action,
-      });
+      await exportReportPdf({ title: t('nav.goodsReceipts') || 'Goods Receipts', columns: reportColumns, rows, lang, fileName: 'goods-receipts-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -116,10 +124,15 @@ export default function GoodsReceiptsPage() {
   return (
     <Shell active="/goods-receipts">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
-      <div className="flex justify-end gap-2 mb-4">
-        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!receipts.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
-        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!receipts.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
-        <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('gr.addReceipt')}</button>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</span>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!receipts.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!receipts.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('excel')} disabled={!receipts.length || !!reportBusy}>{reportBusy === 'excel' ? '…' : 'Download Excel'}</GlassButton>
+          <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('gr.addReceipt')}</button>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden">
@@ -150,15 +163,7 @@ export default function GoodsReceiptsPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal === 'add' && (

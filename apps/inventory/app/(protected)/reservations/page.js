@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
+import { useAllPages } from '@/lib/useAllPages';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassBadge, GlassButton } from '@/components/glass';
+import DateFilter, { inDateFilter } from '@/components/DateFilter';
+import Pagination from '@/components/Pagination';
 
 const REFRESH_MS = 15000;
 const REF_TYPES = ['sales_order', 'project', 'other'];
@@ -13,20 +16,30 @@ const REF_TYPES = ['sales_order', 'project', 'other'];
 export default function ReservationsPage() {
   const { t, lang } = useLanguage();
   const [status, setStatus] = useState('active');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ warehouse_id: '', reference_type: 'other', qty: 1 });
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
 
-  const { data: rd, mutate } = useLiveData(`/api/reservations?status=${status}&page=${page}&limit=50`, REFRESH_MS);
+  /* Full dataset under the active status filter — date filtering,
+     newest-first sort and pagination happen client-side over the complete
+     set, not just one server page. */
+  const { rows: allReservations, mutate } = useAllPages('/api/reservations', { status }, 'reservations', { intervalMs: REFRESH_MS, pageLimit: 200 });
   const { data: wd } = useLiveData('/api/warehouses', 0);
   const { data: prods } = useLiveData('/api/products?limit=200', 0);
   const { data: mats } = useLiveData('/api/materials?limit=200', 0);
 
-  const reservations = rd?.reservations || [];
-  const total = rd?.total || 0;
+  const filtered = useMemo(() => {
+    const rows = allReservations.filter(r => inDateFilter(dateFilter, r.created_at));
+    rows.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    return rows;
+  }, [allReservations, dateFilter]);
+  const total = filtered.length;
+  const reservations = filtered.slice((page - 1) * pageSize, page * pageSize);
   const warehouses = wd?.warehouses || [];
 
   const statusOptions = [
@@ -91,39 +104,40 @@ export default function ReservationsPage() {
 
   function badgeTone(s) { return s === 'active' ? 'info' : s === 'fulfilled' ? 'success' : 'neutral'; }
 
-  async function fetchAllReservations() {
-    const q = new URLSearchParams({ status, page: 1, limit: 200 });
-    const first = await fetch(`/api/reservations?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-    let rows = first.reservations || [];
-    const totalRows = first.total || rows.length;
-    const totalPages = Math.ceil(totalRows / 200);
-    for (let p = 2; p <= totalPages; p++) {
-      q.set('page', p);
-      const next = await fetch(`/api/reservations?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-      rows = rows.concat(next.reservations || []);
-    }
-    return rows;
+  const reportColumns = [
+    { key: 'name', header: t('common.name') }, { key: 'warehouse', header: t('nav.warehouses') },
+    { key: 'qty', header: t('resv.qty') }, { key: 'reference', header: t('resv.reference') },
+    { key: 'status', header: t('common.status') },
+  ];
+  function toReportRow(r) {
+    return {
+      name: r.inv_products?.name || r.inv_materials?.name || '—', warehouse: r.inv_warehouses?.name || '—',
+      qty: Number(r.qty).toLocaleString(), reference: r.reference_label || t('gi.refType.' + (r.reference_type || 'other')),
+      status: t('resv.status.' + r.status),
+    };
   }
 
+  /* Export must reflect the full filtered (status + date) set, not just
+     the current page — `filtered` is already the complete, date-filtered
+     dataset kept in memory by useAllPages. */
   async function runReport(action) {
     setReportBusy(action);
     try {
-      const allReservations = await fetchAllReservations();
+      const rows = filtered.map(toReportRow);
+      if (action === 'excel') {
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: t('nav.reservations') || 'Reservations', columns: reportColumns, rows, filename: 'reservations-report.xlsx' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'reservations-report.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({
-        title: t('nav.reservations') || 'Reservations',
-        columns: [
-          { key: 'name', header: t('common.name') }, { key: 'warehouse', header: t('nav.warehouses') },
-          { key: 'qty', header: t('resv.qty') }, { key: 'reference', header: t('resv.reference') },
-          { key: 'status', header: t('common.status') },
-        ],
-        rows: allReservations.map(r => ({
-          name: r.inv_products?.name || r.inv_materials?.name || '—', warehouse: r.inv_warehouses?.name || '—',
-          qty: Number(r.qty).toLocaleString(), reference: r.reference_label || t('gi.refType.' + (r.reference_type || 'other')),
-          status: t('resv.status.' + r.status),
-        })),
-        lang, fileName: 'reservations-report.pdf', action,
-      });
+      await exportReportPdf({ title: t('nav.reservations') || 'Reservations', columns: reportColumns, rows, lang, fileName: 'reservations-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -133,9 +147,12 @@ export default function ReservationsPage() {
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <GlassSelect value={status} onChange={e => { setStatus(e.target.value); setPage(1); }} options={statusOptions} />
+        <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
         <div className="ms-auto flex items-center gap-2">
+          <span className="text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</span>
           <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!reservations.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
           <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!reservations.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('excel')} disabled={!reservations.length || !!reportBusy}>{reportBusy === 'excel' ? '…' : 'Download Excel'}</GlassButton>
           <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('resv.addReservation')}</button>
         </div>
       </div>
@@ -175,15 +192,7 @@ export default function ReservationsPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal === 'add' && (

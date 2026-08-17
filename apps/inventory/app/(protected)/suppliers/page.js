@@ -6,6 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassModal, GlassInput, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import Pagination from '@/components/Pagination';
 
 const REFRESH_MS = 30000;
 
@@ -13,33 +14,64 @@ export default function SuppliersPage() {
   const { t, lang } = useLanguage();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
 
-  const { data: sd, mutate } = useLiveData(`/api/suppliers?search=${encodeURIComponent(search)}&page=${page}&limit=50`, REFRESH_MS);
+  const { data: sd, mutate } = useLiveData(`/api/suppliers?search=${encodeURIComponent(search)}&page=${page}&limit=${pageSize}`, REFRESH_MS);
   const suppliers = sd?.suppliers || [];
   const total = sd?.total || 0;
+
+  /* Print/PDF/Excel must reflect the full filtered result set, not just
+     the current page — walks every server page under the active search. */
+  async function fetchAllSuppliers() {
+    const q = new URLSearchParams({ search, page: 1, limit: 100 });
+    const first = await fetch(`/api/suppliers?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.suppliers || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 100);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/suppliers?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.suppliers || []);
+    }
+    return rows;
+  }
+
+  function toReportRow(s) {
+    return {
+      name: s.name || '—', contact: s.contact_person || '—', email: s.email || '—',
+      phone: s.phone || '—', city: s.city || '—', status: s.is_active ? t('common.active') : t('common.inactive'),
+    };
+  }
+  const reportColumns = [
+    { key: 'name', header: t('common.name') }, { key: 'contact', header: t('suppliers.contactPerson') },
+    { key: 'email', header: t('common.email') }, { key: 'phone', header: t('suppliers.phone') },
+    { key: 'city', header: t('suppliers.city') }, { key: 'status', header: t('common.status') },
+  ];
 
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allSuppliers = await fetchAllSuppliers();
+      const rows = allSuppliers.map(toReportRow);
+      if (action === 'excel') {
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: 'Suppliers', columns: reportColumns, rows, filename: 'suppliers-report.xlsx' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'suppliers-report.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({
-        title: t('suppliers.addSupplier').replace(/^\+\s*/, '') || 'Suppliers',
-        columns: [
-          { key: 'name', header: t('common.name') }, { key: 'contact', header: t('suppliers.contactPerson') },
-          { key: 'email', header: t('common.email') }, { key: 'phone', header: t('suppliers.phone') },
-          { key: 'city', header: t('suppliers.city') }, { key: 'status', header: t('common.status') },
-        ],
-        rows: suppliers.map(s => ({
-          name: s.name || '—', contact: s.contact_person || '—', email: s.email || '—',
-          phone: s.phone || '—', city: s.city || '—', status: s.is_active ? t('common.active') : t('common.inactive'),
-        })),
-        lang, fileName: 'suppliers-report.pdf', action,
-      });
+      await exportReportPdf({ title: t('suppliers.addSupplier').replace(/^\+\s*/, '') || 'Suppliers', columns: reportColumns, rows, lang, fileName: 'suppliers-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -82,6 +114,7 @@ export default function SuppliersPage() {
         <div className="flex items-center gap-2">
           <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!suppliers.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
           <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!suppliers.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('excel')} disabled={!suppliers.length || !!reportBusy}>{reportBusy === 'excel' ? '…' : 'Download Excel'}</GlassButton>
           <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('suppliers.addSupplier')}</button>
         </div>
       </div>
@@ -125,15 +158,7 @@ export default function SuppliersPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal && (

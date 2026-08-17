@@ -6,6 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassModal, GlassInput, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import Pagination from '@/components/Pagination';
 
 export default function WarehousesPage() {
   const { t, lang } = useLanguage();
@@ -14,8 +15,11 @@ export default function WarehousesPage() {
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const { data: wd, mutate } = useLiveData('/api/warehouses', 0);
   const warehouses = wd?.warehouses || [];
+  const pagedWarehouses = warehouses.slice((page - 1) * pageSize, page * pageSize);
 
   async function runReport(action) {
     setReportBusy(action);
@@ -91,7 +95,7 @@ export default function WarehousesPage() {
           </thead>
           <tbody className="divide-y divide-[color:var(--bd)]">
             {warehouses.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>}
-            {warehouses.map(w => (
+            {pagedWarehouses.map(w => (
               <tr key={w.id} className="hover:bg-[color:var(--pr-soft)] transition-colors">
                 <td className="px-4 py-3 font-medium">{w.name}{w.read_only && <span className="ms-2 text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600" title={t('sl.readOnlyShort')}>{t('sl.badge')}</span>}</td>
                 <td className="px-4 py-3 text-[color:var(--tx-3)]">{w.code || '—'}</td>
@@ -115,6 +119,7 @@ export default function WarehousesPage() {
           </tbody>
         </table>
         </div>
+        <Pagination page={page} pageSize={pageSize} total={warehouses.length} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal && (

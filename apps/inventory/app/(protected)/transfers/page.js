@@ -1,30 +1,40 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
+import { useAllPages } from '@/lib/useAllPages';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import DateFilter, { inDateFilter } from '@/components/DateFilter';
+import Pagination from '@/components/Pagination';
 
 const REFRESH_MS = 20000;
 
 export default function TransfersPage() {
   const { t, lang } = useLanguage();
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ from_warehouse_id: '', to_warehouse_id: '', transfer_date: new Date().toISOString().slice(0, 10), items: [{ product_id: '', material_id: '', qty: 1 }] });
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
 
-  const { data: td, mutate } = useLiveData(`/api/transfers?page=${page}&limit=50`, REFRESH_MS);
+  const { rows: allTransfers, mutate } = useAllPages('/api/transfers', {}, 'transfers', { intervalMs: REFRESH_MS, pageLimit: 200 });
   const { data: wd } = useLiveData('/api/warehouses', 0);
   const { data: prods } = useLiveData('/api/products?limit=200', 0);
   const { data: mats } = useLiveData('/api/materials?limit=200', 0);
 
-  const transfers = td?.transfers || [];
-  const total = td?.total || 0;
+  const filtered = useMemo(() => {
+    const rows = allTransfers.filter(r => inDateFilter(dateFilter, r.transfer_date));
+    rows.sort((a, b) => new Date(b.transfer_date || 0) - new Date(a.transfer_date || 0));
+    return rows;
+  }, [allTransfers, dateFilter]);
+  const total = filtered.length;
+  const transfers = filtered.slice((page - 1) * pageSize, page * pageSize);
   const warehouses = wd?.warehouses || [];
 
   const warehouseOptions = [{ value: '', label: t('warehouses.selectWarehouse') }, ...warehouses.filter(w => w.is_active).map(w => ({ value: w.id, label: w.name }))];
@@ -73,38 +83,36 @@ export default function TransfersPage() {
     } finally { setBusy(false); }
   }, [form, mutate, t]);
 
-  async function fetchAllTransfers() {
-    const q = new URLSearchParams({ page: 1, limit: 200 });
-    const first = await fetch(`/api/transfers?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-    let rows = first.transfers || [];
-    const totalRows = first.total || rows.length;
-    const totalPages = Math.ceil(totalRows / 200);
-    for (let p = 2; p <= totalPages; p++) {
-      q.set('page', p);
-      const next = await fetch(`/api/transfers?${q}`, { credentials: 'same-origin' }).then(r => r.json());
-      rows = rows.concat(next.transfers || []);
-    }
-    return rows;
+  const reportColumns = [
+    { key: 'number', header: t('transfer.transferNumber') }, { key: 'from', header: t('transfer.from') },
+    { key: 'to', header: t('transfer.to') }, { key: 'date', header: t('transfer.transferDate') },
+    { key: 'receivedBy', header: t('common.receivedBy') },
+  ];
+  function toReportRow(r) {
+    return {
+      number: r.transfer_number || r.id.slice(0, 8), from: r.from?.name || '—', to: r.to?.name || '—',
+      date: r.transfer_date || '—', receivedBy: r.platform_users?.full_name || '—',
+    };
   }
 
   async function runReport(action) {
     setReportBusy(action);
     try {
-      const allTransfers = await fetchAllTransfers();
+      const rows = filtered.map(toReportRow);
+      if (action === 'excel') {
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: t('nav.transfers') || 'Transfers', columns: reportColumns, rows, filename: 'transfers-report.xlsx' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'transfers-report.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({
-        title: t('nav.transfers') || 'Transfers',
-        columns: [
-          { key: 'number', header: t('transfer.transferNumber') }, { key: 'from', header: t('transfer.from') },
-          { key: 'to', header: t('transfer.to') }, { key: 'date', header: t('transfer.transferDate') },
-          { key: 'receivedBy', header: t('common.receivedBy') },
-        ],
-        rows: allTransfers.map(r => ({
-          number: r.transfer_number || r.id.slice(0, 8), from: r.from?.name || '—', to: r.to?.name || '—',
-          date: r.transfer_date || '—', receivedBy: r.platform_users?.full_name || '—',
-        })),
-        lang, fileName: 'transfers-report.pdf', action,
-      });
+      await exportReportPdf({ title: t('nav.transfers') || 'Transfers', columns: reportColumns, rows, lang, fileName: 'transfers-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -112,10 +120,15 @@ export default function TransfersPage() {
   return (
     <Shell active="/transfers">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
-      <div className="flex justify-end gap-2 mb-4">
-        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!transfers.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
-        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!transfers.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
-        <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('transfer.addTransfer')}</button>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</span>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!transfers.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!transfers.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('excel')} disabled={!transfers.length || !!reportBusy}>{reportBusy === 'excel' ? '…' : 'Download Excel'}</GlassButton>
+          <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('transfer.addTransfer')}</button>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden">
@@ -144,15 +157,7 @@ export default function TransfersPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal === 'add' && (

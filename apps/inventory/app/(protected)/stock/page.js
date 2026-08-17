@@ -6,6 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
+import Pagination from '@/components/Pagination';
 
 const REFRESH_MS = 20000;
 
@@ -16,12 +17,13 @@ export default function StockPage() {
   const [type, setType] = useState('all');
   const [warehouseId, setWarehouseId] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const params = new URLSearchParams({ search, type, page, limit: 50 });
+  const params = new URLSearchParams({ search, type, page, limit: pageSize });
   if (warehouseId) params.set('warehouse_id', warehouseId);
   const { data: sd, mutate } = useLiveData(`/api/stock?${params}`, REFRESH_MS);
   const { data: wd } = useLiveData('/api/warehouses', 0);
@@ -166,15 +168,7 @@ export default function StockPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {modal === 'adjust' && (
