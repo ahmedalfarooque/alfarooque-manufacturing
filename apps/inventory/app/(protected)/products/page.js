@@ -320,8 +320,21 @@ export default function ProductsPage() {
     setReportBusy(action);
     try {
       const allProducts = await fetchAllProducts();
+      const rows = allProducts.map(toReportRow);
+      if (action === 'excel') {
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: t('products.title') || 'Products', columns: reportColumns, rows, filename: 'products-report.xlsx' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'products-report.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({ title: t('products.title') || 'Products', columns: reportColumns, rows: allProducts.map(toReportRow), fileName: 'products-report.pdf', action });
+      await exportReportPdf({ title: t('products.title') || 'Products', columns: reportColumns, rows, fileName: 'products-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -350,6 +363,7 @@ export default function ProductsPage() {
         <div className="flex items-center gap-2">
           <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!products.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
           <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!products.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('excel')} disabled={!products.length || !!reportBusy}>{reportBusy === 'excel' ? '…' : 'Download Excel'}</GlassButton>
           <button onClick={openAdd} className="gbtn gbtn-primary">
             <GlassIcon name="plus" size={16} bare />{t('products.addProduct')}
           </button>

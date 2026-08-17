@@ -467,12 +467,37 @@ function authHeaders(token) {
   return { Accept: 'application/json', Authorization: token, 'app-lang': 'arabic' };
 }
 
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+/* Transient network failures (isNetworkFailure — DNS/refused/reset/abort,
+   see smartErpRequest above) are retried with a short backoff: a live sync
+   pulling ~2,900 products over many HTTP calls WILL occasionally hit one of
+   these on the external API, and a single flaky call must not fail the
+   whole resource (confirmed live: a real sync run failed "products" with
+   exactly this error on an otherwise-successful pass). This is separate
+   from the 401/403 auth-retry below — a network failure never needs a
+   fresh token, and an auth failure is never solved by waiting. */
+const NETWORK_RETRY_DELAYS_MS = [400, 1000, 2000];
+async function requestWithNetworkRetry(url, options) {
+  let lastError;
+  for (let attempt = 0; attempt <= NETWORK_RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      return await smartErpRequest(url, options);
+    } catch (error) {
+      lastError = error;
+      if (!error?.isNetworkFailure || attempt === NETWORK_RETRY_DELAYS_MS.length) throw error;
+      await sleep(NETWORK_RETRY_DELAYS_MS[attempt]);
+    }
+  }
+  throw lastError;
+}
+
 async function readSmartLifePath(sb, endpointPath, query = {}) {
   const config = await getSmartLifeConfig(sb);
   let token = await authenticateSmartErp(config);
   const url = resourceUrl(config, endpointPath, query);
   try {
-    const payload = await smartErpRequest(url, { method: 'GET', headers: authHeaders(token) });
+    const payload = await requestWithNetworkRetry(url, { method: 'GET', headers: authHeaders(token) });
     return { records: recordsFrom(payload), providerPayload: payload };
   } catch (error) {
     /* Only an expired/invalid token is worth a fresh login + single retry.
@@ -483,7 +508,7 @@ async function readSmartLifePath(sb, endpointPath, query = {}) {
     if (error?.status !== 401 && error?.status !== 403) throw error;
     tokenCache = null;
     token = await authenticateSmartErp(config, true);
-    const payload = await smartErpRequest(url, { method: 'GET', headers: authHeaders(token) });
+    const payload = await requestWithNetworkRetry(url, { method: 'GET', headers: authHeaders(token) });
     return { records: recordsFrom(payload), providerPayload: payload };
   }
 }

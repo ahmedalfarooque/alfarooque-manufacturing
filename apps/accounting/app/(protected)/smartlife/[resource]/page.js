@@ -374,6 +374,22 @@ export default function SmartLifeResourcePage({ params }) {
         if (search.trim()) filterParts.push(`Search: "${search.trim()}"`);
       }
       const title = `AL FAROOQUE ERP — ${LABELS[resource]}` + (filterParts.length ? ` — ${filterParts.join(' · ')}` : '');
+      if (action === 'excel') {
+        /* Same exportRows/reportColumns/reportRows already computed above for
+           PDF — sent to the generic xlsx converter so Excel always matches
+           Print/PDF exactly (same filters, same complete dataset, no second
+           filter implementation). */
+        const res = await fetch('/api/export/xlsx', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ sheetName: LABELS[resource], columns: reportColumns, rows: reportRows, filename: `${resource}-report.xlsx`, rtl: lang === 'ar' }),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not generate Excel export.'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `${resource}-report.xlsx`; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
       await exportReportPdf({
         title,
         columns: reportColumns, rows: reportRows,
@@ -451,6 +467,7 @@ export default function SmartLifeResourcePage({ params }) {
           <GlassButton variant="secondary" size="sm" onClick={resetInvoiceFilters}>Reset</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('print')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='print'?'Preparing…':'Print'}</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('save')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='save'?'Generating…':'⤓ Download PDF'}</GlassButton>
+          <GlassButton variant="secondary" onClick={()=>runReport('excel')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='excel'?'Generating…':'⤓ Download Excel'}</GlassButton>
         </ListToolbar>
       ) : (
         <ListToolbar className="mb-4">
@@ -463,6 +480,7 @@ export default function SmartLifeResourcePage({ params }) {
           </>) : (!['customers','suppliers','warehouses'].includes(resource) && <GlassSelect value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{statusValues.map(s=><option key={s}>{s}</option>)}</GlassSelect>)}
           <GlassButton variant="secondary" onClick={()=>runReport('print')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='print'?'Preparing…':'Print'}</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('save')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='save'?'Generating…':'⤓ Download PDF'}</GlassButton>
+          <GlassButton variant="secondary" onClick={()=>runReport('excel')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='excel'?'Generating…':'⤓ Download Excel'}</GlassButton>
         </ListToolbar>
       )}
       {(error||data?.connected===false)&&(()=>{
