@@ -11,6 +11,7 @@ const {
   readInventoryMovements,
   readSmartErpSnapshot,
   classifySmartErpError,
+  totalFrom,
 } = require('../../../../../../../shared/integrationPlatform');
 
 export async function GET(req, { params }) {
@@ -39,13 +40,21 @@ export async function GET(req, { params }) {
       ? await readInventoryMovements(getDb(), query)
       : await readSmartLife(getDb(), params.resource, query);
     const provider = result.providerPayload || {};
+    /* ROOT CAUSE of "Showing 1-25 of 25" regardless of the real dataset size:
+       SmartERP's actual list endpoints report the full matching count as
+       `total_count` (confirmed against the real captured API responses —
+       e.g. purchases_list returns {data,total_count,page_count,current_page}),
+       NOT `total`. Reading only `provider.total` found nothing, so this
+       silently fell back to `result.records.length` — which is always
+       exactly the page size, on every single page. totalFrom() (already
+       used correctly by the readAllSmartLife() background walker) checks
+       total/total_count/count/meta.total in order — use it here too so the
+       single-page list view reports the true total like the walker does. */
+    const total = totalFrom(provider) ?? result.records.length;
     return json({
       source: 'SmartERP', connected: true, resource: params.resource, records: result.records,
-      /* SmartERP reports the full matching count separately from the returned
-         page, so the UI can show "showing N of TOTAL" instead of implying the
-         page is everything. */
-      total: Number(provider.total) || result.records.length,
-      page: Number(provider.page) || 0,
+      total,
+      page: Number(provider.current_page ?? provider.page) || 0,
       offset: Number(provider.offset) || Number(query.offset) || 0,
       limit: Number(provider.limit) || 0,
     });

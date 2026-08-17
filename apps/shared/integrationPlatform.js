@@ -598,7 +598,7 @@ module.exports = {
   IntegrationConfigurationError, SmartErpWriteAuthorizationError, SmartErpReadOnlyViolation,
   smartErpWritePermissionNotice, requireSmartErpWriteAuthorization, auditSmartErpWriteAuthorization,
   encryptSecrets, decryptSecrets,
-  getIntegration, getSmartLifeConfig, hasSmartErpEnvironment, recordsFrom,
+  getIntegration, getSmartLifeConfig, hasSmartErpEnvironment, recordsFrom, totalFrom,
   authenticateSmartErp, readSmartLife, readSmartLifeDetail, readSmartLifeStat, readAccountBalances, readProductBalances, readInventoryMovements,
   readAllSmartLife, normalizeSmartErpSourceMapping, upsertSmartErpSourceMappings, readSmartErpSnapshot,
   auditIntegration, clearSmartErpTokenForTests, classifySmartErpError,
