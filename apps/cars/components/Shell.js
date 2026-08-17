@@ -111,11 +111,6 @@ export default function Shell({ children, active }) {
             </a>
           ))}
         </nav>
-        <div className="p-3">
-          <button onClick={logout} className="w-full gbtn gbtn-ghost justify-start">
-            <GlassIcon name="logout" size={18} className="shrink-0" />{t('shell.logout')}
-          </button>
-        </div>
       </aside>
 
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
@@ -169,6 +164,9 @@ export default function Shell({ children, active }) {
             </button>
             <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
               <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
+            </button>
+            <button onClick={logout} className="glass-ctrl">
+              <GlassIcon name="logout" size={16} className="ctrl-icon" /><span className="ctrl-label">{t('shell.logout')}</span>
             </button>
           </div>
         </header>
