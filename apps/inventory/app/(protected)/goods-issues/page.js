@@ -75,9 +75,24 @@ export default function GoodsIssuesPage() {
     } finally { setBusy(false); }
   }, [form, mutate, t]);
 
+  async function fetchAllIssues() {
+    const q = new URLSearchParams({ page: 1, limit: 200 });
+    const first = await fetch(`/api/goods-issues?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.issues || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 200);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/goods-issues?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.issues || []);
+    }
+    return rows;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allIssues = await fetchAllIssues();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.goodsIssues') || 'Goods Issues',
@@ -86,7 +101,7 @@ export default function GoodsIssuesPage() {
           { key: 'date', header: t('gi.issueDate') }, { key: 'issuedTo', header: t('gi.issuedTo') },
           { key: 'receivedBy', header: t('common.receivedBy') },
         ],
-        rows: issues.map(r => ({
+        rows: allIssues.map(r => ({
           number: r.gi_number || r.id.slice(0, 8), warehouse: r.inv_warehouses?.name || '—',
           date: r.issue_date || '—', issuedTo: r.issued_to || '—', receivedBy: r.platform_users?.full_name || '—',
         })),

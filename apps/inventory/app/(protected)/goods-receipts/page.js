@@ -76,9 +76,24 @@ export default function GoodsReceiptsPage() {
     } finally { setBusy(false); }
   }, [form, mutate, t]);
 
+  async function fetchAllReceipts() {
+    const q = new URLSearchParams({ page: 1, limit: 200 });
+    const first = await fetch(`/api/goods-receipts?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.receipts || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 200);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/goods-receipts?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.receipts || []);
+    }
+    return rows;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allReceipts = await fetchAllReceipts();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.goodsReceipts') || 'Goods Receipts',
@@ -87,7 +102,7 @@ export default function GoodsReceiptsPage() {
           { key: 'warehouse', header: t('nav.warehouses') }, { key: 'date', header: t('gr.receiptDate') },
           { key: 'invoice', header: t('gr.invoiceNumber') }, { key: 'receivedBy', header: t('common.receivedBy') },
         ],
-        rows: receipts.map(r => ({
+        rows: allReceipts.map(r => ({
           number: r.gr_number || r.id.slice(0, 8), supplier: r.inv_suppliers?.name || '—',
           warehouse: r.inv_warehouses?.name || '—', date: r.receipt_date || '—',
           invoice: r.invoice_number || '—', receivedBy: r.platform_users?.full_name || '—',

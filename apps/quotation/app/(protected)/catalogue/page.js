@@ -128,9 +128,27 @@ export default function CataloguePage() {
     load();
   }
 
+  /* Fetches every page of the current filtered result set (the table
+     itself only ever holds one 25-row page) so the report reflects the
+     full filtered dataset, not just what's on screen. */
+  async function fetchAllProducts() {
+    const all = [];
+    let p = 1, total = Infinity;
+    while (all.length < total) {
+      const res = await fetch(`/api/catalogue?q=${encodeURIComponent(dq)}&category=${encodeURIComponent(category)}&sub=${encodeURIComponent(subCategory)}&status=${status}&page=${p}`, { credentials: 'same-origin' });
+      const d = res.ok ? await res.json() : { rows: [], total: 0 };
+      if (!d.rows || d.rows.length === 0) break;
+      all.push(...d.rows);
+      total = d.total || 0;
+      p++;
+    }
+    return all;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allRows = await fetchAllProducts();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.catalogue'),
@@ -139,7 +157,7 @@ export default function CataloguePage() {
           { key: 'category', header: t('catalogue.categorySub') }, { key: 'unit', header: t('f.unit') },
           { key: 'price', header: t('catalogue.standardPrice') }, { key: 'cost', header: t('catalogue.lastCost') },
         ],
-        rows: (rows || []).map(r => ({
+        rows: allRows.map(r => ({
           code: r.code, name: name(r), category: r.category ? codeLabel(t, 'cat', r.category) : '—',
           unit: codeLabel(t, 'u', r.unit), price: formatNumber(r.standard_price, { minimumFractionDigits: 2 }),
           cost: r.last_calculated_cost != null ? formatNumber(r.last_calculated_cost, { minimumFractionDigits: 2 }) : '—',

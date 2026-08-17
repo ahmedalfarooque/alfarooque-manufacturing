@@ -91,9 +91,24 @@ export default function ReservationsPage() {
 
   function badgeTone(s) { return s === 'active' ? 'info' : s === 'fulfilled' ? 'success' : 'neutral'; }
 
+  async function fetchAllReservations() {
+    const q = new URLSearchParams({ status, page: 1, limit: 200 });
+    const first = await fetch(`/api/reservations?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.reservations || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 200);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/reservations?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.reservations || []);
+    }
+    return rows;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allReservations = await fetchAllReservations();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.reservations') || 'Reservations',
@@ -102,7 +117,7 @@ export default function ReservationsPage() {
           { key: 'qty', header: t('resv.qty') }, { key: 'reference', header: t('resv.reference') },
           { key: 'status', header: t('common.status') },
         ],
-        rows: reservations.map(r => ({
+        rows: allReservations.map(r => ({
           name: r.inv_products?.name || r.inv_materials?.name || '—', warehouse: r.inv_warehouses?.name || '—',
           qty: Number(r.qty).toLocaleString(), reference: r.reference_label || t('gi.refType.' + (r.reference_type || 'other')),
           status: t('resv.status.' + r.status),

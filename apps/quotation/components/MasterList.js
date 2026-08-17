@@ -77,18 +77,36 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
     load();
   }
 
-  /* Print/PDF for the currently loaded (search-filtered) page of results,
-     via the shared AL FAROOQUE report engine — reused by every module that
-     goes through MasterList (Labour, Machines, Expenses, Suppliers) rather
-     than duplicated per page. */
+  /* Fetches every page of the current search-filtered result set (the
+     table itself only ever holds one 25-row page) so the report reflects
+     the full filtered dataset, not just what's on screen. */
+  async function fetchAllRows() {
+    const all = [];
+    let p = 1, total = Infinity;
+    while (all.length < total) {
+      const res = await fetch(`${api}?q=${encodeURIComponent(dq)}&page=${p}`, { credentials: 'same-origin' });
+      const d = res.ok ? await res.json() : { rows: [], total: 0 };
+      if (!d.rows || d.rows.length === 0) break;
+      all.push(...d.rows);
+      total = d.total || 0;
+      p++;
+    }
+    return all;
+  }
+
+  /* Print/PDF for the full search-filtered result set, via the shared
+     AL FAROOQUE report engine — reused by every module that goes through
+     MasterList (Labour, Machines, Expenses, Suppliers) rather than
+     duplicated per page. */
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allRows = await fetchAllRows();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t(titleKey),
         columns: columns.map(c => ({ key: c.key, header: t(c.labelKey) })),
-        rows: (rows || []).map(row => {
+        rows: allRows.map(row => {
           const out = {};
           columns.forEach(c => { out[c.key] = display(row, c); });
           return out;

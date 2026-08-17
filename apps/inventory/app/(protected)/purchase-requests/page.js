@@ -110,9 +110,27 @@ export default function PurchaseRequestsPage() {
     } finally { setBusy(false); }
   }, [mutate, rejectNote, t]);
 
+  /* PDF must export the full filtered result set, not just the current
+     50-row page — walks every server page under the active status filter. */
+  async function fetchAllRequests() {
+    const q = new URLSearchParams({ page: 1, limit: 200 });
+    if (statusFilter) q.set('status', statusFilter);
+    const first = await fetch(`/api/purchase-requests?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.requests || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 200);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/purchase-requests?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.requests || []);
+    }
+    return rows;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allRequests = await fetchAllRequests();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.purchaseRequests') || 'Purchase Requests',
@@ -121,7 +139,7 @@ export default function PurchaseRequestsPage() {
           { key: 'priority', header: t('pr.priority') }, { key: 'requestedBy', header: t('common.requestedBy') },
           { key: 'status', header: t('common.status') }, { key: 'date', header: t('common.date') },
         ],
-        rows: requests.map(r => ({
+        rows: allRequests.map(r => ({
           number: r.pr_number || r.id.slice(0, 8), title: r.title || '—', priority: trEnum(t, 'priority', r.priority),
           requestedBy: r.platform_users?.full_name || '—', status: trEnum(t, 'prStatus', r.status),
           date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '—',

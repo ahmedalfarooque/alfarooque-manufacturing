@@ -78,12 +78,30 @@ export default function CustomersPage() {
     load();
   }
 
-  /* Prints/exports the currently loaded (search/type-filtered) page of
-     results — same rows already rendered in the table — using the shared
+  /* Fetches every page of the current search/type-filtered result set
+     (the table itself only ever holds one 25-row page) so the report
+     reflects the full filtered dataset, not just what's on screen. */
+  async function fetchAllCustomers() {
+    const all = [];
+    let p = 1, total = Infinity;
+    while (all.length < total) {
+      const res = await fetch(`/api/customers?q=${encodeURIComponent(dq)}&type=${type}&page=${p}`, { credentials: 'same-origin' });
+      const d = res.ok ? await res.json() : { rows: [], total: 0 };
+      if (!d.rows || d.rows.length === 0) break;
+      all.push(...d.rows);
+      total = d.total || 0;
+      p++;
+    }
+    return all;
+  }
+
+  /* Prints/exports the full search/type-filtered result set — not just
+     the page currently rendered in the table — using the shared
      AL FAROOQUE report engine, never a browser default print. */
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allRows = await fetchAllCustomers();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.customers'),
@@ -91,7 +109,7 @@ export default function CustomersPage() {
           { key: 'company', header: t('f.companyName') }, { key: 'contact', header: t('f.contactPerson') },
           { key: 'phone', header: t('f.phone') }, { key: 'type', header: t('f.customerType') }, { key: 'city', header: t('f.city') },
         ],
-        rows: (rows || []).map(row => ({
+        rows: allRows.map(row => ({
           company: trL(row, 'company_name') || '—', contact: trL(row, 'contact_person') || row.contact_person || '—',
           phone: row.phone || '—', type: t('ctype.' + (row.customer_type || 'other')), city: row.city || '—',
         })),

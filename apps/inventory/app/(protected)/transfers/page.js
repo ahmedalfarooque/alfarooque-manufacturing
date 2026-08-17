@@ -73,9 +73,24 @@ export default function TransfersPage() {
     } finally { setBusy(false); }
   }, [form, mutate, t]);
 
+  async function fetchAllTransfers() {
+    const q = new URLSearchParams({ page: 1, limit: 200 });
+    const first = await fetch(`/api/transfers?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.transfers || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 200);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/transfers?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.transfers || []);
+    }
+    return rows;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allTransfers = await fetchAllTransfers();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.transfers') || 'Transfers',
@@ -84,7 +99,7 @@ export default function TransfersPage() {
           { key: 'to', header: t('transfer.to') }, { key: 'date', header: t('transfer.transferDate') },
           { key: 'receivedBy', header: t('common.receivedBy') },
         ],
-        rows: transfers.map(r => ({
+        rows: allTransfers.map(r => ({
           number: r.transfer_number || r.id.slice(0, 8), from: r.from?.name || '—', to: r.to?.name || '—',
           date: r.transfer_date || '—', receivedBy: r.platform_users?.full_name || '—',
         })),

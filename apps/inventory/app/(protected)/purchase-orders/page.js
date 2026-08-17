@@ -102,9 +102,25 @@ export default function PurchaseOrdersPage() {
     } finally { setBusy(false); }
   }, [mutate, t]);
 
+  async function fetchAllOrders() {
+    const q = new URLSearchParams({ page: 1, limit: 200 });
+    if (statusFilter) q.set('status', statusFilter);
+    const first = await fetch(`/api/purchase-orders?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.orders || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 200);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/purchase-orders?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.orders || []);
+    }
+    return rows;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allOrders = await fetchAllOrders();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.purchaseOrders') || 'Purchase Orders',
@@ -113,7 +129,7 @@ export default function PurchaseOrdersPage() {
           { key: 'amount', header: t('common.amount') }, { key: 'expectedDelivery', header: t('po.expectedDelivery') },
           { key: 'status', header: t('common.status') }, { key: 'date', header: t('common.date') },
         ],
-        rows: orders.map(o => ({
+        rows: allOrders.map(o => ({
           number: o.po_number || o.id.slice(0, 8), supplier: o.inv_suppliers?.name || '—',
           amount: 'SAR ' + Number(o.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
           expectedDelivery: o.expected_delivery || '—', status: trEnum(t, 'poStatus', o.status),

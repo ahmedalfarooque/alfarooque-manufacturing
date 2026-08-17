@@ -37,9 +37,28 @@ export default function StockPage() {
     { value: 'material', label: t('nav.materials') },
   ];
 
+  /* PDF must export the full filtered result set, not just the current
+     50-row page — this walks every server page under the active filters,
+     same pattern used by other apps' runReport()/fetchAllX() helpers. */
+  async function fetchAllStock() {
+    const q = new URLSearchParams({ search, type, page: 1, limit: 200 });
+    if (warehouseId) q.set('warehouse_id', warehouseId);
+    const first = await fetch(`/api/stock?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.stock || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 200);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/stock?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.stock || []);
+    }
+    return rows;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allStock = await fetchAllStock();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.stock') || 'Stock',
@@ -49,7 +68,7 @@ export default function StockPage() {
           { key: 'qtyOnHand', header: t('stock.qtyOnHand') }, { key: 'qtyReserved', header: t('stock.qtyReserved') },
           { key: 'avgCost', header: t('stock.avgCost') },
         ],
-        rows: stock.map(row => ({
+        rows: allStock.map(row => ({
           name: row.inv_products?.name || row.inv_materials?.name || '—',
           code: row.inv_products?.sku || row.inv_materials?.material_code || '—',
           warehouse: row.inv_warehouses?.name || '—', location: row.inv_locations?.name || '—',

@@ -158,9 +158,27 @@ export default function MaterialsPage() {
     setHistory({ material: row, rows: d.rows || [] });
   }
 
+  /* Fetches every page of the current filtered result set (the table
+     itself only ever holds one 25-row page) so the report reflects the
+     full filtered dataset, not just what's on screen. */
+  async function fetchAllMaterials() {
+    const all = [];
+    let p = 1, total = Infinity;
+    while (all.length < total) {
+      const res = await fetch(`/api/materials?q=${encodeURIComponent(dq)}&kind=${kind}&category=${category}&page=${p}`, { credentials: 'same-origin' });
+      const d = res.ok ? await res.json() : { rows: [], total: 0 };
+      if (!d.rows || d.rows.length === 0) break;
+      all.push(...d.rows);
+      total = d.total || 0;
+      p++;
+    }
+    return all;
+  }
+
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allRows = await fetchAllMaterials();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: t('nav.materials'),
@@ -168,7 +186,7 @@ export default function MaterialsPage() {
           { key: 'code', header: t('f.code') }, { key: 'name', header: t('f.name') }, { key: 'dims', header: t('f.dimensions') },
           { key: 'unit', header: t('f.unit') }, { key: 'category', header: t('f.category') }, { key: 'price', header: t('f.latestPrice') },
         ],
-        rows: (rows || []).map(row => ({
+        rows: allRows.map(row => ({
           code: row.code || '—', name: trL(row, 'name'), dims: formatMaterialDims(row, t) || '—',
           unit: codeLabel(t, 'u', row.unit), category: catName(row.category_id), price: formatNumber(row.latest_price, { minimumFractionDigits: 2 }),
         })),
