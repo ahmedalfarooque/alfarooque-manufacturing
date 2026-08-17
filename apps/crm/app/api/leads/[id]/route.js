@@ -48,6 +48,16 @@ export async function PATCH(req, { params }) {
       const match = await sb.from('crm_contacts').select('*').ilike('phone', `%${leadPhone}%`).limit(1).maybeSingle();
       if (match.data) contact = match.data;
     }
+    /* Name-only matching is a wide net (many people share a name), so it's
+       only trusted when BOTH name AND company match exactly — same
+       conservative-fallback principle already used for SmartLife matching
+       in contacts/[id]/route.js. A bare name match without company is never
+       used to avoid merging two unrelated people. */
+    if (!contact && lead.name && lead.company) {
+      const match = await sb.from('crm_contacts').select('*')
+        .ilike('name', lead.name.trim()).ilike('company', lead.company.trim()).limit(1).maybeSingle();
+      if (match.data) contact = match.data;
+    }
 
     if (!contact) {
       const { data: newContact, error: contactErr } = await sb.from('crm_contacts').insert({
