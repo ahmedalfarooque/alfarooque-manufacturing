@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { projectStatusBadgeKey } from '@/lib/projectStatus';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { Button, Input, Select, Field, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
+import DateFilter, { presetRange } from '@/components/DateFilter';
 import { isSuperAdminEmail } from '@/lib/superAdmin';
 import { pickDefaultEntityId } from '@/lib/defaultEntity';
 
@@ -17,8 +18,15 @@ export default function QuotationsPage() {
   const [rows, setRows] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [q, setQ] = useState('');
   const [tab, setTab] = useState('');
+  /* Newest-first by quote_date is the default (server sorts by
+     created_at desc, which tracks quote_date 1:1 since it's stamped at
+     creation); this filter narrows the same dated list down to a
+     preset/custom range, evaluated against the full server-side dataset
+     — not just the 25/50/100/500 rows currently on screen. */
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const dq = useDebouncedValue(q, 300);
   const [newOpen, setNewOpen] = useState(false);
   const [entities, setEntities] = useState([]);
@@ -36,14 +44,16 @@ export default function QuotationsPage() {
   }, []);
 
   const load = useCallback(() => {
-    fetch(`/api/quotations?q=${encodeURIComponent(dq)}&status=${tab}&page=${page}`, { credentials: 'same-origin' })
+    const { from: rFrom, to: rTo } = dateFilter.preset === 'custom' ? dateFilter : presetRange(dateFilter.preset);
+    const range = (rFrom ? `&from=${rFrom}` : '') + (rTo ? `&to=${rTo}` : '');
+    fetch(`/api/quotations?q=${encodeURIComponent(dq)}&status=${tab}&page=${page}&pageSize=${pageSize}${range}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [], total: 0 })
       .then(d => { setRows(d.rows || []); setTotal(d.total || 0); })
       .catch(() => { setRows([]); setTotal(0); });
-  }, [dq, tab, page]);
+  }, [dq, tab, page, pageSize, dateFilter]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [dq, tab]);
+  useEffect(() => { setPage(1); }, [dq, tab, pageSize, dateFilter]);
 
   /* Dashboard cards deep-link here with ?status=... (Update 1) — adopt
      it as the initial tab once, on mount. */
@@ -105,6 +115,7 @@ export default function QuotationsPage() {
             ))}
           </div>
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder={t('quote.searchNumber')} className="max-w-[200px]" />
+          <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
           <div className="flex-1" />
           <a href={'/api/export/quotations?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
           <Button onClick={() => { setNewOpen(true); setCustomerId(''); setCustQ(''); setErr(null); }}>+ {t('quote.new')}</Button>
@@ -165,7 +176,7 @@ export default function QuotationsPage() {
             </tbody>
           </table>
         </div>
-        <Pagination page={page} pageSize={25} total={total} onPage={setPage} />
+        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={setPageSize} />
       </div>
 
       {newOpen && (

@@ -136,19 +136,42 @@ export function Td({ children, className = '', ...rest }) {
   );
 }
 
-export function Pagination({ page, pageSize, total, onPage }) {
+/* Shared list-page footer: page-size selector (opt-in via `onPageSize`,
+   backward compatible — callers that don't pass it keep the old plain
+   Prev/Next look) + a "showing X–Y of N" range + First/Prev/Next/Last.
+   Every list page across the app (MasterList-driven modules, Quotations,
+   Customers, Catalogue, Materials) renders through this single component,
+   so the ERP-wide "page-size selector + First/Last" standard lands here
+   once instead of being re-implemented per page. */
+export function Pagination({ page, pageSize, total, onPage, onPageSize, pageSizeOptions = [25, 50, 100, 500] }) {
+  if (!total) return null;
   const pages = Math.max(1, Math.ceil(total / pageSize));
-  if (pages <= 1) return null;
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(total, page * pageSize);
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-sm text-[color:var(--tx-3)] border-t border-[color:var(--bd)]">
-      <span>{total}</span>
+    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-[color:var(--tx-3)] border-t border-[color:var(--bd)]">
       <div className="flex items-center gap-2">
-        <button disabled={page <= 1} onClick={() => onPage(page - 1)}
-          className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40">‹</button>
-        <span className="tabular-nums">{page} / {pages}</span>
-        <button disabled={page >= pages} onClick={() => onPage(page + 1)}
-          className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40">›</button>
+        <span className="tabular-nums">{start}–{end} / {total}</span>
+        {onPageSize && (
+          <select value={pageSize} onChange={e => onPageSize(Number(e.target.value))}
+            className="ginput text-xs !py-1 !px-2 !w-auto">
+            {pageSizeOptions.map(n => <option key={n} value={n}>{n} / page</option>)}
+          </select>
+        )}
       </div>
+      {pages > 1 && (
+        <div className="flex items-center gap-1">
+          <button disabled={page <= 1} onClick={() => onPage(1)}
+            className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40" aria-label="First">«</button>
+          <button disabled={page <= 1} onClick={() => onPage(page - 1)}
+            className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40" aria-label="Previous">‹</button>
+          <span className="tabular-nums px-1">{page} / {pages}</span>
+          <button disabled={page >= pages} onClick={() => onPage(page + 1)}
+            className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40" aria-label="Next">›</button>
+          <button disabled={page >= pages} onClick={() => onPage(pages)}
+            className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40" aria-label="Last">»</button>
+        </div>
+      )}
     </div>
   );
 }

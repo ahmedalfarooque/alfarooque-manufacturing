@@ -20,6 +20,7 @@ export default function CataloguePage() {
   const [rows, setRows] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
@@ -73,14 +74,14 @@ export default function CataloguePage() {
   }
 
   const load = useCallback(() => {
-    fetch(`/api/catalogue?q=${encodeURIComponent(dq)}&category=${encodeURIComponent(category)}&sub=${encodeURIComponent(subCategory)}&status=${status}&page=${page}`, { credentials: 'same-origin' })
+    fetch(`/api/catalogue?q=${encodeURIComponent(dq)}&category=${encodeURIComponent(category)}&sub=${encodeURIComponent(subCategory)}&status=${status}&page=${page}&pageSize=${pageSize}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [], total: 0 })
       .then(d => { setRows(d.rows || []); setTotal(d.total || 0); })
       .catch(() => { setRows([]); setTotal(0); });
-  }, [dq, category, subCategory, status, page]);
+  }, [dq, category, subCategory, status, page, pageSize]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [dq, category, subCategory, status]);
+  useEffect(() => { setPage(1); }, [dq, category, subCategory, status, pageSize]);
 
   const name = (r) => trL(r, 'name');
 
@@ -283,7 +284,7 @@ export default function CataloguePage() {
             </tbody>
           </table>
         </div>
-        <Pagination page={page} pageSize={25} total={total} onPage={setPage} />
+        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={setPageSize} />
       </div>
 
       {modal && (

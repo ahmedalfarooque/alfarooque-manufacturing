@@ -33,17 +33,17 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState(25);
 
   const load = useCallback(() => {
-    fetch(`${api}?q=${encodeURIComponent(dq)}&page=${page}`, { credentials: 'same-origin' })
+    fetch(`${api}?q=${encodeURIComponent(dq)}&page=${page}&pageSize=${pageSize}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [], total: 0 })
       .then(d => { setRows(d.rows || []); setTotal(d.total || 0); })
       .catch(() => { setRows([]); setTotal(0); });
-  }, [api, dq, page]);
+  }, [api, dq, page, pageSize]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [dq]);
+  useEffect(() => { setPage(1); }, [dq, pageSize]);
 
   function open(row) {
     const init = {};
@@ -164,7 +164,7 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
             </tbody>
           </table>
         </div>
-        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} />
+        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={setPageSize} />
       </div>
 
       {modal && (

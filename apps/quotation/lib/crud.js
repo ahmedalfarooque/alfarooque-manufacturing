@@ -12,6 +12,7 @@ const { translate, hasArabic } = require('./translate');
 const { currentIp } = require('./requestContext');
 
 const PAGE_SIZE = 25;
+const ALLOWED_PAGE_SIZES = [25, 50, 100, 500];
 
 /* Single-language data model: records store ONE value; display-time
    translation happens in the UI (tr()). Search is bilingual — the query
@@ -77,7 +78,9 @@ function makeListHandler({ table, searchCols, fields, defaultOrder, filters }) {
     const url = new URL(req.url);
     const q = (url.searchParams.get('q') || '').trim();
     const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
-    const from = (page - 1) * PAGE_SIZE;
+    const pageSizeRaw = parseInt(url.searchParams.get('pageSize') || '', 10);
+    const pageSize = ALLOWED_PAGE_SIZES.includes(pageSizeRaw) ? pageSizeRaw : PAGE_SIZE;
+    const from = (page - 1) * pageSize;
 
     let query = sb.from(table).select('*', { count: 'exact' }).is('deleted_at', null);
     if (q) {
@@ -85,11 +88,11 @@ function makeListHandler({ table, searchCols, fields, defaultOrder, filters }) {
       query = query.or(searchCols.flatMap(c => terms.map(x => `${c}.ilike.%${x}%`)).join(','));
     }
     if (filters) query = filters(query, url.searchParams);
-    query = query.order(defaultOrder || 'created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1);
+    query = query.order(defaultOrder || 'created_at', { ascending: false }).range(from, from + pageSize - 1);
 
     const { data, count, error } = await query;
     if (error) return json({ error: error.message }, 500);
-    return json({ rows: data || [], total: count || 0, page, pageSize: PAGE_SIZE });
+    return json({ rows: data || [], total: count || 0, page, pageSize });
   };
 }
 

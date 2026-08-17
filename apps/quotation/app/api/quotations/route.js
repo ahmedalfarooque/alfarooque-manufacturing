@@ -6,6 +6,7 @@ const { audit } = require('@/lib/crud');
 const { getSetting, logEvent } = require('@/lib/quotes');
 
 const PAGE_SIZE = 25;
+const ALLOWED_PAGE_SIZES = [25, 50, 100, 500];
 
 export async function GET(req) {
   const { session, response } = await requireAction(req, 'view');
@@ -14,19 +15,29 @@ export async function GET(req) {
   const url = new URL(req.url);
   const q = (url.searchParams.get('q') || '').trim();
   const status = url.searchParams.get('status') || '';
+  const dateFrom = url.searchParams.get('from') || '';
+  const dateTo = url.searchParams.get('to') || '';
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
-  const from = (page - 1) * PAGE_SIZE;
+  const pageSizeRaw = parseInt(url.searchParams.get('pageSize') || '', 10);
+  const pageSize = ALLOWED_PAGE_SIZES.includes(pageSizeRaw) ? pageSizeRaw : PAGE_SIZE;
+  const from = (page - 1) * pageSize;
 
   let query = sb.from('qt_quotations')
     .select('id, quote_number, revision, status, project_status, project_id, pm_project_id, quote_date, valid_until, grand_total, blended_margin_pct, entity:qt_entities(code), customer:customers(company_name, company_name_en, company_name_ar)', { count: 'exact' })
     .is('deleted_at', null);
   if (status) query = query.eq('status', status);
   if (q) query = query.ilike('quote_number', `%${q.replace(/[%,()]/g, '')}%`);
-  query = query.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1);
+  /* Date-range filter operates on quote_date (the real, user-facing
+     quotation date), independently of created_at sort order below —
+     matches the shared DateFilter's { preset, from, to } local-calendar
+     semantics (never UTC-shifted). */
+  if (dateFrom) query = query.gte('quote_date', dateFrom);
+  if (dateTo) query = query.lte('quote_date', dateTo);
+  query = query.order('created_at', { ascending: false }).range(from, from + pageSize - 1);
 
   const { data, count, error } = await query;
   if (error) return json({ error: error.message }, 500);
-  return json({ rows: data || [], total: count || 0, page, pageSize: PAGE_SIZE });
+  return json({ rows: data || [], total: count || 0, page, pageSize });
 }
 
 /* Create a draft quotation: body { entity_id, customer_id? } */

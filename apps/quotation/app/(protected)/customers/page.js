@@ -28,6 +28,7 @@ export default function CustomersPage() {
   const [rows, setRows] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [q, setQ] = useState('');
   const [type, setType] = useState('');
   const dq = useDebouncedValue(q, 300);
@@ -41,14 +42,14 @@ export default function CustomersPage() {
   const fileRef = useRef(null);
 
   const load = useCallback(() => {
-    fetch(`/api/customers?q=${encodeURIComponent(dq)}&type=${type}&page=${page}`, { credentials: 'same-origin' })
+    fetch(`/api/customers?q=${encodeURIComponent(dq)}&type=${type}&page=${page}&pageSize=${pageSize}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [], total: 0 })
       .then(d => { setRows(d.rows || []); setTotal(d.total || 0); })
       .catch(() => { setRows([]); setTotal(0); });
-  }, [dq, type, page]);
+  }, [dq, type, page, pageSize]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [dq, type]);
+  useEffect(() => { setPage(1); }, [dq, type, pageSize]);
 
   function open(row) {
     const init = { customer_type: 'other', city: 'Jeddah' };
@@ -182,7 +183,7 @@ export default function CustomersPage() {
             </tbody>
           </table>
         </div>
-        <Pagination page={page} pageSize={25} total={total} onPage={setPage} />
+        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={setPageSize} />
       </div>
 
       {modal && (

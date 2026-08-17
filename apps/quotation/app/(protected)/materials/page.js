@@ -50,6 +50,7 @@ export default function MaterialsPage() {
   const [rows, setRows] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [q, setQ] = useState('');
   const [kind, setKind] = useState('');            // '' | material | hardware
   const [category, setCategory] = useState('');
@@ -98,14 +99,14 @@ export default function MaterialsPage() {
   }, []);
 
   const load = useCallback(() => {
-    fetch(`/api/materials?q=${encodeURIComponent(dq)}&kind=${kind}&category=${category}&page=${page}`, { credentials: 'same-origin' })
+    fetch(`/api/materials?q=${encodeURIComponent(dq)}&kind=${kind}&category=${category}&page=${page}&pageSize=${pageSize}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [], total: 0 })
       .then(d => { setRows(d.rows || []); setTotal(d.total || 0); })
       .catch(() => { setRows([]); setTotal(0); });
-  }, [dq, kind, category, page]);
+  }, [dq, kind, category, page, pageSize]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [dq, kind, category]);
+  useEffect(() => { setPage(1); }, [dq, kind, category, pageSize]);
 
   const catName = (id) => {
     const c = categories.find(x => x.id === id);
@@ -284,7 +285,7 @@ export default function MaterialsPage() {
             </tbody>
           </table>
         </div>
-        <Pagination page={page} pageSize={25} total={total} onPage={setPage} />
+        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={setPageSize} />
       </div>
 
       {modal && modal.row && (

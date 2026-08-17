@@ -13,6 +13,7 @@ const { audit, applyBilingual } = require('@/lib/crud');
 const { translate, hasArabic } = require('@/lib/translate');
 
 const PAGE_SIZE = 25;
+const ALLOWED_PAGE_SIZES = [25, 50, 100, 500];
 const UI_FIELDS = ['code', 'company_name', 'company_name_en', 'company_name_ar',
   'contact_person', 'contact_person_en', 'contact_person_ar', 'phone', 'phone2',
   'email', 'address', 'city', 'customer_type', 'vat_number', 'cr_number', 'notes', 'status'];
@@ -40,7 +41,9 @@ export async function GET(req) {
   const q = (url.searchParams.get('q') || '').trim();
   const type = url.searchParams.get('type');
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
-  const from = (page - 1) * PAGE_SIZE;
+  const pageSizeRaw = parseInt(url.searchParams.get('pageSize') || '', 10);
+  const pageSize = ALLOWED_PAGE_SIZES.includes(pageSizeRaw) ? pageSizeRaw : PAGE_SIZE;
+  const from = (page - 1) * pageSize;
 
   let query = sb.from('customers').select('*', { count: 'exact' }).is('deleted_at', null);
   if (q) {
@@ -51,11 +54,11 @@ export async function GET(req) {
       .flatMap(c => terms.map(t => `${c}.ilike.%${t}%`)).join(','));
   }
   if (type) query = query.eq('customer_type', type);
-  query = query.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1);
+  query = query.order('created_at', { ascending: false }).range(from, from + pageSize - 1);
 
   const { data, count, error } = await query;
   if (error) return json({ error: error.message }, 500);
-  return json({ rows: (data || []).map(fromDbRow), total: count || 0, page, pageSize: PAGE_SIZE });
+  return json({ rows: (data || []).map(fromDbRow), total: count || 0, page, pageSize });
 }
 
 export async function POST(req) {
