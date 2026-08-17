@@ -5,11 +5,15 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassModal, GlassInput, GlassSelect, GlassField, GlassTextarea, toast } from '@/components/glass';
+import { InitialAvatar } from '@/components/CRMWidgets';
 
 const STAGES = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
-function statusTone(s) { return s === 'Won' ? 'success' : s === 'Lost' ? 'error' : s === 'On Hold' ? 'warning' : 'info'; }
+/* GlassBadge's tone table only defines neutral/cyan/emerald/amber/red/violet/slate
+   (see components/glass.js) — 'success'/'error'/'warning'/'info' silently fell back
+   to neutral, so every status badge on this page rendered the same gray. */
+function statusTone(s) { return s === 'Won' ? 'emerald' : s === 'Lost' ? 'red' : s === 'On Hold' ? 'amber' : 'cyan'; }
 
 export default function DealDetailPage() {
   const { id } = useParams();
@@ -19,8 +23,8 @@ export default function DealDetailPage() {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  if (loading) return <div className="text-center text-slate-400 py-12">Loading…</div>;
-  if (!data) return <div className="text-center text-slate-400 py-12">Deal not found.</div>;
+  if (loading) return <div className="text-center text-[color:var(--tx-3)] py-12">Loading…</div>;
+  if (!data) return <div className="text-center text-[color:var(--tx-3)] py-12">Deal not found.</div>;
 
   const { deal, activities, linkedQuotation, linkedProject } = data;
 
@@ -64,13 +68,26 @@ export default function DealDetailPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/deals"><GlassButton variant="secondary" size="sm">← Back</GlassButton></Link>
-          <h1 className="text-2xl font-bold text-white">{deal.title}</h1>
-          <GlassBadge tone={statusTone(deal.status)}>{deal.status}</GlassBadge>
+      <div className="flex items-center gap-3">
+        <Link href="/deals"><GlassButton variant="secondary" size="sm">← Back</GlassButton></Link>
+      </div>
+
+      <GlassCard className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <InitialAvatar name={deal.title} size={52} tone={deal.status === 'Won' ? 'emerald' : deal.status === 'Lost' ? 'red' : 'cyan'} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-bold text-[color:var(--tx)] truncate">{deal.title}</h1>
+              <GlassBadge tone={statusTone(deal.status)}>{deal.status}</GlassBadge>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1 text-sm text-[color:var(--tx-3)]">
+              <span>{deal.stage}</span>
+              <span className="font-medium text-[color:var(--pr)]" dir="ltr">SAR {fmt(deal.value)}</span>
+              {deal.expected_close_date && <span>Close: {deal.expected_close_date}</span>}
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <GlassButton variant="secondary" onClick={openEdit}>Edit</GlassButton>
           {deal.status === 'Open' && (
             <>
@@ -80,7 +97,7 @@ export default function DealDetailPage() {
           )}
           <GlassButton variant="danger" onClick={del}>Delete</GlassButton>
         </div>
-      </div>
+      </GlassCard>
 
       {editing && form && (
         <GlassModal title="Edit Deal" onClose={() => setEditing(false)} footer={
@@ -131,27 +148,27 @@ export default function DealDetailPage() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <GlassCard className="lg:col-span-2">
-          <h3 className="text-sm font-semibold text-slate-300 mb-3">Deal Details</h3>
+          <h3 className="text-sm font-semibold text-[color:var(--tx-2)] mb-3">Deal Details</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div><p className="text-slate-400">Value</p><p className="text-2xl font-bold text-cyan-400">SAR {fmt(deal.value)}</p></div>
-            <div><p className="text-slate-400">Stage</p><p className="text-white font-medium">{deal.stage}</p></div>
-            <div><p className="text-slate-400">Probability</p><p className="text-white">{deal.probability || 0}%</p></div>
-            <div><p className="text-slate-400">Expected Close</p><p className="text-white">{deal.expected_close_date || '—'}</p></div>
-            <div><p className="text-slate-400">Currency</p><p className="text-white">{deal.currency}</p></div>
+            <div><p className="text-[color:var(--tx-3)]">Value</p><p className="text-2xl font-bold text-[color:var(--pr)]">SAR {fmt(deal.value)}</p></div>
+            <div><p className="text-[color:var(--tx-3)]">Stage</p><p className="text-[color:var(--tx)] font-medium">{deal.stage}</p></div>
+            <div><p className="text-[color:var(--tx-3)]">Probability</p><p className="text-[color:var(--tx)]">{deal.probability || 0}%</p></div>
+            <div><p className="text-[color:var(--tx-3)]">Expected Close</p><p className="text-[color:var(--tx)]">{deal.expected_close_date || '—'}</p></div>
+            <div><p className="text-[color:var(--tx-3)]">Currency</p><p className="text-[color:var(--tx)]">{deal.currency}</p></div>
           </div>
-          {deal.description && <p className="mt-3 text-slate-300 text-sm">{deal.description}</p>}
+          {deal.description && <p className="mt-3 text-[color:var(--tx-2)] text-sm">{deal.description}</p>}
           {(linkedQuotation || linkedProject) && (
-            <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-4 text-sm">
+            <div className="mt-4 pt-4 border-t border-[color:var(--bd)] flex flex-wrap gap-4 text-sm">
               {linkedQuotation && (
                 <div>
-                  <p className="text-slate-400">Linked Quotation</p>
-                  <p className="text-cyan-400 font-medium">{linkedQuotation.quote_number} <GlassBadge tone="neutral">{linkedQuotation.status}</GlassBadge></p>
+                  <p className="text-[color:var(--tx-3)]">Linked Quotation</p>
+                  <p className="text-[color:var(--pr)] font-medium">{linkedQuotation.quote_number} <GlassBadge tone="neutral">{linkedQuotation.status}</GlassBadge></p>
                 </div>
               )}
               {linkedProject && (
                 <div>
-                  <p className="text-slate-400">Linked Project</p>
-                  <p className="text-cyan-400 font-medium">{linkedProject.project_name} <span className="text-slate-500">({linkedProject.customer_name || '—'})</span></p>
+                  <p className="text-[color:var(--tx-3)]">Linked Project</p>
+                  <p className="text-[color:var(--pr)] font-medium">{linkedProject.project_name} <span className="text-[color:var(--tx-4)]">({linkedProject.customer_name || '—'})</span></p>
                 </div>
               )}
             </div>
@@ -159,33 +176,33 @@ export default function DealDetailPage() {
         </GlassCard>
 
         <GlassCard>
-          <h3 className="text-sm font-semibold text-slate-300 mb-3">Contact</h3>
+          <h3 className="text-sm font-semibold text-[color:var(--tx-2)] mb-3">Contact</h3>
           {deal.crm_contacts ? (
             <div className="text-sm">
-              <Link href={`/contacts/${deal.contact_id}`} className="text-cyan-400 hover:text-cyan-300 font-medium">{deal.crm_contacts.name}</Link>
-              {deal.crm_contacts.company && <p className="text-slate-400 mt-1">{deal.crm_contacts.company}</p>}
-              {deal.crm_contacts.email && <p className="text-slate-500 mt-1">{deal.crm_contacts.email}</p>}
-              {deal.crm_contacts.phone && <p className="text-slate-500">{deal.crm_contacts.phone}</p>}
+              <Link href={`/contacts/${deal.contact_id}`} className="text-[color:var(--pr)] hover:text-[color:var(--pr-2)] font-medium">{deal.crm_contacts.name}</Link>
+              {deal.crm_contacts.company && <p className="text-[color:var(--tx-3)] mt-1">{deal.crm_contacts.company}</p>}
+              {deal.crm_contacts.email && <p className="text-[color:var(--tx-4)] mt-1">{deal.crm_contacts.email}</p>}
+              {deal.crm_contacts.phone && <p className="text-[color:var(--tx-4)]">{deal.crm_contacts.phone}</p>}
             </div>
           ) : (
-            <p className="text-slate-500 text-sm">No contact linked.</p>
+            <p className="text-[color:var(--tx-4)] text-sm">No contact linked.</p>
           )}
         </GlassCard>
       </div>
 
       <GlassCard>
-        <h3 className="text-sm font-semibold text-slate-300 mb-3">Activities ({activities.length})</h3>
-        {!activities.length ? <p className="text-slate-500 text-sm">No activities logged.</p> : (
-          <div className="divide-y divide-white/5">
+        <h3 className="text-sm font-semibold text-[color:var(--tx-2)] mb-3">Activities ({activities.length})</h3>
+        {!activities.length ? <p className="text-[color:var(--tx-4)] text-sm">No activities logged.</p> : (
+          <div className="divide-y divide-[color:var(--bd)]">
             {activities.map(a => (
               <div key={a.id} className="py-2 flex items-center justify-between text-sm">
                 <div>
-                  <span className="text-white">{a.subject}</span>
-                  {a.notes && <p className="text-slate-400 text-xs mt-0.5">{a.notes}</p>}
+                  <span className="text-[color:var(--tx)]">{a.subject}</span>
+                  {a.notes && <p className="text-[color:var(--tx-3)] text-xs mt-0.5">{a.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <GlassBadge tone="neutral">{a.activity_type}</GlassBadge>
-                  <span className="text-slate-500">{a.activity_date}</span>
+                  <span className="text-[color:var(--tx-4)]">{a.activity_date}</span>
                 </div>
               </div>
             ))}

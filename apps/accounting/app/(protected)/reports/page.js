@@ -1,7 +1,67 @@
 'use client';
 
 import { useState } from 'react';
-import { GlassCard, GlassButton, GlassSelect, GlassField, GlassInput } from '@/components/glass';
+import { GlassCard, GlassButton, GlassSelect, GlassField, GlassInput, toast } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
+
+const REPORT_TITLES = {
+  income_statement: 'Income Statement (P&L)',
+  balance_sheet: 'Balance Sheet',
+  cash_flow: 'Cash Flow Statement',
+  vat: 'VAT Report (ZATCA)',
+  inventory_valuation: 'Inventory Valuation',
+  project_costing: 'Project Costing',
+  summary: 'Summary Dashboard',
+};
+
+/* Financial Reports has 7 distinct report shapes (a two-column
+   label/value summary for most, a real table for the two line-item
+   reports). Build generic {columns, rows} for whichever shape is
+   currently on screen instead of a second bespoke renderer per type —
+   same shared A4 report engine as every other Accounting list. */
+function buildReportPayload(data) {
+  if (data.type === 'inventory_valuation') {
+    return {
+      columns: [
+        { key: 'name', header: 'Item' }, { key: 'code', header: 'Code' }, { key: 'warehouse', header: 'Warehouse' },
+        { key: 'qtyText', header: 'Qty' }, { key: 'avgCostText', header: 'Avg Cost' }, { key: 'valueText', header: 'Value' },
+      ],
+      rows: (data.lines || []).map(l => ({ ...l, qtyText: fmt(l.qty), avgCostText: fmt(l.avg_cost), valueText: fmt(l.value) })),
+      totals: [['Total Stock Value', `SAR ${fmt(data.total_value)}`]],
+    };
+  }
+  if (data.type === 'project_costing') {
+    return {
+      columns: [
+        { key: 'project_name', header: 'Project' }, { key: 'revenueText', header: 'Revenue (Invoiced)' },
+        { key: 'costText', header: 'Cost (Bills + Expenses)' }, { key: 'marginText', header: 'Margin' },
+      ],
+      rows: (data.projects || []).map(p => ({ ...p, revenueText: fmt(p.revenue), costText: fmt(p.cost), marginText: fmt(p.margin) })),
+      totals: [],
+    };
+  }
+  /* income_statement / balance_sheet / cash_flow / vat / summary — all a
+     flat list of labelled figures, rendered as a two-column table. */
+  const pairs = [];
+  if (data.type === 'income_statement') {
+    pairs.push(['Revenue', data.revenue], ['Cost of Goods Sold', data.cogs], ['Gross Profit', data.gross_profit], ['Operating Expenses', data.opex], ['Net Income', data.net_income]);
+  } else if (data.type === 'balance_sheet') {
+    pairs.push(['Cash & Bank', data.cash], ['Accounts Receivable', data.receivables], ['Fixed Assets (Net)', data.fixed_assets], ['Total Assets', data.total_assets],
+      ['Accounts Payable', data.payables], ['Total Liabilities', data.payables], ['Equity', data.equity]);
+  } else if (data.type === 'cash_flow') {
+    pairs.push(['Cash Inflows', data.inflows], ['Cash Outflows', data.outflows], ['Net Cash Flow', data.net_cash_flow]);
+  } else if (data.type === 'vat') {
+    pairs.push(['Output VAT (Sales)', data.output_vat], ['Input VAT (Purchases)', data.input_vat], ['Net VAT Payable', data.net_vat_payable]);
+  } else if (data.type === 'summary') {
+    pairs.push(['Total Invoices', data.total_invoices], ['Total Bills', data.total_bills], ['Approved Expenses', `SAR ${fmt(data.total_expenses)}`],
+      ['Posted Journal Entries', data.total_journal_entries], ['Total Bank Balance', `SAR ${fmt(data.total_bank_balance)}`]);
+  }
+  return {
+    columns: [{ key: 'label', header: 'Line Item' }, { key: 'valueText', header: 'Amount' }],
+    rows: pairs.map(([label, value]) => ({ label, valueText: typeof value === 'number' ? `SAR ${fmt(value)}` : String(value ?? '—') })),
+    totals: [],
+  };
+}
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
 
@@ -14,6 +74,7 @@ export default function ReportsPage() {
   const [to, setTo] = useState(today());
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
 
   async function run() {
     setLoading(true);
@@ -26,6 +87,24 @@ export default function ReportsPage() {
       setData(body);
     } catch (e) { alert(e.message); }
     finally { setLoading(false); }
+  }
+
+  /* Same shared A4 report engine as the rest of Accounting — reuses the
+     figures already computed and shown on screen, no recomputation. */
+  async function runPdf(action) {
+    if (!data) return;
+    setReportBusy(action);
+    try {
+      const { columns, rows, totals } = buildReportPayload(data);
+      const rangeSuffix = (type !== 'balance_sheet' && type !== 'summary' && type !== 'inventory_valuation') ? ` — ${data.from} to ${data.to}` : '';
+      await exportReportPdf({
+        title: `${REPORT_TITLES[type] || 'Financial Report'}${rangeSuffix}`,
+        columns, rows, totals,
+        period: rangeSuffix ? `${data.from} to ${data.to}` : 'As of today',
+        fileName: `${type}-report.pdf`, action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
   }
 
   return (
@@ -56,6 +135,8 @@ export default function ReportsPage() {
             </>
           )}
           <GlassButton onClick={run} disabled={loading}>{loading ? 'Generating…' : 'Run Report'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runPdf('print')} disabled={!data || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runPdf('save')} disabled={!data || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
       </GlassCard>
 

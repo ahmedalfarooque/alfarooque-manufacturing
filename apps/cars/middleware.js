@@ -41,7 +41,7 @@ async function readAnySession(req) {
   return ssoToken ? await verifySso(ssoToken) : null;
 }
 
-const ADMIN_ONLY_PREFIXES = ['/vehicles/new', '/vehicles/edit'];
+const ADMIN_ONLY_PREFIXES = ['/users'];
 
 /* This app has no basePath (it lives at the root of cars.alfarooque.com),
    so req.nextUrl.basePath is always '' here — kept as a helper anyway so
@@ -76,5 +76,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/drivers/:path*', '/maintenance/:path*', '/maintenance-schedule/:path*', '/maintenance-shops/:path*', '/alerts/:path*', '/reports/:path*', '/view/:path*'],
+  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/drivers/:path*', '/maintenance/:path*', '/maintenance-schedule/:path*', '/maintenance-shops/:path*', '/alerts/:path*', '/reports/:path*', '/view/:path*', '/users/:path*'],
 };

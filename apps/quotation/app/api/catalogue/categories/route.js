@@ -7,10 +7,10 @@
    match any hardcoded set. */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 export async function GET(req) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
   const { data, error } = await sb.from('qt_catalogue_products')

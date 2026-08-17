@@ -6,7 +6,7 @@ import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Input, EmptyState, Th, Td } from '@/components/ui';
+import { Input, EmptyState, Th, Td, Button } from '@/components/ui';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
 export const QUOTE_STATUS_BADGE = {
@@ -20,11 +20,12 @@ const REFRESH_MS = 15000;
 function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 export default function QuotesPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState('All');
   const [busyId, setBusyId] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data, error, refresh } = useLiveData('/api/quotes', REFRESH_MS);
   const allRows = data?.quotes || [];
@@ -50,9 +51,34 @@ export default function QuotesPage() {
     if (res && res.ok) refresh();
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('oq.quotesTitle'),
+        columns: [
+          { key: 'name', header: t('oq.col.name') }, { key: 'contact', header: t('oq.col.contact') },
+          { key: 'product', header: t('oq.col.product') }, { key: 'status', header: t('oq.col.status') }, { key: 'date', header: t('oq.col.date') },
+        ],
+        rows: filtered.map(r => ({
+          name: r.name || '—', contact: r.email || r.phone || '—', product: r.product || '—',
+          status: trEnum(t, 'status', r.status), date: new Date(r.created_at).toLocaleDateString(),
+        })),
+        lang, fileName: 'quotes-report.pdf', action,
+      });
+    } catch (e2) {} finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/quotes">
-      <h2 className="text-lg font-semibold mb-4">{t('oq.quotesTitle')}</h2>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h2 className="text-lg font-semibold">{t('oq.quotesTitle')}</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!filtered.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!filtered.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
+        </div>
+      </div>
 
       <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <Input placeholder={t('oq.searchQuotesPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />

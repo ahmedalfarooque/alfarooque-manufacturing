@@ -8,7 +8,7 @@
 
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 const BUCKET = 'maintenance-documents';
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -16,7 +16,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf
 const SLOTS = ['invoice_pdf', 'invoice_image', 'before', 'during', 'after', 'document'];
 
 export async function POST(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
 
   let form;

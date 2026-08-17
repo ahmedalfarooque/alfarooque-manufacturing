@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin , requireAction } = require('@/lib/http');
 
 const BUCKET = 'project-documents';
 const MAX_BYTES = 50 * 1024 * 1024; // 50MB (video-friendly)
@@ -13,7 +13,7 @@ const ALLOWED_TYPES = [
 ];
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
 
   const sb = getDb();

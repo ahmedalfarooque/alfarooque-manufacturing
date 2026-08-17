@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
-import { EmptyState } from '@/components/ui';
+import { EmptyState, Button } from '@/components/ui';
 
 export default function AlertsPage() {
-  const { t, formatDateTime } = useLanguage();
+  const { t, lang, formatDateTime } = useLanguage();
   const [alerts, setAlerts] = useState(null);
   const [error, setError] = useState(null);
   const [me, setMe] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
   const isAdmin = me?.role === 'admin';
 
   function load() {
@@ -28,9 +29,39 @@ export default function AlertsPage() {
     load();
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      const ar = lang === 'ar';
+      await exportReportPdf({
+        title: ar ? 'تقرير التنبيهات' : 'Alerts Report',
+        columns: [
+          { key: 'title', header: ar ? 'العنوان' : 'Title' },
+          { key: 'vehicle', header: ar ? 'المركبة' : 'Vehicle' },
+          { key: 'body', header: ar ? 'التفاصيل' : 'Details' },
+          { key: 'date', header: ar ? 'التاريخ' : 'Date' },
+          { key: 'status', header: ar ? 'الحالة' : 'Status' },
+        ],
+        rows: (alerts || []).map(a => ({
+          title: a.title || '—', vehicle: a.cars?.vehicle_number || '—', body: a.body || '—',
+          date: formatDateTime(a.created_at), status: a.is_read ? (ar ? 'مقروء' : 'Read') : (ar ? 'غير مقروء' : 'Unread'),
+        })),
+        lang, fileName: 'alerts-report.pdf', action,
+      });
+    } catch (e) { /* keep page silent-safe; error state below stays untouched */ }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/alerts">
-      <h2 className="text-lg font-semibold mb-4">{t('nav.alerts')}</h2>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h2 className="text-lg font-semibold">{t('nav.alerts')}</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!alerts?.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!alerts?.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
+        </div>
+      </div>
       {error && <div className="text-[#ef4444] text-sm">{error}</div>}
       {!alerts ? (
         <div className="text-[color:var(--tx-3)] text-sm">{t('common.loading')}</div>

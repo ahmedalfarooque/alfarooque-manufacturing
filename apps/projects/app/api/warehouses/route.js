@@ -4,10 +4,10 @@
    project) so the Sales Order line-item picker can assign a warehouse. */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();

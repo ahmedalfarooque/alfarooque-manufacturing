@@ -1,8 +1,21 @@
 'use strict';
 
-const { SMARTLIFE_RESOURCES, IntegrationConfigurationError, recordsFrom } = require('../../shared/integrationPlatform');
+const {
+  SMARTLIFE_RESOURCES,
+  SMARTLIFE_MISC_READ,
+  IntegrationConfigurationError,
+  recordsFrom,
+} = require('../../shared/integrationPlatform');
 
-const RESOURCES = SMARTLIFE_RESOURCES;
+/* account-balances is explicitly documented in the V3 specification, but is
+   outside the normal list-resource map. This only validates the local proxy
+   key; the request still goes to CRM's one central SmartERP route. */
+const RESOURCES = Object.freeze({
+  ...SMARTLIFE_RESOURCES,
+  'account-balances': SMARTLIFE_MISC_READ.accountBalances,
+  'product-balances': SMARTLIFE_MISC_READ.productsBalance,
+  'inventory-movements': SMARTLIFE_MISC_READ.inventoryMovements,
+});
 const SmartLifeConfigurationError = IntegrationConfigurationError;
 
 function endpointFor(resource, query = {}) {
@@ -50,12 +63,24 @@ async function readSmartLife(resource, credential, query = {}) {
       signal: controller.signal,
     });
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || `Central SmartERP service returned HTTP ${response.status}.`);
+    if (!response.ok) {
+      const error = new Error(payload.error || `Central SmartERP service returned HTTP ${response.status}.`);
+      error.centralPayload = payload;
+      /* Preserve the central proxy's permission_required flag (set when
+         SmartERP itself denies this module for the configured account) so
+         the caller can show "Permission required" instead of a generic
+         "connection unavailable" — see apps/crm's data/[resource] route. */
+      if (payload.permission_required) error.permissionRequired = true;
+      if (payload.endpoint_unavailable) error.endpointUnavailable = true;
+      if (payload.connection_error) error.connectionError = true;
+      throw error;
+    }
     const records = recordsFrom(payload.records || payload);
     return {
       records, providerPayload: payload,
       total: Number(payload.total) || records.length,
       page: Number(payload.page) || 0,
+      offset: Number(payload.offset) || 0,
       limit: Number(payload.limit) || 0,
     };
   } finally { clearTimeout(timeout); }

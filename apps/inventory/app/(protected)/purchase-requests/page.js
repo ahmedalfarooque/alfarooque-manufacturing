@@ -5,14 +5,14 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
 
 const REFRESH_MS = 20000;
 const STATUS_COLORS = { pending: 'text-amber-500 bg-amber-500/10', approved: 'text-emerald-500 bg-emerald-500/10', rejected: 'text-red-500 bg-red-500/10', ordered: 'text-blue-500 bg-blue-500/10' };
 const PRIORITY_COLORS = { low: 'text-slate-400', normal: 'text-[color:var(--tx-3)]', high: 'text-amber-500', urgent: 'text-red-500' };
 
 export default function PurchaseRequestsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null);
@@ -21,6 +21,7 @@ export default function PurchaseRequestsPage() {
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [rejectNote, setRejectNote] = useState('');
+  const [reportBusy, setReportBusy] = useState('');
 
   const params = new URLSearchParams({ page, limit: 50 });
   if (statusFilter) params.set('status', statusFilter);
@@ -109,12 +110,38 @@ export default function PurchaseRequestsPage() {
     } finally { setBusy(false); }
   }, [mutate, rejectNote, t]);
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.purchaseRequests') || 'Purchase Requests',
+        columns: [
+          { key: 'number', header: t('common.number') }, { key: 'title', header: t('common.title') },
+          { key: 'priority', header: t('pr.priority') }, { key: 'requestedBy', header: t('common.requestedBy') },
+          { key: 'status', header: t('common.status') }, { key: 'date', header: t('common.date') },
+        ],
+        rows: requests.map(r => ({
+          number: r.pr_number || r.id.slice(0, 8), title: r.title || '—', priority: trEnum(t, 'priority', r.priority),
+          requestedBy: r.platform_users?.full_name || '—', status: trEnum(t, 'prStatus', r.status),
+          date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '—',
+        })),
+        lang, fileName: 'purchase-requests-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/purchase-requests">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <GlassSelect value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={statusOptions} />
-        <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('pr.addRequest')}</button>
+        <div className="flex items-center gap-2">
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!requests.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!requests.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('pr.addRequest')}</button>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden">

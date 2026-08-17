@@ -42,7 +42,7 @@ async function readAnySession(req) {
 /* Settings and user management are admin-only; everything else is
    accessible to any authenticated user (per-action permission checks
    happen inside the API routes via lib/perms.js). */
-const ADMIN_ONLY_PREFIXES = ['/settings'];
+const ADMIN_ONLY_PREFIXES = ['/settings', '/users'];
 
 function redirectTo(req, path) {
   return NextResponse.redirect(new URL(req.nextUrl.basePath + path, req.url));
@@ -76,6 +76,6 @@ export const config = {
     '/reservations/:path*', '/transfers/:path*',
     '/purchase-requests/:path*', '/purchase-orders/:path*',
     '/goods-receipts/:path*', '/goods-issues/:path*',
-    '/reports/:path*', '/settings/:path*',
+    '/reports/:path*', '/settings/:path*', '/users/:path*',
   ],
 };

@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 const SORTS = {
   latest: { column: 'last_update', ascending: false },
@@ -11,7 +11,7 @@ const SORTS = {
 };
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const url = new URL(req.url);
@@ -43,7 +43,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

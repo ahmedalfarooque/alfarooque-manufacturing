@@ -36,6 +36,7 @@ export default function CataloguePage() {
   const [importResult, setImportResult] = useState(null);
   const [stale, setStale] = useState(null);        // { count, products } | null
   const [recalcBusy, setRecalcBusy] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
 
   const loadStale = useCallback(() => {
     fetch('/api/catalogue/stale', { credentials: 'same-origin' })
@@ -127,6 +128,28 @@ export default function CataloguePage() {
     load();
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.catalogue'),
+        columns: [
+          { key: 'code', header: t('f.code') }, { key: 'name', header: t('f.name') },
+          { key: 'category', header: t('catalogue.categorySub') }, { key: 'unit', header: t('f.unit') },
+          { key: 'price', header: t('catalogue.standardPrice') }, { key: 'cost', header: t('catalogue.lastCost') },
+        ],
+        rows: (rows || []).map(r => ({
+          code: r.code, name: name(r), category: r.category ? codeLabel(t, 'cat', r.category) : '—',
+          unit: codeLabel(t, 'u', r.unit), price: formatNumber(r.standard_price, { minimumFractionDigits: 2 }),
+          cost: r.last_calculated_cost != null ? formatNumber(r.last_calculated_cost, { minimumFractionDigits: 2 }) : '—',
+        })),
+        lang, fileName: 'catalogue-report.pdf', action,
+      });
+    } catch (e2) { setImportResult('⚠ ' + (e2.message || 'Could not generate report.')); }
+    finally { setReportBusy(''); }
+  }
+
   async function doImport(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -160,6 +183,8 @@ export default function CataloguePage() {
           <div className="flex-1" />
           <a href={'/api/export/products?template=1&lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.template')}</a>
           <a href={'/api/export/products?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!rows?.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!rows?.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={doImport} />
           <Button variant="ghost" disabled={importing} onClick={() => fileRef.current && fileRef.current.click()}>
             {importing ? t('common.importing') : '⇪ ' + t('common.importExcel')}

@@ -5,17 +5,18 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
 
 const REFRESH_MS = 20000;
 
 export default function TransfersPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ from_warehouse_id: '', to_warehouse_id: '', transfer_date: new Date().toISOString().slice(0, 10), items: [{ product_id: '', material_id: '', qty: 1 }] });
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data: td, mutate } = useLiveData(`/api/transfers?page=${page}&limit=50`, REFRESH_MS);
   const { data: wd } = useLiveData('/api/warehouses', 0);
@@ -72,10 +73,33 @@ export default function TransfersPage() {
     } finally { setBusy(false); }
   }, [form, mutate, t]);
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.transfers') || 'Transfers',
+        columns: [
+          { key: 'number', header: t('transfer.transferNumber') }, { key: 'from', header: t('transfer.from') },
+          { key: 'to', header: t('transfer.to') }, { key: 'date', header: t('transfer.transferDate') },
+          { key: 'receivedBy', header: t('common.receivedBy') },
+        ],
+        rows: transfers.map(r => ({
+          number: r.transfer_number || r.id.slice(0, 8), from: r.from?.name || '—', to: r.to?.name || '—',
+          date: r.transfer_date || '—', receivedBy: r.platform_users?.full_name || '—',
+        })),
+        lang, fileName: 'transfers-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/transfers">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!transfers.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!transfers.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
         <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('transfer.addTransfer')}</button>
       </div>
 

@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin, requireDelete } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin, requireDelete , requireAction } = require('@/lib/http');
 
 const BUCKET = 'project-documents';
 const MIME_BY_EXT = {
@@ -13,7 +13,7 @@ const MIME_BY_EXT = {
 };
 
 export async function GET(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();

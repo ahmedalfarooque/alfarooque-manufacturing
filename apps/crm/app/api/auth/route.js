@@ -64,8 +64,8 @@ export async function POST(req) {
     let role = user.role === 'admin' ? 'admin' : 'viewer';
     if (isSuperAdminEmail(email)) role = 'admin';
     else {
-      const { data: appRole } = await sb.from('crm_user_roles').select('role').eq('user_id', user.id).maybeSingle();
-      if (appRole) role = appRole.role;
+      const { data: appRole } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'crm').maybeSingle();
+      if (appRole) role = appRole.app_role;
     }
 
     await recordLoginAttempt(email, ip, true);
@@ -110,8 +110,8 @@ export async function POST(req) {
     let role = user.role === 'admin' ? 'admin' : 'viewer';
     if (isSuperAdminEmail(email)) role = 'admin';
     else {
-      const { data: appRole } = await sb.from('crm_user_roles').select('role').eq('user_id', user.id).maybeSingle();
-      if (appRole) role = appRole.role;
+      const { data: appRole } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'crm').maybeSingle();
+      if (appRole) role = appRole.app_role;
     }
 
     const sessionUser = { id: user.id, email: user.email, role };

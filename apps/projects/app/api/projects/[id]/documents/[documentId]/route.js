@@ -7,7 +7,7 @@
    Routing through our own domain sidesteps that entirely. */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
 
 const BUCKET = 'project-documents';
 
@@ -17,7 +17,7 @@ const MIME_BY_EXT = {
 };
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();

@@ -8,7 +8,7 @@
    the dictionary engine so the whole sheet reads in one language.     */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { buildXlsx, xlsxResponse, csvResponse } = require('@/lib/sheets');
 const { translate, hasArabic } = require('@/lib/translate');
 
@@ -93,7 +93,7 @@ const DEFS = {
 };
 
 export async function GET(req, { params }) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const def = DEFS[params.table];
   if (!def) return json({ error: 'Unknown export.' }, 404);

@@ -7,13 +7,13 @@
            %/amount) via the repo.
    DELETE → soft delete. Write permission required for PATCH/DELETE. */
 
-const { json, requireSession, requireWrite, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireWrite, requireDelete , requireAction } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 const { getDb } = require('@/lib/db');
 const repo = require('@/lib/contracts/repo');
 
 export async function GET(req, { params }) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   try {
     const contract = await repo.getContract(params.id);

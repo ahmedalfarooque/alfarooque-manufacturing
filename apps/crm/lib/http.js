@@ -25,10 +25,20 @@ async function requireDelete(req) {
   const session = readSession(req);
   if (!session) return { response: json({ error: 'Unauthorized.' }, 401) };
   const { getDb } = require('./db');
-  const { getDeleteAuthorization } = require('../../shared/authorization');
-  const authorization = await getDeleteAuthorization(getDb(), session, 'crm');
+  const { authorizeRequest } = require('../../shared/moduleAuthorization');
+  const authorization = await authorizeRequest(getDb(), session, 'crm', req, 'delete');
   if (!authorization.allowed) return { response: json({ error: 'Delete permission required.' }, 403) };
   return { session, authorization };
 }
 
-module.exports = { json, requireSession, requireDelete };
+async function requireAction(req, action) {
+  const session = readSession(req);
+  if (!session) return { response: json({ error: 'Unauthorized.' }, 401) };
+  const { getDb } = require('./db');
+  const { authorizeRequest } = require('../../shared/moduleAuthorization');
+  const authorization = await authorizeRequest(getDb(), session, 'crm', req, action);
+  if (!authorization.allowed) return { response: json({ error: `Permission required: ${action}.` }, 403) };
+  return { session, authorization };
+}
+
+module.exports = { json, requireSession, requireAction, requireDelete };

@@ -11,7 +11,7 @@
    URL the user already sees, so there is nothing left to keep in sync —
    preview and PDF are the same render, produced the same way. */
 
-const { requireSession } = require('@/lib/http');
+const { requireSession , requireAction } = require('@/lib/http');
 const { renderUrlToPdfBuffer } = require('@/lib/pdf/renderPdfServer');
 
 /* Node runtime required — puppeteer-core/@sparticuz/chromium launch a
@@ -23,7 +23,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 export async function GET(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
 
   const { id } = params;

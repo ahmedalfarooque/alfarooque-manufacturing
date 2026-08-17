@@ -1,10 +1,10 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin , requireAction } = require('@/lib/http');
 
 export async function GET(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -24,7 +24,7 @@ export async function GET(req, { params }) {
 }
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
 
   const sb = getDb();

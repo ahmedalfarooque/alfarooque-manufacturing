@@ -1,12 +1,12 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export async function GET(req) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
   if (session.role === 'external') return json({ error: 'Not permitted. Use /api/my-stats.' }, 403);
   const sb = getDb();

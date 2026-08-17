@@ -23,14 +23,16 @@ const ACCOUNTING_COOKIE = 'af_accounting_session';
 const SSO_COOKIE        = 'af_sso_session';
 const SUPER_ADMIN_EMAIL = 'arshad@alfarooque.com';
 
-const ROLES = ['admin', 'accountant', 'ap', 'ar', 'viewer'];
+const ROLES = ['admin', 'manager', 'sales', 'estimator', 'accountant', 'production', 'readonly'];
 
 const PERMS = {
   admin:      ['write', 'manage', 'approve', 'reports', 'admin'],
   accountant: ['write', 'approve', 'reports'],
-  ap:         ['write', 'reports'],
-  ar:         ['write', 'reports'],
-  viewer:     ['reports'],
+  manager:    ['write', 'approve', 'reports'],
+  sales:      ['reports'],
+  estimator:  ['reports'],
+  production: ['reports'],
+  readonly:   ['reports'],
 };
 
 const WRITE_ROLES = ROLES.filter(r => PERMS[r].includes('write'));
@@ -83,7 +85,7 @@ async function readSession(req) {
   const session = {
     id:    payload.sub   || payload.id   || null,
     email: payload.email || null,
-    role:  ROLES.includes(payload.role) ? payload.role : 'viewer',
+    role:  ROLES.includes(payload.role) ? payload.role : 'readonly',
   };
 
   /* Super-admin override: the master account is always treated as admin. */

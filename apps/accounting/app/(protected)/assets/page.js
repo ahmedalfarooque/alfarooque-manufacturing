@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
 
 const CATEGORIES = ['Equipment', 'Machinery', 'Vehicles', 'Furniture', 'Land', 'Buildings', 'Computers', 'Other'];
 const STATUSES = ['Active', 'Disposed', 'Under Maintenance', 'Fully Depreciated'];
@@ -15,12 +16,49 @@ export default function AssetsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ category: 'Equipment', useful_life_years: 5, depreciation_method: 'straight_line' });
   const [saving, setSaving] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const params = new URLSearchParams({ page, pageSize });
   if (category) params.set('category', category);
   const { data, refresh } = useLiveData(`/api/assets?${params}`, 0);
   const assets = data?.assets || [];
+
+  /* Same shared A4 report engine as the rest of Accounting. Walks every
+     server page (100 at a time) under the active category filter instead
+     of only exporting the currently visible page. */
+  async function fetchAllAssets() {
+    const all = [];
+    for (let p = 1, guard = 0; guard < 100; guard += 1) {
+      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
+      if (category) qp.set('category', category);
+      const res = await fetch(`/api/assets?${qp}`, { credentials: 'same-origin' });
+      const body = await res.json().catch(() => ({}));
+      const batch = Array.isArray(body.assets) ? body.assets : [];
+      all.push(...batch);
+      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      p += 1;
+    }
+    return all;
+  }
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = await fetchAllAssets();
+      await exportReportPdf({
+        title: 'Fixed Assets Report' + (category ? ` — ${category}` : ''),
+        columns: [
+          { key: 'name', header: 'Name' }, { key: 'category', header: 'Category' }, { key: 'purchase_date', header: 'Purchase Date' },
+          { key: 'costText', header: 'Cost' }, { key: 'bookValueText', header: 'Book Value' }, { key: 'status', header: 'Status' },
+        ],
+        rows: all.map(a => ({ ...a, costText: `SAR ${fmt(a.purchase_cost)}`, bookValueText: `SAR ${fmt(a.current_book_value)}` })),
+        totals: [['Assets exported', String(all.length)], ['Total book value', `SAR ${fmt(all.reduce((s, a) => s + Number(a.current_book_value || 0), 0))}`]],
+        fileName: 'assets-report.pdf', action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   async function createAsset() {
     setSaving(true);
@@ -62,6 +100,8 @@ export default function AssetsPage() {
             <option value="">All Categories</option>
             {CATEGORIES.map(c => <option key={c}>{c}</option>)}
           </GlassSelect>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">

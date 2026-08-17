@@ -1,0 +1,84 @@
+'use strict';
+
+function first(record, keys) {
+  for (const key of keys) {
+    const value = record?.[key];
+    if (value !== undefined && value !== null && value !== '') return value;
+  }
+  return null;
+}
+
+function roundMoney(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+function dateKey(value) {
+  if (!value) return null;
+  const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : null;
+}
+
+function normalizeFinancialDocument(resource, record) {
+  const total = roundMoney(first(record, ['grand_total', 'total_amount', 'total', 'net_total', 'amount']));
+  const paid = roundMoney(first(record, ['paid_amount', 'amount_paid', 'paid', 'payment_total']));
+  const balanceValue = first(record, ['balance_amount', 'remaining_balance', 'balance', 'due_amount']);
+  return {
+    id: String(first(record, ['id', 'invoice_id', 'uuid', 'reference_no', 'number', 'invoice_number', 'reference']) || ''),
+    reference: String(first(record, ['reference_no', 'invoice_number', 'number', 'reference', 'code']) || ''),
+    date: dateKey(first(record, ['invoice_date', 'date', 'created_at'])),
+    party: String(first(record, resource === 'purchases'
+      ? ['supplier', 'supplier_name', 'party_name']
+      : ['customer', 'customer_name', 'party_name']) || ''),
+    subtotal: roundMoney(first(record, ['subtotal', 'sub_total', 'net_amount', 'total'])),
+    vat: roundMoney(first(record, ['total_tax', 'vat_amount', 'tax_amount', 'vat', 'tax'])),
+    total,
+    paid,
+    balance: balanceValue == null ? roundMoney(Math.max(total - paid, 0)) : roundMoney(balanceValue),
+    currency: String(first(record, ['currency', 'currency_code']) || 'SAR'),
+  };
+}
+
+function matchesPeriod(value, month = 'all', year = 'all') {
+  const date = dateKey(value);
+  if (!date) return month === 'all' && year === 'all';
+  const [recordYear, recordMonth] = date.split('-');
+  if (year !== 'all' && recordYear !== String(year)) return false;
+  if (month !== 'all' && Number(recordMonth) !== Number(month)) return false;
+  return true;
+}
+
+function periodLabel(month = 'all', year = 'all') {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  if (month === 'all' && year === 'all') return 'All available dates';
+  if (month === 'all') return String(year);
+  const name = months[Number(month) - 1] || `Month ${month}`;
+  return year === 'all' ? `${name} · all years` : `${name} ${year}`;
+}
+
+function buildVatReport(salesRecords, purchaseRecords, month = 'all', year = 'all') {
+  const sales = (salesRecords || []).map(r => normalizeFinancialDocument('sales-invoices', r)).filter(r => matchesPeriod(r.date, month, year));
+  const purchases = (purchaseRecords || []).map(r => normalizeFinancialDocument('purchases', r)).filter(r => matchesPeriod(r.date, month, year));
+  const rows = [
+    ...sales.map(r => ({ ...r, type: 'Sale', vatDirection: 'Output VAT' })),
+    ...purchases.map(r => ({ ...r, type: 'Purchase', vatDirection: 'Input VAT' })),
+  ].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || String(b.id).localeCompare(String(a.id)));
+  const sum = (items, key) => roundMoney(items.reduce((total, row) => total + (Number(row[key]) || 0), 0));
+  const salesVat = sum(sales, 'vat');
+  const purchaseVat = sum(purchases, 'vat');
+  return {
+    period: { month, year, label: periodLabel(month, year) },
+    summary: {
+      sales: sum(sales, 'total'),
+      salesVat,
+      purchases: sum(purchases, 'total'),
+      purchaseVat,
+      netVat: roundMoney(salesVat - purchaseVat),
+      salesCount: sales.length,
+      purchaseCount: purchases.length,
+    },
+    rows,
+    availableYears: [...new Set(rows.map(r => r.date?.slice(0, 4)).filter(Boolean))].sort((a, b) => b.localeCompare(a)),
+  };
+}
+
+module.exports = { first, roundMoney, dateKey, normalizeFinancialDocument, matchesPeriod, periodLabel, buildVatReport };

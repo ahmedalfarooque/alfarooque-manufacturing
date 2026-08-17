@@ -7,7 +7,7 @@
 
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin , requireAction } = require('@/lib/http');
 
 const BUCKET = 'project-documents';
 const MAX_BYTES = 20 * 1024 * 1024; // 20MB
@@ -20,7 +20,7 @@ const ALLOWED_TYPES = [
 ];
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
 
   const sb = getDb();
@@ -36,7 +36,7 @@ export async function POST(req, { params }) {
   if (file.type && !ALLOWED_TYPES.includes(file.type)) return json({ error: 'Unsupported file type.' }, 400);
 
   const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
-  const path = `${pr.project_id}/purchase-requests/${params.id}/${crypto.randomUUID()}.${ext}`;
+  const path = `${pr.project_id || 'unassigned'}/purchase-requests/${params.id}/${crypto.randomUUID()}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadErr } = await sb.storage.from(BUCKET).upload(path, buf, { contentType: file.type || 'application/octet-stream' });

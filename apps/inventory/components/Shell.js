@@ -6,11 +6,11 @@ import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
 import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
+import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
 
 const NAV = [
   { href: '/dashboard',        key: 'nav.dashboard',       icon: 'dashboard' },
   { href: '/products',         key: 'nav.products',        icon: 'package' },
-  { href: '/materials',        key: 'nav.materials',       icon: 'layers' },
   { href: '/categories',       key: 'nav.categories',      icon: 'tag' },
   { href: '/suppliers',        key: 'nav.suppliers',       icon: 'building' },
   { href: '/warehouses',       key: 'nav.warehouses',      icon: 'warehouse' },
@@ -25,6 +25,7 @@ const NAV = [
   { href: '/goods-issues',     key: 'nav.goodsIssues',     icon: 'door' },
   { href: '/reports',          key: 'nav.reports',         icon: 'bar-chart' },
   { href: '/settings',         key: 'nav.settings',        icon: 'settings' },
+  { href: '/users',            key: 'Users',               icon: 'users', adminOnly: true },
 ];
 
 export default function Shell({ children, active }) {
@@ -77,6 +78,7 @@ export default function Shell({ children, active }) {
 
   return (
     <div className="min-h-screen flex text-[color:var(--tx)]">
+      <ModuleActionVisibility />
       {/* Sidebar */}
       <aside className={
         'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
@@ -104,7 +106,7 @@ export default function Shell({ children, active }) {
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
-          {NAV.map(item => (
+          {NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
             <a key={item.href} href={item.href}
               className={
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ' +
@@ -112,15 +114,10 @@ export default function Shell({ children, active }) {
                   ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] shadow-[inset_0_0_0_1px_rgba(6,182,212,0.28)]'
                   : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
               }>
-              <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.key)}
+              <GlassIcon name={item.icon} size={20} className="shrink-0" />{item.key === 'Users' ? 'Users' : t(item.key)}
             </a>
           ))}
         </nav>
-        <div className="p-3">
-          <button onClick={logout} className="w-full gbtn gbtn-ghost justify-start">
-            <GlassIcon name="logout" size={18} className="shrink-0" />{t('shell.logout')}
-          </button>
-        </div>
       </aside>
 
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
@@ -140,7 +137,7 @@ export default function Shell({ children, active }) {
               placeholder={t('shell.searchPlaceholder')}
               className="ginput"
             />
-            {results && (results.products?.length > 0 || results.materials?.length > 0 || results.suppliers?.length > 0) && (
+            {results && (results.products?.length > 0 || results.suppliers?.length > 0) && (
               <div className="glass-card absolute top-full mt-1 start-0 end-0 max-h-80 overflow-y-auto z-30">
                 {results.products?.length > 0 && (
                   <div>
@@ -149,17 +146,6 @@ export default function Shell({ children, active }) {
                       <a key={p.id} href={'/products/' + p.id} className="block px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)]">
                         <div className="font-medium">{p.name}</div>
                         <div className="text-xs text-[color:var(--tx-4)]">{p.sku || '—'}</div>
-                      </a>
-                    ))}
-                  </div>
-                )}
-                {results.materials?.length > 0 && (
-                  <div>
-                    <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">{t('shell.searchMaterials')}</div>
-                    {results.materials.map(m => (
-                      <a key={m.id} href={'/materials/' + m.id} className="block px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)]">
-                        <div className="font-medium">{m.name}</div>
-                        <div className="text-xs text-[color:var(--tx-4)]">{m.code || '—'}</div>
                       </a>
                     ))}
                   </div>
@@ -185,6 +171,10 @@ export default function Shell({ children, active }) {
             </button>
             <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
               <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
+            </button>
+            <button onClick={logout} className="glass-ctrl">
+              <GlassIcon name="logout" size={16} className="ctrl-icon" />
+              <span className="ctrl-label">{t('shell.logout')}</span>
             </button>
           </div>
         </header>

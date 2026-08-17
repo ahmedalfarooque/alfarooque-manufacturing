@@ -45,10 +45,21 @@ async function requireDelete(req) {
   const session = readSession(req);
   if (!session) return { response: json({ error: 'Not authenticated.' }, 401) };
   const { getDb } = require('./db');
-  const { getDeleteAuthorization } = require('../../shared/authorization');
-  const authorization = await getDeleteAuthorization(getDb(), session, 'projects');
+  const { authorizeRequest } = require('../../shared/moduleAuthorization');
+  const authorization = await authorizeRequest(getDb(), session, 'projects', req, 'delete');
   if (!authorization.allowed) return { response: json({ error: 'Delete permission required.' }, 403) };
   return { session, authorization };
 }
 
-module.exports = { json, requireSession, isAssignedOrAdmin, requireDelete };
+async function requireAction(req, action) {
+  setRequestIp(req);
+  const session = readSession(req);
+  if (!session) return { response: json({ error: 'Not authenticated.' }, 401) };
+  const { getDb } = require('./db');
+  const { authorizeRequest } = require('../../shared/moduleAuthorization');
+  const authorization = await authorizeRequest(getDb(), session, 'projects', req, action);
+  if (!authorization.allowed) return { response: json({ error: `Permission required: ${action}.` }, 403) };
+  return { session, authorization };
+}
+
+module.exports = { json, requireSession, requireAction, isAssignedOrAdmin, requireDelete };

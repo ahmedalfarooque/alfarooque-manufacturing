@@ -52,9 +52,11 @@ export default function QuotationEditorPage() {
   const [catQ, setCatQ] = useState('');
   const dCatQ = useDebouncedValue(catQ, 250);
   const [catRows, setCatRows] = useState([]);
+  const [catIntegration, setCatIntegration] = useState(null);
   const [custQ, setCustQ] = useState('');
   const dCustQ = useDebouncedValue(custQ, 250);
   const [custRows, setCustRows] = useState([]);
+  const [custIntegration, setCustIntegration] = useState(null);
   const [custOpen, setCustOpen] = useState(false);
   const [pickedCustomer, setPickedCustomer] = useState(null); // full bilingual row, for instant re-display on language switch
   const [tabByProduct, setTabByProduct] = useState({});
@@ -122,14 +124,40 @@ export default function QuotationEditorPage() {
   /* ── Catalogue & customer pickers ── */
   useEffect(() => {
     if (!addOpen) return;
-    fetch(`/api/catalogue?q=${encodeURIComponent(dCatQ)}&page=1`, { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : { rows: [] }).then(d => setCatRows(d.rows || [])).catch(() => {});
+    Promise.all([
+      fetch(`/api/catalogue?q=${encodeURIComponent(dCatQ)}&page=1`, { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : { rows: [] }),
+      fetch(`/api/smartlife/products?search=${encodeURIComponent(dCatQ)}&offset=0&limit=25`, { credentials: 'same-origin' })
+        .then(r => r.json().catch(() => ({ records: [], source: 'LOCAL' }))),
+    ]).then(([local, smart]) => {
+      const smartLocalIds = new Set((smart.records || []).map(row => row.local_record_id).filter(Boolean));
+      const rows = (local.rows || []).map(row => smartLocalIds.has(row.id) ? { ...row, _source: smart.source } : row);
+      for (const row of smart.records || []) {
+        if (!row.local_record_id) rows.push({ ...row, id: `smartlife:${row.source_record_id}`, _smartlife: true, _source: smart.source });
+      }
+      setCatRows(rows);
+      setCatIntegration(smart.permission_required && !(smart.records || []).length ? 'PERMISSION REQUIRED'
+        : smart.source === 'LIVE' ? 'LIVE' : smart.source === 'SNAPSHOT' ? 'SNAPSHOT' : 'LOCAL');
+    }).catch(() => { setCatIntegration('LOCAL'); });
   }, [dCatQ, addOpen]);
 
   useEffect(() => {
     if (!custOpen) return;
-    fetch(`/api/customers?q=${encodeURIComponent(dCustQ)}&page=1`, { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : { rows: [] }).then(d => setCustRows(d.rows || [])).catch(() => {});
+    Promise.all([
+      fetch(`/api/customers?q=${encodeURIComponent(dCustQ)}&page=1`, { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : { rows: [] }),
+      fetch(`/api/smartlife/customers?search=${encodeURIComponent(dCustQ)}&offset=0&limit=25`, { credentials: 'same-origin' })
+        .then(r => r.json().catch(() => ({ records: [], source: 'LOCAL' }))),
+    ]).then(([local, smart]) => {
+      const smartLocalIds = new Set((smart.records || []).map(row => row.local_record_id).filter(Boolean));
+      const rows = (local.rows || []).map(row => smartLocalIds.has(row.id) ? { ...row, _source: smart.source } : row);
+      for (const row of smart.records || []) {
+        if (!row.local_record_id) rows.push({ ...row, id: `smartlife:${row.source_record_id}`, _smartlife: true, _source: smart.source });
+      }
+      setCustRows(rows);
+      setCustIntegration(smart.permission_required && !(smart.records || []).length ? 'PERMISSION REQUIRED'
+        : smart.source === 'LIVE' ? 'LIVE' : smart.source === 'SNAPSHOT' ? 'SNAPSHOT' : 'LOCAL');
+    }).catch(() => { setCustIntegration('LOCAL'); });
   }, [dCustQ, custOpen]);
 
   /* ── Local totals (instant) ── */
@@ -196,6 +224,17 @@ export default function QuotationEditorPage() {
   }
 
   async function addFromCatalogue(c) {
+    if (c._smartlife) {
+      const imported = await fetch('/api/smartlife/import', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify({ resource: 'products', source_record_id: c.source_record_id }),
+      }).then(async r => ({ ok: r.ok, data: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, data: {} }));
+      if (!imported.ok || !imported.data.row) {
+        setStatusMsg('⚠ ' + (imported.data.error || 'Could not import the synchronized SmartLife product.'));
+        return;
+      }
+      c = imported.data.row;
+    }
     /* Snapshot the catalogue product incl. its cost model + base dims. */
     let lines = [];
     let params = { ...DEFAULT_PARAMS };
@@ -223,6 +262,24 @@ export default function QuotationEditorPage() {
     }]);
     setAddOpen(false); setCatQ('');
     touch();
+  }
+
+  async function chooseCustomer(c) {
+    if (c._smartlife) {
+      const imported = await fetch('/api/smartlife/import', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify({ resource: 'customers', source_record_id: c.source_record_id }),
+      }).then(async r => ({ ok: r.ok, data: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, data: {} }));
+      if (!imported.ok || !imported.data.row) {
+        setStatusMsg('⚠ ' + (imported.data.error || 'Could not import the synchronized SmartLife customer.'));
+        return;
+      }
+      c = imported.data.row;
+    }
+    patchDoc({ customer_id: c.id });
+    setPickedCustomer(c);
+    setCustQ(custName(c));
+    setCustOpen(false);
   }
 
   /* Dynamic size pricing (spec §8): editing a dimension rescales the
@@ -447,13 +504,15 @@ export default function QuotationEditorPage() {
                 <div className="absolute z-30 mt-1 w-full glass-card shadow-xl max-h-56 overflow-y-auto">
                   {custRows.slice(0, 8).map(c => (
                     <button key={c.id} type="button"
-                      onClick={() => { patchDoc({ customer_id: c.id }); setPickedCustomer(c); setCustQ(custName(c)); setCustOpen(false); }}
+                      onClick={() => chooseCustomer(c)}
                       className="w-full text-start px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)] border-b border-[color:var(--bd)]">
                       {custName(c)} <span className="text-[11px] text-[color:var(--tx-3)]" dir="ltr">{c.phone}</span>
+                      {c._source && <span className="ms-2 text-[10px] font-semibold text-brand-500">{c._source}</span>}
                     </button>
                   ))}
                 </div>
               )}
+              {custIntegration && <div className="mt-1 text-[10px] text-[color:var(--tx-3)]">SmartLife: {custIntegration} · Local shared customers remain available</div>}
             </Field>
             <Field label={t('quote.date')}>
               <Input type="date" disabled={!editable} value={doc.quote_date || ''} onChange={e => patchDoc({ quote_date: e.target.value })} />
@@ -667,11 +726,12 @@ export default function QuotationEditorPage() {
                   <span className="text-sm font-medium truncate">{trL(c, 'name')}</span>
                   <span className="text-sm whitespace-nowrap" dir="ltr">{money(c.standard_price)} {t('common.currencyUnit')} / {c.unit}</span>
                 </div>
-                <div className="text-[11px] text-[color:var(--tx-3)]">{codeLabel(t, 'cat', c.category)} · {c.code}</div>
+                <div className="text-[11px] text-[color:var(--tx-3)]">{codeLabel(t, 'cat', c.category)} · {c.code}{c._source ? ` · ${c._source}` : ''}</div>
               </button>
             ))}
             {catRows.length === 0 && <div className="py-8 text-center text-sm text-[color:var(--tx-3)]">{t('common.noRecords')}</div>}
           </div>
+          {catIntegration && <div className="pt-2 text-[10px] text-[color:var(--tx-3)]">SmartLife catalogue: {catIntegration} · Quotation lines remain local snapshots</div>}
           <div className="pt-3 flex justify-end">
             <Button variant="ghost" onClick={addDetailed}>+ {t('quote.addDetailed')}</Button>
           </div>

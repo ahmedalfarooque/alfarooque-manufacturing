@@ -133,7 +133,7 @@ export default function PurchaseRequestsPage() {
   /* Standardized A4 report PDF — shared engine (lib/reportPdf.js).
      Exports exactly the same rows and columns as the Excel/CSV export
      above, so both formats always carry identical data. */
-  async function exportPdf() {
+  async function buildReport(action) {
     const ar = lang === 'ar';
     const { exportReportPdf } = await import('@/lib/reportPdf');
     await exportReportPdf({
@@ -150,10 +150,14 @@ export default function PurchaseRequestsPage() {
       rows,
       lang,
       fileName: 'purchase-requests-report.pdf',
+      action,
     });
   }
 
-  function printReport() { window.print(); }
+  function exportPdf() { return buildReport('save'); }
+  /* Opens the same generated PDF in a new tab instead of window.print() on
+     the live app page — printing used to capture the sidebar/topbar too. */
+  function printReport() { return buildReport('print'); }
 
   if (!isAdmin && me) return <Shell active="/purchase-requests"><div className="text-red-500 text-sm">{t('pr.adminOnly')}</div></Shell>;
 

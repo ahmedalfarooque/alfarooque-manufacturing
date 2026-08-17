@@ -20,19 +20,44 @@ export const SO_STATUS_BADGE = {
 function money(n, c) { return `${c || 'SAR'} ${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`; }
 
 export default function SalesOrdersPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [status, setStatus] = useState('All');
   const [modal, setModal] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
   const { data, error, refresh } = useLiveData('/api/sales-orders', REFRESH_MS);
   const rows = data?.salesOrders || [];
 
   const filtered = useMemo(() => status === 'All' ? rows : rows.filter(r => r.status === status), [rows, status]);
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('so.title'),
+        columns: [
+          { key: 'number', header: t('so.col.number') }, { key: 'customer', header: t('so.col.customer') },
+          { key: 'total', header: t('so.col.total') }, { key: 'status', header: t('so.col.status') }, { key: 'date', header: t('so.col.date') },
+        ],
+        rows: filtered.map(r => ({
+          number: r.so_number || r.id.slice(0, 8), customer: r.customer_name, total: money(r.total_amount, r.currency),
+          status: trEnum(t, 'status', r.status), date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '—',
+        })),
+        lang, fileName: 'sales-orders-report.pdf', action,
+      });
+    } catch (e2) { /* no local error slot on this page; report is best-effort */ }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/sales-orders">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h2 className="text-lg font-semibold">{t('so.title')}</h2>
-        <Button onClick={() => setModal(true)}>{t('so.new')}</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!filtered.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!filtered.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
+          <Button onClick={() => setModal(true)}>{t('so.new')}</Button>
+        </div>
       </div>
 
       <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">

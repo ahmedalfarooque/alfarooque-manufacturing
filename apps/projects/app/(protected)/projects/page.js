@@ -89,7 +89,7 @@ export default function ProjectsPage() {
      the existing list API (pages of 100 — the API's max) so the PDF
      carries the same complete dataset as the Excel export, with the
      same columns. No API changes. */
-  async function exportPdf() {
+  async function buildReport(action) {
     const all = [];
     for (let p = 1; p <= 200; p++) {
       const res = await fetch('/api/projects?' + new URLSearchParams({ status: 'All', page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
@@ -114,10 +114,14 @@ export default function ProjectsPage() {
       rows: all,
       lang,
       fileName: 'projects-report.pdf',
+      action,
     });
   }
 
-  function printReport() { window.print(); }
+  function exportPdf() { return buildReport('save'); }
+  /* Opens the same generated PDF in a new tab instead of window.print() on
+     the live app page — printing used to capture the sidebar/topbar too. */
+  function printReport() { return buildReport('print'); }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -158,6 +162,9 @@ export default function ProjectsPage() {
                 <Th><span onClick={() => toggleSort('customer_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.customer')}<SortIndicator column="customer_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
                 <Th><span onClick={() => toggleSort('company_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.company')}<SortIndicator column="company_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
                 <Th><span onClick={() => toggleSort('project_name')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.project')}<SortIndicator column="project_name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th className="text-end"><span onClick={() => toggleSort('value')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('pd.fin.projectValue') === 'pd.fin.projectValue' ? 'Value' : t('pd.fin.projectValue')}<SortIndicator column="value" sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                <Th className="text-end">{t('pd.fin.paidAmount') === 'pd.fin.paidAmount' ? 'Paid' : t('pd.fin.paidAmount')}</Th>
+                <Th className="text-end">{t('pd.fin.balanceToPay') === 'pd.fin.balanceToPay' ? 'Balance' : t('pd.fin.balanceToPay')}</Th>
                 <Th>{t('projects.col.assignedUsers')}</Th>
                 <Th><span onClick={() => toggleSort('start_date')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.start')}<SortIndicator column="start_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
                 <Th><span onClick={() => toggleSort('end_date')} className="cursor-pointer select-none inline-flex items-center gap-1 hover:text-[#5b5a52] dark:hover:text-white/80">{t('projects.col.end')}<SortIndicator column="end_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
@@ -168,9 +175,9 @@ export default function ProjectsPage() {
             </thead>
             <tbody>
               {!data ? (
-                <tr><td colSpan={10} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
+                <tr><td colSpan={13} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={10}><EmptyState text={t('projects.noMatch')} /></td></tr>
+                <tr><td colSpan={13}><EmptyState text={t('projects.noMatch')} /></td></tr>
               ) : rows.map((p, i) => (
                 <tr key={p.id} className="cursor-pointer transition-colors duration-150 hover:bg-[color:var(--pr-soft)]"
                   onClick={() => { window.location.href = '/projects/' + p.id; }}>
@@ -178,6 +185,9 @@ export default function ProjectsPage() {
                   <Td className="font-medium">{p.customer_name}</Td>
                   <Td>{p.company_name || '—'}</Td>
                   <Td className="max-w-[220px] truncate">{p.project_name}</Td>
+                  <Td className="text-end whitespace-nowrap">{p.value != null ? Number(p.value).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</Td>
+                  <Td className="text-end whitespace-nowrap">{Number(p.paid_amount||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</Td>
+                  <Td className="text-end whitespace-nowrap">{Number(p.balance_to_pay||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</Td>
                   <Td><AssigneeChips assignees={p.assignees} /></Td>
                   <Td>{p.start_date || '—'}</Td>
                   <Td>{p.end_date || '—'}</Td>

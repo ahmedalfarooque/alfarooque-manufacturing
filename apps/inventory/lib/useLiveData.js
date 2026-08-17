@@ -17,9 +17,14 @@ export function useLiveData(url, intervalMs) {
     try {
       const res = await fetch(url, { credentials: 'same-origin' });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Request failed');
+      /* A non-2xx response still carries a real body (e.g. `connected:false,
+         permission_required:true`) that callers need to render a specific
+         state — discarding it and keeping only a string in `error` meant
+         any such distinction from a server route was invisible to the UI.
+         Surface the body as `data` either way; `error` is reserved for
+         cases where the server sent no usable body at all. */
       setData(body);
-      setError(null);
+      setError(res.ok ? null : (body?.error || 'Request failed'));
     } catch (e) {
       setError(e.message);
     }

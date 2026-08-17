@@ -18,6 +18,9 @@ export async function PUT(req, { params }) {
   if (response) return response;
   const sb = getDb();
 
+  const { data: existing } = await sb.from('inv_warehouses').select('id').eq('id', params.id).maybeSingle();
+  if (!existing) return json({ error: 'This warehouse is sourced from SmartLife and cannot be edited here.' }, 403);
+
   const body = await req.json().catch(() => ({}));
   const { error } = await sb.from('inv_warehouses').update({
     name: body.name,
@@ -35,6 +38,9 @@ export async function DELETE(req, { params }) {
   const { response, session } = await requireDelete(req);
   if (response) return response;
   const sb = getDb();
+
+  const { data: existing } = await sb.from('inv_warehouses').select('id').eq('id', params.id).maybeSingle();
+  if (!existing) return json({ error: 'This warehouse is sourced from SmartLife and cannot be edited here.' }, 403);
 
   const { error } = await sb.from('inv_warehouses').update({ is_active: false }).eq('id', params.id);
   if (error) return json({ error: 'Could not deactivate warehouse.' }, 500);

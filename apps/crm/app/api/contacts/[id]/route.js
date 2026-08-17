@@ -1,8 +1,8 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
-const { readSmartLife } = require('../../../../../shared/integrationPlatform');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
+const { readSmartLife, classifySmartErpError } = require('../../../../../shared/integrationPlatform');
 
 const EDITABLE = ['name', 'email', 'phone', 'company', 'job_title', 'contact_type', 'source', 'address', 'notes', 'tags', 'assigned_to', 'status'];
 
@@ -11,7 +11,7 @@ const phone = value => String(value || '').replace(/\D/g, '');
 const amount = value => Number(value || 0) || 0;
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -40,7 +40,65 @@ export async function GET(req, { params }) {
     projectIds.length ? sb.from('pm_projects').select('id,project_name,status,progress_percent,created_at,quotation_id').in('id', projectIds).order('created_at', { ascending: false }) : Promise.resolve({ data: [] }),
   ]);
 
-  let smartErp = { connected: false, customers: [], suppliers: [], invoices: [], summary: { invoiced: 0, paid: 0, outstanding: 0 } };
+  /* Sales Orders live in ProTrack (`sales_orders`), keyed to a quotation
+     (quotation_id → qt_quotations.id), not directly to a customer — so this
+     customer's orders are found via the quotation ids already resolved above.
+     Read-only join across apps, same pattern as quotations/projects. */
+  const quotationIds = (quotations.data || []).map(q => q.id).filter(Boolean);
+  const salesOrders = quotationIds.length
+    ? await sb.from('sales_orders').select('id,so_number,status,total_amount,currency,created_at,project_id,quotation_id').in('quotation_id', quotationIds).order('created_at', { ascending: false })
+    : { data: [] };
+  if (salesOrders.error) console.error('[crm/customer360] sales_orders lookup failed:', salesOrders.error.message);
+
+  /* Customer-360 must remain useful when SmartERP denies live module access.
+     The synchronized source table is local, read-only snapshot data already
+     owned by the central integration. Match explicit SmartERP mappings first,
+     then exact customer/company names as a conservative legacy fallback. */
+  const mappedSmartErpIds = [...new Set(mappings
+    .filter(mapping => ['smartlife', 'smarterp'].includes(clean(mapping.source_system)))
+    .map(mapping => String(mapping.source_record_id))
+    .filter(Boolean))];
+  const partyNames = [...new Set([data.name, data.company, data.full_name, data.company_name]
+    .map(value => String(value || '').trim())
+    .filter(Boolean))];
+  const financialQueries = [];
+  const financialSelect = 'id,external_id,source_reference,party_name,record_date,due_date,currency,total_amount,paid_amount,balance_amount,source_status,last_synced_at,raw_payload';
+  if (mappedSmartErpIds.length) {
+    financialQueries.push(sb.from('erp_financial_source_records').select(financialSelect)
+      .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife').eq('record_type', 'sales_invoice')
+      .in('raw_payload->>customer_id', mappedSmartErpIds));
+  } else if (partyNames.length) {
+    /* Exact-name matching is only a fallback for legacy customers that have
+       no explicit mapping yet. Once a source ID exists, never widen the match
+       by name and risk combining two customers with the same display name. */
+    financialQueries.push(sb.from('erp_financial_source_records').select(financialSelect)
+      .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife').eq('record_type', 'sales_invoice')
+      .in('party_name', partyNames));
+  }
+  const financialResults = await Promise.all(financialQueries);
+  const snapshotById = new Map();
+  for (const result of financialResults) {
+    if (result.error) console.error('[crm/customer360] synchronized finance lookup failed:', result.error.message);
+    for (const record of result.data || []) snapshotById.set(record.id, record);
+  }
+  const snapshotInvoices = [...snapshotById.values()].sort((a, b) => String(b.record_date || '').localeCompare(String(a.record_date || '')));
+  const snapshotSummary = snapshotInvoices.reduce((summary, record) => ({
+    invoiced: summary.invoiced + amount(record.total_amount),
+    paid: summary.paid + amount(record.paid_amount),
+    outstanding: summary.outstanding + amount(record.balance_amount),
+  }), { invoiced: 0, paid: 0, outstanding: 0 });
+
+  /* `status` mirrors the same taxonomy used by Accounting's SmartERP UI
+     (connected / permission_required / endpoint_or_version_mismatch /
+     connection_error / other_error) so this card can say "Permission
+     required" instead of a generic "Offline" once the badge below reads it. */
+  let smartErp = {
+    connected: false,
+    status: 'pending',
+    source: snapshotInvoices.length ? 'synchronized_snapshot' : 'none',
+    customers: [], suppliers: [], invoices: snapshotInvoices, summary: snapshotSummary,
+    lastSyncedAt: snapshotInvoices[0]?.last_synced_at || null,
+  };
   try {
     const [customerResult, supplierResult, salesResult] = await Promise.all([
       readSmartLife(sb, 'customers'),
@@ -58,16 +116,21 @@ export async function GET(req, { params }) {
     const invoices = salesResult.records.filter(record => externalIds.has(String(record?.customer_id)) || names.has(clean(record?.customer)));
     const invoiced = invoices.reduce((sum, record) => sum + amount(record?.grand_total ?? record?.total_amount ?? record?.total), 0);
     const paid = invoices.reduce((sum, record) => sum + amount(record?.paid), 0);
-    smartErp = { connected: true, customers, suppliers, invoices, summary: { invoiced, paid, outstanding: Math.max(0, invoiced - paid) } };
-  } catch (_) {
-    // Customer 360 remains available when the external read-only service is offline.
+    smartErp = {
+      connected: true, status: 'connected', source: 'live', customers, suppliers, invoices,
+      summary: { invoiced, paid, outstanding: Math.max(0, invoiced - paid) },
+      lastSyncedAt: snapshotInvoices[0]?.last_synced_at || null,
+    };
+  } catch (smartErpError) {
+    // Customer 360 remains available when the external read-only service is degraded — just classify why.
+    smartErp.status = classifySmartErpError(smartErpError);
   }
 
-  return json({ contact: data, deals: deals.data || [], activities: activities.data || [], customer360: { identity, mappings, timeline: timeline.data || [], quotations: quotations.data || [], projects: projects.data || [], smartErp } });
+  return json({ contact: data, deals: deals.data || [], activities: activities.data || [], customer360: { identity, mappings, timeline: timeline.data || [], quotations: quotations.data || [], projects: projects.data || [], salesOrders: salesOrders.data || [], smartErp } });
 }
 
 export async function PATCH(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'edit');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

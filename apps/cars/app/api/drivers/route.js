@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 const EDITABLE = [
   'full_name', 'full_name_ar', 'employee_id', 'phone', 'whatsapp', 'email', 'nationality',
@@ -13,7 +13,7 @@ const EDITABLE = [
 ];
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const url = new URL(req.url);
@@ -31,7 +31,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

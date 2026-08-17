@@ -4,11 +4,11 @@
    automatically by the quotation contract transition; this endpoint uses
    the same idempotent workflow and cannot bypass Production/customer rules. */
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { createProjectForQuotation } = require('../../../../../../shared/quotationProjectWorkflow');
 
 export async function POST(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
   const sb = getDb();
   const { data: requestRow } = await sb.from('project_requests').select('quotation_id').eq('id', params.id).maybeSingle();

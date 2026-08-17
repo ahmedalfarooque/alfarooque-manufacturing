@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
 
@@ -14,6 +15,7 @@ export default function BankingPage() {
   const [showTxForm, setShowTxForm] = useState(false);
   const [txForm, setTxForm] = useState({ transaction_type: 'credit' });
   const [saving, setSaving] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const { data: bankData, refresh: refreshAccounts } = useLiveData('/api/banking', 0);
@@ -23,6 +25,47 @@ export default function BankingPage() {
   if (selectedAccount) txParams.set('account_id', selectedAccount);
   const { data: txData, refresh: refreshTx } = useLiveData(`/api/banking/transactions?${txParams}`, 15000);
   const transactions = txData?.transactions || [];
+
+  /* Same shared A4 report engine as the rest of Accounting. Walks every
+     server page (100 at a time) under the currently selected account
+     instead of only exporting the currently visible page. */
+  async function fetchAllTransactions() {
+    const all = [];
+    for (let p = 1, guard = 0; guard < 100; guard += 1) {
+      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
+      if (selectedAccount) qp.set('account_id', selectedAccount);
+      const res = await fetch(`/api/banking/transactions?${qp}`, { credentials: 'same-origin' });
+      const body = await res.json().catch(() => ({}));
+      const batch = Array.isArray(body.transactions) ? body.transactions : [];
+      all.push(...batch);
+      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      p += 1;
+    }
+    return all;
+  }
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = await fetchAllTransactions();
+      const accountName = selectedAccount ? accounts.find(a => a.id === selectedAccount)?.name : null;
+      await exportReportPdf({
+        title: 'Banking Transactions Report' + (accountName ? ` — ${accountName}` : ''),
+        columns: [
+          { key: 'transaction_date', header: 'Date' }, { key: 'transaction_type', header: 'Type' },
+          { key: 'accountName', header: 'Account' }, { key: 'description', header: 'Description' },
+          { key: 'amountText', header: 'Amount' }, { key: 'reference', header: 'Reference' },
+        ],
+        rows: all.map(t => ({
+          ...t, accountName: t.acc_bank_accounts?.name || '—', description: t.description || '—', reference: t.reference || '—',
+          amountText: `${t.transaction_type === 'credit' ? '+' : '-'}SAR ${fmt(t.amount)}`,
+        })),
+        totals: [['Transactions exported', String(all.length)]],
+        fileName: 'banking-transactions-report.pdf', action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   async function createAccount() {
     setSaving(true);
@@ -84,7 +127,11 @@ export default function BankingPage() {
           <h3 className="text-sm font-semibold text-slate-300">
             {selectedAccount ? `Transactions — ${accounts.find(a => a.id === selectedAccount)?.name}` : 'All Transactions'}
           </h3>
-          {selectedAccount && <GlassButton variant="secondary" size="sm" onClick={() => setSelectedAccount('')}>Show All</GlassButton>}
+          <div className="flex gap-2">
+            {selectedAccount && <GlassButton variant="secondary" size="sm" onClick={() => setSelectedAccount('')}>Show All</GlassButton>}
+            <GlassButton variant="secondary" size="sm" onClick={() => runReport('print')} disabled={!txData?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+            <GlassButton variant="secondary" size="sm" onClick={() => runReport('save')} disabled={!txData?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
+          </div>
         </div>
 
         <table className="w-full text-sm">

@@ -32,6 +32,7 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const load = useCallback(() => {
@@ -76,6 +77,28 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
     load();
   }
 
+  /* Print/PDF for the currently loaded (search-filtered) page of results,
+     via the shared AL FAROOQUE report engine — reused by every module that
+     goes through MasterList (Labour, Machines, Expenses, Suppliers) rather
+     than duplicated per page. */
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t(titleKey),
+        columns: columns.map(c => ({ key: c.key, header: t(c.labelKey) })),
+        rows: (rows || []).map(row => {
+          const out = {};
+          columns.forEach(c => { out[c.key] = display(row, c); });
+          return out;
+        }),
+        lang, fileName: t(titleKey).toLowerCase().replace(/\s+/g, '-') + '-report.pdf', action,
+      });
+    } catch (e2) { setErr(e2.message || 'Could not generate report.'); }
+    finally { setReportBusy(''); }
+  }
+
   function display(row, col) {
     if (col.render) return col.render(row, { t, lang, formatNumber });
     /* stored-bilingual pick: instant, no runtime translation */
@@ -95,6 +118,8 @@ export default function MasterList({ active, api, titleKey, columns, fields, wid
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder={t('common.search')} className="max-w-xs" />
           <div className="flex-1" />
           {toolbar && toolbar({ reload: load, t })}
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!rows?.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!rows?.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           <Button onClick={() => open(null)}>+ {t('common.add')}</Button>
         </div>
         <div className="overflow-x-auto">

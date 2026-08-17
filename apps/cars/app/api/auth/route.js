@@ -141,7 +141,9 @@ async function handleVerifyOtp(sb, body, ip, ua, req) {
 
   await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
-  const token = signSession(user);
+  const { data: grant } = user.role === 'admin' ? { data: null } : await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'cars').maybeSingle();
+  const sessionUser = { ...user, role: user.role === 'admin' ? 'admin' : (grant?.app_role || user.role || 'readonly') };
+  const token = signSession(sessionUser);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,
     expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
@@ -152,7 +154,7 @@ async function handleVerifyOtp(sb, body, ip, ua, req) {
   }
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
-  const res = json({ ok: true, user: sanitizeUser(user) });
+  const res = json({ ok: true, user: sanitizeUser(sessionUser) });
   const cookieDomain = cookieDomainFromReq(req);
   res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomain));
   /* Admin SSO — one extra parent-domain cookie signs the Admin into the
@@ -281,7 +283,9 @@ async function handleViewVerifyOtp(sb, body, ip, ua, req) {
   await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
   // Role is always forced to "viewer" for a session minted via this route — see the header comment above.
-  const token = signSession({ ...user, role: 'viewer' });
+  const { data: grant } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'cars').maybeSingle();
+  const sessionUser = { ...user, role: grant?.app_role || 'readonly' };
+  const token = signSession(sessionUser);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,
     expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
@@ -293,7 +297,7 @@ async function handleViewVerifyOtp(sb, body, ip, ua, req) {
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
   /* Never mints an SSO cookie — this session's role is always 'viewer'. */
-  const res = json({ ok: true, user: sanitizeUser({ ...user, role: 'viewer' }) });
+  const res = json({ ok: true, user: sanitizeUser(sessionUser) });
   res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomainFromReq(req)));
   return res;
 }

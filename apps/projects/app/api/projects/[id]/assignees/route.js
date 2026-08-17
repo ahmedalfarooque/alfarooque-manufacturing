@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { sendEmail } = require('@/lib/email');
 
 function assignmentEmailHtml({ userName, projectName, customerName, companyName, position, adminName, assignedDate, loginLink }) {
@@ -33,7 +33,7 @@ function escapeHtml(s) {
 }
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -51,7 +51,7 @@ export async function GET(req, { params }) {
 }
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

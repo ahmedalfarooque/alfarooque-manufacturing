@@ -11,7 +11,7 @@ import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/com
 const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[color:var(--tx)] transition-colors';
 
 export default function MaintenanceShopsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
   const [shops, setShops] = useState([]);
   const [search, setSearch] = useState('');
@@ -21,6 +21,7 @@ export default function MaintenanceShopsPage() {
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [reportBusy, setReportBusy] = useState('');
   const isAdmin = me?.role === 'admin';
 
   const load = useCallback(async () => {
@@ -54,6 +55,29 @@ export default function MaintenanceShopsPage() {
     load();
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      const ar = lang === 'ar';
+      await exportReportPdf({
+        title: ar ? 'تقرير ورش الصيانة' : 'Maintenance Shops Report',
+        columns: [
+          { key: 'name', header: t('shops.colName') },
+          { key: 'contact', header: t('shops.colContact') },
+          { key: 'mobile', header: t('shops.colMobile') },
+          { key: 'city', header: t('shops.colCity') },
+          { key: 'vat', header: t('shops.colVat') },
+        ],
+        rows: sorted.map(s => ({
+          name: s.name || '—', contact: s.contact_person || '—', mobile: s.mobile || '—', city: s.city || '—', vat: s.vat_number || '—',
+        })),
+        lang, fileName: 'maintenance-shops-report.pdf', action,
+      });
+    } catch (e) { /* no-op — report generation failures shouldn't disrupt the page */ }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/maintenance-shops">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -61,7 +85,11 @@ export default function MaintenanceShopsPage() {
           <h2 className="text-lg font-semibold">{t('shops.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('shops.breadcrumb')}</p>
         </div>
-        {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('shops.addShop')}</Button>}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
+          {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('shops.addShop')}</Button>}
+        </div>
       </div>
 
       <Input placeholder={t('shops.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm mb-4" />

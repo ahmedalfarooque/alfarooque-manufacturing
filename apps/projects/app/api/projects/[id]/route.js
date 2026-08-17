@@ -1,14 +1,14 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin, requireDelete } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin, requireDelete , requireAction } = require('@/lib/http');
 const { autoProjectName } = require('@/lib/autoProjectName');
 
 const EDITABLE = ['customer_id', 'customer_name', 'company_name', 'contact_person', 'contact_email', 'contact_phone',
   'address', 'project_name', 'short_summary', 'project_details', 'value', 'start_date', 'end_date', 'status', 'progress', 'notes'];
 
 export async function GET(req, { params }) {
-  const { response, session } = requireSession(req); // any authenticated user — the View page is viewer-accessible; external users are further gated below to only their assigned project
+  const { response, session } = await requireAction(req, 'view'); // any authenticated user — the View page is viewer-accessible; external users are further gated below to only their assigned project
   if (response) return response;
   if (session.role === 'external' && !(await isAssignedOrAdmin(session, params.id))) {
     return json({ error: 'Project not found.' }, 404);
@@ -36,7 +36,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

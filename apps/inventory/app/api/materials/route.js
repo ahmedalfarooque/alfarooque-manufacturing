@@ -68,7 +68,7 @@ export async function GET(req) {
       count = legacyCount || 0;
     }
   } else {
-    data = (data || []).map(row => ({ ...row, source_table: 'inv_materials', read_only: false }));
+    data = (data || []).map(row => ({ ...row, source_table: 'inv_materials', read_only: false, business_role: 'local' }));
   }
   data = await attachCategoryNames(sb, data || []);
   return json({ materials: data, total: count || 0, page, limit });

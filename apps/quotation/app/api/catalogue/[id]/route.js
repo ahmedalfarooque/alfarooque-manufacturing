@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { makeItemHandlers } = require('@/lib/crud');
 
 const FIELDS = ['code', 'name', 'name_en', 'name_ar', 'category', 'sub_category', 'sub_category_en', 'sub_category_ar', 'sku', 'barcode',
@@ -12,7 +12,7 @@ const handlers = makeItemHandlers({ table: 'qt_catalogue_products', fields: FIEL
 
 /* GET returns the product together with its cost-model lines. */
 export async function GET(req, { params }) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
   const { data: row, error } = await sb.from('qt_catalogue_products')

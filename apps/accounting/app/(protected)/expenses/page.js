@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, GlassTextarea, toast, GlassTh, GlassTd } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
 
 const CATEGORIES = ['General', 'Travel', 'Meals', 'Office Supplies', 'Utilities', 'Rent', 'Insurance', 'Marketing', 'Maintenance', 'Other'];
 const STATUSES = ['Pending', 'Approved', 'Rejected', 'Paid'];
@@ -15,12 +16,50 @@ export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ currency: 'SAR', category: 'General' });
   const [saving, setSaving] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const params = new URLSearchParams({ page, pageSize });
   if (category) params.set('category', category);
   const { data, refresh } = useLiveData(`/api/expenses?${params}`, 15000);
   const expenses = data?.expenses || [];
+
+  /* Same shared A4 report engine as the rest of Accounting. Walks every
+     server page (100 at a time) under the active category filter instead
+     of only exporting the currently visible page. */
+  async function fetchAllExpenses() {
+    const all = [];
+    for (let p = 1, guard = 0; guard < 100; guard += 1) {
+      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
+      if (category) qp.set('category', category);
+      const res = await fetch(`/api/expenses?${qp}`, { credentials: 'same-origin' });
+      const body = await res.json().catch(() => ({}));
+      const batch = Array.isArray(body.expenses) ? body.expenses : [];
+      all.push(...batch);
+      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      p += 1;
+    }
+    return all;
+  }
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = await fetchAllExpenses();
+      await exportReportPdf({
+        title: 'Expenses Report' + (category ? ` — ${category}` : ''),
+        columns: [
+          { key: 'expense_date', header: 'Date' }, { key: 'description', header: 'Description' },
+          { key: 'category', header: 'Category' }, { key: 'vendor_name', header: 'Vendor' },
+          { key: 'amountText', header: 'Amount' }, { key: 'status', header: 'Status' },
+        ],
+        rows: all.map(e => ({ ...e, vendor_name: e.vendor_name || '—', amountText: `SAR ${fmt(e.amount)}` })),
+        totals: [['Expenses exported', String(all.length)], ['Total amount', `SAR ${fmt(all.reduce((s, e) => s + Number(e.amount || 0), 0))}`]],
+        fileName: 'expenses-report.pdf', action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   async function createExpense() {
     setSaving(true);
@@ -62,6 +101,8 @@ export default function ExpensesPage() {
             <option value="">All Categories</option>
             {CATEGORIES.map(c => <option key={c}>{c}</option>)}
           </GlassSelect>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">

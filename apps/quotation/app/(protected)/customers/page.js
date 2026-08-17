@@ -37,6 +37,7 @@ export default function CustomersPage() {
   const [err, setErr] = useState(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
   const fileRef = useRef(null);
 
   const load = useCallback(() => {
@@ -77,6 +78,29 @@ export default function CustomersPage() {
     load();
   }
 
+  /* Prints/exports the currently loaded (search/type-filtered) page of
+     results — same rows already rendered in the table — using the shared
+     AL FAROOQUE report engine, never a browser default print. */
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.customers'),
+        columns: [
+          { key: 'company', header: t('f.companyName') }, { key: 'contact', header: t('f.contactPerson') },
+          { key: 'phone', header: t('f.phone') }, { key: 'type', header: t('f.customerType') }, { key: 'city', header: t('f.city') },
+        ],
+        rows: (rows || []).map(row => ({
+          company: trL(row, 'company_name') || '—', contact: trL(row, 'contact_person') || row.contact_person || '—',
+          phone: row.phone || '—', type: t('ctype.' + (row.customer_type || 'other')), city: row.city || '—',
+        })),
+        lang, fileName: 'customers-report.pdf', action,
+      });
+    } catch (e2) { setErr(e2.message || 'Could not generate report.'); }
+    finally { setReportBusy(''); }
+  }
+
   async function doImport(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -103,6 +127,8 @@ export default function CustomersPage() {
           <div className="flex-1" />
           <a href={'/api/export/customers?template=1&lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.template')}</a>
           <a href={'/api/export/customers?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!rows?.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!rows?.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           <input ref={fileRef} type="file" accept=".xlsx" className="hidden" onChange={doImport} />
           <Button variant="ghost" disabled={importing} onClick={() => fileRef.current && fileRef.current.click()}>
             {importing ? t('common.importing') : '⇪ ' + t('common.importExcel')}

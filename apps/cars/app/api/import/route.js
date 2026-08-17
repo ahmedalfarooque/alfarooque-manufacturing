@@ -11,7 +11,7 @@
 
 const ExcelJS = require('exceljs');
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 /* header text (lowercased, trimmed) → cars column */
 const HEADER_MAP = {
@@ -185,7 +185,7 @@ async function importMaintenanceLogSheet(workbook, sb, plateToCarId) {
 }
 
 export async function POST(req) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
 
   let form;

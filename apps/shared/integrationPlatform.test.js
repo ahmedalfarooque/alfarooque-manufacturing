@@ -4,13 +4,22 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   encryptSecrets, decryptSecrets, getSmartLifeConfig, recordsFrom,
-  readSmartLife, clearSmartErpTokenForTests,
+  readSmartLife, readAllSmartLife, clearSmartErpTokenForTests, classifySmartErpError,
+  normalizeSmartErpSourceMapping,
+  SMARTLIFE_RESOURCES, SmartErpReadOnlyViolation,
   SMARTERP_WRITE_AUTHORIZATION_PHRASE, smartErpWritePermissionNotice,
   requireSmartErpWriteAuthorization, auditSmartErpWriteAuthorization,
 } = require('./integrationPlatform');
 
 const SMART_KEYS = ['SMARTLIFE_API_BASE_URL','SMARTLIFE_COMPANY','SMARTLIFE_USERNAME','SMARTLIFE_PASSWORD'];
 const db = row => ({ from: () => ({ select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row || null, error: null }) }) }) }) }) });
+
+function setV3Env() {
+  process.env.SMARTLIFE_API_BASE_URL = 'https://smarterp.example/api/v3';
+  process.env.SMARTLIFE_COMPANY = 'alfarooqe';
+  process.env.SMARTLIFE_USERNAME = 'owner';
+  process.env.SMARTLIFE_PASSWORD = 'password';
+}
 
 test.afterEach(() => {
   clearSmartErpTokenForTests();
@@ -26,13 +35,10 @@ test('integration credentials encrypt and decrypt without plaintext storage', ()
 });
 
 test('central SmartERP configuration comes from the server environment', async () => {
-  process.env.SMARTLIFE_API_BASE_URL = 'https://smarterp.example/api/v1.0';
-  process.env.SMARTLIFE_COMPANY = 'company';
-  process.env.SMARTLIFE_USERNAME = 'user';
-  process.env.SMARTLIFE_PASSWORD = 'password';
+  setV3Env();
   const config = await getSmartLifeConfig(db({ config: { baseUrl: 'https://ignored.example/' } }));
-  assert.equal(config.baseUrl, 'https://smarterp.example/api/v1.0/');
-  assert.equal(config.company, 'company');
+  assert.equal(config.baseUrl, 'https://smarterp.example/api/v3/');
+  assert.equal(config.company, 'alfarooqe');
 });
 
 test('extracts both list and single-object SmartERP data envelopes', () => {
@@ -43,28 +49,107 @@ test('extracts both list and single-object SmartERP data envelopes', () => {
   assert.deepEqual(recordsFrom({ unexpected: list }), []);
 });
 
-test('authenticates once and performs token/company read-only POST requests', async () => {
-  process.env.SMARTLIFE_API_BASE_URL = 'https://smarterp.example/api/v1.0';
-  process.env.SMARTLIFE_COMPANY = 'company';
-  process.env.SMARTLIFE_USERNAME = 'user';
-  process.env.SMARTLIFE_PASSWORD = 'password';
+test('normalizes stable read-only SmartERP source mappings without duplicating identities', () => {
+  const synchronizedAt = '2026-08-12T10:00:00.000Z';
+  const first = normalizeSmartErpSourceMapping('products', { id: 42, name: 'Panel', price: 10 }, synchronizedAt);
+  const changed = normalizeSmartErpSourceMapping('products', { id: 42, name: 'Panel', price: 12 }, synchronizedAt);
+  assert.equal(first.source_record_id, '42');
+  assert.equal(changed.source_record_id, first.source_record_id);
+  assert.equal(changed.metadata.raw_payload.price, 12);
+  assert.equal(changed.metadata.read_only, true);
+  assert.equal(changed.source_system, 'smartlife');
+  assert.equal(normalizeSmartErpSourceMapping('not-verified', { id: 42 }, synchronizedAt), null);
+});
+
+test('authenticates via V3 user/login and reads with the raw access-token header', async () => {
+  setV3Env();
   const requests = [];
   global.fetch = async (url, options) => {
     requests.push({ url: new URL(String(url)), options });
-    if (requests.length === 1) return { ok: true, json: async () => ({ error: false, company: 'company', token: 'test-token-value' }) };
-    return { ok: true, json: async () => ({ error: false, data: [{ id: 'product-1' }] }) };
+    if (requests.length === 1) return { ok: true, text: async () => JSON.stringify({ success: true, logged_in: true, access_token: 'v3-test-token', company: 'alfarooqe' }) };
+    return { ok: true, text: async () => JSON.stringify({ success: true, data: [{ id: 'product-1' }], total: 1 }) };
   };
   const first = await readSmartLife(db(), 'products');
   const second = await readSmartLife(db(), 'products');
   assert.deepEqual(first.records, [{ id: 'product-1' }]);
   assert.deepEqual(second.records, [{ id: 'product-1' }]);
   assert.equal(requests.length, 3);
-  assert.equal(requests[0].url.pathname, '/api/v1.0/login');
+  assert.equal(requests[0].url.pathname, '/api/v3/user/login');
   assert.equal(requests[0].options.method, 'POST');
-  assert.equal(requests[1].url.pathname, '/api/v1.0/products/index');
-  assert.equal(requests[1].url.searchParams.get('company'), 'company');
-  assert.equal(requests[1].options.method, 'POST');
-  assert.equal(requests[1].options.headers.Authorization, undefined);
+  assert.equal(requests[1].url.pathname, '/api/v3/products/get_products_list');
+  assert.equal(requests[1].options.method, 'GET');
+  assert.equal(requests[1].options.headers.Authorization, 'v3-test-token');
+  assert.equal(requests[1].options.headers['app-lang'], 'arabic');
+  assert.equal(requests[1].url.searchParams.get('limit'), '100');
+});
+
+test('readAllSmartLife walks offset/limit pages until a short page ends it', async () => {
+  setV3Env();
+  const pages = [
+    { success: true, data: Array.from({ length: 100 }, (_, i) => ({ id: i + 1 })), total: 150 },
+    { success: true, data: Array.from({ length: 50 }, (_, i) => ({ id: i + 101 })), total: 150 },
+  ];
+  let pageIndex = 0;
+  global.fetch = async (url) => {
+    if (String(url).includes('user/login')) return { ok: true, text: async () => JSON.stringify({ success: true, logged_in: true, access_token: 'tok' }) };
+    const payload = pages[pageIndex]; pageIndex += 1;
+    return { ok: true, text: async () => JSON.stringify(payload) };
+  };
+  const result = await readAllSmartLife(db(), 'products');
+  assert.equal(result.records.length, 150);
+  assert.equal(result.total, 150);
+});
+
+test('write verbs against SmartERP are rejected before any request is built', async () => {
+  setV3Env();
+  global.fetch = async () => { throw new Error('fetch must never be called for a blocked write'); };
+  const mod = require('./integrationPlatform');
+  const config = await mod.getSmartLifeConfig(db());
+  await assert.rejects(
+    () => mod.__testables.smartErpRequest(new URL('products/add', config.baseUrl), { method: 'POST' }),
+    SmartErpReadOnlyViolation,
+  );
+});
+
+test('an unlisted read path is rejected even as a GET', () => {
+  const { __testables } = require('./integrationPlatform');
+  assert.throws(() => __testables.assertAllowedReadPath('/api/v3/products/add'), SmartErpReadOnlyViolation);
+  assert.doesNotThrow(() => __testables.assertAllowedReadPath('/api/v3/products/get_products_list'));
+  assert.doesNotThrow(() => __testables.assertAllowedReadPath('/api/v3/products/product/42'));
+});
+
+test('every documented SmartERP resource path is on the verified V3 allow-list', () => {
+  for (const path of Object.values(SMARTLIFE_RESOURCES)) assert.match(path, /^[a-z_]+\/[a-z_]+$/);
+});
+
+test('classifySmartErpError distinguishes permission/version-mismatch/connection/other errors', () => {
+  const permissionError = new Error('The user is unauthorized to access the requested resource');
+  permissionError.status = 401;
+  assert.equal(classifySmartErpError(permissionError), 'permission_required');
+
+  const wrongStatusSameMessage = new Error('The user is unauthorized to access the requested resource');
+  wrongStatusSameMessage.status = 403;
+  assert.equal(classifySmartErpError(wrongStatusSameMessage), 'other_error');
+
+  const nonJsonError = new Error('SmartERP returned a non-JSON response (HTTP 200).');
+  nonJsonError.isNonJson = true;
+  assert.equal(classifySmartErpError(nonJsonError), 'endpoint_or_version_mismatch');
+
+  const networkError = new Error('fetch failed');
+  networkError.isNetworkFailure = true;
+  assert.equal(classifySmartErpError(networkError), 'connection_error');
+
+  const abortError = new Error('The operation was aborted.');
+  abortError.name = 'AbortError';
+  assert.equal(classifySmartErpError(abortError), 'connection_error');
+
+  const genericServerError = new Error('SmartERP returned HTTP 500.');
+  genericServerError.status = 500;
+  assert.equal(classifySmartErpError(genericServerError), 'other_error');
+
+  // Back-compat: a plain message string still classifies correctly.
+  assert.equal(classifySmartErpError('The user is unauthorized to access the requested resource'), 'permission_required');
+  assert.equal(classifySmartErpError('Some other failure'), 'other_error');
 });
 
 test('future SmartERP writes expose an exact red permission warning', () => {

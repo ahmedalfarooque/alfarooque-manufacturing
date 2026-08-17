@@ -42,14 +42,21 @@ export default function UnifiedErpLogin({
   const [message, setMessage] = useState(null);
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
   const timer = useRef(null);
 
   useEffect(() => {
     const requestedMode = new URLSearchParams(window.location.search).get('mode');
     if (requestedMode === 'admin') setMode('admin');
-    let saved = 'dark';
-    try { saved = localStorage.getItem(themeKey) || 'dark'; } catch (_) {}
+    /* Every app's own design system is light-by-default (see globals.css:
+       ":root" holds the light tokens, "html.dark" opts in) — this must
+       match, or a first-time visitor sees a dark login screen and then a
+       light dashboard after logging in. Verified live in a real browser
+       this session: the previous 'dark' default here disagreed with
+       every app's own Shell.js init (which already used `saved==='dark'`,
+       i.e. light unless explicitly saved as dark). */
+    let saved = null;
+    try { saved = localStorage.getItem(themeKey); } catch (_) {}
     const isDark = saved === 'dark';
     setDark(isDark);
     document.documentElement.classList.toggle('dark', isDark);

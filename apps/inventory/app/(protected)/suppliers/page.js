@@ -5,22 +5,44 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassTextarea, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
 
 const REFRESH_MS = 30000;
 
 export default function SuppliersPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data: sd, mutate } = useLiveData(`/api/suppliers?search=${encodeURIComponent(search)}&page=${page}&limit=50`, REFRESH_MS);
   const suppliers = sd?.suppliers || [];
   const total = sd?.total || 0;
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('suppliers.addSupplier').replace(/^\+\s*/, '') || 'Suppliers',
+        columns: [
+          { key: 'name', header: t('common.name') }, { key: 'contact', header: t('suppliers.contactPerson') },
+          { key: 'email', header: t('common.email') }, { key: 'phone', header: t('suppliers.phone') },
+          { key: 'city', header: t('suppliers.city') }, { key: 'status', header: t('common.status') },
+        ],
+        rows: suppliers.map(s => ({
+          name: s.name || '—', contact: s.contact_person || '—', email: s.email || '—',
+          phone: s.phone || '—', city: s.city || '—', status: s.is_active ? t('common.active') : t('common.inactive'),
+        })),
+        lang, fileName: 'suppliers-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
 
   function openAdd() { setForm({ country: 'Saudi Arabia' }); setModal('add'); }
   function openEdit(s) { setForm({ ...s }); setModal('edit'); }
@@ -57,7 +79,11 @@ export default function SuppliersPage() {
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder={t('suppliers.searchPlaceholder')} className="ginput flex-1 max-w-sm" />
-        <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('suppliers.addSupplier')}</button>
+        <div className="flex items-center gap-2">
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!suppliers.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!suppliers.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('suppliers.addSupplier')}</button>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden">

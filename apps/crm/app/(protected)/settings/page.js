@@ -26,14 +26,17 @@ export default function SettingsPage() {
     finally { setSaving(false); }
   }
 
-  if (loading) return <div className="text-center text-slate-400 py-12">Loading…</div>;
+  if (loading) return <div className="text-center text-[color:var(--tx-3)] py-12">Loading…</div>;
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-white">CRM Settings</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-[color:var(--tx)]">CRM Settings</h1>
+        <p className="text-sm text-[color:var(--tx-3)] mt-1">Defaults applied across contacts, deals, and reports.</p>
+      </div>
 
-      <GlassCard>
-        <h3 className="text-sm font-semibold text-slate-300 mb-4">General</h3>
+      <GlassCard className="p-5">
+        <h3 className="text-sm font-semibold text-[color:var(--tx-2)] mb-4">General</h3>
         <div className="grid grid-cols-2 gap-4">
           <GlassField label="Company Name">
             <GlassInput value={form.company_name || ''} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} />

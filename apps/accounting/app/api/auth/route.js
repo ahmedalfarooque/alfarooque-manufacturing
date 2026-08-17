@@ -62,8 +62,8 @@ export async function POST(req) {
     await recordLoginAttempt(email, ip, true);
 
     // Check accounting role
-    const { data: roleRow } = await sb.from('acc_user_roles').select('role').eq('user_id', user.id).maybeSingle();
-    const appRole = roleRow?.role || (user.role === 'admin' ? 'admin' : 'viewer');
+    const { data: roleRow } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'accounting').maybeSingle();
+    const appRole = user.role === 'admin' ? 'admin' : (roleRow?.app_role || 'readonly');
 
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
@@ -102,8 +102,8 @@ export async function POST(req) {
     }
     await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otpRow.id);
 
-    const { data: roleRow } = await sb.from('acc_user_roles').select('role').eq('user_id', user.id).maybeSingle();
-    const appRole = roleRow?.role || (user.role === 'admin' ? 'admin' : 'viewer');
+    const { data: roleRow } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'accounting').maybeSingle();
+    const appRole = user.role === 'admin' ? 'admin' : (roleRow?.app_role || 'readonly');
 
     const sessionUser = { id: user.id, email: user.email, role: appRole };
     const token = signSession(sessionUser);

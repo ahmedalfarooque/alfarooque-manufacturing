@@ -1,10 +1,10 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req, { roles: ['admin','manager','sales'] });
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
   const sb = getDb();
   const { data: contact, error } = await sb.from('crm_contacts').select('id,name,email,phone,company').eq('id', params.id).maybeSingle();

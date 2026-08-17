@@ -5,7 +5,7 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
 
 const TYPE_OPTIONS = [
   { value: 'product', label: 'Product' },
@@ -14,12 +14,13 @@ const TYPE_OPTIONS = [
 ];
 
 export default function CategoriesPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [modal, setModal] = useState(null);
   const [activeTab, setActiveTab] = useState('categories');
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data: catData, mutate: mutateCats } = useLiveData('/api/categories', 0);
   const { data: subData, mutate: mutateSubs } = useLiveData('/api/subcategories', 0);
@@ -31,6 +32,25 @@ export default function CategoriesPage() {
 
   const catOptions = [{ value: '', label: t('common.selectCategory') }, ...categories.map(c => ({ value: c.id, label: c.name }))];
   const typeOptions = [{ value: '', label: t('common.select') }, ...TYPE_OPTIONS];
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      const cfg = activeTab === 'categories'
+        ? { title: t('cats.categoriesTab'), columns: [{ key: 'name', header: t('common.name') }, { key: 'type', header: t('common.type') }, { key: 'description', header: t('common.description') }],
+            rows: categories.map(c => ({ name: c.name || '—', type: c.type || '—', description: c.description || '—' })), fileName: 'categories-report.pdf' }
+        : activeTab === 'subcategories'
+        ? { title: t('cats.subcategoriesTab'), columns: [{ key: 'name', header: t('common.name') }, { key: 'category', header: t('common.category') }, { key: 'description', header: t('common.description') }],
+            rows: subcategories.map(s => ({ name: s.name || '—', category: s.inv_categories?.name || '—', description: s.description || '—' })), fileName: 'subcategories-report.pdf' }
+        : { title: t('cats.unitsTab'), columns: [{ key: 'name', header: t('common.name') }, { key: 'symbol', header: t('units.symbol') }],
+            rows: units.map(u => ({ name: u.name || '—', symbol: u.symbol || '—' })), fileName: 'units-report.pdf' };
+      await exportReportPdf({ ...cfg, lang, action });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
+
+  const activeRows = activeTab === 'categories' ? categories : activeTab === 'subcategories' ? subcategories : units;
 
   function open(type, item = {}) { setForm({ _type: type, ...item }); setModal(type); }
   function closeModal() { setModal(null); setForm({}); }
@@ -85,6 +105,11 @@ export default function CategoriesPage() {
             {tab === 'categories' ? t('cats.categoriesTab') : tab === 'subcategories' ? t('cats.subcategoriesTab') : t('cats.unitsTab')}
           </button>
         ))}
+      </div>
+
+      <div className="flex justify-end gap-2 mb-4">
+        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!activeRows.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!activeRows.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
       </div>
 
       {activeTab === 'categories' && (

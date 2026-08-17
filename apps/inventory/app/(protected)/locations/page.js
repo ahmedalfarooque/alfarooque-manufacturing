@@ -5,7 +5,7 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassSelect, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassSelect, GlassToast, GlassButton } from '@/components/glass';
 
 const LOCATION_TYPES = [
   { value: 'zone', label: 'Zone' },
@@ -16,12 +16,13 @@ const LOCATION_TYPES = [
 ];
 
 export default function LocationsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [selectedWarehouse, setSelectedWarehouse] = useState('');
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data: wd } = useLiveData('/api/warehouses', 0);
   const { data: ld, mutate } = useLiveData(
@@ -33,6 +34,27 @@ export default function LocationsPage() {
   const whOptions = [{ value: '', label: t('common.allWarehouses') }, ...warehouses.map(w => ({ value: w.id, label: w.name }))];
   const whFormOptions = [{ value: '', label: t('warehouses.selectWarehouse') }, ...warehouses.map(w => ({ value: w.id, label: w.name }))];
   const typeOptions = [{ value: '', label: t('common.select') }, ...LOCATION_TYPES];
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.locations') || 'Locations',
+        columns: [
+          { key: 'name', header: t('common.name') }, { key: 'code', header: t('locations.code') },
+          { key: 'warehouse', header: t('nav.warehouses') }, { key: 'type', header: t('common.type') },
+          { key: 'status', header: t('common.status') },
+        ],
+        rows: locations.map(l => ({
+          name: l.name || '—', code: l.code || '—', warehouse: l.inv_warehouses?.name || '—',
+          type: l.type || '—', status: l.is_active ? t('common.active') : t('common.inactive'),
+        })),
+        lang, fileName: 'locations-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
 
   function openAdd() { setForm({ warehouse_id: selectedWarehouse || '' }); setModal('add'); }
   function openEdit(l) { setForm({ ...l }); setModal('edit'); }
@@ -69,7 +91,11 @@ export default function LocationsPage() {
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <GlassSelect value={selectedWarehouse} onChange={e => setSelectedWarehouse(e.target.value)} options={whOptions} />
-        <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('locations.addLocation')}</button>
+        <div className="flex items-center gap-2 ms-auto">
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!locations.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!locations.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+          <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('locations.addLocation')}</button>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden">

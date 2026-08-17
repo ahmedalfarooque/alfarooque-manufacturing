@@ -69,6 +69,7 @@ export default function MaterialsPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [newCat, setNewCat] = useState({ name: '', kind: 'material' });
+  const [reportBusy, setReportBusy] = useState('');
 
   const loadCategories = () => {
     fetch('/api/material-categories', { credentials: 'same-origin' })
@@ -157,6 +158,26 @@ export default function MaterialsPage() {
     setHistory({ material: row, rows: d.rows || [] });
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.materials'),
+        columns: [
+          { key: 'code', header: t('f.code') }, { key: 'name', header: t('f.name') }, { key: 'dims', header: t('f.dimensions') },
+          { key: 'unit', header: t('f.unit') }, { key: 'category', header: t('f.category') }, { key: 'price', header: t('f.latestPrice') },
+        ],
+        rows: (rows || []).map(row => ({
+          code: row.code || '—', name: trL(row, 'name'), dims: formatMaterialDims(row, t) || '—',
+          unit: codeLabel(t, 'u', row.unit), category: catName(row.category_id), price: formatNumber(row.latest_price, { minimumFractionDigits: 2 }),
+        })),
+        lang, fileName: 'materials-report.pdf', action,
+      });
+    } catch (e2) { setImportResult('⚠ ' + (e2.message || 'Could not generate report.')); }
+    finally { setReportBusy(''); }
+  }
+
   async function doImport(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -195,6 +216,8 @@ export default function MaterialsPage() {
           <div className="flex-1" />
           <a href={'/api/export/materials?template=1&lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.template')}</a>
           <a href={'/api/export/materials?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!rows?.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!rows?.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           <ImportButton endpoint="/api/import/materials" label={t('common.importExcel')} onDone={(err, d) => {
             setImportResult(err ? '⚠ ' + err : t('import.genericResult', { created: d.inserted, updated: d.updated, failed: d.failed }));
             if (!err) load();

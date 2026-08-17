@@ -2,19 +2,26 @@
 
 import { useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { useLang } from '@/lib/i18n';
+import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd, GlassSkeletonRows } from '@/components/glass';
+import { CRMEmptyState } from '@/components/CRMWidgets';
 
 const TYPES = ['Call', 'Meeting', 'Email', 'Demo', 'Follow-up', 'Task', 'Note'];
 const STATUSES = ['Planned', 'Completed', 'Cancelled', 'No Show'];
-function statusTone(s) { return s === 'Completed' ? 'success' : s === 'Cancelled' ? 'error' : s === 'No Show' ? 'warning' : 'info'; }
+/* GlassBadge's tone table only defines neutral/cyan/emerald/amber/red/violet/slate
+   (see components/glass.js) — 'success'/'error'/'warning'/'info' silently fell back
+   to neutral, so every status badge on this page rendered the same gray. */
+function statusTone(s) { return s === 'Completed' ? 'emerald' : s === 'Cancelled' ? 'red' : s === 'No Show' ? 'amber' : 'cyan'; }
 
 export default function ActivitiesPage() {
+  const { t, lang } = useLang();
   const [type, setType] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ activity_type: 'Call' });
   const [saving, setSaving] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const params = new URLSearchParams({ page, pageSize });
@@ -22,6 +29,45 @@ export default function ActivitiesPage() {
   if (status) params.set('status', status);
   const { data, refresh } = useLiveData(`/api/activities?${params}`, 15000);
   const activities = data?.activities || [];
+
+  async function fetchAllActivities() {
+    const q = new URLSearchParams({ page: 1, pageSize: 100 });
+    if (type) q.set('type', type);
+    if (status) q.set('status', status);
+    const first = await fetch(`/api/activities?${q}`).then(r => r.json());
+    let rows = first.activities || [];
+    const total = first.total || rows.length;
+    const totalPages = Math.ceil(total / 100);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/activities?${q}`).then(r => r.json());
+      rows = rows.concat(next.activities || []);
+    }
+    return rows;
+  }
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = await fetchAllActivities();
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: 'Activities',
+        columns: [
+          { key: 'type', header: 'Type' }, { key: 'subject', header: 'Subject' },
+          { key: 'contact', header: 'Contact' }, { key: 'deal', header: 'Deal' },
+          { key: 'date', header: 'Date' }, { key: 'status', header: 'Status' },
+        ],
+        rows: all.map(a => ({
+          type: a.activity_type || '—', subject: a.subject || '—',
+          contact: a.crm_contacts?.name || '—', deal: a.crm_deals?.title || '—',
+          date: a.activity_date || '—', status: a.status || '—',
+        })),
+        lang, fileName: 'activities-report.pdf', action,
+      });
+    } catch (e) { toast('Report generation failed', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   async function create() {
     setSaving(true);
@@ -53,8 +99,12 @@ export default function ActivitiesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Activities</h1>
-        <GlassButton onClick={() => setShowForm(true)}>+ Log Activity</GlassButton>
+        <h1 className="text-2xl font-bold text-[color:var(--tx)]">Activities</h1>
+        <div className="flex items-center gap-2">
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? '…' : t('print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('downloadPdf')}</GlassButton>
+          <GlassButton onClick={() => setShowForm(true)}>+ Log Activity</GlassButton>
+        </div>
       </div>
 
       <GlassCard>
@@ -69,9 +119,19 @@ export default function ActivitiesPage() {
           </GlassSelect>
         </div>
 
+        {!data ? (
+          <GlassSkeletonRows rows={6} cols={6} />
+        ) : !activities.length && !type && !status ? (
+          <CRMEmptyState
+            title="No activities logged yet"
+            text="Log calls, meetings, and follow-ups to keep a full history of every relationship."
+            actionLabel="+ Log Activity"
+            onAction={() => setShowForm(true)}
+          />
+        ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10">
+            <tr className="border-b border-[color:var(--bd)]">
               <GlassTh>Type</GlassTh>
               <GlassTh>Subject</GlassTh>
               <GlassTh>Contact</GlassTh>
@@ -83,11 +143,11 @@ export default function ActivitiesPage() {
           </thead>
           <tbody>
             {activities.map(a => (
-              <tr key={a.id} className="border-b border-white/5 hover:bg-white/5">
+              <tr key={a.id} className="border-b border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)]">
                 <GlassTd><GlassBadge tone="neutral">{a.activity_type}</GlassBadge></GlassTd>
-                <GlassTd className="text-white">{a.subject}</GlassTd>
-                <GlassTd className="text-slate-400">{a.crm_contacts?.name || '—'}</GlassTd>
-                <GlassTd className="text-slate-400">{a.crm_deals?.title || '—'}</GlassTd>
+                <GlassTd className="text-[color:var(--tx)]">{a.subject}</GlassTd>
+                <GlassTd className="text-[color:var(--tx-3)]">{a.crm_contacts?.name || '—'}</GlassTd>
+                <GlassTd className="text-[color:var(--tx-3)]">{a.crm_deals?.title || '—'}</GlassTd>
                 <GlassTd>{a.activity_date}</GlassTd>
                 <GlassTd><GlassBadge tone={statusTone(a.status)}>{a.status}</GlassBadge></GlassTd>
                 <GlassTd>
@@ -99,10 +159,11 @@ export default function ActivitiesPage() {
               </tr>
             ))}
             {!activities.length && (
-              <tr><td colSpan={7} className="text-center text-slate-500 py-8">No activities found.</td></tr>
+              <tr><td colSpan={7} className="text-center text-[color:var(--tx-4)] py-8">No activities found.</td></tr>
             )}
           </tbody>
         </table>
+        )}
 
         <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
       </GlassCard>

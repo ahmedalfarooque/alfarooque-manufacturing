@@ -169,6 +169,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         @media print {
           .qdoc {
             padding-top: 0 !important;
+            padding-bottom: 0 !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -208,8 +209,8 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
              would otherwise render flush to the page's physical edges.
              36px matches .qdoc's own horizontal padding below, so the
              footer still lines up with the rest of the content.
-             qdoc-body gets matching bottom padding so its last content
-             (signatures) never renders underneath this fixed footer. */
+             A repeating tfoot spacer below reserves the footer's actual
+             footprint on every fragment without padding each body row. */
           .qdoc-footer-screen { display: none !important; }
           .qdoc-footer-print {
             display: block !important;
@@ -217,7 +218,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
             bottom: 0; left: 36px; right: 36px;
             background: #fff; z-index: 2;
           }
-          .qdoc-body { padding-bottom: 72px; }
+          .qdoc-footer-space { height: 44px; }
           /* QR was page-1-only by original design (position:absolute
              against .qdoc, so it only ever painted on the first natural
              page of the document's total height). Every other header
@@ -485,28 +486,38 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </div>
       )}
 
-      {/* Bank Details */}
-      <div style={{ ...box, borderRadius: 8, padding: '12px 14px', marginTop: 28, fontSize: 11.5, breakInside: 'avoid' }}>
-        <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 8 }}>{t.bankDetails}</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 28px' }} dir="ltr">
-          <div><span style={{ color: '#6b6b63' }}>{t.bank}: </span><b>{BANK_DETAILS.bank}</b></div>
-          <div><span style={{ color: '#6b6b63' }}>{t.accountNumber}: </span><b>{BANK_DETAILS.accountNumber}</b></div>
-          <div><span style={{ color: '#6b6b63' }}>{t.iban}: </span><b>{BANK_DETAILS.iban}</b></div>
-          <div><span style={{ color: '#6b6b63' }}>{t.accountName}: </span><b>{BANK_DETAILS.accountName}</b></div>
-        </div>
-      </div>
-
       </div>
       </td></tr>
 
       {/* A separate outer layout row gives Chromium a legal pagination
-          boundary before signatures. If they do not fit after Terms, the
-          repeating layout-table header is then emitted on the next page;
-          a break inside one giant outer row suppresses that repetition. */}
+          boundary before the closing package.
+
+          IMPORTANT: this wrapper itself is deliberately NOT break-avoid.
+          An earlier version made the whole Bank Details + Terms +
+          Signatures package one atomic break-inside:avoid unit — which
+          meant that on a borderline document (Bank Details and Terms
+          would have fit at the bottom of page 1, but the full package
+          together didn't), the ENTIRE package moved to page 2, wasting
+          the remaining space on page 1 AND leaving page 2 mostly empty.
+          Each SECTION below keeps its own break-inside:avoid (a section
+          never splits internally — no half-a-bank-details-box, no
+          mid-paragraph Terms, no orphaned single signature line), but the
+          boundary BETWEEN sections is free to fall on a page break. This
+          is what "keep together when there's room, move naturally when
+          there isn't" actually means per section, not as one giant
+          indivisible block. */}
       <tr><td>
-      <div className="qdoc-body" style={{ position: 'relative', zIndex: 1, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-        {/* Terms & Conditions stay with the signature section on the
-            final page, clear of the independently fixed footer. */}
+      <div className="qdoc-body qdoc-closing" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ ...box, borderRadius: 8, padding: '12px 14px', marginTop: 28, fontSize: 11.5, breakInside: 'avoid' }}>
+          <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 8 }}>{t.bankDetails}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 28px' }} dir="ltr">
+            <div><span style={{ color: '#6b6b63' }}>{t.bank}: </span><b>{BANK_DETAILS.bank}</b></div>
+            <div><span style={{ color: '#6b6b63' }}>{t.accountNumber}: </span><b>{BANK_DETAILS.accountNumber}</b></div>
+            <div><span style={{ color: '#6b6b63' }}>{t.iban}: </span><b>{BANK_DETAILS.iban}</b></div>
+            <div><span style={{ color: '#6b6b63' }}>{t.accountName}: </span><b>{BANK_DETAILS.accountName}</b></div>
+          </div>
+        </div>
+
         {(doc.terms_body_override || terms) && (
           <div style={{ marginTop: 28, fontSize: 11, color: '#55534c', breakInside: 'avoid' }}>
             <div style={{ fontWeight: 700, color: '#1a1a18', marginBottom: 6 }}>{t.terms}</div>
@@ -524,6 +535,7 @@ export default function QuoteDocument({ doc, products, entity, customer, terms, 
         </div>
       </div>
       </td></tr></tbody>
+      <tfoot aria-hidden="true"><tr><td><div className="qdoc-footer-space" /></td></tr></tfoot>
       </table>
 
       {/* Fixed print-frame footer. It is outside the pagination table so

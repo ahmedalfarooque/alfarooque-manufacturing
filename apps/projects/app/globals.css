@@ -17,31 +17,37 @@ html.dark { color-scheme: dark; }
    three copies identical.
    ═══════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Surfaces */
-  --bg:      #F4F8FB;
-  --bg-2:    #EAF1F7;
-  --bg-card: rgba(255,255,255,0.72);
-  --bd:      rgba(15,42,64,0.10);
-  --bd-2:    rgba(15,42,64,0.14);
-  /* Text */
+  /* Surfaces — deepened slightly from the original #F4F8FB/#EAF1F7 pair,
+     which read as too bright/washed-out; still clearly a light theme, just
+     with enough tone for cards/nav to visibly separate from the page. */
+  --bg:      #ECF1F5;
+  --bg-2:    #E1E9F0;
+  --bg-card: rgba(255,255,255,0.85);
+  --bd:      rgba(15,42,64,0.16);
+  --bd-2:    rgba(15,42,64,0.22);
+  /* Text — tx-2/tx-3/tx-4 darkened a step each for stronger contrast on
+     table headers, secondary labels and placeholder/helper text; tx stays
+     the same near-black primary. */
   --tx:      #0B1B29;
-  --tx-2:    #35506A;
-  --tx-3:    #5B7690;
-  --tx-4:    #8AA1B5;
+  --tx-2:    #2B4457;
+  --tx-3:    #47607A;
+  --tx-4:    #6E8398;
   /* Cyan accent */
   --pr:      #0891B2;
   --pr-2:    #0E7490;
-  --pr-soft: rgba(6,182,212,0.12);
-  --nav-bg:  rgba(255,255,255,0.62);
-  /* Elevation */
-  --sh-sm:   0 1px 2px rgba(11,27,41,0.05), 0 4px 14px rgba(11,27,41,0.06);
-  --sh-md:   0 2px 8px rgba(11,27,41,0.06), 0 14px 34px rgba(11,27,41,0.09);
-  --sh-lg:   0 6px 16px rgba(11,27,41,0.08), 0 28px 60px rgba(11,27,41,0.12);
-  /* Ambient orb tints (light) */
-  --orb-1:   rgba(6,182,212,0.16);
-  --orb-2:   rgba(14,165,233,0.13);
-  --orb-3:   rgba(45,212,191,0.10);
-  --grid-ln: rgba(15,42,64,0.045);
+  --pr-soft: rgba(6,182,212,0.14);
+  --nav-bg:  rgba(255,255,255,0.80);
+  /* Elevation — slightly stronger shadows so cards read with real depth
+     against the now-less-stark background. */
+  --sh-sm:   0 1px 2px rgba(11,27,41,0.07), 0 4px 14px rgba(11,27,41,0.08);
+  --sh-md:   0 2px 8px rgba(11,27,41,0.08), 0 14px 34px rgba(11,27,41,0.11);
+  --sh-lg:   0 6px 16px rgba(11,27,41,0.10), 0 28px 60px rgba(11,27,41,0.14);
+  /* Ambient orb tints (light) — trimmed back to stay subtle against the
+     slightly deeper background. */
+  --orb-1:   rgba(6,182,212,0.14);
+  --orb-2:   rgba(14,165,233,0.11);
+  --orb-3:   rgba(45,212,191,0.09);
+  --grid-ln: rgba(15,42,64,0.06);
   --radius:  16px;
 }
 html.dark {

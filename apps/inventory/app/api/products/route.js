@@ -1,21 +1,24 @@
 'use strict';
 
-/* Local product master (inv_products) with a read-only fallback onto
-   SmartLife's real product feed (2,912 real records) when the local table
-   has no rows for the current filter. NOTE: this used to fall back onto
-   the top-level `products` table — that is the public MARKETING WEBSITE's
-   product showcase (SEO fields, warranty labels, images/videos), a
-   completely different real-world dataset, not any ERP source. That was a
-   real bug (silently showing e.g. "Premium Solid Hardwood Exterior Door"
-   demo doors in the Inventory ERP) — fixed by falling back to the actual
-   verified SmartLife product feed instead, same pattern as Materials'
-   qt_materials fallback. QuotePro's own "Products" concept
+/* Inventory Products = the OPERATIONAL item master (purchased materials,
+   finished/resale items, SmartLife-sourced stock — whatever AL FAROOQUE
+   actually buys/sells/holds), not QuotePro's manufacturing catalogue.
+   Falls back onto SmartLife's real product feed (2,912 real records) when
+   the local table has no rows for the current filter. NOTE: this used to
+   fall back onto the top-level `products` table — that is the public
+   MARKETING WEBSITE's product showcase (SEO fields, warranty labels), a
+   completely different dataset — fixed. QuotePro's own "Products" concept
    (qt_catalogue_products) is a different real entity — a calculated
-   quotation cost template built from materials/labour/machines, not a
-   warehouse stock item — so it is deliberately NOT used as the fallback
-   here; Inventory's own inv_products schema already matches SmartLife's
-   product shape (sku/barcode/cost/price/qty), which is the correct
-   canonical reference for THIS module. */
+   quotation cost template, not a warehouse stock item — so it is
+   deliberately NOT used as the fallback here.
+
+   An item classified 'material' (erp_item_business_classification) is
+   still shown here — this page is the operational master for ALL
+   operational items regardless of business role; a purchased material
+   legitimately belongs in the operational item list. The classification
+   is metadata (badge) for optionally connecting the item to an existing
+   QuotePro Material (see /api/products/[id]/quotepro-link), never a
+   filter that hides rows. */
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
@@ -49,12 +52,23 @@ export async function GET(req) {
       const result = await readSmartLife('products', {
         appToken: cookies[COOKIE_NAME], ssoToken: cookies[SSO_COOKIE_NAME],
       }, { search, offset: String(offset), limit: String(limit) });
+      const ids = result.records.map(r => String(r.id));
+      const [{ data: classifications }, { data: links }] = ids.length
+        ? await Promise.all([
+            sb.from('erp_item_business_classification').select('source_record_id,business_role').eq('source_system', 'smartlife').in('source_record_id', ids),
+            sb.from('erp_master_data_mappings').select('source_record_id,canonical_id').eq('source_system', 'smartlife').eq('entity_kind', 'material').in('source_record_id', ids),
+          ])
+        : [{ data: [] }, { data: [] }];
+      const roleById = new Map((classifications || []).map(c => [c.source_record_id, c.business_role]));
+      const linkById = new Map((links || []).map(l => [l.source_record_id, l.canonical_id]));
       data = result.records.map(r => ({
         id: r.id, name: r.name, sku: r.code || null, barcode: null,
         cost_price: Number(r.cost) || 0, selling_price: Number(r.price) || 0,
         qty_on_hand: Number(r.quantity) || 0, min_stock_qty: Number(r.alert_quantity) || 0,
         category_name: r.category || null, unit_name: r.unit || null, tax_rate: r.tax_rate || null,
         is_active: true, source_table: 'smartlife', read_only: true,
+        business_role: roleById.get(String(r.id)) || 'unclassified',
+        quotepro_material_id: linkById.get(String(r.id)) || null,
       }));
       count = result.total || data.length;
     } catch (_) {
@@ -64,7 +78,7 @@ export async function GET(req) {
       data = []; count = 0;
     }
   } else {
-    data = (data || []).map(row => ({ ...row, category_name: row.inv_categories?.name || null, unit_name: row.inv_units?.name || null, source_table: 'inv_products', read_only: false }));
+    data = (data || []).map(row => ({ ...row, category_name: row.inv_categories?.name || null, unit_name: row.inv_units?.name || null, source_table: 'inv_products', read_only: false, business_role: 'local' }));
   }
   return json({ products: data, total: count || 0, page, limit });
 }

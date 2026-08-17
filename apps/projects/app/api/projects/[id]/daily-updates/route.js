@@ -1,11 +1,11 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin , requireAction } = require('@/lib/http');
 const { sendEmail } = require('@/lib/email');
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -26,7 +26,7 @@ export async function GET(req, { params }) {
 }
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
   if (!(await isAssignedOrAdmin(session, params.id))) {
     return json({ error: 'Only assigned users or an admin can submit a daily update for this project.' }, 403);

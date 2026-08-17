@@ -2,7 +2,7 @@
 
 const ExcelJS = require('exceljs');
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 const COLUMNS = [
   { header: 'Customer Name', key: 'customer_name', width: 18 },
@@ -15,7 +15,7 @@ const COLUMNS = [
 ];
 
 export async function GET(req) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
   if (session.role === 'external') return json({ error: 'Not permitted.' }, 403);
 

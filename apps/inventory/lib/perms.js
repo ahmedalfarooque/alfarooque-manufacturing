@@ -4,13 +4,15 @@
    the inventory-specific role lives in inv_user_roles. A platform 'admin'
    is always an inventory admin. Everyone else defaults to 'readonly'. */
 
-const ROLES = ['admin', 'manager', 'warehouse', 'purchasing', 'readonly'];
+const ROLES = ['admin', 'manager', 'sales', 'estimator', 'accountant', 'production', 'readonly'];
 
 const PERMS = {
   admin:      ['write', 'approve', 'reports', 'admin'],
   manager:    ['write', 'approve', 'reports'],
-  warehouse:  ['write', 'reports'],
-  purchasing: ['write', 'reports'],
+  sales:      ['reports'],
+  estimator:  ['write', 'reports'],
+  accountant: ['write', 'reports'],
+  production: ['write', 'reports'],
   readonly:   [],
 };
 
@@ -20,8 +22,8 @@ async function getInvRole(sb, session) {
   if (!session) return 'readonly';
   if (session.role === 'admin') return 'admin';
   try {
-    const { data } = await sb.from('inv_user_roles').select('role').eq('user_id', session.sub).maybeSingle();
-    return (data && data.role) || 'readonly';
+    const { data } = await sb.from('app_permissions').select('app_role').eq('user_id', session.sub).eq('app_id', 'inventory').maybeSingle();
+    return (data && data.app_role) || 'readonly';
   } catch (_) { return 'readonly'; }
 }
 

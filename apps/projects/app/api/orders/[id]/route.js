@@ -4,12 +4,12 @@
    Admin (see apps/projects/lib/ordersQuotesCore.js). */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { ORDER_STATUSES, ORDER_PAYMENT_STATUSES, hasSoftDelete, logError, attachCustomerInfo } = require('@/lib/ordersQuotesCore');
 const { enrichOrderItems } = require('@/lib/orderEnrich');
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -25,7 +25,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

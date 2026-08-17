@@ -6,6 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
 import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
+import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
 
 const NAV = [
   { href: '/dashboard', key: 'nav.dashboard', icon: 'dashboard' },
@@ -15,6 +16,7 @@ const NAV = [
   { href: '/maintenance', key: 'nav.maintenance', icon: 'wrench' },
   { href: '/maintenance-shops', key: 'nav.maintenanceShops', icon: 'wrench' },
   { href: '/alerts', key: 'nav.alerts', icon: 'bell' },
+  { href: '/users', key: 'Users', icon: 'users', adminOnly: true },
 ];
 
 export default function Shell({ children, active }) {
@@ -69,9 +71,10 @@ export default function Shell({ children, active }) {
 
   return (
     <div className="min-h-screen flex text-[color:var(--tx)]">
+      <ModuleActionVisibility />
       {/* Sidebar */}
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
+        'print:hidden fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
         'bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 border-e border-[color:var(--bd)] ' +
         'shadow-[8px_0_40px_rgba(11,27,41,0.06)] dark:shadow-[8px_0_40px_rgba(0,0,0,0.4)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
@@ -96,7 +99,7 @@ export default function Shell({ children, active }) {
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
-          {NAV.map(item => (
+          {NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
             <a key={item.href} href={item.href}
               className={
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ' +
@@ -104,7 +107,7 @@ export default function Shell({ children, active }) {
                   ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] shadow-[inset_0_0_0_1px_rgba(6,182,212,0.28)]'
                   : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
               }>
-              <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.key)}
+              <GlassIcon name={item.icon} size={20} className="shrink-0" />{item.key === 'Users' ? 'Users' : t(item.key)}
             </a>
           ))}
         </nav>
@@ -119,7 +122,7 @@ export default function Shell({ children, active }) {
 
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 flex items-center justify-between gap-3 px-4 lg:px-6 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
+        <header className="print:hidden h-16 flex items-center justify-between gap-3 px-4 lg:px-6 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button className="lg:hidden gbtn gbtn-ghost gbtn--icon gbtn--sm text-xl" onClick={() => setSidebarOpen(true)} aria-label="Menu">☰</button>
             <h1 className="font-semibold text-lg hidden sm:block">{t(NAV.find(n => n.href === active)?.key) || active.replace('/', '')}</h1>

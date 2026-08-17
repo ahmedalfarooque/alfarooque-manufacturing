@@ -228,6 +228,7 @@ export const translations = {
     'common.rows': 'Rows:',
     'common.print': 'Print',
     'common.export': 'Export',
+    'common.clear': 'Clear',
     'common.none': '— None —',
     'common.select': 'Select…',
 
@@ -245,6 +246,20 @@ export const translations = {
     'login.backToEmailPassword': '← Back to email & password',
     'login.successRedirect': 'Success — redirecting…',
     'login.genericError': 'Something went wrong.',
+
+    // Purchase Requests — inventory item picker
+    'pr.linkInventoryItem': 'Link to Inventory Item (optional)',
+    'pr.linkInventoryItemPlaceholder': 'Search item by name or code…',
+    'pr.stockOnHand': 'In stock',
+    'pr.noMatchFound': 'No matching item found.',
+    'pr.addNewItem': '+ Add New Material / Item',
+    'pr.addNewItemTitle': 'Add New Material / Item',
+    'pr.itemType': 'Type',
+    'pr.itemTypeProduct': 'Product',
+    'pr.itemTypeMaterial': 'Material',
+    'pr.itemName': 'Name *',
+    'pr.itemCode': 'Code (optional)',
+    'pr.addAndSelect': 'Add & Select',
   },
 
   ar: {
@@ -469,6 +484,7 @@ export const translations = {
     'common.rows': 'الصفوف:',
     'common.print': 'طباعة',
     'common.export': 'تصدير',
+    'common.clear': 'مسح',
     'common.none': '— لا يوجد —',
     'common.select': 'اختر…',
 
@@ -486,6 +502,20 @@ export const translations = {
     'login.backToEmailPassword': '← العودة إلى البريد الإلكتروني وكلمة المرور',
     'login.successRedirect': 'تم بنجاح — جارٍ إعادة التوجيه…',
     'login.genericError': 'حدث خطأ ما.',
+
+    // Purchase Requests — inventory item picker
+    'pr.linkInventoryItem': 'ربط بعنصر مخزون (اختياري)',
+    'pr.linkInventoryItemPlaceholder': 'ابحث بالاسم أو الرمز…',
+    'pr.stockOnHand': 'المتوفر',
+    'pr.noMatchFound': 'لا يوجد عنصر مطابق.',
+    'pr.addNewItem': '+ إضافة مادة / عنصر جديد',
+    'pr.addNewItemTitle': 'إضافة مادة / عنصر جديد',
+    'pr.itemType': 'النوع',
+    'pr.itemTypeProduct': 'منتج',
+    'pr.itemTypeMaterial': 'مادة',
+    'pr.itemName': 'الاسم *',
+    'pr.itemCode': 'الرمز (اختياري)',
+    'pr.addAndSelect': 'إضافة واختيار',
   },
 };
 

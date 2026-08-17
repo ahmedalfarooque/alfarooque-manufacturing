@@ -1,17 +1,17 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin , requireAction } = require('@/lib/http');
 const { sendEmail } = require('@/lib/email');
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
   const { data, error } = await sb
     .from('pm_purchase_requests')
-    .select('*, platform_users(full_name, email)')
+    .select('*, platform_users(full_name, email), inv_products(name), inv_materials(name)')
     .eq('project_id', params.id)
     .order('created_at', { ascending: false });
   if (error) { console.error('[purchase-requests] list failed:', error.message); return json({ error: 'Could not load purchase requests.' }, 500); }
@@ -19,13 +19,14 @@ export async function GET(req, { params }) {
   const requests = (data || []).map(r => ({
     ...r,
     requested_by_name: r.platform_users?.full_name || r.platform_users?.email || null,
-    platform_users: undefined,
+    linked_item_name: r.inv_products?.name || r.inv_materials?.name || null,
+    platform_users: undefined, inv_products: undefined, inv_materials: undefined,
   }));
   return json({ purchaseRequests: requests });
 }
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
   if (!(await isAssignedOrAdmin(session, params.id))) {
     return json({ error: 'Only assigned users or an admin can submit a purchase request for this project.' }, 403);

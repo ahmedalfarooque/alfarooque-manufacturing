@@ -14,7 +14,8 @@
     "test:workflow": "node --test lib/quotationWorkflow.test.js",
     "verify:workflow-db": "node scripts/verify-workflow-db.js",
     "test:workflow-db": "node scripts/verify-quotation-approval-state-machine.js",
-    "test:workflow-localhost": "node scripts/verify-localhost-quotation-workflow.js"
+    "test:workflow-localhost": "node scripts/verify-localhost-quotation-workflow.js",
+    "test:pdf-pagination": "node scripts/verify-pdf-pagination.js"
   },
   "dependencies": {
     "@sparticuz/chromium": "^131.0.1",

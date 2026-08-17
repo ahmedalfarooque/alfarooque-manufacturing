@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin, requireDelete } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin, requireDelete , requireAction } = require('@/lib/http');
 
 /* Superset of the original 6 statuses — old rows/values keep working,
    these are purely additive per the workflow-expansion spec. */
@@ -9,13 +9,13 @@ const VALID_STATUSES = ['Pending', 'Under Review', 'Approved', 'Rejected', 'On H
   'Cancelled', 'Payment Pending', 'Payment Approved', 'Payment Completed', 'Ordered', 'Completed'];
 
 export async function GET(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
   const { data: row, error } = await sb
     .from('pm_purchase_requests')
-    .select('*, pm_projects(id, project_name, customer_name), platform_users(full_name, email)')
+    .select('*, pm_projects(id, project_name, customer_name), platform_users(full_name, email), inv_products(name), inv_materials(name)')
     .eq('id', params.id)
     .maybeSingle();
   if (error) { console.error('[purchase-requests] get failed:', error.message); return json({ error: 'Could not load the purchase request.' }, 500); }
@@ -44,8 +44,9 @@ export async function GET(req, { params }) {
       project_name: row.pm_projects?.project_name || null,
       customer_name: row.pm_projects?.customer_name || null,
       requested_by_name: row.platform_users?.full_name || row.platform_users?.email || null,
+      linked_item_name: row.inv_products?.name || row.inv_materials?.name || null,
       pm_projects: undefined,
-      platform_users: undefined,
+      platform_users: undefined, inv_products: undefined, inv_materials: undefined,
     },
     attachments: (attachments || []).map(a => ({ ...a, url: `/api/purchase-requests/${params.id}/attachments/${a.id}` })),
     statusHistory: (history || []).map(h => ({ ...h, changed_by_name: h.platform_users?.full_name || h.platform_users?.email || null, platform_users: undefined })),
@@ -53,7 +54,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));
@@ -67,39 +68,62 @@ export async function PATCH(req, { params }) {
    'inv_material_id', 'inv_product_id'].forEach(f => {
     if (body[f] !== undefined) patch[f] = body[f];
   });
-  if (Object.keys(patch).length === 0) return json({ error: 'Nothing to update.' }, 400);
 
   const sb = getDb();
   const { data: existing } = await sb.from('pm_purchase_requests').select('project_id, material_description, status').eq('id', params.id).maybeSingle();
   if (!existing) return json({ error: 'Purchase request not found.' }, 404);
 
+  /* Connect/disconnect an existing (possibly standalone) Purchase Request
+     to a project — same pm_purchase_requests.project_id relationship the
+     Accounting app's own PATCH route uses, no separate mechanism. */
+  if (Object.prototype.hasOwnProperty.call(body, 'project_id')) {
+    if (body.project_id) {
+      const { data: project } = await sb.from('pm_projects').select('id').eq('id', body.project_id).maybeSingle();
+      if (!project) return json({ error: 'Project not found.' }, 404);
+    }
+    patch.project_id = body.project_id || null;
+  }
+  if (Object.keys(patch).length === 0) return json({ error: 'Nothing to update.' }, 400);
+
   const { data: row, error } = await sb.from('pm_purchase_requests').update(patch).eq('id', params.id).select().single();
   if (error) { console.error('[purchase-requests] update failed:', error.message); return json({ error: 'Could not update the purchase request.' }, 500); }
 
   if (patch.status) {
-    await sb.from('pm_project_logs').insert({
-      project_id: existing.project_id,
-      activity: `Purchase Request ${patch.status}: ${existing.material_description}`,
-    });
-    await sb.from('pm_purchase_request_status_history').insert({
-      purchase_request_id: params.id,
-      from_status: existing.status || null,
-      to_status: patch.status,
-      changed_by: session.sub,
-      note: body.note || null,
-    }).catch(() => {}); // table only exists once apps-schema-v7.sql has been run — safe no-op until then
+    try {
+      if (existing.project_id) {
+        const { error: logErr } = await sb.from('pm_project_logs').insert({
+          project_id: existing.project_id,
+          activity: `Purchase Request ${patch.status}: ${existing.material_description}`,
+        });
+        if (logErr) console.error('[purchase-requests] project_logs insert failed:', logErr.message);
+      }
+      const { error: histErr } = await sb.from('pm_purchase_request_status_history').insert({
+        purchase_request_id: params.id,
+        from_status: existing.status || null,
+        to_status: patch.status,
+        changed_by: session.sub,
+        note: body.note || null,
+      });
+      if (histErr) console.error('[purchase-requests] status_history insert failed:', histErr.message);
 
-    /* Also notify the requester so they see the status change without polling — mirrors the admin-notification-on-create below. */
-    const { data: prRow } = await sb.from('pm_purchase_requests').select('requested_by').eq('id', params.id).maybeSingle();
-    if (prRow?.requested_by) {
-      const notifType = patch.status === 'Approved' ? 'purchase_approved' : patch.status === 'Rejected' ? 'purchase_rejected' : 'purchase_request';
-      await sb.from('notifications').insert({
-        user_id: prRow.requested_by,
-        type: notifType, project_id: existing.project_id,
-        title: `Purchase Request ${patch.status}`,
-        body: existing.material_description,
-        link: `/projects/${existing.project_id}?tab=purchase-requests`,
-      }).catch(() => {});
+      /* Also notify the requester so they see the status change without polling — mirrors the admin-notification-on-create below. */
+      const { data: prRow } = await sb.from('pm_purchase_requests').select('requested_by').eq('id', params.id).maybeSingle();
+      if (prRow?.requested_by) {
+        const notifType = patch.status === 'Approved' ? 'purchase_approved' : patch.status === 'Rejected' ? 'purchase_rejected' : 'purchase_request';
+        const { error: notifErr } = await sb.from('notifications').insert({
+          user_id: prRow.requested_by,
+          type: notifType, project_id: existing.project_id,
+          title: `Purchase Request ${patch.status}`,
+          body: existing.material_description,
+          link: `/projects/${existing.project_id}?tab=purchase-requests`,
+        });
+        if (notifErr) console.error('[purchase-requests] notification insert failed:', notifErr.message);
+      }
+    } catch (sideEffectErr) {
+      /* Status-change side effects (activity log / history / notification)
+         must never fail the actual status update, which has already
+         succeeded above. */
+      console.error('[purchase-requests] status-change side effect failed:', sideEffectErr.message);
     }
   }
 
@@ -122,6 +146,8 @@ export async function DELETE(req, { params }) {
   const { error } = await sb.from('pm_purchase_requests').delete().eq('id', params.id);
   if (error) { console.error('[purchase-requests] delete failed:', error.message); return json({ error: 'Could not delete the purchase request.' }, 500); }
 
-  await sb.from('pm_project_logs').insert({ project_id: existing.project_id, activity: `Purchase Request Deleted: ${existing.material_description}` });
+  if (existing.project_id) {
+    await sb.from('pm_project_logs').insert({ project_id: existing.project_id, activity: `Purchase Request Deleted: ${existing.material_description}` });
+  }
   return json({ ok: true });
 }

@@ -1,13 +1,13 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
 
 const EDITABLE = ['expense_date', 'description', 'category', 'amount', 'currency', 'tax_amount', 'vendor_name', 'receipt_url', 'project_id', 'bank_account_id', 'status', 'notes'];
 const VALID_STATUSES = ['Pending', 'Approved', 'Rejected', 'Paid'];
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'edit');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

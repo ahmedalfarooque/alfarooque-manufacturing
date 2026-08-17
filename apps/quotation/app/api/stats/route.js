@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 /* Dashboard KPI counts. Tolerant of a not-yet-applied schema: any table
    error simply yields 0 so the Phase 0 shell still renders. */
@@ -16,7 +16,7 @@ async function count(sb, table, apply) {
 }
 
 export async function GET(req) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
 

@@ -6,6 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
 import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
+import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
 
 const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
@@ -101,6 +102,7 @@ export default function Shell({ children, active }) {
 
   return (
     <div className="min-h-screen flex text-[color:var(--tx)]">
+      <ModuleActionVisibility />
       <aside className={
         'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
         'bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 border-e border-[color:var(--bd)] ' +

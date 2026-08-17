@@ -127,7 +127,7 @@ export default function ProjectViewPage() {
 
       {tab === 'overview' && <OverviewTab p={p} c={c} hasValue={hasValue} assignees={assignees || []} />}
       {tab === 'purchase-requests' && <PurchaseRequestsTab projectId={id} canCreate={canCreate} isAdmin={isAdmin} />}
-      {tab === 'financials' && <FinancialsTab projectId={id} canCreate={canCreate} />}
+      {tab === 'financials' && <FinancialsTab projectId={id} canCreate={canCreate} isAdmin={isAdmin} projectValue={p.value} projectName={p.project_name} />}
       {tab === 'daily-updates' && <DailyUpdatesTab projectId={id} canCreate={canCreate} isAdmin={isAdmin} meId={me?.id} />}
       {tab === 'documents' && <DocumentsTab projectId={id} documents={documents} isAdmin={isAdmin} refresh={refresh} />}
       {tab === 'assigned-people' && <AssignedPeopleTab assignees={assignees || []} isAdmin={isAdmin} onEdit={() => setEditOpen(true)} />}
@@ -368,7 +368,7 @@ function DocumentsTab({ projectId, documents, isAdmin, refresh }) {
 
 function PurchaseRequestsTab({ projectId, canCreate, isAdmin }) {
   const { t } = useLanguage();
-  const [modal, setModal] = useState(null); // 'new' | {id}
+  const [modal, setModal] = useState(null); // 'new' | 'connect' | {id}
   const { data, error, refresh } = useLiveData(`/api/projects/${projectId}/purchase-requests`, 15000);
   const rows = data?.purchaseRequests || [];
 
@@ -376,7 +376,10 @@ function PurchaseRequestsTab({ projectId, canCreate, isAdmin }) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-medium text-sm">{t('pd.tab.purchaseRequests')}</h3>
-        {canCreate && <Button onClick={() => setModal('new')}>{t('pd.newPurchaseRequest')}</Button>}
+        <div className="flex gap-2">
+          {isAdmin && <Button variant="secondary" onClick={() => setModal('connect')}>Connect Existing</Button>}
+          {canCreate && <Button onClick={() => setModal('new')}>{t('pd.newPurchaseRequest')}</Button>}
+        </div>
       </div>
       {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
       <div className="glass-card overflow-hidden">
@@ -413,8 +416,49 @@ function PurchaseRequestsTab({ projectId, canCreate, isAdmin }) {
       </div>
 
       {modal === 'new' && <PurchaseRequestModal projectId={projectId} onClose={() => setModal(null)} onSaved={() => { setModal(null); refresh(); }} />}
-      {modal && modal !== 'new' && <PurchaseRequestDetailModal id={modal.id} isAdmin={isAdmin} onClose={() => setModal(null)} onChanged={refresh} />}
+      {modal === 'connect' && <ConnectExistingPurchaseRequestModal projectId={projectId} onClose={() => setModal(null)} onConnected={() => { setModal(null); refresh(); }} />}
+      {modal && modal !== 'new' && modal !== 'connect' && <PurchaseRequestDetailModal id={modal.id} isAdmin={isAdmin} onClose={() => setModal(null)} onChanged={refresh} />}
     </div>
+  );
+}
+
+function ConnectExistingPurchaseRequestModal({ projectId, onClose, onConnected }) {
+  const { data } = useLiveData('/api/purchase-requests?unassigned=1', 0);
+  const [search, setSearch] = useState('');
+  const [busy, setBusy] = useState(null);
+  const rows = (data?.purchaseRequests || []).filter(r => !search.trim()
+    || `${r.material_description || ''} ${r.supplier || ''}`.toLowerCase().includes(search.trim().toLowerCase()));
+
+  async function connect(id) {
+    setBusy(id);
+    try {
+      const res = await fetch(`/api/purchase-requests/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify({ project_id: projectId }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Could not connect.');
+      onConnected();
+    } catch (e) { alert(e.message); } finally { setBusy(null); }
+  }
+
+  return (
+    <Modal title="Connect Existing Purchase Request" onClose={onClose}>
+      <div className="space-y-3">
+        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm">
+          Only standalone Purchase Requests (created without a project, e.g. from Accounting) are shown here.
+        </div>
+        <Input placeholder="Search material, supplier…" value={search} onChange={e => setSearch(e.target.value)} />
+        {!data ? <div className="py-6 text-center text-sm text-[color:var(--tx-3)]">Loading…</div>
+          : !rows.length ? <div className="py-6 text-center text-sm text-[color:var(--tx-3)]">No standalone purchase requests found.</div>
+          : <div className="max-h-80 space-y-2 overflow-auto">{rows.map(r => (
+              <button key={r.id} disabled={busy === r.id} onClick={() => connect(r.id)}
+                className="block w-full rounded-xl border border-[color:var(--bd)] p-3 text-start text-sm hover:bg-[color:var(--pr-soft)] disabled:opacity-50">
+                <div className="font-medium">{r.material_description}</div>
+                <div className="text-xs text-[color:var(--tx-3)]">{r.request_date} · {r.supplier || 'No supplier'} · {r.estimated_price != null ? `${Number(r.estimated_price).toFixed(2)} SAR` : 'Amount not specified'}</div>
+              </button>
+            ))}</div>}
+      </div>
+    </Modal>
   );
 }
 
@@ -437,6 +481,9 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
   const [invQuery, setInvQuery] = useState('');
   const [invResults, setInvResults] = useState(null);
   const [invPicked, setInvPicked] = useState(null);
+  const [addItemOpen, setAddItemOpen] = useState(false);
+  const [addItemForm, setAddItemForm] = useState({ kind: 'product', name: '' });
+  const [addItemBusy, setAddItemBusy] = useState(false);
 
   useEffect(() => {
     const query = invQuery.trim();
@@ -449,6 +496,13 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
     }, 250);
     return () => clearTimeout(timer);
   }, [invQuery]);
+
+  /* inv_material_id/inv_product_id carry a real FK to inv_materials/
+     inv_products — a qt_materials- or legacy-products-sourced fallback row
+     has no matching row there, so linking one would violate the FK and
+     silently 500 on save. Those rows are reference-only; Add New Item
+     creates a real linkable row first. */
+  function isLinkable(item) { return !item.source_table || item.source_table === 'inv_products' || item.source_table === 'inv_materials'; }
 
   function pickInventoryItem(item, kind) {
     setInvPicked({ ...item, kind });
@@ -466,6 +520,21 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
   function clearInventoryItem() {
     setInvPicked(null);
     setForm(f => ({ ...f, inv_material_id: '', inv_product_id: '' }));
+  }
+
+  async function submitAddItem() {
+    const name = addItemForm.name.trim();
+    if (!name) return;
+    setAddItemBusy(true);
+    try {
+      const r = await fetch('/api/inventory-search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(addItemForm) });
+      const p = await r.json();
+      if (!r.ok) throw new Error(p.error || 'Could not add item.');
+      const created = p.product || p.material;
+      pickInventoryItem(created, addItemForm.kind);
+      setAddItemOpen(false); setAddItemForm({ kind: 'product', name: '' });
+    } catch (e2) { setErr(e2.message); }
+    setAddItemBusy(false);
   }
 
   function onFileChange(e) {
@@ -506,6 +575,7 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
   }
 
   return (
+    <>
     <Modal title={t('pd.newPurchaseRequest').replace(/^\+\s*/, '')} onClose={onClose} wide>
       <form onSubmit={submit} className="space-y-4">
         {err && <div className="text-sm text-[#ef4444]">{err}</div>}
@@ -531,20 +601,31 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
             {invResults && (invResults.products?.length > 0 || invResults.materials?.length > 0) && (
               <div className="absolute z-30 mt-1 w-full rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 shadow-lg max-h-64 overflow-y-auto">
                 {invResults.products?.map(p => (
-                  <button key={'p:' + p.id} type="button" onClick={() => pickInventoryItem(p, 'product')}
-                    className="block w-full text-start px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5">
+                  <button key={'p:' + p.id} type="button" disabled={!isLinkable(p)} onClick={() => isLinkable(p) && pickInventoryItem(p, 'product')}
+                    className={'block w-full text-start px-3 py-2 text-sm ' + (isLinkable(p) ? 'hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-50')}>
                     <div className="font-medium">{p.name}</div>
-                    <div className="text-xs opacity-60">{p.sku || '—'} · {t('pd.stockOnHand')}: {Number(p.qty_on_hand || 0).toLocaleString()}</div>
+                    <div className="text-xs opacity-60">{p.sku || '—'} · {t('pd.stockOnHand')}: {Number(p.qty_on_hand || 0).toLocaleString()}{!isLinkable(p) && ' · not linkable — use Add New Item'}</div>
                   </button>
                 ))}
                 {invResults.materials?.map(m => (
-                  <button key={'m:' + m.id} type="button" onClick={() => pickInventoryItem(m, 'material')}
-                    className="block w-full text-start px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5">
+                  <button key={'m:' + m.id} type="button" disabled={!isLinkable(m)} onClick={() => isLinkable(m) && pickInventoryItem(m, 'material')}
+                    className={'block w-full text-start px-3 py-2 text-sm ' + (isLinkable(m) ? 'hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-50')}>
                     <div className="font-medium">{m.name}</div>
-                    <div className="text-xs opacity-60">{m.material_code || '—'} · {t('pd.stockOnHand')}: {Number(m.qty_on_hand || 0).toLocaleString()}</div>
+                    <div className="text-xs opacity-60">{m.material_code || '—'} · {t('pd.stockOnHand')}: {Number(m.qty_on_hand || 0).toLocaleString()}{!isLinkable(m) && ' · not linkable — use Add New Item'}</div>
                   </button>
                 ))}
               </div>
+            )}
+            {invResults && ![...(invResults.products || []), ...(invResults.materials || [])].some(isLinkable) && (
+              <div className="mt-1 rounded-lg border border-black/10 dark:border-white/10 p-3 text-sm">
+                {t('pd.noMatchFound') === 'pd.noMatchFound' ? 'No matching item found.' : t('pd.noMatchFound')}
+                <button type="button" onClick={() => { setAddItemForm({ kind: 'product', name: invQuery.trim() }); setAddItemOpen(true); }}
+                  className="mt-1 block font-medium text-[#0ea5a4] hover:underline">{t('pd.addNewItem') === 'pd.addNewItem' ? '+ Add New Material / Item' : t('pd.addNewItem')}</button>
+              </div>
+            )}
+            {!invPicked && !invResults && (
+              <button type="button" onClick={() => { setAddItemForm({ kind: 'product', name: '' }); setAddItemOpen(true); }}
+                className="mt-1 text-xs text-[#0ea5a4] hover:underline">{t('pd.addNewItem') === 'pd.addNewItem' ? '+ Add New Material / Item' : t('pd.addNewItem')}</button>
             )}
           </div>
           <div className="col-span-2">
@@ -579,6 +660,28 @@ function PurchaseRequestModal({ projectId, onClose, onSaved }) {
         </div>
       </form>
     </Modal>
+    {addItemOpen && (
+      <Modal title={t('pd.addNewItemTitle') === 'pd.addNewItemTitle' ? 'Add New Material / Item' : t('pd.addNewItemTitle')} onClose={() => setAddItemOpen(false)}>
+        <div className="space-y-3">
+          <Field label={t('pd.itemType') === 'pd.itemType' ? 'Type' : t('pd.itemType')}>
+            <Dropdown value={addItemForm.kind} onChange={v => setAddItemForm(f => ({ ...f, kind: v }))}
+              options={[['product', t('pd.itemTypeProduct') === 'pd.itemTypeProduct' ? 'Product' : t('pd.itemTypeProduct')], ['material', t('pd.itemTypeMaterial') === 'pd.itemTypeMaterial' ? 'Material' : t('pd.itemTypeMaterial')]]} />
+          </Field>
+          <Field label={t('pd.itemName') === 'pd.itemName' ? 'Name *' : t('pd.itemName')}>
+            <Input value={addItemForm.name} onChange={e => setAddItemForm(f => ({ ...f, name: e.target.value }))} />
+          </Field>
+          <Field label={t('pd.itemCode') === 'pd.itemCode' ? 'Code (optional)' : t('pd.itemCode')}>
+            <Input value={(addItemForm.kind === 'material' ? addItemForm.material_code : addItemForm.sku) || ''}
+              onChange={e => setAddItemForm(f => ({ ...f, [addItemForm.kind === 'material' ? 'material_code' : 'sku']: e.target.value }))} />
+          </Field>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setAddItemOpen(false)}>{t('common.cancel')}</Button>
+            <Button type="button" onClick={submitAddItem} disabled={addItemBusy}>{addItemBusy ? t('pd.submitting') : (t('pd.addAndSelect') === 'pd.addAndSelect' ? 'Add & Select' : t('pd.addAndSelect'))}</Button>
+          </div>
+        </div>
+      </Modal>
+    )}
+    </>
   );
 }
 
@@ -936,22 +1039,191 @@ function DailyUpdateDetailModal({ id, isAdmin, meId, onClose, onChanged }) {
 
 /* ══════════════════════════════ ACTIVITY ══════════════════════════════ */
 
-function FinancialsTab({ projectId, canCreate }) {
+function FinancialsTab({ projectId, canCreate, isAdmin, projectValue, projectName }) {
+  const { t, lang } = useLanguage();
   const { data, error, refresh } = useLiveData(`/api/projects/${projectId}/financials`, 15000);
   const [open,setOpen] = useState(false);
   const [busy,setBusy] = useState(false);
   const [err,setErr] = useState('');
   const [form,setForm] = useState({source_record_id:'',amount:'',payment_date:new Date().toISOString().slice(0,10),payment_method:'bank_transfer',reference:'',notes:''});
-  const invoices=data?.invoices||[]; const summary=data?.summary||{};
+  const [purchaseDetail,setPurchaseDetail] = useState(null);
+  const [paymentDetail,setPaymentDetail] = useState(null);
+  const invoices=data?.invoices||[]; const summary=data?.summary||{}; const pr=data?.purchaseRequests||{count:0,estimatedKnownTotal:0,knownCount:0,unknownCount:0};
+  const purchases = invoices.filter(row=>row.record_type==='purchase_invoice');
+  /* Received Payments = the SAME connected-sales-invoice reflected_paid the
+     "Payments received" summary metric already uses (real SmartLife
+     paid_amount, maxed against any ERP-local payment rows on top of it) —
+     never a separate erp_project_payments-only view, which would miss any
+     payment already recorded directly on the SmartLife invoice. One row
+     per invoice with an actual paid amount; the sum of this list always
+     equals summary.payments_received by construction. */
+  const receivedPayments = invoices.filter(row=>row.record_type==='sales_invoice'&&row.reflected_paid>0);
+  const totalReceived = summary.payments_received||0;
+  const balanceToPay = Math.max(Number(projectValue||0)-totalReceived,0);
   const money=value=>`${Number(value||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} SAR`;
+
   async function submit(e){e.preventDefault();setBusy(true);setErr('');try{const r=await fetch(`/api/projects/${projectId}/financials`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({action:'add-payment',...form})});const p=await r.json();if(!r.ok)throw new Error(p.error);setOpen(false);setForm({source_record_id:'',amount:'',payment_date:new Date().toISOString().slice(0,10),payment_method:'bank_transfer',reference:'',notes:''});refresh();}catch(x){setErr(x.message)}finally{setBusy(false)}}
+
+  async function disconnectPurchase(sourceRecordId) {
+    if (!confirm(t('pd.fin.confirmDisconnectPurchase') === 'pd.fin.confirmDisconnectPurchase' ? 'Remove this purchase from the project? The Accounting/SmartLife record itself is not deleted.' : t('pd.fin.confirmDisconnectPurchase'))) return;
+    try {
+      const r = await fetch(`/api/projects/${projectId}/financials`, { method:'DELETE', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({ action:'disconnect-purchase', source_record_id: sourceRecordId }) });
+      if (!r.ok) { const p = await r.json(); throw new Error(p.error); }
+      setPurchaseDetail(null); refresh();
+    } catch (e2) { alert(e2.message); }
+  }
+
+  async function disconnectInvoice(sourceRecordId) {
+    if (!confirm(t('pd.fin.confirmDisconnectInvoice'))) return;
+    try {
+      const r = await fetch(`/api/projects/${projectId}/financials`, { method:'DELETE', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({ action:'disconnect-invoice', source_record_id: sourceRecordId }) });
+      if (!r.ok) { const p = await r.json(); throw new Error(p.error); }
+      setPaymentDetail(null); refresh();
+    } catch (e2) { alert(e2.message); }
+  }
+
+  async function deletePayment(paymentId) {
+    if (!confirm(t('pd.fin.confirmDeletePayment') === 'pd.fin.confirmDeletePayment' ? 'Delete this payment record?' : t('pd.fin.confirmDeletePayment'))) return;
+    try {
+      const r = await fetch(`/api/projects/${projectId}/financials`, { method:'DELETE', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({ action:'delete-payment', payment_id: paymentId }) });
+      if (!r.ok) { const p = await r.json(); throw new Error(p.error); }
+      setPaymentDetail(null); refresh();
+    } catch (e2) { alert(e2.message); }
+  }
+
+  async function printPurchase(row) {
+    /* apps/projects/lib/reportPdf.js is the plain generic-report mirror
+       (title/columns/rows/lang/fileName/action only) — unlike Accounting's
+       own fork, it has no period/source/totals footer concept. Fold that
+       context into the title and into extra rows using the same column
+       shape instead of passing unsupported params that would be silently
+       dropped. */
+    const { exportReportPdf } = await import('@/lib/reportPdf');
+    const items = row.raw_payload?.items || [];
+    const blank = { product_name: '', product_code: '', quantity: '', unit_cost: '' };
+    await exportReportPdf({
+      title: `${projectName} — ${t('pd.fin.purchase')} #${row.source_reference || row.external_id} — ${row.record_date} — ${row.party_name || ''}`,
+      columns: [
+        { key: 'product_name', header: t('pd.fin.item') }, { key: 'product_code', header: t('pd.fin.code') },
+        { key: 'quantity', header: t('pd.fin.qty') }, { key: 'unit_cost', header: t('pd.fin.unitCost') }, { key: 'total', header: t('pd.fin.total') },
+      ],
+      rows: [
+        ...items.map(it => ({ product_name: it.product_name, product_code: it.product_code, quantity: it.quantity, unit_cost: it.unit_cost, total: it.total })),
+        { ...blank, product_name: t('pd.fin.subtotal'), total: money(row.subtotal) },
+        { ...blank, product_name: t('pd.fin.vat'), total: money(row.vat_amount) },
+        { ...blank, product_name: t('pd.fin.total'), total: money(row.total_amount) },
+        { ...blank, product_name: t('pd.fin.amountPaid'), total: money(row.reflected_paid) },
+        { ...blank, product_name: t('pd.fin.remaining'), total: money(row.reflected_balance) },
+      ],
+      lang, fileName: `purchase-${row.source_reference || row.external_id}.pdf`, action: 'print',
+    });
+  }
+
+  async function printPayment(row) {
+    const { exportReportPdf } = await import('@/lib/reportPdf');
+    await exportReportPdf({
+      title: `${projectName} — ${t('pd.fin.receivedPayment')} — ${row.source_reference || row.external_id}`,
+      columns: [{ key: 'label', header: lang === 'ar' ? 'الحقل' : 'Field' }, { key: 'value', header: lang === 'ar' ? 'القيمة' : 'Value' }],
+      rows: [
+        { label: t('pd.fin.invoiceNumber'), value: row.source_reference || row.external_id }, { label: t('pd.fin.customer'), value: row.party_name || '—' },
+        { label: t('pd.fin.invoiceDate'), value: row.record_date }, { label: t('pd.fin.invoiceTotal'), value: money(row.total_amount) },
+        { label: t('pd.fin.amountPaid'), value: money(row.reflected_paid) }, { label: t('pd.fin.remaining'), value: money(row.reflected_balance) },
+        { label: t('pd.fin.status'), value: row.payment_status },
+        { label: t('pd.fin.projectValue'), value: money(projectValue) }, { label: t('pd.fin.paidAmount'), value: money(totalReceived) },
+        { label: t('pd.fin.balanceToPay'), value: money(balanceToPay) },
+      ],
+      lang, fileName: `payment-${row.source_reference || row.external_id}.pdf`, action: 'print',
+    });
+  }
+
   return <div className="space-y-4">
     {error&&<div className="text-sm text-red-500">{error}</div>}
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><FinancialMetric label="Revenue" value={money(summary.revenue)}/><FinancialMetric label="Payments received" value={money(summary.payments_received)}/><FinancialMetric label="Outstanding receivables" value={money(summary.receivables)}/><FinancialMetric label="Profit / cost summary" value={money(summary.profit)}/><FinancialMetric label="Purchases" value={money(summary.purchases)}/><FinancialMetric label="Payments made" value={money(summary.payments_made)}/><FinancialMetric label="Outstanding payables" value={money(summary.payables)}/></div>
-    <div className="glass-card p-4"><div className="mb-3 flex items-center justify-between"><div><h3 className="font-medium">Connected invoices and payments</h3><p className="text-xs text-[color:var(--tx-3)]">SmartLife source values remain read-only. Project connections and local payments belong to AL FAROOQUE ERP.</p></div>{canCreate&&invoices.length>0&&<Button onClick={()=>setOpen(true)}>Add Payment</Button>}</div>
-      {!invoices.length?<EmptyState text="No SmartERP invoices are connected to this project."/>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><Th>Invoice</Th><Th>Type</Th><Th>Total</Th><Th>SmartLife paid</Th><Th>ERP payments</Th><Th>Remaining</Th><Th>Status</Th></tr></thead><tbody>{invoices.map(row=><tr key={row.id}><Td>{row.source_reference||row.external_id}</Td><Td>{row.record_type.replaceAll('_',' ')}</Td><Td>{money(row.total_amount)}</Td><Td>{money(row.source_paid)}</Td><Td>{money(row.local_paid)}</Td><Td>{money(row.reflected_balance)}</Td><Td>{row.payment_status}</Td></tr>)}</tbody></table></div>}
+
+    <div>
+      <h3 className="mb-2 text-xs font-semibold uppercase text-[color:var(--tx-3)]">{t('pd.fin.projectSummary') === 'pd.fin.projectSummary' ? 'Project Summary' : t('pd.fin.projectSummary')}</h3>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <FinancialMetric label={t('pd.fin.projectValue') === 'pd.fin.projectValue' ? 'Project Value' : t('pd.fin.projectValue')} value={money(projectValue)}/>
+        <FinancialMetric label={t('pd.fin.paidAmount') === 'pd.fin.paidAmount' ? 'Paid Amount' : t('pd.fin.paidAmount')} value={money(totalReceived)}/>
+        <FinancialMetric label={t('pd.fin.balanceToPay') === 'pd.fin.balanceToPay' ? 'Balance To Pay' : t('pd.fin.balanceToPay')} value={money(balanceToPay)}/>
+      </div>
     </div>
-    {open&&<Modal title="Add Project Payment" onClose={()=>setOpen(false)}><form onSubmit={submit} className="space-y-4">{err&&<div className="text-sm text-red-500">{err}</div>}<Field label="Related invoice"><select className="ginput" value={form.source_record_id} onChange={e=>setForm(f=>({...f,source_record_id:e.target.value}))} required><option value="">Select invoice…</option>{invoices.map(row=><option key={row.id} value={row.id}>{row.source_reference||row.external_id} · {money(row.total_amount)} · remaining {money(row.reflected_balance)}</option>)}</select></Field><div className="grid grid-cols-2 gap-3"><Field label="Amount"><Input type="number" min="0.01" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} required/></Field><Field label="Payment date"><Input type="date" value={form.payment_date} onChange={e=>setForm(f=>({...f,payment_date:e.target.value}))} required/></Field><Field label="Payment method"><select className="ginput" value={form.payment_method} onChange={e=>setForm(f=>({...f,payment_method:e.target.value}))}><option value="bank_transfer">Bank transfer</option><option value="cash">Cash</option><option value="cheque">Cheque</option><option value="card">Card</option><option value="other">Other</option></select></Field><Field label="Reference"><Input value={form.reference} onChange={e=>setForm(f=>({...f,reference:e.target.value}))}/></Field></div><Field label="Notes"><Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}/></Field><div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-300">This payment is stored only in AL FAROOQUE ERP and is never sent to SmartLife.</div><div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={()=>setOpen(false)}>Cancel</Button><Button type="submit" disabled={busy}>{busy?'Saving…':'Add Payment'}</Button></div></form></Modal>}
+
+    <div>
+      <h3 className="mb-2 text-xs font-semibold uppercase text-[color:var(--tx-3)]">{t('pd.fin.actualHeading')}</h3>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><FinancialMetric label={t('pd.fin.revenue')} value={money(summary.revenue)}/><FinancialMetric label={t('pd.fin.paymentsReceived')} value={money(summary.payments_received)}/><FinancialMetric label={t('pd.fin.outstandingReceivables')} value={money(summary.receivables)}/><FinancialMetric label={t('pd.fin.profit')} value={money(summary.profit)}/><FinancialMetric label={t('pd.fin.actualPurchaseCost')} value={money(summary.purchases)}/><FinancialMetric label={t('pd.fin.paymentsMade')} value={money(summary.payments_made)}/><FinancialMetric label={t('pd.fin.outstandingPayables')} value={money(summary.payables)}/></div>
+    </div>
+    <div>
+      <h3 className="mb-2 text-xs font-semibold uppercase text-[color:var(--tx-3)]">{t('pd.fin.plannedHeading')}</h3>
+      <div className="grid gap-3 sm:grid-cols-3"><FinancialMetric label={t('pd.fin.purchaseRequestsCount')} value={String(pr.count)}/><FinancialMetric label={t('pd.fin.estimatedKnown')} value={money(pr.estimatedKnownTotal)}/><FinancialMetric label={t('pd.fin.requestsNoAmount')} value={String(pr.unknownCount)}/></div>
+    </div>
+
+    <div className="glass-card p-4">
+      <div className="mb-3"><h3 className="font-medium">{t('pd.fin.purchases')}</h3><p className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.purchasesNotice')}</p></div>
+      {!purchases.length?<EmptyState text={t('pd.fin.noPurchases')}/>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><Th>{t('pd.fin.purchase')}</Th><Th>{t('pd.fin.date')}</Th><Th>{t('pd.fin.supplier')}</Th><Th>{t('pd.fin.total')}</Th><Th>{t('pd.fin.remaining')}</Th><Th>{t('pd.fin.status')}</Th></tr></thead><tbody>{purchases.map(row=><tr key={row.id} className="cursor-pointer hover:bg-black/5 dark:hover:bg-white/5" onClick={()=>setPurchaseDetail(row)}><Td>{row.source_reference||row.external_id}</Td><Td>{row.record_date}</Td><Td>{row.party_name||'—'}</Td><Td>{money(row.total_amount)}</Td><Td>{money(row.reflected_balance)}</Td><Td>{row.payment_status}</Td></tr>)}</tbody></table></div>}
+    </div>
+
+    <div className="glass-card p-4">
+      <div className="mb-3 flex items-center justify-between"><div><h3 className="font-medium">{t('pd.fin.receivedPayments')}</h3><p className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.receivedPaymentsNotice')}</p></div>{canCreate&&invoices.filter(r=>r.record_type==='sales_invoice').length>0&&<Button onClick={()=>setOpen(true)}>{t('pd.fin.addPayment')}</Button>}</div>
+      {!receivedPayments.length?<EmptyState text={t('pd.fin.noPaymentsReceived')}/>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><Th>{t('pd.fin.invoice')}</Th><Th>{t('pd.fin.date')}</Th><Th>{t('pd.fin.customer')}</Th><Th>{t('pd.fin.invoiceTotal')}</Th><Th>{t('pd.fin.amountPaid')}</Th><Th>{t('pd.fin.remaining')}</Th><Th>{t('pd.fin.status')}</Th></tr></thead><tbody>{receivedPayments.map(row=><tr key={row.id} className="cursor-pointer hover:bg-black/5 dark:hover:bg-white/5" onClick={()=>setPaymentDetail(row)}><Td>{row.source_reference||row.external_id}</Td><Td>{row.record_date}</Td><Td>{row.party_name||'—'}</Td><Td>{money(row.total_amount)}</Td><Td>{money(row.reflected_paid)}</Td><Td>{money(row.reflected_balance)}</Td><Td>{row.payment_status}</Td></tr>)}</tbody></table></div>}
+    </div>
+
+    {open&&<Modal title={t('pd.fin.addProjectPayment')} onClose={()=>setOpen(false)}><form onSubmit={submit} className="space-y-4">{err&&<div className="text-sm text-red-500">{err}</div>}<Field label={t('pd.fin.relatedInvoice')}><select className="ginput" value={form.source_record_id} onChange={e=>setForm(f=>({...f,source_record_id:e.target.value}))} required><option value="">{t('pd.fin.selectInvoice')}</option>{invoices.filter(r=>r.record_type==='sales_invoice').map(row=><option key={row.id} value={row.id}>{row.source_reference||row.external_id} · {money(row.total_amount)} · {t('pd.fin.remaining')} {money(row.reflected_balance)}</option>)}</select></Field><div className="grid grid-cols-2 gap-3"><Field label={t('pd.fin.amount')}><Input type="number" min="0.01" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} required/></Field><Field label={t('pd.fin.paymentDate')}><Input type="date" value={form.payment_date} onChange={e=>setForm(f=>({...f,payment_date:e.target.value}))} required/></Field><Field label={t('pd.fin.paymentMethod')}><select className="ginput" value={form.payment_method} onChange={e=>setForm(f=>({...f,payment_method:e.target.value}))}><option value="bank_transfer">{t('pd.fin.bankTransfer')}</option><option value="cash">{t('pd.fin.cash')}</option><option value="cheque">{t('pd.fin.cheque')}</option><option value="card">{t('pd.fin.card')}</option><option value="other">{t('pd.fin.other')}</option></select></Field><Field label={t('pd.fin.reference')}><Input value={form.reference} onChange={e=>setForm(f=>({...f,reference:e.target.value}))}/></Field></div><Field label={t('pd.fin.notes')}><Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}/></Field><div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-300">{t('pd.fin.localOnlyNotice')}</div><div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={()=>setOpen(false)}>{t('common.cancel')}</Button><Button type="submit" disabled={busy}>{busy?t('common.saving'):t('pd.fin.addPayment')}</Button></div></form></Modal>}
+
+    {purchaseDetail && <Modal title={`${t('pd.fin.purchase')} #${purchaseDetail.source_reference || purchaseDetail.external_id}`} onClose={()=>setPurchaseDetail(null)}>
+      <div className="space-y-3 text-sm">
+        <div className="grid grid-cols-2 gap-3">
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.date')}</div><div>{purchaseDetail.record_date}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.supplier')}</div><div>{purchaseDetail.party_name||'—'}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.subtotal')}</div><div>{money(purchaseDetail.subtotal)}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.vat')}</div><div>{money(purchaseDetail.vat_amount)}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.total')}</div><div>{money(purchaseDetail.total_amount)}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.amountPaid')}</div><div>{money(purchaseDetail.reflected_paid)}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.remaining')}</div><div>{money(purchaseDetail.reflected_balance)}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.status')}</div><div>{purchaseDetail.payment_status}</div></div>
+        </div>
+        {!!(purchaseDetail.raw_payload?.items||[]).length && <div className="overflow-auto"><table className="w-full text-xs"><thead><tr><Th>{t('pd.fin.item')}</Th><Th>{t('pd.fin.code')}</Th><Th>{t('pd.fin.qty')}</Th><Th>{t('pd.fin.unitCost')}</Th><Th>{t('pd.fin.total')}</Th></tr></thead><tbody>{purchaseDetail.raw_payload.items.map((it,i)=><tr key={i}><Td>{it.product_name}</Td><Td>{it.product_code}</Td><Td>{it.quantity}</Td><Td>{it.unit_cost}</Td><Td>{it.total}</Td></tr>)}</tbody></table></div>}
+        <div className="flex justify-between gap-2 pt-2">
+          {isAdmin ? <Button variant="ghost" onClick={()=>disconnectPurchase(purchaseDetail.id)}>{t('pd.fin.disconnect')}</Button> : <span/>}
+          <Button onClick={()=>printPurchase(purchaseDetail)}>{t('common.print')}</Button>
+        </div>
+      </div>
+    </Modal>}
+
+    {paymentDetail && <Modal title={`${t('pd.fin.receivedPayment')} — ${paymentDetail.source_reference || paymentDetail.external_id}`} onClose={()=>setPaymentDetail(null)}>
+      <div className="space-y-3 text-sm">
+        <div className="grid grid-cols-2 gap-3">
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.invoiceNumber')}</div><div>{paymentDetail.source_reference||paymentDetail.external_id}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.customer')}</div><div>{paymentDetail.party_name||'—'}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.invoiceDate')}</div><div>{paymentDetail.record_date}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.status')}</div><div>{paymentDetail.payment_status}</div></div>
+        </div>
+        <div className="grid grid-cols-3 gap-3 rounded-lg border border-[color:var(--bd)] p-3 text-center">
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.invoiceTotal')}</div><div className="font-semibold">{money(paymentDetail.total_amount)}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.amountPaid')}</div><div className="font-semibold text-emerald-600 dark:text-emerald-400">{money(paymentDetail.reflected_paid)}</div></div>
+          <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.remaining')}</div><div className="font-semibold">{money(paymentDetail.reflected_balance)}</div></div>
+        </div>
+        {!!(paymentDetail.localPayments||[]).length && <div>
+          <div className="mb-1 text-xs font-semibold uppercase text-[color:var(--tx-3)]">{t('pd.fin.erpRecordedPayments')}</div>
+          <div className="space-y-1">{paymentDetail.localPayments.map(lp => (
+            <div key={lp.id} className="flex items-center justify-between rounded-lg border border-[color:var(--bd)] px-3 py-2">
+              <span>{lp.payment_date} · {money(lp.amount)} · {lp.payment_method||'—'}{lp.reference?` · ${lp.reference}`:''}</span>
+              {isAdmin && <button onClick={()=>deletePayment(lp.id)} title={t('common.delete')} className="text-[#ef4444]">🗑</button>}
+            </div>
+          ))}</div>
+        </div>}
+        <div className="rounded-lg border border-[color:var(--bd)] p-3">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.projectValue') === 'pd.fin.projectValue' ? 'Project Value' : t('pd.fin.projectValue')}</div><div className="font-semibold">{money(projectValue)}</div></div>
+            <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.paidAmount') === 'pd.fin.paidAmount' ? 'Paid Amount' : t('pd.fin.paidAmount')}</div><div className="font-semibold">{money(totalReceived)}</div></div>
+            <div><div className="text-xs text-[color:var(--tx-3)]">{t('pd.fin.balanceToPay') === 'pd.fin.balanceToPay' ? 'Balance To Pay' : t('pd.fin.balanceToPay')}</div><div className="font-semibold">{money(balanceToPay)}</div></div>
+          </div>
+        </div>
+        <div className="flex justify-between gap-2 pt-2">
+          {isAdmin ? <Button variant="ghost" onClick={()=>disconnectInvoice(paymentDetail.id)}>{t('pd.fin.disconnect') === 'pd.fin.disconnect' ? 'Disconnect from project' : t('pd.fin.disconnect')}</Button> : <span/>}
+          <Button onClick={()=>printPayment(paymentDetail)}>{t('common.print')}</Button>
+        </div>
+      </div>
+    </Modal>}
   </div>;
 }
 

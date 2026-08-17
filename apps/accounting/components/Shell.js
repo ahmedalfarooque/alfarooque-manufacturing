@@ -6,14 +6,60 @@ import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
 import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
+import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
 
-const NAV = [
-  { href: '/smartlife/sales-invoices', label: 'Sales Invoices', labelAr: 'فواتير المبيعات', icon: 'receipt' },
-  { href: '/smartlife/purchase-invoices', label: 'Purchase Invoices', labelAr: 'فواتير المشتريات', icon: 'receipt' },
-  { href: '/smartlife/payments', label: 'Payments', labelAr: 'المدفوعات', icon: 'receipt' },
-  { href: '/smartlife/expenses', label: 'Expenses', labelAr: 'المصروفات', icon: 'receipt' },
-  { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'receipt' },
-  { href: '/settings',          label: 'Settings',          labelAr: 'الإعدادات',         icon: 'settings' },
+/* Grouped nav — every href is an EXISTING route (the generic
+   /smartlife/[resource] page for every SmartERP-backed module, or an
+   already-working local page). No new physical routes were created to
+   build this list; see apps/accounting/app/(protected)/smartlife/[resource]/page.js
+   MODULES for the full SmartERP-backed set. "Purchase Invoices" pointed at a
+   resource key ('purchase-invoices') that has never existed in
+   SMARTLIFE_RESOURCES (the real key is 'purchases') — fixed here.
+   "Expenses" pointed at '/smartlife/expenses', a resource key that ALSO
+   never existed in MODULES — the generic [resource] page's fallback
+   (`LABELS[params.resource] ? params.resource : 'sales-invoices'`) silently
+   rendered Sales Invoices data under the Expenses label. Removed entirely
+   (no SmartERP expenses endpoint exists to replace it with). */
+const NAV_GROUPS = [
+  { group: null, items: [
+    { href: '/dashboard', label: 'Dashboard', labelAr: 'الرئيسية', icon: 'receipt' },
+  ] },
+  { group: 'Accounting', groupAr: 'المحاسبة', items: [
+    { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'receipt' },
+    { href: '/smartlife/accounts', label: 'Chart of Accounts', labelAr: 'دليل الحسابات', icon: 'receipt' },
+    { href: '/smartlife/account-balances', label: 'Account Balances', labelAr: 'أرصدة الحسابات', icon: 'receipt' },
+    { href: '/smartlife/cost-centers', label: 'Cost Centers', labelAr: 'مراكز التكلفة', icon: 'receipt' },
+    { href: '/vat', label: 'VAT Report', labelAr: 'تقرير ضريبة القيمة المضافة', icon: 'receipt' },
+  ] },
+  { group: 'Sales', groupAr: 'المبيعات', items: [
+    { href: '/smartlife/sales-invoices', label: 'Sales Invoices', labelAr: 'فواتير المبيعات', icon: 'receipt' },
+    { href: '/smartlife/customers', label: 'Customers', labelAr: 'العملاء', icon: 'receipt' },
+    { href: '/smartlife/payments', label: 'Payments', labelAr: 'المدفوعات', icon: 'receipt' },
+  ] },
+  { group: 'Purchasing', groupAr: 'المشتريات', items: [
+    { href: '/smartlife/purchases', label: 'Purchase Invoices', labelAr: 'فواتير المشتريات', icon: 'receipt' },
+    { href: '/purchase-requests', label: 'Purchase Requests', labelAr: 'طلبات الشراء', icon: 'receipt' },
+    { href: '/smartlife/suppliers', label: 'Suppliers', labelAr: 'الموردون', icon: 'receipt' },
+  ] },
+  { group: 'Inventory', groupAr: 'المخزون', items: [
+    { href: '/inventory', label: 'Inventory', labelAr: 'المخزون', icon: 'receipt' },
+    { href: '/smartlife/product-balances', label: 'Product Balances', labelAr: 'أرصدة المنتجات', icon: 'receipt' },
+    { href: '/smartlife/products', label: 'Products', labelAr: 'المنتجات', icon: 'receipt' },
+    { href: '/smartlife/categories', label: 'Categories', labelAr: 'الفئات', icon: 'receipt' },
+    { href: '/smartlife/brands', label: 'Brands', labelAr: 'العلامات التجارية', icon: 'receipt' },
+    { href: '/smartlife/units', label: 'Units', labelAr: 'الوحدات', icon: 'receipt' },
+    { href: '/smartlife/warehouses', label: 'Warehouses / Branches', labelAr: 'المستودعات / الفروع', icon: 'receipt' },
+    { href: '/smartlife/tax', label: 'Tax', labelAr: 'الضرائب', icon: 'receipt' },
+  ] },
+  { group: 'Other', groupAr: 'أخرى', items: [
+    { href: '/smartlife/gift-cards', label: 'Gift Cards', labelAr: 'بطاقات الهدايا', icon: 'receipt' },
+    { href: '/smartlife/coupons', label: 'Coupons', labelAr: 'القسائم', icon: 'receipt' },
+    { href: '/users', label: 'Users', labelAr: 'المستخدمون', icon: 'receipt', adminOnly: true },
+    { href: '/smartlife/cashiers', label: 'Cashiers', labelAr: 'الصرافون', icon: 'receipt' },
+  ] },
+  { group: null, items: [
+    { href: '/settings', label: 'Settings', labelAr: 'الإعدادات', icon: 'settings' },
+  ] },
 ];
 
 export default function Shell({ children, active }) {
@@ -46,10 +92,15 @@ export default function Shell({ children, active }) {
     window.location.href = '/login';
   }
 
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  // Keep the server render and the first client render identical. Reading
+  // window.location during render made the active-link class differ during
+  // hydration (server: inactive, client: active), producing noisy warnings.
+  const [currentPath, setCurrentPath] = useState('');
+  useEffect(() => { setCurrentPath(window.location.pathname); }, []);
 
   return (
     <div className="min-h-screen flex text-[color:var(--tx)]">
+      <ModuleActionVisibility />
       {/* Sidebar */}
       <aside className={
         'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
@@ -66,21 +117,30 @@ export default function Shell({ children, active }) {
         </div>
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          {NAV.map(item => {
-            const isActive = active === item.href || currentPath.startsWith(item.href);
-            return (
-              <a key={item.href} href={item.href}
-                className={
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
-                  (isActive
-                    ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] border border-[rgba(6,182,212,0.25)]'
-                    : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
-                }>
-                <GlassIcon name={item.icon} size={18} />
-                <span>{lang === 'ar' ? item.labelAr : item.label}</span>
-              </a>
-            );
-          })}
+          {NAV_GROUPS.map((section, sectionIndex) => (
+            <div key={section.group || `ungrouped-${sectionIndex}`}>
+              {section.group && (
+                <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--tx-4)]">
+                  {lang === 'ar' ? section.groupAr : section.group}
+                </div>
+              )}
+              {section.items.filter(item => !item.adminOnly || user?.role === 'admin').map(item => {
+                const isActive = active === item.href || currentPath.startsWith(item.href);
+                return (
+                  <a key={item.href} href={item.href}
+                    className={
+                      'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
+                      (isActive
+                        ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] border border-[rgba(6,182,212,0.25)]'
+                        : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
+                    }>
+                    <GlassIcon name={item.icon} size={18} />
+                    <span>{lang === 'ar' ? item.labelAr : item.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+          ))}
         </nav>
         {/* User */}
         {user && (

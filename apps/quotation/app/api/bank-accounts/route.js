@@ -4,13 +4,13 @@
    GET  ?activeOnly=1 → list (any authenticated user)
    POST { bank_name, account_name, ... } → create (write permission). */
 
-const { json, requireSession, requireWrite } = require('@/lib/http');
+const { json, requireSession, requireWrite , requireAction } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 const { getDb } = require('@/lib/db');
 const repo = require('@/lib/contracts/repo');
 
 export async function GET(req) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const url = new URL(req.url);
   try {

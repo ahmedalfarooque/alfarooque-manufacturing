@@ -8,7 +8,7 @@
    is unchanged so the customers page needs no UI changes. */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite } = require('@/lib/http');
+const { json, requireSession, requireWrite , requireAction } = require('@/lib/http');
 const { audit, applyBilingual } = require('@/lib/crud');
 const { translate, hasArabic } = require('@/lib/translate');
 
@@ -33,7 +33,7 @@ function fromDbRow(row) {
 }
 
 export async function GET(req) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
   const url = new URL(req.url);

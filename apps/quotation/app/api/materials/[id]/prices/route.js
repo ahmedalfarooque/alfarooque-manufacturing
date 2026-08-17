@@ -1,11 +1,11 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 /* Price history for one material, newest first, with supplier names. */
 export async function GET(req, { params }) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
   const { data, error } = await sb.from('qt_material_price_history')

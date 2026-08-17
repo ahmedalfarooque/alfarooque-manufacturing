@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
 
@@ -12,6 +13,7 @@ export default function PaymentsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ payment_type: 'receipt', currency: 'SAR' });
   const [saving, setSaving] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const params = new URLSearchParams({ page, pageSize });
@@ -20,6 +22,43 @@ export default function PaymentsPage() {
   const { data: bankData } = useLiveData('/api/banking', 0);
   const payments = paymentsData?.payments || [];
   const accounts = bankData?.accounts || [];
+
+  /* Same shared A4 report engine as the rest of Accounting. Walks every
+     server page (100 at a time) under the active type filter instead of
+     only exporting the currently visible page. */
+  async function fetchAllPayments() {
+    const all = [];
+    for (let p = 1, guard = 0; guard < 100; guard += 1) {
+      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
+      if (type) qp.set('type', type);
+      const res = await fetch(`/api/payments?${qp}`, { credentials: 'same-origin' });
+      const body = await res.json().catch(() => ({}));
+      const batch = Array.isArray(body.payments) ? body.payments : [];
+      all.push(...batch);
+      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      p += 1;
+    }
+    return all;
+  }
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = await fetchAllPayments();
+      await exportReportPdf({
+        title: 'Payments Report' + (type ? ` — ${type === 'receipt' ? 'Receipts' : 'Payments'}` : ''),
+        columns: [
+          { key: 'payment_type', header: 'Type' }, { key: 'payment_date', header: 'Date' },
+          { key: 'party_name', header: 'Party' }, { key: 'bankAccountName', header: 'Bank Account' },
+          { key: 'amountText', header: 'Amount' }, { key: 'reference', header: 'Reference' },
+        ],
+        rows: all.map(p => ({ ...p, party_name: p.party_name || '—', bankAccountName: p.acc_bank_accounts?.name || '—', amountText: `SAR ${fmt(p.amount)}`, reference: p.reference || '—' })),
+        totals: [['Payments exported', String(all.length)], ['Total amount', `SAR ${fmt(all.reduce((s, p) => s + Number(p.amount || 0), 0))}`]],
+        fileName: 'payments-report.pdf', action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   async function createPayment() {
     setSaving(true);
@@ -56,6 +95,8 @@ export default function PaymentsPage() {
             <option value="receipt">Receipts</option>
             <option value="payment">Payments</option>
           </GlassSelect>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!paymentsData?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!paymentsData?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">

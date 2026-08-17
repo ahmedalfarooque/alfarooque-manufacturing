@@ -13,13 +13,14 @@ const EMPTY_FORM = { full_name: '', company_name: '', email: '', mobile_number: 
 const REFRESH_MS = 15000;
 
 export default function CustomersPage() {
-  const { t, formatDate } = useLanguage();
+  const { t, lang, formatDate } = useLanguage();
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [modal, setModal] = useState(null); // { mode: 'add'|'edit'|'view', data }
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [reportBusy, setReportBusy] = useState('');
 
   const isAdmin = me?.role === 'admin';
   const url = '/api/customers' + (debouncedSearch ? '?search=' + encodeURIComponent(debouncedSearch) : '');
@@ -55,6 +56,26 @@ export default function CustomersPage() {
     else { const d = await res.json().catch(() => ({})); alert(d.error || t('cust.couldNotDelete')); }
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('cust.title'),
+        columns: [
+          { key: 'fullName', header: t('cust.col.fullName') }, { key: 'company', header: t('cust.col.company') },
+          { key: 'email', header: t('common.email') }, { key: 'mobile', header: t('cust.col.mobile') },
+          { key: 'vat', header: t('cust.col.vatNumber') }, { key: 'city', header: t('cust.col.city') },
+        ],
+        rows: sorted.map(c => ({
+          fullName: c.full_name || '—', company: c.company_name || '—', email: c.email || '—',
+          mobile: c.mobile_number || '—', vat: c.vat_number || '—', city: c.city || '—',
+        })),
+        lang, fileName: 'customers-report.pdf', action,
+      });
+    } catch (e2) {} finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/customers">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -62,7 +83,11 @@ export default function CustomersPage() {
           <h2 className="text-lg font-semibold">{t('cust.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('cust.breadcrumb')}</p>
         </div>
-        {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('cust.addCustomer')}</Button>}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!sorted.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
+          {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>{t('cust.addCustomer')}</Button>}
+        </div>
       </div>
 
       <div className="glass-card p-4 mb-4">

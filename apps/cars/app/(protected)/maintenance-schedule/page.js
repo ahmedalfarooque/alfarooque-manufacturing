@@ -17,7 +17,7 @@ const STATUS_BADGE = {
 const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[color:var(--tx)] transition-colors';
 
 export default function MaintenanceSchedulePage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [items, setItems] = useState(null);
   const [error, setError] = useState(null);
   const [me, setMe] = useState(null);
@@ -26,6 +26,7 @@ export default function MaintenanceSchedulePage() {
   const debouncedSearch = useDebouncedValue(search, 350);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [reportBusy, setReportBusy] = useState('');
   const isAdmin = me?.role === 'admin';
 
   function load() {
@@ -66,9 +67,41 @@ export default function MaintenanceSchedulePage() {
     if (res.ok) load();
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      const ar = lang === 'ar';
+      await exportReportPdf({
+        title: ar ? 'تقرير جدول الصيانة' : 'Maintenance Schedule Report',
+        columns: [
+          { key: 'vehicle', header: t('maintSchedule.colVehicle') },
+          { key: 'type', header: t('maintSchedule.colType') },
+          { key: 'lastService', header: t('maintSchedule.colLastService') },
+          { key: 'interval', header: t('maintSchedule.colInterval') },
+          { key: 'nextDue', header: t('maintSchedule.colNextDue') },
+          { key: 'remaining', header: t('maintSchedule.colRemaining') },
+          { key: 'status', header: t('maintSchedule.colStatus') },
+        ],
+        rows: sorted.map(m => ({
+          vehicle: m.vehicle_number || '—', type: m.maintenance_type || '—', lastService: fmt(m.last_service_km),
+          interval: fmt(m.interval_km), nextDue: fmt(m.next_due_km), remaining: fmt(m.remaining_km), status: trEnum(t, 'status', m.status),
+        })),
+        lang, fileName: 'maintenance-schedule-report.pdf', action,
+      });
+    } catch (e) { /* no-op — report generation failures shouldn't disrupt the page */ }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/maintenance-schedule">
-      <h2 className="text-lg font-semibold mb-1">{t('maintSchedule.title')}</h2>
+      <div className="flex items-center justify-between mb-1 flex-wrap gap-3">
+        <h2 className="text-lg font-semibold">{t('maintSchedule.title')}</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
+        </div>
+      </div>
       <p className="text-xs text-[color:var(--tx-3)] mb-4">{t('maintSchedule.subtitle')}</p>
       <Input placeholder={t('maintSchedule.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm mb-4" />
       {error && <div className="text-[#ef4444] text-sm">{error}</div>}

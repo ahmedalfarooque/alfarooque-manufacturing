@@ -2,7 +2,7 @@
 
 const ExcelJS = require('exceljs');
 const { getDb } = require('@/lib/db');
-const { requireSession } = require('@/lib/http');
+const { requireSession , requireAction } = require('@/lib/http');
 
 const COLUMNS = [
   { header: 'Vehicle Number', key: 'vehicle_number', width: 16 },
@@ -17,7 +17,7 @@ const COLUMNS = [
 ];
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();

@@ -6,6 +6,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import AppSwitcherButtons from '@/components/AppSwitcherButtons';
 import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
+import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
 
 const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
@@ -117,8 +118,9 @@ export default function Shell({ children, active }) {
 
   return (
     <div className="min-h-screen flex text-[color:var(--tx)]">
+      <ModuleActionVisibility />
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
+        'print:hidden fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
         'bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 border-e border-[color:var(--bd)] ' +
         'shadow-[8px_0_40px_rgba(11,27,41,0.06)] dark:shadow-[8px_0_40px_rgba(0,0,0,0.4)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
@@ -154,17 +156,12 @@ export default function Shell({ children, active }) {
             </a>
           ))}
         </nav>
-        <div className="p-3">
-          <button onClick={logout} className="w-full gbtn gbtn-ghost justify-start">
-            <GlassIcon name="logout" size={18} className="shrink-0" />{t('shell.logout')}
-          </button>
-        </div>
       </aside>
 
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
+        <header className="print:hidden min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
             <button className="lg:hidden gbtn gbtn-ghost gbtn--icon gbtn--sm text-xl" onClick={() => setSidebarOpen(true)} aria-label="Menu">☰</button>
             <h1 className="font-semibold text-lg capitalize truncate">{(() => { const navItem = NAV.find(i => i.href === active); return navItem ? t(navItem.labelKey) : active.replace('/', ''); })()}</h1>
@@ -206,6 +203,10 @@ export default function Shell({ children, active }) {
             </button>
             <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>
               <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
+            </button>
+            <button onClick={logout} className="glass-ctrl">
+              <GlassIcon name="logout" size={16} className="ctrl-icon" />
+              <span className="ctrl-label">{t('shell.logout')}</span>
             </button>
           </div>
         </header>

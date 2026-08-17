@@ -1,13 +1,13 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireWrite, requireDelete , requireAction } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 const { isSuperAdminEmail } = require('@/lib/superAdmin');
 
 /* Full document: quotation + entity + customer + products (+cost lines). */
 export async function GET(req, { params }) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
   const { data: row, error } = await sb.from('qt_quotations')

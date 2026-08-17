@@ -13,14 +13,14 @@
 
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 const BUCKET = 'project-documents';
 const MAX_BYTES = 15 * 1024 * 1024; // 15MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
 
   let form;
@@ -66,7 +66,7 @@ export async function POST(req, { params }) {
 }
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
   const { data, error } = await sb.from('pm_project_documents').select('*').eq('project_id', params.id).order('created_at', { ascending: false });

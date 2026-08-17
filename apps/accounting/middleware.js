@@ -28,14 +28,22 @@ async function readAnySession(req) {
   return ssoToken ? await verifySso(ssoToken) : null;
 }
 
-const ADMIN_ONLY_PREFIXES = ['/settings'];
+const ADMIN_ONLY_PREFIXES = ['/settings', '/users'];
+/* /api/dashboard and /api/reports are RE-ACTIVATED (product decision,
+   2026-08-13): they now back a real local aggregation layer built on top
+   of the synced SmartERP snapshot (erp_financial_source_records) plus
+   AL FAROOQUE's own local records (pm_purchase_requests, erp_project_payments)
+   — never fabricated data, never a SmartLife write. Everything still
+   genuinely unbuilt (chart-of-accounts/journal-entries/invoices/bills/
+   payments/banking/expenses/assets) stays retired until it has a real
+   backend, so users are never shown a page that quietly does nothing. */
 const LOCAL_FINANCIAL_APIS = [
   '/api/chart-of-accounts', '/api/journal-entries', '/api/invoices', '/api/bills',
-  '/api/payments', '/api/banking', '/api/expenses', '/api/assets', '/api/dashboard', '/api/reports',
+  '/api/payments', '/api/banking', '/api/expenses', '/api/assets',
 ];
 const LEGACY_FINANCIAL_PAGES = [
-  '/dashboard', '/chart-of-accounts', '/journal-entries', '/invoices', '/bills',
-  '/payments', '/banking', '/expenses', '/assets', '/reports',
+  '/chart-of-accounts', '/journal-entries', '/invoices', '/bills',
+  '/payments', '/banking', '/expenses', '/assets',
 ];
 
 function redirectTo(req, path) {
@@ -60,7 +68,6 @@ export async function middleware(req) {
   if (LEGACY_FINANCIAL_PAGES.some(p => pathname === p || pathname.startsWith(p + '/'))) {
     const target = pathname.startsWith('/bills') ? '/smartlife/purchase-invoices'
       : pathname.startsWith('/payments') ? '/smartlife/payments'
-      : pathname.startsWith('/reports') ? '/smartlife/financial-reports'
       : '/smartlife/sales-invoices';
     return redirectTo(req, target);
   }
@@ -76,10 +83,12 @@ export const config = {
   matcher: [
     '/dashboard/:path*', '/chart-of-accounts/:path*', '/journal-entries/:path*',
     '/invoices/:path*', '/bills/:path*', '/payments/:path*', '/banking/:path*',
-    '/expenses/:path*', '/assets/:path*', '/reports/:path*', '/settings/:path*',
+    '/expenses/:path*', '/assets/:path*', '/reports/:path*', '/vat/:path*', '/settings/:path*', '/users/:path*',
     '/smartlife/:path*', '/api/chart-of-accounts/:path*', '/api/journal-entries/:path*',
     '/api/invoices/:path*', '/api/bills/:path*', '/api/payments/:path*',
     '/api/banking/:path*', '/api/expenses/:path*', '/api/assets/:path*',
-    '/api/dashboard/:path*', '/api/reports/:path*',
+    /* /api/dashboard and /api/reports are intentionally NOT matched here —
+       same as /api/smartlife/*: auth is enforced inside each route via
+       requireSession(), not by this middleware. */
   ],
 };

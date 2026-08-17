@@ -5,18 +5,19 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
 
 const REFRESH_MS = 20000;
 const REF_TYPES = ['project', 'department', 'sales_order', 'other'];
 
 export default function GoodsIssuesPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ warehouse_id: '', issue_date: new Date().toISOString().slice(0, 10), reference_type: 'other', items: [{ product_id: '', material_id: '', qty_issued: 1, unit_cost: 0 }] });
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data: gid, mutate } = useLiveData(`/api/goods-issues?page=${page}&limit=50`, REFRESH_MS);
   const { data: wd } = useLiveData('/api/warehouses', 0);
@@ -74,10 +75,33 @@ export default function GoodsIssuesPage() {
     } finally { setBusy(false); }
   }, [form, mutate, t]);
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.goodsIssues') || 'Goods Issues',
+        columns: [
+          { key: 'number', header: t('gi.giNumber') }, { key: 'warehouse', header: t('nav.warehouses') },
+          { key: 'date', header: t('gi.issueDate') }, { key: 'issuedTo', header: t('gi.issuedTo') },
+          { key: 'receivedBy', header: t('common.receivedBy') },
+        ],
+        rows: issues.map(r => ({
+          number: r.gi_number || r.id.slice(0, 8), warehouse: r.inv_warehouses?.name || '—',
+          date: r.issue_date || '—', issuedTo: r.issued_to || '—', receivedBy: r.platform_users?.full_name || '—',
+        })),
+        lang, fileName: 'goods-issues-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/goods-issues">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!issues.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!issues.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
         <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('gi.addIssue')}</button>
       </div>
 

@@ -38,10 +38,6 @@ export default function DashboardPage() {
           <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="package" size={20} bare /></span>
           <span className="text-sm font-medium truncate">{t('products.addProduct')}</span>
         </a>
-        <a href="/materials" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
-          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="layers" size={20} bare /></span>
-          <span className="text-sm font-medium truncate">{t('materials.addMaterial')}</span>
-        </a>
         <a href="/purchase-requests" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
           <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="clipboard" size={20} bare /></span>
           <span className="text-sm font-medium truncate">{t('pr.addRequest')}</span>
@@ -54,7 +50,6 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 gfade-up">
         <StatCard icon="package" tone="brand" label={t('dash.totalProducts')} value={fmt(stats.totalProducts)} sub={t('dash.activeProducts')} href="/products" />
-        <StatCard icon="layers" tone="blue" label={t('dash.totalMaterials')} value={fmt(stats.totalMaterials)} sub={t('dash.activeMaterials')} href="/materials" />
         <StatCard icon="box" tone="emerald" label={t('dash.stockValue')} value={'SAR ' + fmtNum(stats.stockValue)} sub={t('dash.totalInventoryValue')} />
         <StatCard icon="bell" tone={stats.lowStockCount > 0 ? 'amber' : 'emerald'} label={t('dash.lowStock')} value={fmt(stats.lowStockCount)} sub={t('dash.itemsBelowMinimum')} href="/stock" />
         <StatCard icon="x" tone={stats.outOfStock > 0 ? 'red' : 'emerald'} label={t('dash.outOfStock')} value={fmt(stats.outOfStock)} sub={t('dash.zeroQtyItems')} href="/stock" />

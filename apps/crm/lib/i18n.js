@@ -4,14 +4,26 @@ import { createContext, useContext, useState } from 'react';
 
 const translations = {
   en: {
-    dashboard: 'Dashboard', contacts: 'Contacts', deals: 'Deals',
+    dashboard: 'Dashboard', leads: 'Leads', contacts: 'Contacts', deals: 'Deals',
     activities: 'Activities', pipeline: 'Pipeline', integrations: 'Integrations', reports: 'Reports',
     settings: 'Settings', logout: 'Logout', theme: 'Theme',
+    notifications: 'Notifications', noNotificationsYet: 'No notifications yet.', delete: 'Delete',
+    toggleLanguage: 'Toggle language', toggleTheme: 'Toggle theme', menu: 'Menu',
+    print: 'Print', downloadPdf: 'Download PDF',
+    companies: 'Companies', opportunities: 'Opportunities', workspace: 'My Workspace',
+    analytics: 'Analytics', search: 'Search', attention: 'Attention', calendar: 'Calendar',
+    communications: 'Communications', documents: 'Documents',
   },
   ar: {
-    dashboard: 'لوحة التحكم', contacts: 'جهات الاتصال', deals: 'الصفقات',
+    dashboard: 'لوحة التحكم', leads: 'العملاء المحتملون', contacts: 'جهات الاتصال', deals: 'الصفقات',
     activities: 'الأنشطة', pipeline: 'خط الأنابيب', integrations: 'التكاملات', reports: 'التقارير',
     settings: 'الإعدادات', logout: 'تسجيل الخروج', theme: 'المظهر',
+    notifications: 'الإشعارات', noNotificationsYet: 'لا توجد إشعارات بعد.', delete: 'حذف',
+    toggleLanguage: 'تبديل اللغة', toggleTheme: 'تبديل المظهر', menu: 'القائمة',
+    print: 'طباعة', downloadPdf: 'تنزيل PDF',
+    companies: 'الشركات', opportunities: 'الفرص', workspace: 'مساحتي',
+    analytics: 'التحليلات', search: 'بحث', attention: 'يتطلب الانتباه', calendar: 'التقويم',
+    communications: 'الاتصالات', documents: 'المستندات',
   },
 };
 

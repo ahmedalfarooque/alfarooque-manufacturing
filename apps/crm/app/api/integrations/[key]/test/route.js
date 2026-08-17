@@ -1,17 +1,21 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { getIntegration, readSmartLife, auditIntegration } = require('../../../../../../shared/integrationPlatform');
 
 export async function POST(req, { params }) {
-  const { response, session } = requireSession(req, { roles: ['admin','manager'] });
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
   const sb = getDb();
   const integration = await getIntegration(sb, params.key);
   if (!integration) return json({ error: 'Integration not found.' }, 404);
   try {
-    if (params.key === 'smartlife') await readSmartLife(sb, 'products');
+    /* Connection health must use a module this API user can actually read.
+       Products is currently permission-blocked in SmartERP, so probing it
+       mislabels a healthy authenticated connection as a network failure.
+       Categories is a verified V3 read endpoint and is live for this account. */
+    if (params.key === 'smartlife') await readSmartLife(sb, 'categories');
     else if (params.key === 'alfarooque_erp') {
       const checks = await Promise.all([
         sb.from('qt_quotations').select('id', { count: 'exact', head: true }),

@@ -5,12 +5,13 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
 
 const REFRESH_MS = 20000;
 
 export default function StockPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const [reportBusy, setReportBusy] = useState('');
   const [search, setSearch] = useState('');
   const [type, setType] = useState('all');
   const [warehouseId, setWarehouseId] = useState('');
@@ -35,6 +36,31 @@ export default function StockPage() {
     { value: 'product', label: t('nav.products') },
     { value: 'material', label: t('nav.materials') },
   ];
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.stock') || 'Stock',
+        columns: [
+          { key: 'name', header: t('common.name') }, { key: 'code', header: t('common.code') },
+          { key: 'warehouse', header: t('nav.warehouses') }, { key: 'location', header: t('nav.locations') },
+          { key: 'qtyOnHand', header: t('stock.qtyOnHand') }, { key: 'qtyReserved', header: t('stock.qtyReserved') },
+          { key: 'avgCost', header: t('stock.avgCost') },
+        ],
+        rows: stock.map(row => ({
+          name: row.inv_products?.name || row.inv_materials?.name || '—',
+          code: row.inv_products?.sku || row.inv_materials?.material_code || '—',
+          warehouse: row.inv_warehouses?.name || '—', location: row.inv_locations?.name || '—',
+          qtyOnHand: Number(row.qty_on_hand || 0).toLocaleString(), qtyReserved: Number(row.qty_reserved || 0).toLocaleString(),
+          avgCost: 'SAR ' + Number(row.avg_cost || 0).toFixed(2),
+        })),
+        lang, fileName: 'stock-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
 
   function openAdjust(row) {
     setForm({
@@ -73,7 +99,11 @@ export default function StockPage() {
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder={t('stock.searchPlaceholder')} className="ginput flex-1 max-w-xs" />
         <GlassSelect value={type} onChange={e => { setType(e.target.value); setPage(1); }} options={typeOptions} />
         <GlassSelect value={warehouseId} onChange={e => { setWarehouseId(e.target.value); setPage(1); }} options={whOptions} />
-        <div className="ms-auto text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</div>
+        <div className="flex items-center gap-2 ms-auto">
+          <span className="text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</span>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!stock.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!stock.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden">

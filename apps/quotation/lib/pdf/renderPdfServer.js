@@ -138,7 +138,11 @@ async function renderUrlToPdfBuffer(pageUrl, { cookieHeader } = {}) {
   let page;
   try {
     page = await browser.newPage();
-    await page.setViewport({ width: 900, height: 1200, deviceScaleFactor: 2 });
+    /* Match the viewport's vertical containing block to A4 at 96 CSS dpi
+       (297 mm = 1122.52 px). This does not size or stretch document
+       content; it keeps bottom:0 fixed print-frame elements anchored
+       inside the physical A4 crop. */
+    await page.setViewport({ width: 900, height: 1123, deviceScaleFactor: 2 });
 
     if (cookieHeader) {
       const url = new URL(pageUrl);

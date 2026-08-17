@@ -67,6 +67,7 @@ const ORDER = [
   'migrations/20260809155500_delete_legacy_quotation_approval_links.sql', // unlink shared legacy revision references
   'migrations/20260810100000_crm_central_integration_platform.sql', // CRM identities, integrations, sync, webhook and audit foundation
   'migrations/20260810113000_consolidate_internal_erp_integration.sql', // one AL FAROOQUE ERP integration with four separate modules
+  'migrations/20260813170000_shared_role_module_permissions.sql', // shared app roles + module-aware role policy for all ERP apps
 ];
 
 async function main() {

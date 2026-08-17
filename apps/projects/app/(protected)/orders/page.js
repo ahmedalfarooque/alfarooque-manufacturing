@@ -8,7 +8,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
-import { Input } from '@/components/ui';
+import { Input, Button } from '@/components/ui';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected'];
 export const STATUS_BADGE = {
@@ -26,7 +26,7 @@ function money(n) { return 'SAR ' + Number(n || 0).toLocaleString('en-US'); }
 function label(s) { return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 export default function OrdersPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState('All');
@@ -34,6 +34,7 @@ export default function OrdersPage() {
   const pageSize = 25;
   const [busyId, setBusyId] = useState(null);
   const [viewOrderId, setViewOrderId] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data, error, refresh } = useLiveData('/api/orders', REFRESH_MS);
   const allRows = data?.orders || [];
@@ -68,11 +69,36 @@ export default function OrdersPage() {
     if (res && res.ok) refresh();
   }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('oq.ordersTitle'),
+        columns: [
+          { key: 'orderNo', header: t('oq.col.orderNo') }, { key: 'customer', header: t('oq.col.customer') },
+          { key: 'email', header: t('oq.col.email') }, { key: 'total', header: t('oq.col.total') },
+          { key: 'status', header: t('oq.col.status') }, { key: 'date', header: t('oq.col.date') },
+        ],
+        rows: rows.map(r => ({
+          orderNo: r.order_no || r.id.slice(0, 8), customer: r.guest_name || r.customer_name || '—',
+          email: r.guest_email || r.customer_email || '—', total: money(r.grand_total),
+          status: trEnum(t, 'status', r.status), date: new Date(r.created_at).toLocaleDateString(),
+        })),
+        lang, fileName: 'orders-report.pdf', action,
+      });
+    } catch (e2) {} finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/orders">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('oq.ordersTitle')}</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!rows.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!rows.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
         </div>
       </div>
 

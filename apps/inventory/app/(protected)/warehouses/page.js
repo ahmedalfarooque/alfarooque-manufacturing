@@ -5,16 +5,38 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassTextarea, GlassToast } from '@/components/glass';
+import { GlassModal, GlassInput, GlassTextarea, GlassToast, GlassButton } from '@/components/glass';
 
 export default function WarehousesPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
   const { data: wd, mutate } = useLiveData('/api/warehouses', 0);
   const warehouses = wd?.warehouses || [];
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('warehouses.addWarehouse').replace(/^\+\s*/, '') || 'Warehouses',
+        columns: [
+          { key: 'name', header: t('common.name') }, { key: 'code', header: t('warehouses.code') },
+          { key: 'city', header: t('suppliers.city') }, { key: 'address', header: t('suppliers.address') },
+          { key: 'status', header: t('common.status') },
+        ],
+        rows: warehouses.map(w => ({
+          name: w.name || '—', code: w.code || '—', city: w.city || '—',
+          address: w.address || '—', status: w.is_active ? t('common.active') : t('common.inactive'),
+        })),
+        lang, fileName: 'warehouses-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
 
   function openAdd() { setForm({}); setModal('add'); }
   function openEdit(w) { setForm({ ...w }); setModal('edit'); }
@@ -49,7 +71,9 @@ export default function WarehousesPage() {
   return (
     <Shell active="/warehouses">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!warehouses.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+        <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!warehouses.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
         <button onClick={openAdd} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('warehouses.addWarehouse')}</button>
       </div>
       <div className="glass-card overflow-hidden">
@@ -69,7 +93,7 @@ export default function WarehousesPage() {
             {warehouses.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>}
             {warehouses.map(w => (
               <tr key={w.id} className="hover:bg-[color:var(--pr-soft)] transition-colors">
-                <td className="px-4 py-3 font-medium">{w.name}</td>
+                <td className="px-4 py-3 font-medium">{w.name}{w.read_only && <span className="ms-2 text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600" title={t('sl.readOnlyShort')}>{t('sl.badge')}</span>}</td>
                 <td className="px-4 py-3 text-[color:var(--tx-3)]">{w.code || '—'}</td>
                 <td className="px-4 py-3 text-[color:var(--tx-3)]">{w.city || '—'}</td>
                 <td className="px-4 py-3 text-[color:var(--tx-3)]">{w.address || '—'}</td>
@@ -80,8 +104,10 @@ export default function WarehousesPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1 justify-end">
-                    <button onClick={() => openEdit(w)} className="gbtn gbtn-ghost gbtn--icon gbtn--sm"><GlassIcon name="edit" size={15} bare /></button>
-                    {w.is_active && <button onClick={() => deactivate(w.id)} className="gbtn gbtn-ghost gbtn--icon gbtn--sm text-red-500"><GlassIcon name="trash" size={15} bare /></button>}
+                    {!w.read_only && <>
+                      <button onClick={() => openEdit(w)} className="gbtn gbtn-ghost gbtn--icon gbtn--sm"><GlassIcon name="edit" size={15} bare /></button>
+                      {w.is_active && <button onClick={() => deactivate(w.id)} className="gbtn gbtn-ghost gbtn--icon gbtn--sm text-red-500"><GlassIcon name="trash" size={15} bare /></button>}
+                    </>}
                   </div>
                 </td>
               </tr>

@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
 
 const EDITABLE = ['vehicle_number', 'name', 'make', 'model', 'year', 'color', 'serial_number',
   'type', 'fuel_type', 'driver', 'status', 'condition_status', 'oil_type', 'oil_viscosity',
@@ -11,7 +11,7 @@ const EDITABLE = ['vehicle_number', 'name', 'make', 'model', 'year', 'color', 's
   'assigned_driver_id', 'purchase_date', 'purchase_cost'];
 
 export async function GET(req, { params }) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -36,7 +36,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'edit');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

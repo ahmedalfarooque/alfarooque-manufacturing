@@ -1,11 +1,11 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { getIntegration, hasSmartErpEnvironment, auditIntegration } = require('../../../../../shared/integrationPlatform');
 
 export async function PATCH(req, { params }) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
   const sb = getDb();
   const existing = await getIntegration(sb, params.key);

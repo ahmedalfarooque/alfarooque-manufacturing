@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
 
 const TYPES = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'];
 
@@ -13,12 +14,33 @@ export default function ChartOfAccountsPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
 
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   if (typeFilter) params.set('type', typeFilter);
   const { data, refresh } = useLiveData(`/api/chart-of-accounts?${params}`, 0);
   const accounts = data?.accounts || [];
+
+  /* Same shared A4 report engine as the rest of Accounting. This endpoint
+     is unpaginated, so `accounts` is already the full currently-filtered
+     set — no extra fetch loop needed. */
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      await exportReportPdf({
+        title: 'Chart of Accounts' + (typeFilter ? ` — ${typeFilter}` : ''),
+        columns: [
+          { key: 'account_code', header: 'Code' }, { key: 'name', header: 'Name' },
+          { key: 'account_type', header: 'Type' }, { key: 'category', header: 'Category' }, { key: 'activeText', header: 'Active' },
+        ],
+        rows: accounts.map(a => ({ ...a, category: a.category || '—', activeText: a.is_active ? 'Yes' : 'No' })),
+        totals: [['Accounts exported', String(accounts.length)]],
+        fileName: 'chart-of-accounts-report.pdf', action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   function openNew() { setForm({}); setEditing(null); setShowForm(true); }
   function openEdit(a) { setForm({ ...a }); setEditing(a.id); setShowForm(true); }
@@ -59,6 +81,8 @@ export default function ChartOfAccountsPage() {
             <option value="">All Types</option>
             {TYPES.map(t => <option key={t}>{t}</option>)}
           </GlassSelect>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!accounts.length || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!accounts.length || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">

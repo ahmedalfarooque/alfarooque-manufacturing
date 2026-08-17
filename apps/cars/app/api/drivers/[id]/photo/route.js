@@ -10,7 +10,7 @@
 
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 const BUCKET = 'driver-documents';
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB — these are phone-camera photos of ID cards, not scans
@@ -24,7 +24,7 @@ const SLOT_COLUMNS = {
 };
 
 export async function POST(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
 
   let form;

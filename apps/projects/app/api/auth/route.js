@@ -137,7 +137,9 @@ async function handleVerifyOtp(sb, body, ip, ua, req) {
 
   await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
-  const token = signSession(user);
+  const { data: grant } = user.role === 'admin' ? { data: null } : await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'projects').maybeSingle();
+  const sessionUser = { ...user, role: user.role === 'admin' ? 'admin' : (grant?.app_role || user.role || 'readonly') };
+  const token = signSession(sessionUser);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,
     expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
@@ -148,13 +150,13 @@ async function handleVerifyOtp(sb, body, ip, ua, req) {
   }
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
-  const res = json({ ok: true, user: sanitizeUser(user) });
+  const res = json({ ok: true, user: sanitizeUser(sessionUser) });
   const cookieDomain = cookieDomainFromReq(req);
   res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomain));
   /* Admin SSO — one extra parent-domain cookie signs the Admin into the
      sibling apps too (QuotePro / Projects / Car Inventory behave as one
      ERP). Only ever minted for admins; every other role is untouched. */
-  if (sanitizeUser(user).role === 'admin') {
+  if (user.role === 'admin') {
     res.headers.append('Set-Cookie', ssoCookieHeader(signSsoSession(user), cookieDomain));
   }
   return res;
@@ -299,7 +301,9 @@ async function handleViewVerifyOtp(sb, body, ip, ua, req) {
   // permissions (an admin never gets LESS than they should; an
   // external user never gets MORE, since they're never auto-created
   // with anything but 'external' or 'viewer' — see findOrCreateViewUser).
-  const token = signSession(user);
+  const { data: grant } = user.role === 'admin' ? { data: null } : await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'projects').maybeSingle();
+  const sessionUser = { ...user, role: user.role === 'admin' ? 'admin' : (grant?.app_role || user.role || 'readonly') };
+  const token = signSession(sessionUser);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,
     expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString(),
@@ -310,7 +314,7 @@ async function handleViewVerifyOtp(sb, body, ip, ua, req) {
   }
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
-  const res = json({ ok: true, user: sanitizeUser(user) });
+  const res = json({ ok: true, user: sanitizeUser(sessionUser) });
   const cookieDomain = cookieDomainFromReq(req);
   res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomain));
   /* Admin SSO — one extra parent-domain cookie signs the Admin into the

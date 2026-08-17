@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 function withComputedStatus(row) {
   const currentKm = Number(row.cars?.current_km || 0);
@@ -15,7 +15,7 @@ function withComputedStatus(row) {
 }
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const sb = getDb();
   const { data, error } = await sb.from('car_maintenance').select('*, cars(vehicle_number, current_km, is_active)').order('created_at', { ascending: false });
@@ -25,7 +25,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
   const body = await req.json().catch(() => ({}));
   if (!body.car_id || !body.maintenance_type) return json({ error: 'Vehicle and maintenance type are required.' }, 400);

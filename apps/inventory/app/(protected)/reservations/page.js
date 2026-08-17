@@ -5,19 +5,20 @@ import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassBadge } from '@/components/glass';
+import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassBadge, GlassButton } from '@/components/glass';
 
 const REFRESH_MS = 15000;
 const REF_TYPES = ['sales_order', 'project', 'other'];
 
 export default function ReservationsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [status, setStatus] = useState('active');
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ warehouse_id: '', reference_type: 'other', qty: 1 });
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
 
   const { data: rd, mutate } = useLiveData(`/api/reservations?status=${status}&page=${page}&limit=50`, REFRESH_MS);
   const { data: wd } = useLiveData('/api/warehouses', 0);
@@ -90,12 +91,36 @@ export default function ReservationsPage() {
 
   function badgeTone(s) { return s === 'active' ? 'info' : s === 'fulfilled' ? 'success' : 'neutral'; }
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.reservations') || 'Reservations',
+        columns: [
+          { key: 'name', header: t('common.name') }, { key: 'warehouse', header: t('nav.warehouses') },
+          { key: 'qty', header: t('resv.qty') }, { key: 'reference', header: t('resv.reference') },
+          { key: 'status', header: t('common.status') },
+        ],
+        rows: reservations.map(r => ({
+          name: r.inv_products?.name || r.inv_materials?.name || '—', warehouse: r.inv_warehouses?.name || '—',
+          qty: Number(r.qty).toLocaleString(), reference: r.reference_label || t('gi.refType.' + (r.reference_type || 'other')),
+          status: t('resv.status.' + r.status),
+        })),
+        lang, fileName: 'reservations-report.pdf', action,
+      });
+    } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/reservations">
       <GlassToast toast={toast} onClose={() => setToast(null)} />
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <GlassSelect value={status} onChange={e => { setStatus(e.target.value); setPage(1); }} options={statusOptions} />
-        <div className="ms-auto">
+        <div className="ms-auto flex items-center gap-2">
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!reservations.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!reservations.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
           <button onClick={() => setModal('add')} className="gbtn gbtn-primary"><GlassIcon name="plus" size={16} bare />{t('resv.addReservation')}</button>
         </div>
       </div>

@@ -7,14 +7,19 @@
     "build": "next build",
     "start": "next start -p 3050",
     "lint": "next lint",
-    "test:smartlife": "node --test lib/smartlife.test.js"
+    "test:smartlife": "node --test lib/smartlife.test.js",
+    "verify:reporting": "node scripts/verify-reporting.js"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^131.0.1",
     "@supabase/supabase-js": "2.45.4",
     "bcryptjs": "2.4.3",
     "jose": "5.9.6",
     "jsonwebtoken": "9.0.2",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "next": "14.2.15",
+    "puppeteer-core": "^23.11.1",
     "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18",

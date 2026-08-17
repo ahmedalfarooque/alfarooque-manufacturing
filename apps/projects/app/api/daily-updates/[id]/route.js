@@ -1,12 +1,12 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, isAssignedOrAdmin, requireDelete } = require('@/lib/http');
+const { json, requireSession, isAssignedOrAdmin, requireDelete , requireAction } = require('@/lib/http');
 
 const REVIEW_STATUSES = ['Pending', 'Approved', 'Rejected', 'Need Revision', 'Published'];
 
 export async function GET(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -39,7 +39,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'edit');
   if (response) return response;
 
   const sb = getDb();

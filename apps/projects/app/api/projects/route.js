@@ -1,7 +1,7 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { buildProjectRow } = require('@/lib/createProjectRow');
 
 const SORTS = {
@@ -12,7 +12,7 @@ const SORTS = {
 };
 
 export async function GET(req) {
-  const { response, session } = requireSession(req);
+  const { response, session } = await requireAction(req, 'view');
   if (response) return response;
 
   const url = new URL(req.url);
@@ -71,13 +71,47 @@ export async function GET(req) {
       (assigneesByProject[r.project_id] ||= []).push({ id: r.platform_users.id, full_name: r.platform_users.full_name });
     }
   }
-  const projects = (data || []).map(p => ({ ...p, assignees: assigneesByProject[p.id] || [] }));
+  /* Paid Amount = sum, per connected sales invoice, of reflected_paid =
+     max(SmartLife's own paid_amount, local ERP payments recorded on top of
+     it) — the SAME canonical calculation the Financials tab summary uses
+     (never just erp_project_payments alone, which misses a sales invoice
+     that SmartLife already shows as paid with zero local ERP rows; never
+     planned/requested Purchase Request amounts; never sales-invoice totals
+     — that would be Revenue, not Paid Amount). Balance To Pay = value - paidAmount. */
+  let paidByProject = {};
+  if (ids.length) {
+    const { data: connections } = await sb.from('erp_financial_connections').select('project_id, source_record_id').in('project_id', ids);
+    const sourceIds = [...new Set((connections || []).map(c => c.source_record_id))];
+    if (sourceIds.length) {
+      const [{ data: sources }, { data: localPayments }] = await Promise.all([
+        sb.from('erp_financial_source_records').select('id, record_type, paid_amount').in('id', sourceIds).eq('record_type', 'sales_invoice'),
+        sb.from('erp_project_payments').select('project_id, source_record_id, amount').eq('direction', 'received').in('project_id', ids),
+      ]);
+      const sourceById = new Map((sources || []).map(s => [s.id, s]));
+      const localPaidBySource = new Map();
+      for (const p of localPayments || []) {
+        const key = p.project_id + ':' + p.source_record_id;
+        localPaidBySource.set(key, (localPaidBySource.get(key) || 0) + Number(p.amount || 0));
+      }
+      for (const c of connections || []) {
+        const source = sourceById.get(c.source_record_id);
+        if (!source) continue; // not a sales invoice (e.g. a connected purchase) — never counted as received payment
+        const localPaid = localPaidBySource.get(c.project_id + ':' + c.source_record_id) || 0;
+        const reflectedPaid = Math.max(Number(source.paid_amount || 0), localPaid);
+        paidByProject[c.project_id] = (paidByProject[c.project_id] || 0) + reflectedPaid;
+      }
+    }
+  }
+  const projects = (data || []).map(p => {
+    const paidAmount = paidByProject[p.id] || 0;
+    return { ...p, assignees: assigneesByProject[p.id] || [], paid_amount: paidAmount, balance_to_pay: Math.max(Number(p.value || 0) - paidAmount, 0) };
+  });
 
   return json({ projects, total: count || 0, page, pageSize });
 }
 
 export async function POST(req) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

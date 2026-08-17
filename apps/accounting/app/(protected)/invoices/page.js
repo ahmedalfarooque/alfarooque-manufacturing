@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
 
 const STATUSES = ['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled', 'Partially Paid'];
 function statusTone(s) { return s === 'Paid' ? 'success' : s === 'Overdue' ? 'error' : s === 'Sent' ? 'info' : 'neutral'; }
@@ -18,6 +19,7 @@ export default function InvoicesPage() {
   const [form, setForm] = useState({});
   const [lines, setLines] = useState([emptyLine()]);
   const [saving, setSaving] = useState(false);
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const params = new URLSearchParams({ page, pageSize });
@@ -25,6 +27,46 @@ export default function InvoicesPage() {
   if (status) params.set('status', status);
   const { data, refresh } = useLiveData(`/api/invoices?${params}`, 15000);
   const invoices = data?.invoices || [];
+
+  /* Reuses the same shared A4 report engine as VAT/Purchase Requests/
+     Inventory — no second PDF renderer. The list itself is server-paginated
+     (25/page), so the report walks every page (100 at a time, the API's
+     cap) under the currently active search/status filter rather than only
+     exporting the visible page. */
+  async function fetchAllInvoices() {
+    const all = [];
+    for (let p = 1, guard = 0; guard < 100; guard += 1) {
+      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
+      if (search) qp.set('search', search);
+      if (status) qp.set('status', status);
+      const res = await fetch(`/api/invoices?${qp}`, { credentials: 'same-origin' });
+      const body = await res.json().catch(() => ({}));
+      const batch = Array.isArray(body.invoices) ? body.invoices : [];
+      all.push(...batch);
+      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      p += 1;
+    }
+    return all;
+  }
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = await fetchAllInvoices();
+      await exportReportPdf({
+        title: 'Invoices Report' + (status ? ` — ${status}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
+        columns: [
+          { key: 'invoice_number', header: 'Number' }, { key: 'customer_name', header: 'Customer' },
+          { key: 'invoice_date', header: 'Date' }, { key: 'due_date', header: 'Due' },
+          { key: 'totalText', header: 'Total' }, { key: 'status', header: 'Status' },
+        ],
+        rows: all.map(inv => ({ ...inv, invoice_number: inv.invoice_number || String(inv.id).slice(0, 8), due_date: inv.due_date || '—', totalText: `SAR ${fmt(inv.total_amount)}` })),
+        totals: [['Invoices exported', String(all.length)]],
+        fileName: 'invoices-report.pdf', action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   const lineSubtotal = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0), 0);
   const lineTax = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0) * ((Number(l.tax_rate) || 0) / 100), 0);
@@ -77,6 +119,8 @@ export default function InvoicesPage() {
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">

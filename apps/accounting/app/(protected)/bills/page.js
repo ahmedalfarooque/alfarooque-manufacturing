@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd } from '@/components/glass';
+import { exportReportPdf } from '@/lib/reportPdf';
 
 const STATUSES = ['Draft', 'Unpaid', 'Paid', 'Overdue', 'Cancelled', 'Partially Paid'];
 const DESTINATIONS = [
@@ -27,6 +28,7 @@ export default function BillsPage() {
   const [warehouses, setWarehouses] = useState([]);
   const [itemQuery, setItemQuery] = useState({});
   const [itemResults, setItemResults] = useState({});
+  const [reportBusy, setReportBusy] = useState('');
   const pageSize = 25;
 
   const params = new URLSearchParams({ page, pageSize });
@@ -34,6 +36,44 @@ export default function BillsPage() {
   if (status) params.set('status', status);
   const { data, refresh } = useLiveData(`/api/bills?${params}`, 15000);
   const bills = data?.bills || [];
+
+  /* Same shared A4 report engine as the rest of Accounting. Walks every
+     server page (100 at a time) under the active filters instead of only
+     exporting the currently visible page. */
+  async function fetchAllBills() {
+    const all = [];
+    for (let p = 1, guard = 0; guard < 100; guard += 1) {
+      const qp = new URLSearchParams({ page: String(p), pageSize: '100' });
+      if (search) qp.set('search', search);
+      if (status) qp.set('status', status);
+      const res = await fetch(`/api/bills?${qp}`, { credentials: 'same-origin' });
+      const body = await res.json().catch(() => ({}));
+      const batch = Array.isArray(body.bills) ? body.bills : [];
+      all.push(...batch);
+      if (!batch.length || batch.length < 100 || all.length >= Number(body.total || 0)) break;
+      p += 1;
+    }
+    return all;
+  }
+
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = await fetchAllBills();
+      await exportReportPdf({
+        title: 'Bills Report' + (status ? ` — ${status}` : '') + (search.trim() ? ` — Search: "${search.trim()}"` : ''),
+        columns: [
+          { key: 'bill_number', header: 'Number' }, { key: 'vendor_name', header: 'Vendor' },
+          { key: 'bill_date', header: 'Date' }, { key: 'due_date', header: 'Due' },
+          { key: 'totalText', header: 'Total' }, { key: 'status', header: 'Status' },
+        ],
+        rows: all.map(b => ({ ...b, bill_number: b.bill_number || String(b.id).slice(0, 8), due_date: b.due_date || '—', totalText: `SAR ${fmt(b.total_amount)}` })),
+        totals: [['Bills exported', String(all.length)]],
+        fileName: 'bills-report.pdf', action,
+      });
+    } catch (e) { toast(e.message || 'Could not generate report.', 'error'); }
+    finally { setReportBusy(''); }
+  }
 
   useEffect(() => {
     if (form.destination_type === 'warehouse' && warehouses.length === 0) {
@@ -111,6 +151,8 @@ export default function BillsPage() {
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data?.total || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
         </div>
 
         <table className="w-full text-sm">

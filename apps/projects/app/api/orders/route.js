@@ -12,7 +12,7 @@
    POST { action:'permanent-delete', id } -> real delete, Super Admin only */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireDelete , requireAction } = require('@/lib/http');
 const {
   RECOVERY_WINDOW_DAYS, isSuperAdmin, hasSoftDelete, logError, daysRemaining,
   attachActorNames, attachCustomerInfo,
@@ -54,7 +54,7 @@ async function listDeleted(sb, url) {
 }
 
 export async function GET(req) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
 
   const sb = getDb();
@@ -79,7 +79,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { response, session } = requireSession(req, { adminOnly: true });
+  const { response, session } = await requireAction(req, 'add');
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));

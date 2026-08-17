@@ -1,13 +1,13 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { parseCookies, COOKIE_NAME } = require('@/lib/auth');
 const { SSO_COOKIE_NAME } = require('@/lib/sso');
 const { forwardedCookieHeader } = require('@/lib/smartlife');
 
 export async function GET(req) {
-  const { response } = requireSession(req);
+  const { response } = await requireAction(req, 'view');
   if (response) return response;
   const { data, error } = await getDb().from('crm_integrations').select('status,last_sync_at,last_error').eq('tenant_id','alfarooque').eq('integration_key','smartlife').maybeSingle();
   if (error) return json({ error: 'Could not load SmartERP synchronization status.' }, 500);
@@ -15,7 +15,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { response } = requireSession(req, { adminOnly:true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
   /* Same credential rule as the resource read route: forward the app cookie
      and/or the parent-domain SSO cookie, since requireSession accepts either.

@@ -13,7 +13,7 @@
           and leaves standard_price unchanged.                        */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite } = require('@/lib/http');
+const { json, requireSession, requireWrite , requireAction } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 const { productCostSummary, costLineTotal, r2 } = require('@/lib/costing');
 
@@ -78,7 +78,7 @@ async function findStale(sb) {
 }
 
 export async function GET(req) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
   const stale = await findStale(sb);

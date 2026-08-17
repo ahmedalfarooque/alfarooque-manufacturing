@@ -5,7 +5,7 @@
    reserve/deliver/invoice locks quantities in place). */
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 
 async function recomputeTotal(sb, salesOrderId) {
   const { data: lines } = await sb.from('sales_order_lines').select('qty, unit_price').eq('sales_order_id', salesOrderId);
@@ -15,7 +15,7 @@ async function recomputeTotal(sb, salesOrderId) {
 }
 
 export async function POST(req, { params }) {
-  const { response } = requireSession(req, { adminOnly: true });
+  const { response } = await requireAction(req, 'add');
   if (response) return response;
 
   const sb = getDb();

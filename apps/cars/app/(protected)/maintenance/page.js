@@ -24,7 +24,7 @@ export const EMPTY_FORM = {
 };
 
 export default function MaintenanceRecordsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
   const [records, setRecords] = useState([]);
   const [cars, setCars] = useState([]);
@@ -48,6 +48,7 @@ export default function MaintenanceRecordsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
   const isAdmin = me?.role === 'admin';
 
   const loadRefs = useCallback(() => {
@@ -90,6 +91,48 @@ export default function MaintenanceRecordsPage() {
     if (res.ok) load();
   }
 
+  /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same as
+     Vehicles. Fetches ALL records matching the current filters through the
+     existing list API (pages of 100 — its max) so the report carries the
+     complete filtered dataset, not just the current on-screen page. */
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const q = { search: debouncedSearch, carId, driverId, shopId, category, paymentStatus, dateFrom, dateTo, costMin, costMax };
+      const all = [];
+      for (let p = 1; p <= 200; p++) {
+        const res = await fetch('/api/maintenance-records?' + new URLSearchParams({ ...q, page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
+        const d = res && res.ok ? await res.json() : null;
+        if (!d || !Array.isArray(d.records) || d.records.length === 0) break;
+        all.push(...d.records);
+        if (all.length >= (d.total || 0)) break;
+      }
+      const ar = lang === 'ar';
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: ar ? 'تقرير سجلات الصيانة' : 'Maintenance Records Report',
+        columns: [
+          { key: 'date', header: t('maint.colDate') },
+          { key: 'vehicle', header: t('maint.colVehicle') },
+          { key: 'driver', header: t('maint.colDriver') },
+          { key: 'category', header: t('maint.colCategory') },
+          { key: 'shop', header: t('maint.colShop') },
+          { key: 'amount', header: t('maint.colAmount') },
+          { key: 'km', header: t('maint.colKm') },
+          { key: 'invoice', header: t('maint.colInvoice') },
+          { key: 'status', header: t('maint.colStatus') },
+        ],
+        rows: all.map(r => ({
+          date: r.maintenance_date || '—', vehicle: r.cars?.vehicle_number || '—', driver: r.drivers?.full_name || '—',
+          category: r.category || '—', shop: r.maintenance_shops?.name || '—', amount: `${r.currency || ''} ${fmt(r.amount)}`.trim(),
+          km: r.odometer_km ? fmt(r.odometer_km) : '—', invoice: r.invoice_number || '—', status: trEnum(t, 'payment', r.payment_status),
+        })),
+        lang, fileName: 'maintenance-records-report.pdf', action,
+      });
+    } catch (e) { /* no-op — report generation failures shouldn't disrupt the page */ }
+    finally { setReportBusy(''); }
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
@@ -99,7 +142,11 @@ export default function MaintenanceRecordsPage() {
           <h2 className="text-lg font-semibold">{t('maint.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('maint.breadcrumb')}</p>
         </div>
-        {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('maint.addRecord')}</Button>}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!total || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!total || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
+          {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('maint.addRecord')}</Button>}
+        </div>
       </div>
 
       <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">

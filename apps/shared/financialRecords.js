@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 
-const RESOURCE_TYPES = Object.freeze({ 'sales-invoices': 'sales_invoice', expenses: 'expense' });
+const RESOURCE_TYPES = Object.freeze({ 'sales-invoices': 'sales_invoice', purchases: 'purchase_invoice' });
 
 function first(record, keys) {
   for (const key of keys) if (record?.[key] !== undefined && record?.[key] !== null && record?.[key] !== '') return record[key];

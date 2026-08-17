@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassSelect } from '@/components/glass';
+import { GlassSelect, GlassButton } from '@/components/glass';
 
 const REFRESH_MS = 20000;
 
@@ -20,10 +20,11 @@ const MOVEMENT_TYPE_COLORS = {
 };
 
 export default function StockMovementsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [type, setType] = useState('');
   const [warehouseId, setWarehouseId] = useState('');
   const [page, setPage] = useState(1);
+  const [reportBusy, setReportBusy] = useState('');
 
   const params = new URLSearchParams({ page, limit: 50 });
   if (type) params.set('movement_type', type);
@@ -42,12 +43,43 @@ export default function StockMovementsPage() {
       .map(v => ({ value: v, label: trEnum(t, 'movementType', v) })),
   ];
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t('nav.stockMovements') || 'Stock Movements',
+        columns: [
+          { key: 'date', header: t('common.date') }, { key: 'name', header: t('common.name') },
+          { key: 'type', header: t('stock.movementType') }, { key: 'warehouse', header: t('nav.warehouses') },
+          { key: 'qty', header: t('common.qty') }, { key: 'unitCost', header: t('stock.unitCost') },
+          { key: 'reference', header: t('common.reference') },
+        ],
+        rows: movements.map(m => {
+          const isOut = m.movement_type?.includes('out') || m.movement_type === 'issue';
+          return {
+            date: m.created_at ? new Date(m.created_at).toLocaleDateString() : '—',
+            name: m.inv_products?.name || m.inv_materials?.name || '—',
+            type: trEnum(t, 'movementType', m.movement_type), warehouse: m.inv_warehouses?.name || '—',
+            qty: (isOut ? '-' : '+') + Number(m.qty || 0).toLocaleString(), unitCost: 'SAR ' + Number(m.unit_cost || 0).toFixed(2),
+            reference: m.reference || '—',
+          };
+        }),
+        lang, fileName: 'stock-movements-report.pdf', action,
+      });
+    } catch (e) {} finally { setReportBusy(''); }
+  }
+
   return (
     <Shell active="/stock-movements">
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <GlassSelect value={type} onChange={e => { setType(e.target.value); setPage(1); }} options={typeOptions} />
         <GlassSelect value={warehouseId} onChange={e => { setWarehouseId(e.target.value); setPage(1); }} options={whOptions} />
-        <div className="ms-auto text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</div>
+        <div className="flex items-center gap-2 ms-auto">
+          <span className="text-sm text-[color:var(--tx-3)]">{t('common.total')}: {total}</span>
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!movements.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('materials.print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!movements.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('materials.downloadPdf')}</GlassButton>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden">

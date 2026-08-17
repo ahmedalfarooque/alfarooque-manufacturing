@@ -1,11 +1,11 @@
 'use strict';
 
 const { getDb } = require('@/lib/db');
-const { json, requireSession, requireWrite, requireDelete } = require('@/lib/http');
+const { json, requireSession, requireWrite, requireDelete , requireAction } = require('@/lib/http');
 const { audit } = require('@/lib/crud');
 
 export async function GET(req) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'view');
   if (!session) return response;
   const sb = getDb();
   const { data, error } = await sb.from('qt_material_categories')

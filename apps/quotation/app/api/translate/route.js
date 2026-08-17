@@ -9,13 +9,13 @@
 
 const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
-const { json, requireSession } = require('@/lib/http');
+const { json, requireSession , requireAction } = require('@/lib/http');
 const { translate, hasArabic } = require('@/lib/translate');
 
 const md5 = (s) => crypto.createHash('md5').update(String(s).toLowerCase().trim()).digest('hex');
 
 export async function POST(req) {
-  const { session, response } = requireSession(req);
+  const { session, response } = await requireAction(req, 'add');
   if (!session) return response;
   const body = await req.json().catch(() => ({}));
   const to = body.to === 'ar' ? 'ar' : 'en';

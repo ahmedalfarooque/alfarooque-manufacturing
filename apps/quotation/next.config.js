@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   reactStrictMode: true,
   /* Deployed as its own Vercel project with quotation.alfarooque.com as
      its production domain — same pattern as apps/cars and apps/projects

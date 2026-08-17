@@ -189,7 +189,7 @@ function fmtDate(lang) {
  * @param {string}   [opts.generatedBy]  defaults to the signed-in user (GET /api/auth)
  * @param {string}   [opts.fileName]
  */
-export async function exportReportPdf({ title, columns, rows, lang = 'en', generatedBy, fileName = 'report.pdf' }) {
+export async function exportReportPdf({ title, columns, rows, lang = 'en', generatedBy, fileName = 'report.pdf', action = 'save' }) {
   const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
   await import('jspdf-autotable');
 
@@ -344,5 +344,19 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
   });
 
   if (typeof doc.putTotalPages === 'function') doc.putTotalPages(totalPagesExp);
+
+  /* 'print' opens the exact same generated PDF in a new tab (the browser's
+     own PDF viewer supplies the print button) instead of downloading it —
+     same bytes, same template — rather than calling window.print() on the
+     live app page, which would capture the sidebar/topbar chrome too.
+     Every existing caller never passes `action` and keeps the original
+     doc.save() behavior, byte-for-byte. Mirrors apps/cars, apps/projects,
+     apps/inventory's own reportPdf.js — this app's copy had drifted. */
+  if (action === 'print') {
+    const blobUrl = doc.output('bloburl');
+    const win = window.open(blobUrl, '_blank');
+    if (!win) doc.save(fileName);
+    return;
+  }
   doc.save(fileName);
 }

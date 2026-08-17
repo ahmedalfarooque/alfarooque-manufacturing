@@ -67,6 +67,33 @@ Each app is an independent Next.js app with its own `app/`, `lib/`, `components/
 - **Dark is the default theme** (repo-wide convention, see root `CLAUDE.md`) — light is opt-in. Both themes must stay equally functional and readable; theming is driven by CSS custom properties in `themes.css`/`globals.css`, not scattered `dark:` Tailwind classes.
 - Every list page must wrap its `<table>` in a horizontally-scrollable container (`overflow-x-auto`); the page itself must never overflow horizontally. Modals must fit small screens.
 
+## Products vs Materials — the three concepts (do not merge these)
+
+Three distinct entities exist and must never be conflated just because names look similar:
+
+1. **QuotePro catalogue products** (`qt_catalogue_products`) — manufactured/sellable finished items (table, cabinet, TV unit). QuotePro's quotation cost templates.
+2. **Inventory/Accounting operational items** (`inv_products`, `inv_materials`) — the operational purchasing/sales/stock item master. Can represent purchased materials, sellable products, or any other commercially-tracked item. An Inventory "product" does NOT automatically mean a QuotePro catalogue product.
+3. **QuotePro manufacturing materials** (`qt_materials`) — raw/input materials (MDF, wood, plywood, hardware, paint, aluminium, steel) consumed to build QuotePro catalogue products.
+
+A relationship between (2) and (3) is only ever explicit and admin-triggered (see `erp_master_data_mappings` / the Inventory Products page's QuotePro-link modal) — never automatic, never by name-matching. Inventory's own Materials page/menu was removed (the `materials/` route file remains on disk, orphaned/unreachable, only because Goods Receipts/Purchase Orders line pickers still call its `/api/materials` list API) — Inventory Products is the one operational item list.
+
+## Purchase Requests — one canonical record, two apps
+
+`pm_purchase_requests` (owned by Projects, consumed by Accounting) is the ONE Purchase Request table — do not create a second one. Both apps' create/edit forms include a real inventory item picker (`/api/inventory-search` in each app — separate files by necessity of being separate Next processes, kept behaviorally identical, search-only, never `JSON.stringify`-dumps a record) that links to the SAME canonical `inv_products`/`inv_materials` row via `inv_material_id`/`inv_product_id` (real FKs). "Add New Material/Item" (`POST /api/inventory-search` in each app) creates a row in those same canonical tables — never a QuotePro Material, never a Purchase-Request-only table.
+
+**Important FK reality:** `inv_material_id`/`inv_product_id` reference `inv_materials`/`inv_products` only. The search endpoints also return read-only fallback rows from `qt_materials` / the legacy `products` table when the local tables have no match — those fallback rows have no `inv_materials`/`inv_products` counterpart and are **not linkable** (FK violation if attempted). Both pickers tag fallback rows via `source_table` and disable selection on them; only "Add New Item" or a genuinely-local row can be linked.
+
+Status: the real DB CHECK on `pm_purchase_requests.status` was widened to the full 13-value workflow (`Pending, Under Review, Approved, Rejected, On Hold, Purchased, Delivered, Cancelled, Payment Pending, Payment Approved, Payment Completed, Ordered, Completed`) to match what both apps' UI/API already assumed — both apps' `VALID_STATUSES` lists must stay identical to each other and to this constraint; if a future status is added, update the DB CHECK and both apps' lists together, never just one.
+
+## Project Purchases / Received Payments — canonical financial records
+
+Projects' per-project Financials tab (`apps/projects/app/(protected)/projects/[id]/page.js` → `FinancialsTab`) reads `erp_financial_source_records` (SmartLife-mirrored snapshot, read-only, `raw_payload` holds full line-item detail) via `erp_financial_connections` (the project↔invoice relationship) and `erp_project_payments` (ERP-owned payment ledger, `direction`: made/received, `origin`: local_erp). These are the SAME canonical rows Accounting's own SmartLife browser reads — never duplicate a purchase/payment into a second table.
+
+- **Purchases section** = connected `record_type='purchase_invoice'` rows, clickable to a detail view built directly from the same row's `raw_payload.items`, with print.
+- **Received Payments section** = `erp_project_payments` rows with `direction='received'`, clickable to detail (amount/method/reference/related invoice + Project Value/Paid/Balance), with print.
+- **Disconnecting** a purchase (`DELETE .../financials {action:'disconnect-purchase'}`) removes only the `erp_financial_connections` row. **Deleting** a payment (`{action:'delete-payment'}`) removes only the `erp_project_payments` row. Neither ever touches `erp_financial_source_records` — that table is the SmartLife source snapshot and is never mutated by a project-side action.
+- **Balance To Pay** = `pm_projects.value` − sum of `erp_project_payments` where `direction='received'` for that project. Purchase Request `estimated_price` is planned/requested and must never be added into actual purchase cost or payments — the Financials tab keeps an explicit separate "Requested / planned" block for this.
+
 ## Permissions model
 
 Seven roles (`admin, manager, sales, estimator, accountant, production, readonly`), three access levels per module:
