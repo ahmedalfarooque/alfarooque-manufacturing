@@ -294,7 +294,7 @@ export default function SmartLifeResourcePage({ params }) {
      This prevents a filter from inspecting only the current 25-row page. */
   useEffect(() => {
     let cancelled = false;
-    if (!isInvoiceWorkspace && resource !== 'products') { setFilterUniverse([]); return undefined; }
+    if (!isInvoiceWorkspace && resource !== 'products' && resource !== 'trial-balance') { setFilterUniverse([]); return undefined; }
     fetchCompleteResource(false).then(all => { if (!cancelled) setFilterUniverse(all); }).catch(() => { if (!cancelled) setFilterUniverse([]); });
     return () => { cancelled = true; };
   }, [resource,isInvoiceWorkspace]);
@@ -551,12 +551,21 @@ export default function SmartLifeResourcePage({ params }) {
       {loading&&<div className="py-8 text-center text-[color:var(--tx-3)]">Loading latest SmartERP data…</div>}
       {!loading&&data?.connected&&!filtered.length&&<div className="py-8 text-center text-[color:var(--tx-3)]">No SmartERP records matched this view.</div>}
       {!loading&&data?.connected&&!!filtered.length&&<div className="mb-2 text-xs text-[color:var(--tx-3)]">Showing {page * pageSize + 1}–{Math.min(page * pageSize + filtered.length,totalRecords)} of {totalRecords}{usingCompleteFilterSet?' matched records':Number(data.total)>records.length?' SmartERP records':' records'}</div>}
+      {/* Summary must reflect the COMPLETE (optionally search-filtered)
+         790-account dataset, never just the current 25/50/100/500 visible
+         page — reuses filterUniverse (background-fetched for trial-balance
+         same as isInvoiceWorkspace resources) filtered with the exact same
+         search predicate the table itself uses, so page size never changes
+         these totals. */}
       {resource==='trial-balance'&&!loading&&!!filtered.length&&(()=>{
-        const debit=filtered.reduce((acc,r)=>acc+Math.max(0,Number(r?.balance)||0),0);
-        const credit=filtered.reduce((acc,r)=>acc+Math.max(0,-(Number(r?.balance)||0)),0);
+        if(!filterUniverse.length) return <div className="mb-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm text-[color:var(--tx-3)] print:hidden">Loading complete totals…</div>;
+        const needle=search.trim().toLowerCase();
+        const summarySource=needle?filterUniverse.filter(r=>searchable(r,resource).includes(needle)):filterUniverse;
+        const debit=summarySource.reduce((acc,r)=>acc+Math.max(0,Number(r?.balance)||0),0);
+        const credit=summarySource.reduce((acc,r)=>acc+Math.max(0,-(Number(r?.balance)||0)),0);
         return <div className="mb-3 grid grid-cols-2 gap-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm sm:grid-cols-2 print:hidden">
-          <Metric label="This page — Total Debit" value={money(debit)}/>
-          <Metric label="This page — Total Credit" value={money(credit)}/>
+          <Metric label="Total Debit" value={money(debit)}/>
+          <Metric label="Total Credit" value={money(credit)}/>
         </div>;
       })()}
       {/* Summary must reflect the COMPLETE filtered dataset, never just the
