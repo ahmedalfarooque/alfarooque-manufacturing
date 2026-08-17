@@ -255,6 +255,22 @@ export default function SmartLifeResourcePage({ params }) {
     for (const a of numbers) { if (a && numbers.some(b => b !== a && b.startsWith(a))) set.add(a); }
     return set;
   }, [resource, filterUniverse]);
+  /* Hierarchy depth for visual indent — real, derived the same way as
+     trialBalanceParentNumbers: an account is one level deeper for every
+     OTHER real, shorter account number that is a proper prefix of it. Not
+     an invented tree — just counting real ancestors already present in the
+     synced data. */
+  const trialBalanceDepth = useMemo(() => {
+    if (resource !== 'trial-balance' || !filterUniverse.length) return null;
+    const numbers = filterUniverse.map(r => String(r?.account_number || '')).filter(Boolean);
+    const map = new Map();
+    for (const a of numbers) {
+      let depth = 0;
+      for (const b of numbers) { if (b !== a && a.startsWith(b) && b.length < a.length) depth += 1; }
+      map.set(a, depth);
+    }
+    return map;
+  }, [resource, filterUniverse]);
   /* SmartLife-backed lists must preserve SmartERP's own record order, never
      an opinionated client-side re-sort — sort_by=date&sort_type=desc is sent
      upstream (honored by some endpoints, silently ignored by others) and
@@ -592,13 +608,14 @@ export default function SmartLifeResourcePage({ params }) {
              investigations of the full documented SmartERP API surface, see
              the ENGINEERING NOTE above. A disabled, clearly inert control is
              honest; a working-looking one with no real effect would not be. */
-          <div className="mb-2 flex flex-wrap items-center gap-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm opacity-60" title="Not available — SmartERP's account balances data has no fiscal year, period, branch, account-type, or cost-center dimension.">
-            <label className="flex items-center gap-1.5 text-xs">Fiscal Year<GlassSelect disabled value="" className="w-24"><option value="">2026</option></GlassSelect></label>
-            <label className="flex items-center gap-1.5 text-xs">Period<GlassInput disabled type="date" className="w-36"/>–<GlassInput disabled type="date" className="w-36"/></label>
-            <label className="flex items-center gap-1.5 text-xs">Branch / Warehouse<GlassSelect disabled value="" className="w-36"><option value="">All Warehouses</option></GlassSelect></label>
-            <label className="flex items-center gap-1.5 text-xs">Account Type<GlassSelect disabled value="" className="w-32"><option value="">All</option></GlassSelect></label>
-            <label className="flex items-center gap-1.5 text-xs">Cost Center<GlassSelect disabled value="" className="w-32"><option value=""></option></GlassSelect></label>
-            <span className="text-[11px] italic text-[color:var(--tx-4)]">(not available from SmartLife)</span>
+          <div className="mb-2 flex flex-wrap items-end gap-4 rounded-xl border border-dashed border-[color:var(--bd)] p-3 text-sm opacity-60 cursor-not-allowed" title="Not available — SmartERP's account balances data has no fiscal year, period, branch, account-type, or cost-center dimension.">
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Fiscal Year<GlassSelect disabled value="" className="w-24"><option value="">2026</option></GlassSelect></label>
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Period From<GlassInput disabled type="date" className="w-36"/></label>
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Period To<GlassInput disabled type="date" className="w-36"/></label>
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Branch / Warehouse<GlassSelect disabled value="" className="w-36"><option value="">All Warehouses</option></GlassSelect></label>
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Account Type<GlassSelect disabled value="" className="w-32"><option value="">All</option></GlassSelect></label>
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Cost Center<GlassSelect disabled value="" className="w-32"><option value=""></option></GlassSelect></label>
+            <span className="pb-1.5 text-[11px] italic text-[color:var(--tx-4)]">🔒 Not available from SmartLife</span>
           </div>
         )}
         <ListToolbar className="mb-4">
@@ -695,7 +712,11 @@ export default function SmartLifeResourcePage({ params }) {
             <th className="print:hidden"/>
           </tr>;
         })()}
-        <tr className="border-b border-[color:var(--bd)]">{columns.map(c=><th key={c} className="p-3 text-start text-xs uppercase text-[color:var(--tx-3)]">{c==='customer'?partyLabel:(COLUMN_LABELS[c] || c.replaceAll('_',' '))}</th>)}<th className="print:hidden">Actions</th></tr></thead><tbody>{filtered.map((record,index)=><tr key={externalId(record)||index} className="border-b border-[color:var(--bd)]">{columns.map(c=><td key={c} className="max-w-64 truncate p-3">{cell(record,c)}</td>)}<td className="p-3 print:hidden"><div className="flex gap-1"><GlassButton variant="secondary" size="sm" onClick={()=>setSelected(record)}>View</GlassButton>{DOCUMENT_RESOURCES.has(resource)&&<a href={`${printBase}/${externalId(record)}/print`} target="_blank" rel="noreferrer"><GlassButton variant="secondary" size="sm">PDF</GlassButton></a>}{DOCUMENT_RESOURCES.has(resource)&&<GlassButton size="sm" onClick={()=>{setSelected(record);setProjectId('');setConnectOpen(true);}}>Connect Project</GlassButton>}</div></td></tr>)}</tbody></table></div>}
+        <tr className="border-b border-[color:var(--bd)]">{columns.map(c=><th key={c} className={`p-3 text-xs uppercase text-[color:var(--tx-3)] ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end':'text-start'}`}>{c==='customer'?partyLabel:(COLUMN_LABELS[c] || c.replaceAll('_',' '))}</th>)}<th className="print:hidden">Actions</th></tr></thead><tbody>{filtered.map((record,index)=>{
+          const isParent=resource==='trial-balance'&&trialBalanceParentNumbers&&trialBalanceParentNumbers.has(String(record?.account_number||''));
+          const depth=resource==='trial-balance'&&trialBalanceDepth?(trialBalanceDepth.get(String(record?.account_number||''))||0):0;
+          return <tr key={externalId(record)||index} className={`border-b border-[color:var(--bd)] ${isParent?'bg-[color:var(--pr-soft)] font-semibold':''}`}>{columns.map(c=><td key={c} className={`max-w-64 truncate p-3 ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end tabular-nums':''}`} style={resource==='trial-balance'&&c==='account_name'?{paddingInlineStart:`${12+depth*20}px`}:undefined}>{cell(record,c)}</td>)}<td className="p-3 print:hidden"><div className="flex gap-1"><GlassButton variant="secondary" size="sm" onClick={()=>setSelected(record)}>View</GlassButton>{DOCUMENT_RESOURCES.has(resource)&&<a href={`${printBase}/${externalId(record)}/print`} target="_blank" rel="noreferrer"><GlassButton variant="secondary" size="sm">PDF</GlassButton></a>}{DOCUMENT_RESOURCES.has(resource)&&<GlassButton size="sm" onClick={()=>{setSelected(record);setProjectId('');setConnectOpen(true);}}>Connect Project</GlassButton>}</div></td></tr>;
+        })}</tbody></table></div>}
       {resource!=='financial-reports'&&resource!=='product-balances'&&totalRecords>0&&<div className="mt-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="text-xs text-[color:var(--tx-3)] flex items-center gap-3 flex-wrap">
           <span>Showing {Math.min(page*pageSize+1,totalRecords)}–{Math.min((page+1)*pageSize,totalRecords)} of {totalRecords} {usingCompleteFilterSet?'matched':'source'} records</span>
@@ -857,8 +878,11 @@ function FinancialReportsView({ data, error, loading, lastSync, sync, busy, lang
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[color:var(--tx-3)]">{cat.label}</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {cat.reports.map(r => (
-              <GlassCard key={r.key} className="p-4">
-                <div className="font-semibold text-[color:var(--tx)]">{r.name}</div>
+              <GlassCard key={r.key} className={`p-4 ${r.available ? '' : 'opacity-60'}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="font-semibold text-[color:var(--tx)]">{r.name}</div>
+                  {!r.available && <span className="shrink-0 rounded-full bg-[color:var(--bd)] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[color:var(--tx-4)]">Unavailable</span>}
+                </div>
                 <div className="mt-1 text-xs text-[color:var(--tx-3)]">{r.description}</div>
                 <div className="mt-3 flex gap-2">
                   {r.available && r.href
