@@ -223,6 +223,7 @@ export default function ProductsPage() {
   const ROLE_LABELS = useMemo(() => roleLabels(t), [t]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(null); // 'add' | 'edit' | 'view'
   const [labelProduct, setLabelProduct] = useState(null);
   const [quoteProProduct, setQuoteProProduct] = useState(null);
@@ -232,7 +233,7 @@ export default function ProductsPage() {
   const [reportBusy, setReportBusy] = useState('');
   const [toast, setToast] = useState(null);
 
-  const { data: pd, mutate } = useLiveData(`/api/products?search=${encodeURIComponent(search)}&page=${page}&limit=50`, REFRESH_MS);
+  const { data: pd, mutate } = useLiveData(`/api/products?search=${encodeURIComponent(search)}&page=${page}&limit=${pageSize}`, REFRESH_MS);
   const { data: cats } = useLiveData('/api/categories', 0);
   const { data: units } = useLiveData('/api/units', 0);
 
@@ -290,16 +291,37 @@ export default function ProductsPage() {
     { key: 'category', header: t('common.category') }, { key: 'qty', header: t('stock.qtyOnHand') },
     { key: 'price', header: t('products.costPrice') },
   ];
-  const reportRows = useMemo(() => products.map(p => ({
-    name: p.name || '—', sku: p.sku || '—', category: p.category_name || (p.inv_categories?.name) || '—',
-    qty: Number(p.qty_on_hand || 0).toLocaleString(), price: money(p.cost_price),
-  })), [products]);
+  function toReportRow(p) {
+    return {
+      name: p.name || '—', sku: p.sku || '—', category: p.category_name || (p.inv_categories?.name) || '—',
+      qty: Number(p.qty_on_hand || 0).toLocaleString(), price: money(p.cost_price),
+    };
+  }
+
+  /* PDF must export the full filtered result set (local inv_products can be
+     thousands of rows, and the SmartLife fallback alone is ~2,900 real
+     products), not just the currently-displayed page. Walks every server
+     page under the active search filter. */
+  async function fetchAllProducts() {
+    const q = new URLSearchParams({ search, page: 1, limit: 500 });
+    const first = await fetch(`/api/products?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+    let rows = first.products || [];
+    const totalRows = first.total || rows.length;
+    const totalPages = Math.ceil(totalRows / 500);
+    for (let p = 2; p <= totalPages; p++) {
+      q.set('page', p);
+      const next = await fetch(`/api/products?${q}`, { credentials: 'same-origin' }).then(r => r.json());
+      rows = rows.concat(next.products || []);
+    }
+    return rows;
+  }
 
   async function runReport(action) {
     setReportBusy(action);
     try {
+      const allProducts = await fetchAllProducts();
       const { exportReportPdf } = await import('@/lib/reportPdf');
-      await exportReportPdf({ title: t('products.title') || 'Products', columns: reportColumns, rows: reportRows, fileName: 'products-report.pdf', action });
+      await exportReportPdf({ title: t('products.title') || 'Products', columns: reportColumns, rows: allProducts.map(toReportRow), fileName: 'products-report.pdf', action });
     } catch (e) { setToast({ kind: 'error', text: e.message || 'Could not generate report.' }); }
     finally { setReportBusy(''); }
   }
@@ -404,12 +426,22 @@ export default function ProductsPage() {
             </tbody>
           </table>
         </div>
-        {total > 50 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <span>{t('common.showing', { from: (page - 1) * 50 + 1, to: Math.min(page * 50, total), total })}</span>
+        {total > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span>{t('common.showing', { from: total ? (page - 1) * pageSize + 1 : 0, to: Math.min(page * pageSize, total), total })}</span>
+              <span className="flex items-center gap-1.5">
+                <GlassSelect value={String(pageSize)} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="w-20">
+                  <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="500">500</option>
+                </GlassSelect>
+              </span>
+            </div>
             <div className="flex gap-2">
+              <button disabled={page <= 1} onClick={() => setPage(1)} className="gbtn gbtn-ghost gbtn--sm">First</button>
               <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <button disabled={page * 50 >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
+              <span className="px-2 self-center">{page} / {Math.max(1, Math.ceil(total / pageSize))}</span>
+              <button disabled={page * pageSize >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
+              <button disabled={page * pageSize >= total} onClick={() => setPage(Math.max(1, Math.ceil(total / pageSize)))} className="gbtn gbtn-ghost gbtn--sm">Last</button>
             </div>
           </div>
         )}

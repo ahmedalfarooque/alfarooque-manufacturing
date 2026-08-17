@@ -33,19 +33,40 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get('search') || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const limit = Math.min(100, parseInt(searchParams.get('limit') || '50', 10));
+  const limit = Math.min(500, parseInt(searchParams.get('limit') || '25', 10));
   const offset = (page - 1) * limit;
   const categoryId = searchParams.get('category_id');
 
-  let q = sb.from('inv_products')
-    .select('*, inv_categories(name), inv_units(name, symbol)', { count: 'exact' });
-  if (search) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
-  if (categoryId) q = q.eq('category_id', categoryId);
-  const activeParam = searchParams.get('active');
-  if (activeParam !== null) q = q.eq('is_active', activeParam !== 'false');
+  function baseQuery(countOpt) {
+    let q = sb.from('inv_products').select(countOpt ? '*' : '*, inv_categories(name), inv_units(name, symbol)', countOpt ? { count: 'exact', head: true } : { count: 'exact' });
+    if (search) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
+    if (categoryId) q = q.eq('category_id', categoryId);
+    const activeParam = searchParams.get('active');
+    if (activeParam !== null) q = q.eq('is_active', activeParam !== 'false');
+    return q;
+  }
 
-  let { data, count, error } = await q.order('name', { ascending: true }).range(offset, offset + limit - 1);
-  if (error) return json({ error: 'Could not load products.' }, 500);
+  /* Check the local match count FIRST (cheap head:true query) rather than
+     going straight to .range(offset, offset+limit-1) — on an empty (or
+     small) local table, requesting a page whose offset exceeds the actual
+     row count makes PostgREST return a range error, which previously threw
+     a 500 "Could not load products" and never reached the SmartLife
+     fallback below — silently breaking Products pagination beyond page 1
+     whenever the local table has fewer rows than the requested offset
+     (which is always true today, since inv_products is empty and the
+     SmartLife-fallback dataset is ~2,900 rows spanning many pages). */
+  const { count: localCount, error: countError } = await baseQuery(true);
+  if (countError) return json({ error: 'Could not load products.' }, 500);
+
+  let data, count;
+  if (localCount && offset < localCount) {
+    const result = await baseQuery(false).order('name', { ascending: true }).range(offset, offset + limit - 1);
+    if (result.error) return json({ error: 'Could not load products.' }, 500);
+    data = result.data; count = result.count;
+  } else {
+    count = localCount || 0;
+    data = [];
+  }
   if (!count) {
     try {
       const cookies = parseCookies(req.headers.get('cookie'));
