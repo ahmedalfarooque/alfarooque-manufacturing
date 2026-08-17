@@ -10,6 +10,8 @@ export async function GET(req) {
   const url = new URL(req.url);
   const month = url.searchParams.get('month') || 'all';
   const year = url.searchParams.get('year') || 'all';
+  const from = url.searchParams.get('from') || '';
+  const to = url.searchParams.get('to') || '';
   try {
     const sb = getDb();
     const [sales, purchases] = await Promise.all([
@@ -18,7 +20,7 @@ export async function GET(req) {
     ]);
     return json({
       source: 'SmartLife live read-only data', connected: true,
-      ...buildVatReport(sales.records, purchases.records, month, year),
+      ...buildVatReport(sales.records, purchases.records, month, year, from, to),
       sourceCounts: { sales: sales.total, purchases: purchases.total },
     });
   } catch (error) {

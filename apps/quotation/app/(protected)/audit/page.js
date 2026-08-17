@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { useLanguage } from '@/lib/i18n';
 import { Select, Modal, EmptyState, Th, Td, Pagination } from '@/components/ui';
+import DateFilter, { presetRange } from '@/components/DateFilter';
 
 const TABLES = ['', 'qt_quotations', 'qt_quotation_products', 'qt_catalogue_products', 'qt_product_cost_lines',
   'qt_materials', 'customers', 'qt_suppliers', 'qt_labour_roles', 'qt_machines', 'qt_expense_templates',
@@ -17,16 +18,19 @@ export default function AuditPage() {
   const [page, setPage] = useState(1);
   const [table, setTable] = useState('');
   const [action, setAction] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [detail, setDetail] = useState(null);
 
   const load = useCallback(() => {
-    fetch(`/api/admin/audit?table=${table}&action=${action}&page=${page}`, { credentials: 'same-origin' })
+    const { from: rFrom, to: rTo } = dateFilter.preset === 'custom' ? dateFilter : presetRange(dateFilter.preset);
+    const range = (rFrom ? `&from=${rFrom}` : '') + (rTo ? `&to=${rTo}` : '');
+    fetch(`/api/admin/audit?table=${table}&action=${action}&page=${page}${range}`, { credentials: 'same-origin' })
       .then(r => r.ok ? r.json() : { rows: [], total: 0 })
       .then(d => { setRows(d.rows || []); setTotal(d.total || 0); })
       .catch(() => { setRows([]); setTotal(0); });
-  }, [table, action, page]);
+  }, [table, action, page, dateFilter]);
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [table, action]);
+  useEffect(() => { setPage(1); }, [table, action, dateFilter]);
 
   return (
     <Shell active="/audit">
@@ -36,6 +40,7 @@ export default function AuditPage() {
             options={TABLES.map(x => ({ value: x, label: x || t('common.all') }))} />
           <Select value={action} onChange={e => setAction(e.target.value)} className="max-w-[150px]"
             options={ACTIONS.map(x => ({ value: x, label: x || t('common.all') }))} />
+          <DateFilter value={dateFilter} onChange={setDateFilter} t={t} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">

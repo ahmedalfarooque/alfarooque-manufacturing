@@ -47,6 +47,19 @@ function matchesPeriod(value, month = 'all', year = 'all') {
   return true;
 }
 
+/* Custom From/To range — local calendar-date semantics (dateKey already
+   extracts the plain YYYY-MM-DD prefix, never converted through
+   toISOString()/UTC, so a date typed as 17/08/2026 means that exact Saudi
+   calendar day, inclusive on both ends). Takes priority over month/year
+   when either bound is set, so the two controls never silently conflict. */
+function matchesRange(value, from, to) {
+  const date = dateKey(value);
+  if (!date) return false;
+  if (from && date < from) return false;
+  if (to && date > to) return false;
+  return true;
+}
+
 function periodLabel(month = 'all', year = 'all') {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   if (month === 'all' && year === 'all') return 'All available dates';
@@ -55,9 +68,11 @@ function periodLabel(month = 'all', year = 'all') {
   return year === 'all' ? `${name} · all years` : `${name} ${year}`;
 }
 
-function buildVatReport(salesRecords, purchaseRecords, month = 'all', year = 'all') {
-  const sales = (salesRecords || []).map(r => normalizeFinancialDocument('sales-invoices', r)).filter(r => matchesPeriod(r.date, month, year));
-  const purchases = (purchaseRecords || []).map(r => normalizeFinancialDocument('purchases', r)).filter(r => matchesPeriod(r.date, month, year));
+function buildVatReport(salesRecords, purchaseRecords, month = 'all', year = 'all', from = '', to = '') {
+  const useRange = !!(from || to);
+  const matches = r => useRange ? matchesRange(r.date, from, to) : matchesPeriod(r.date, month, year);
+  const sales = (salesRecords || []).map(r => normalizeFinancialDocument('sales-invoices', r)).filter(matches);
+  const purchases = (purchaseRecords || []).map(r => normalizeFinancialDocument('purchases', r)).filter(matches);
   const rows = [
     ...sales.map(r => ({ ...r, type: 'Sale', vatDirection: 'Output VAT' })),
     ...purchases.map(r => ({ ...r, type: 'Purchase', vatDirection: 'Input VAT' })),
@@ -65,8 +80,9 @@ function buildVatReport(salesRecords, purchaseRecords, month = 'all', year = 'al
   const sum = (items, key) => roundMoney(items.reduce((total, row) => total + (Number(row[key]) || 0), 0));
   const salesVat = sum(sales, 'vat');
   const purchaseVat = sum(purchases, 'vat');
+  const rangeLabel = from && to ? `${from} → ${to}` : from ? `From ${from}` : to ? `Until ${to}` : null;
   return {
-    period: { month, year, label: periodLabel(month, year) },
+    period: { month, year, from, to, label: useRange ? rangeLabel : periodLabel(month, year) },
     summary: {
       sales: sum(sales, 'total'),
       salesVat,

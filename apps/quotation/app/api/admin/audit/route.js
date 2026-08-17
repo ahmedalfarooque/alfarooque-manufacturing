@@ -12,13 +12,20 @@ export async function GET(req) {
   const url = new URL(req.url);
   const table = url.searchParams.get('table') || '';
   const action = url.searchParams.get('action') || '';
+  const dateFrom = url.searchParams.get('from') || '';
+  const dateTo = url.searchParams.get('to') || '';
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
-  const from = (page - 1) * PAGE_SIZE;
+  const offset = (page - 1) * PAGE_SIZE;
 
   let q = sb.from('qt_audit_logs').select('*', { count: 'exact' });
   if (table) q = q.eq('table_name', table);
   if (action) q = q.eq('action', action);
-  q = q.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1);
+  /* created_at is a timestamp, not a plain date — the upper bound must
+     include the entire local calendar day, not just its midnight instant,
+     or records from later that day would be silently dropped. */
+  if (dateFrom) q = q.gte('created_at', dateFrom);
+  if (dateTo) q = q.lte('created_at', `${dateTo}T23:59:59.999`);
+  q = q.order('created_at', { ascending: false }).range(offset, offset + PAGE_SIZE - 1);
   const { data, count, error } = await q;
   if (error) return json({ error: error.message }, 500);
 

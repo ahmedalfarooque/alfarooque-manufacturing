@@ -7,6 +7,7 @@ import { GlassBadge, GlassButton, GlassCard, GlassInput, GlassSelect, toast } fr
 import { exportReportPdf } from '@/lib/reportPdf';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage } from '@/lib/i18n';
+import DateFilter, { presetRange } from '@/components/DateFilter';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const money = value => `${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR`;
@@ -15,9 +16,17 @@ export default function VatReportPage() {
   const { lang } = useLanguage();
   const [month, setMonth] = useState('all');
   const [year, setYear] = useState('all');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState('');
-  const query = `/api/smartlife/vat?month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`;
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  /* Custom Range (dateFilter) takes priority over the month/year presets
+     when either bound is set — see buildVatReport's `useRange` — so the two
+     controls never silently conflict; local-calendar-date semantics via
+     the same presetRange()/DateFilter used everywhere else in Accounting. */
+  const { from: rangeFrom, to: rangeTo } = dateFilter.preset === 'custom' ? dateFilter : presetRange(dateFilter.preset);
+  const query = `/api/smartlife/vat?month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}${rangeFrom ? `&from=${rangeFrom}` : ''}${rangeTo ? `&to=${rangeTo}` : ''}`;
   const { data, error, loading, refresh } = useLiveData(query, 60000);
   const years = data?.availableYears || [];
   useEffect(() => { if (year !== 'all' && years.length && !years.includes(String(year))) setYear('all'); }, [year, years]);
@@ -25,6 +34,9 @@ export default function VatReportPage() {
     const needle = search.trim().toLowerCase();
     return !needle || [row.reference, row.party, row.type].some(value => String(value || '').toLowerCase().includes(needle));
   }), [data, search]);
+  useEffect(() => { setPage(0); }, [search, month, year, dateFilter, pageSize]);
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const pageRows = useMemo(() => rows.slice(page * pageSize, (page + 1) * pageSize), [rows, page, pageSize]);
   const summary = data?.summary || {};
 
   async function runReport(action) {
@@ -61,19 +73,35 @@ export default function VatReportPage() {
         <GlassInput className="min-w-56 flex-1" placeholder="Search reference, customer, or supplier…" value={search} onChange={e => setSearch(e.target.value)} />
         <GlassSelect value={month} onChange={e => setMonth(e.target.value)}><option value="all">All months</option>{MONTHS.map((name, i) => <option key={name} value={String(i + 1)}>{name}</option>)}</GlassSelect>
         <GlassSelect value={year} onChange={e => setYear(e.target.value)}><option value="all">All years</option>{years.map(value => <option key={value}>{value}</option>)}</GlassSelect>
-        <GlassButton variant="secondary" onClick={() => { setSearch(''); setMonth('all'); setYear('all'); }}>Reset</GlassButton>
+        <DateFilter value={dateFilter} onChange={setDateFilter} lang={lang} />
+        <GlassButton variant="secondary" onClick={() => { setSearch(''); setMonth('all'); setYear('all'); setDateFilter({ preset: 'all', from: null, to: null }); }}>Reset</GlassButton>
         <GlassButton variant="secondary" disabled={!rows.length || !!busy} onClick={() => runReport('print')}>{busy === 'print' ? 'Preparing…' : 'Print'}</GlassButton>
         <GlassButton variant="secondary" disabled={!rows.length || !!busy} onClick={() => runReport('save')}>{busy === 'save' ? 'Generating…' : 'Download PDF'}</GlassButton>
       </ListToolbar>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[['Sales',summary.sales],['Sales VAT',summary.salesVat],['Purchases',summary.purchases],['Purchase VAT',summary.purchaseVat],['Net VAT',summary.netVat]].map(([label,value]) => <div key={label} className="rounded-xl border border-[color:var(--bd)] p-3"><div className="text-xs text-[color:var(--tx-4)]">{label}</div><div className="mt-1 font-semibold">{money(value)}</div></div>)}
       </div>
-      <div className="mt-4 overflow-auto">
+      {!!rows.length && <div className="mb-2 text-xs text-[color:var(--tx-3)]">Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, rows.length)} of {rows.length}{(search.trim() || rangeFrom || rangeTo || month !== 'all' || year !== 'all') ? ' matched records' : ' records'}</div>}
+      <div className="mt-1 overflow-auto">
         <table className="w-full min-w-[760px] text-sm"><thead><tr className="border-b border-[color:var(--bd)]">{['Type','Reference','Date','Customer / Supplier','Total','VAT'].map(h => <th key={h} className="p-3 text-start text-xs uppercase text-[color:var(--tx-3)]">{h}</th>)}</tr></thead>
-          <tbody>{rows.map((row, index) => <tr key={`${row.type}-${row.id}-${index}`} className="border-b border-[color:var(--bd)]"><td className="p-3"><GlassBadge tone={row.type === 'Sale' ? 'emerald' : 'amber'}>{row.type}</GlassBadge></td><td className="p-3">{row.reference || '—'}</td><td className="p-3">{row.date || '—'}</td><td className="p-3">{row.party || '—'}</td><td className="p-3 text-end">{money(row.total)}</td><td className="p-3 text-end">{money(row.vat)}</td></tr>)}</tbody>
+          <tbody>{pageRows.map((row, index) => <tr key={`${row.type}-${row.id}-${index}`} className="border-b border-[color:var(--bd)]"><td className="p-3"><GlassBadge tone={row.type === 'Sale' ? 'emerald' : 'amber'}>{row.type}</GlassBadge></td><td className="p-3">{row.reference || '—'}</td><td className="p-3">{row.date || '—'}</td><td className="p-3">{row.party || '—'}</td><td className="p-3 text-end">{money(row.total)}</td><td className="p-3 text-end">{money(row.vat)}</td></tr>)}</tbody>
         </table>
       </div>
       {!loading && !rows.length && <div className="py-8 text-center text-[color:var(--tx-3)]">No VAT transactions matched this period and search.</div>}
+      {!!rows.length && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <div className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]">Rows per page:
+          <GlassSelect value={String(pageSize)} onChange={e => { setPageSize(Number(e.target.value)); setPage(0); }} className="w-20">
+            <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="500">500</option>
+          </GlassSelect>
+        </div>
+        <div className="flex gap-2">
+          <GlassButton variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage(0)}>First</GlassButton>
+          <GlassButton variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage(v => Math.max(0, v - 1))}>Previous</GlassButton>
+          <span className="px-2 text-xs self-center text-[color:var(--tx-3)]">Page {page + 1} of {totalPages}</span>
+          <GlassButton variant="secondary" size="sm" disabled={page + 1 >= totalPages} onClick={() => setPage(v => Math.min(totalPages - 1, v + 1))}>Next</GlassButton>
+          <GlassButton variant="secondary" size="sm" disabled={page + 1 >= totalPages} onClick={() => setPage(totalPages - 1)}>Last</GlassButton>
+        </div>
+      </div>}
     </GlassCard>
   </div>;
 }
