@@ -45,6 +45,16 @@ export async function GET(req) {
     vat_amount: Number(first(r, ['tax', 'total_tax', 'vat_amount'])) || 0,
   }));
   const sum = (items, key) => items.reduce((total, row) => total + Number(row[key] || 0), 0);
+  /* Receivables/payables must sum only POSITIVE balances — a negative
+     balance_amount is a customer/supplier credit (overpayment), a distinct
+     balance-sheet concept from "amount still owed", and must never net
+     against genuine receivables. Confirmed real bug: 7 sales invoices carry
+     a negative balance, which previously reduced "Total Receivables" by
+     ~SAR 420,935 versus the correct positive-balances-only figure (verified
+     against CRM's dashboard, which already summed positive balances only —
+     this brought the two apps' identical "Outstanding Receivables" metric
+     back into agreement instead of changing the correct one). */
+  const sumPositive = (items, key) => items.reduce((total, row) => total + Math.max(0, Number(row[key] || 0)), 0);
   const localPayments = payments.data || [];
 
   const hasSales = sales.length > 0;
@@ -53,8 +63,8 @@ export async function GET(req) {
   const kpis = {
     totalSales: hasSales ? r2(sum(sales, 'total_amount')) : null,
     totalPurchases: hasPurchases ? r2(sum(purchases, 'total_amount')) : null,
-    receivables: hasSales ? r2(sum(sales, 'balance_amount')) : null,
-    payables: hasPurchases ? r2(sum(purchases, 'balance_amount')) : null,
+    receivables: hasSales ? r2(sumPositive(sales, 'balance_amount')) : null,
+    payables: hasPurchases ? r2(sumPositive(purchases, 'balance_amount')) : null,
     salesVat: hasSales ? r2(sum(sales, 'vat_amount')) : null,
     purchaseVat: hasPurchases ? r2(sum(purchases, 'vat_amount')) : null,
     grossProfit: (hasSales || hasPurchases) ? r2(sum(sales, 'total_amount') - sum(purchases, 'total_amount')) : null,
