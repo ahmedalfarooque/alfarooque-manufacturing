@@ -159,6 +159,17 @@ export default function SmartLifeResourcePage({ params }) {
   const [dateFilter,setDateFilter] = useState({ preset:'all', from:null, to:null });
   const [customerFilter,setCustomerFilter] = useState(''); const [paymentStatusFilter,setPaymentStatusFilter] = useState(''); const [saleStatusFilter,setSaleStatusFilter] = useState('');
   const [categoryFilter,setCategoryFilter] = useState(''); const [unitFilter,setUnitFilter] = useState(''); const [typeFilter,setTypeFilter] = useState('');
+  /* Trial Balance column toggles — real, working switches over the one
+     real `balance` field SmartERP exposes (id/account_number/account_name/
+     balance only). SmartERP has no fiscal-year, branch, cost-center link,
+     account-type classification, or beginning/period-balance breakdown on
+     this resource, so those SmartLife-report controls are NOT built here —
+     adding them would mean fabricated columns with no real data behind
+     them, which is explicitly disallowed. Debit/Credit/Balance are genuine
+     alternate views of the same real number, toggle instantly, and are
+     picked up by Print/PDF/Excel automatically since runReport() already
+     builds its export columns from this same `columns` array. */
+  const [tbShowDebit,setTbShowDebit] = useState(true); const [tbShowCredit,setTbShowCredit] = useState(true); const [tbShowBalance,setTbShowBalance] = useState(false);
   const [page,setPage] = useState(0); const [pageSize,setPageSize] = useState(25);
   const [connectOpen,setConnectOpen] = useState(false); const [projectId,setProjectId] = useState(''); const [relationship,setRelationship] = useState(null); const [busy,setBusy] = useState(false);
   const [reportBusy,setReportBusy] = useState('');
@@ -327,8 +338,10 @@ export default function SmartLifeResourcePage({ params }) {
     /* Trial Balance: same account_number/account_name/balance real fields
        as Account Balances, split into standard Debit/Credit columns by
        cell() below — a display convention (positive balance = debit side,
-       negative = credit side), not an invented figure. */
-    if (resource === 'trial-balance') return ['account_number', 'account_name', 'debit', 'credit'];
+       negative = credit side), not an invented figure. Column set responds
+       live to the toggle switches in the toolbar. */
+    if (resource === 'trial-balance') return ['account_number', 'account_name',
+      ...(tbShowDebit ? ['debit'] : []), ...(tbShowCredit ? ['credit'] : []), ...(tbShowBalance ? ['balance'] : [])];
     /* Tax Rates: real fields are id/code/name/rate/type — the generic
        `preferred` list below has no 'rate'/'type' entries, so it silently
        dropped the rate value entirely (the entire point of this report).
@@ -337,7 +350,7 @@ export default function SmartLifeResourcePage({ params }) {
     const preferred = ['id','number','reference','code','name','english_name','company','customer_name','supplier_name','phone','email','city','date','status','quantity','price','total','amount','balance','currency'];
     const present = new Set(records.flatMap(r => r && typeof r === 'object' ? Object.keys(r) : []));
     return preferred.filter(k => present.has(k)).slice(0,8).length ? preferred.filter(k => present.has(k)).slice(0,8) : [...present].slice(0,8);
-  },[records,resource,isInvoiceWorkspace]);
+  },[records,resource,isInvoiceWorkspace,tbShowDebit,tbShowCredit,tbShowBalance]);
   const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate', debit:'Debit', credit:'Credit' };
   function resetInvoiceFilters() { setSearch(''); setCustomerFilter(''); setPaymentStatusFilter(''); setSaleStatusFilter(''); setDateFilter({ preset:'all', from:null, to:null }); }
 
@@ -463,6 +476,7 @@ export default function SmartLifeResourcePage({ params }) {
       const balance = Number(record?.balance) || 0;
       if (column === 'debit') return balance >= 0 && balance !== 0 ? money(balance) : display(null);
       if (column === 'credit') return balance < 0 ? money(Math.abs(balance)) : display(null);
+      if (column === 'balance') return money(balance);
       return display(record?.[column]);
     }
     if(!DOCUMENT_RESOURCES.has(resource)) return display(record?.[column]);
@@ -509,6 +523,10 @@ export default function SmartLifeResourcePage({ params }) {
             <GlassSelect value={unitFilter} onChange={e=>setUnitFilter(e.target.value)}><option value="">All units</option>{unitValues.map(u=><option key={u}>{u}</option>)}</GlassSelect>
             <GlassSelect value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="">All types</option>{typeValues.map(t=><option key={t}>{t}</option>)}</GlassSelect>
             <GlassButton variant="secondary" size="sm" onClick={()=>{setSearch('');setCategoryFilter('');setUnitFilter('');setTypeFilter('');}}>Reset</GlassButton>
+          </>) : resource==='trial-balance' ? (<>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowDebit} onChange={e=>setTbShowDebit(e.target.checked)}/> Debit</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCredit} onChange={e=>setTbShowCredit(e.target.checked)}/> Credit</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowBalance} onChange={e=>setTbShowBalance(e.target.checked)}/> Balance</label>
           </>) : (!['customers','suppliers','warehouses'].includes(resource) && <GlassSelect value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{statusValues.map(s=><option key={s}>{s}</option>)}</GlassSelect>)}
           <GlassButton variant="secondary" onClick={()=>runReport('print')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='print'?'Preparing…':'Print'}</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('save')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='save'?'Generating…':'⤓ Download PDF'}</GlassButton>
