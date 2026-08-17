@@ -11,13 +11,21 @@ export async function GET(req) {
   const q = url.searchParams;
   const search = (q.get('search') || '').trim();
   const type = q.get('type') || '';
+  const dateFrom = q.get('dateFrom') || '';
+  const dateTo = q.get('dateTo') || '';
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
 
   const sb = getDb();
   let query = sb.from('crm_contacts').select('*', { count: 'exact' });
   if (type) query = query.eq('contact_type', type);
   if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%,phone.ilike.%${search}%`);
+  /* created_at is timestamptz — the end bound is pushed to the last instant
+     of that local calendar date so records created later on the same
+     "to" day aren't silently dropped. Dates arrive as plain YYYY-MM-DD
+     from the browser's local DateFilter, never UTC-shifted. */
+  if (dateFrom) query = query.gte('created_at', dateFrom);
+  if (dateTo) query = query.lte('created_at', `${dateTo}T23:59:59.999`);
   query = query.order('created_at', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
 
   let { data, error, count } = await query;
@@ -26,6 +34,8 @@ export async function GET(req) {
     let legacy = sb.from('customers').select('*', { count: 'exact' }).is('deleted_at', null);
     if (type) legacy = legacy.eq('customer_type', type);
     if (search) legacy = legacy.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%,mobile_number.ilike.%${search}%`);
+    if (dateFrom) legacy = legacy.gte('created_at', dateFrom);
+    if (dateTo) legacy = legacy.lte('created_at', `${dateTo}T23:59:59.999`);
     const legacyRes = await legacy.order('created_at', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
     if (!legacyRes.error) {
       data = (legacyRes.data || []).map(row => ({ ...row, name: row.full_name, phone: row.mobile_number, company: row.company_name, contact_type: row.customer_type || 'Customer', source_table: 'customers' }));

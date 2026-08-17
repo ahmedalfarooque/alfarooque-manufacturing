@@ -5,6 +5,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useLang } from '@/lib/i18n';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd, GlassSkeletonRows } from '@/components/glass';
 import { CRMEmptyState } from '@/components/CRMWidgets';
+import DateFilter, { resolveDateRange, dateFilterLabel } from '@/components/DateFilter';
 
 const TYPES = ['Call', 'Meeting', 'Email', 'Demo', 'Follow-up', 'Task', 'Note'];
 const STATUSES = ['Planned', 'Completed', 'Cancelled', 'No Show'];
@@ -17,27 +18,33 @@ export default function ActivitiesPage() {
   const { t, lang } = useLang();
   const [type, setType] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ activity_type: 'Call' });
   const [saving, setSaving] = useState(false);
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
   const params = new URLSearchParams({ page, pageSize });
   if (type) params.set('type', type);
   if (status) params.set('status', status);
+  if (dateFrom) params.set('dateFrom', dateFrom);
+  if (dateTo) params.set('dateTo', dateTo);
   const { data, refresh } = useLiveData(`/api/activities?${params}`, 15000);
   const activities = data?.activities || [];
 
   async function fetchAllActivities() {
-    const q = new URLSearchParams({ page: 1, pageSize: 100 });
+    const q = new URLSearchParams({ page: 1, pageSize: 500 });
     if (type) q.set('type', type);
     if (status) q.set('status', status);
+    if (dateFrom) q.set('dateFrom', dateFrom);
+    if (dateTo) q.set('dateTo', dateTo);
     const first = await fetch(`/api/activities?${q}`).then(r => r.json());
     let rows = first.activities || [];
     const total = first.total || rows.length;
-    const totalPages = Math.ceil(total / 100);
+    const totalPages = Math.ceil(total / 500);
     for (let p = 2; p <= totalPages; p++) {
       q.set('page', p);
       const next = await fetch(`/api/activities?${q}`).then(r => r.json());
@@ -52,7 +59,7 @@ export default function ActivitiesPage() {
       const all = await fetchAllActivities();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
-        title: 'Activities',
+        title: `Activities${dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : ''}`,
         columns: [
           { key: 'type', header: 'Type' }, { key: 'subject', header: 'Subject' },
           { key: 'contact', header: 'Contact' }, { key: 'deal', header: 'Deal' },
@@ -108,7 +115,7 @@ export default function ActivitiesPage() {
       </div>
 
       <GlassCard>
-        <div className="flex gap-3 mb-4">
+        <div className="flex flex-wrap gap-3 mb-4">
           <GlassSelect value={type} onChange={e => { setType(e.target.value); setPage(1); }}>
             <option value="">All Types</option>
             {TYPES.map(t => <option key={t}>{t}</option>)}
@@ -117,6 +124,7 @@ export default function ActivitiesPage() {
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
         </div>
 
         {!data ? (
@@ -165,7 +173,8 @@ export default function ActivitiesPage() {
         </table>
         )}
 
-        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
+        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage}
+          onPageSize={v => { setPageSize(v); setPage(1); }} />
       </GlassCard>
 
       {showForm && (

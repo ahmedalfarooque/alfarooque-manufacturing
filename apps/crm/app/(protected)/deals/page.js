@@ -6,6 +6,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useLang } from '@/lib/i18n';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd, GlassSkeletonRows } from '@/components/glass';
 import { MetricCard, CRMEmptyState } from '@/components/CRMWidgets';
+import DateFilter, { resolveDateRange, dateFilterLabel } from '@/components/DateFilter';
 
 const STATUSES = ['Open', 'Won', 'Lost', 'On Hold'];
 const STAGES = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
@@ -19,16 +20,20 @@ export default function DealsPage() {
   const { t, lang } = useLang();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ stage: 'Prospecting', currency: 'SAR' });
   const [saving, setSaving] = useState(false);
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
   const params = new URLSearchParams({ page, pageSize });
   if (search) params.set('search', search);
   if (status) params.set('status', status);
+  if (dateFrom) params.set('dateFrom', dateFrom);
+  if (dateTo) params.set('dateTo', dateTo);
   const { data, refresh } = useLiveData(`/api/deals?${params}`, 15000);
   const deals = data?.deals || [];
 
@@ -42,7 +47,7 @@ export default function DealsPage() {
     fetchAllDeals().then(rows => { if (!cancelled) setKpiRows(rows); }).catch(() => { if (!cancelled) setKpiRows([]); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, status, data?.total]);
+  }, [search, status, dateFrom, dateTo, data?.total]);
 
   const kpiTotalValue = (kpiRows || []).reduce((sum, d) => sum + Number(d.value || 0), 0);
   const kpiOpen = (kpiRows || []).filter(d => d.status === 'Open').length;
@@ -50,13 +55,15 @@ export default function DealsPage() {
   const kpiLost = (kpiRows || []).filter(d => d.status === 'Lost').length;
 
   async function fetchAllDeals() {
-    const q = new URLSearchParams({ page: 1, pageSize: 100 });
+    const q = new URLSearchParams({ page: 1, pageSize: 500 });
     if (search) q.set('search', search);
     if (status) q.set('status', status);
+    if (dateFrom) q.set('dateFrom', dateFrom);
+    if (dateTo) q.set('dateTo', dateTo);
     const first = await fetch(`/api/deals?${q}`).then(r => r.json());
     let rows = first.deals || [];
     const total = first.total || rows.length;
-    const totalPages = Math.ceil(total / 100);
+    const totalPages = Math.ceil(total / 500);
     for (let p = 2; p <= totalPages; p++) {
       q.set('page', p);
       const next = await fetch(`/api/deals?${q}`).then(r => r.json());
@@ -71,7 +78,7 @@ export default function DealsPage() {
       const all = await fetchAllDeals();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
-        title: 'Deals',
+        title: `Deals${dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : ''}`,
         columns: [
           { key: 'title', header: 'Title' }, { key: 'contact', header: 'Contact' },
           { key: 'stage', header: 'Stage' }, { key: 'value', header: 'Value' },
@@ -133,12 +140,13 @@ export default function DealsPage() {
       </div>
 
       <GlassCard>
-        <div className="flex gap-3 mb-4">
-          <GlassInput placeholder="Search deal title…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="flex-1" />
+        <div className="flex flex-wrap gap-3 mb-4">
+          <GlassInput placeholder="Search deal title…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="flex-1 min-w-48" />
           <GlassSelect value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
         </div>
 
         {!data ? (
@@ -189,7 +197,8 @@ export default function DealsPage() {
         </table>
         )}
 
-        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
+        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage}
+          onPageSize={v => { setPageSize(v); setPage(1); }} />
       </GlassCard>
 
       {showForm && (

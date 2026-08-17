@@ -5,6 +5,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useLang } from '@/lib/i18n';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd, GlassSkeletonRows } from '@/components/glass';
 import { MetricCard, CRMEmptyState } from '@/components/CRMWidgets';
+import DateFilter, { resolveDateRange, dateFilterLabel } from '@/components/DateFilter';
 
 const STATUSES = ['New', 'Contacted', 'Qualified', 'Unqualified', 'Converted', 'Lost'];
 function statusTone(s) {
@@ -18,17 +19,21 @@ export default function LeadsPage() {
   const { t, lang } = useLang();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ status: 'New' });
   const [saving, setSaving] = useState(false);
   const [reportBusy, setReportBusy] = useState('');
   const [converting, setConverting] = useState(null);
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
   const params = new URLSearchParams({ page, pageSize });
   if (search) params.set('search', search);
   if (status) params.set('status', status);
+  if (dateFrom) params.set('dateFrom', dateFrom);
+  if (dateTo) params.set('dateTo', dateTo);
   const { data, refresh } = useLiveData(`/api/leads?${params}`, 15000);
   const leads = data?.leads || [];
 
@@ -39,7 +44,7 @@ export default function LeadsPage() {
     fetchAllLeads().then(rows => { if (!cancelled) setKpiRows(rows); }).catch(() => { if (!cancelled) setKpiRows([]); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, status, data?.total]);
+  }, [search, status, dateFrom, dateTo, data?.total]);
 
   const kpiNew = (kpiRows || []).filter(l => l.status === 'New').length;
   const kpiQualified = (kpiRows || []).filter(l => l.status === 'Qualified').length;
@@ -47,13 +52,15 @@ export default function LeadsPage() {
   const kpiTotal = kpiRows == null ? '—' : kpiRows.length;
 
   async function fetchAllLeads() {
-    const q = new URLSearchParams({ page: 1, pageSize: 100 });
+    const q = new URLSearchParams({ page: 1, pageSize: 500 });
     if (search) q.set('search', search);
     if (status) q.set('status', status);
+    if (dateFrom) q.set('dateFrom', dateFrom);
+    if (dateTo) q.set('dateTo', dateTo);
     const first = await fetch(`/api/leads?${q}`).then(r => r.json());
     let rows = first.leads || [];
     const total = first.total || rows.length;
-    const totalPages = Math.ceil(total / 100);
+    const totalPages = Math.ceil(total / 500);
     for (let p = 2; p <= totalPages; p++) {
       q.set('page', p);
       const next = await fetch(`/api/leads?${q}`).then(r => r.json());
@@ -68,7 +75,7 @@ export default function LeadsPage() {
       const all = await fetchAllLeads();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
-        title: 'Leads',
+        title: `Leads${dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : ''}`,
         columns: [
           { key: 'name', header: 'Name' }, { key: 'company', header: 'Company' },
           { key: 'source', header: 'Source' }, { key: 'status', header: 'Status' },
@@ -136,12 +143,13 @@ export default function LeadsPage() {
       </div>
 
       <GlassCard>
-        <div className="flex gap-3 mb-4">
-          <GlassInput placeholder="Search lead name, company, email…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="flex-1" />
+        <div className="flex flex-wrap gap-3 mb-4">
+          <GlassInput placeholder="Search lead name, company, email…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="flex-1 min-w-48" />
           <GlassSelect value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
             <option value="">All Statuses</option>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
           </GlassSelect>
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
         </div>
 
         {!data ? (
@@ -192,7 +200,8 @@ export default function LeadsPage() {
         </table>
         )}
 
-        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
+        <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage}
+          onPageSize={v => { setPageSize(v); setPage(1); }} />
       </GlassCard>
 
       {showForm && (

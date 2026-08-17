@@ -11,14 +11,21 @@ export async function GET(req) {
   const q = url.searchParams;
   const search = (q.get('search') || '').trim();
   const status = q.get('status') || '';
+  const dateFrom = q.get('dateFrom') || '';
+  const dateTo = q.get('dateTo') || '';
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '25', 10)));
 
   const sb = getDb();
   let query = sb.from('crm_deals')
     .select('*, crm_contacts(name, company)', { count: 'exact' });
   if (status) query = query.eq('status', status);
   if (search) query = query.or(`title.ilike.%${search}%`);
+  /* created_at is timestamptz — the end bound is pushed to the last instant
+     of that local calendar date so records created later on the same
+     "to" day aren't silently dropped. */
+  if (dateFrom) query = query.gte('created_at', dateFrom);
+  if (dateTo) query = query.lte('created_at', `${dateTo}T23:59:59.999`);
   query = query.order('created_at', { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1);
 
   const { data, error, count } = await query;

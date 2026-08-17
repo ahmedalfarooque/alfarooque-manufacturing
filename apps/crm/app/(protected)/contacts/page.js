@@ -6,6 +6,7 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useLang } from '@/lib/i18n';
 import { GlassCard, GlassBadge, GlassButton, GlassInput, GlassSelect, GlassPagination, GlassModal, GlassField, toast, GlassTh, GlassTd, GlassSkeletonRows } from '@/components/glass';
 import { InitialAvatar, CRMEmptyState } from '@/components/CRMWidgets';
+import DateFilter, { resolveDateRange, dateFilterLabel } from '@/components/DateFilter';
 
 const TYPES = ['Lead', 'Prospect', 'Customer', 'Partner', 'Supplier'];
 /* GlassBadge's tone table only defines neutral/cyan/emerald/amber/red/violet/slate
@@ -18,27 +19,33 @@ export default function ContactsPage() {
   const { t, lang } = useLang();
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ contact_type: 'Lead' });
   const [saving, setSaving] = useState(false);
   const [reportBusy, setReportBusy] = useState('');
-  const pageSize = 25;
+  const { from: dateFrom, to: dateTo } = resolveDateRange(dateFilter);
 
   const params = new URLSearchParams({ page, pageSize });
   if (search) params.set('search', search);
   if (type) params.set('type', type);
+  if (dateFrom) params.set('dateFrom', dateFrom);
+  if (dateTo) params.set('dateTo', dateTo);
   const { data, refresh } = useLiveData(`/api/contacts?${params}`, 15000);
   const contacts = data?.contacts || [];
 
   async function fetchAllContacts() {
-    const q = new URLSearchParams({ page: 1, pageSize: 100 });
+    const q = new URLSearchParams({ page: 1, pageSize: 500 });
     if (search) q.set('search', search);
     if (type) q.set('type', type);
+    if (dateFrom) q.set('dateFrom', dateFrom);
+    if (dateTo) q.set('dateTo', dateTo);
     const first = await fetch(`/api/contacts?${q}`).then(r => r.json());
     let rows = first.contacts || [];
     const total = first.total || rows.length;
-    const totalPages = Math.ceil(total / 100);
+    const totalPages = Math.ceil(total / 500);
     for (let p = 2; p <= totalPages; p++) {
       q.set('page', p);
       const next = await fetch(`/api/contacts?${q}`).then(r => r.json());
@@ -53,7 +60,7 @@ export default function ContactsPage() {
       const all = await fetchAllContacts();
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
-        title: 'Contacts',
+        title: `Contacts${dateFilter.preset !== 'all' ? ` — Period: ${dateFilterLabel(dateFilter, t, lang)}` : ''}`,
         columns: [
           { key: 'name', header: 'Name' }, { key: 'company', header: 'Company' },
           { key: 'email', header: 'Email' }, { key: 'phone', header: 'Phone' },
@@ -102,12 +109,13 @@ export default function ContactsPage() {
       </div>
 
       <GlassCard>
-        <div className="flex gap-3 mb-4">
-          <GlassInput placeholder="Search name, email, company…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="flex-1" />
+        <div className="flex flex-wrap gap-3 mb-4">
+          <GlassInput placeholder="Search name, email, company…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="flex-1 min-w-48" />
           <GlassSelect value={type} onChange={e => { setType(e.target.value); setPage(1); }}>
             <option value="">All Types</option>
             {TYPES.map(t => <option key={t}>{t}</option>)}
           </GlassSelect>
+          <DateFilter value={dateFilter} onChange={v => { setDateFilter(v); setPage(1); }} t={t} lang={lang} />
         </div>
 
         {!data ? (
@@ -159,7 +167,8 @@ export default function ContactsPage() {
               </tbody>
             </table>
 
-            <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage} />
+            <GlassPagination page={page} pageSize={pageSize} total={data?.total || 0} onPage={setPage}
+              onPageSize={v => { setPageSize(v); setPage(1); }} />
           </>
         )}
       </GlassCard>

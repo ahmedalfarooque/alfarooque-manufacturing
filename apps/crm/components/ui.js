@@ -136,19 +136,40 @@ export function Td({ children, className = '', ...rest }) {
   );
 }
 
-export function Pagination({ page, pageSize, total, onPage }) {
+/* Standardized list-page pagination — page-size selector (default 25/50/
+   100/500 via `onPageSize`, optional so existing call sites that only pass
+   page/pageSize/total/onPage keep working exactly as before) plus a
+   First/Previous/Next/Last control set and a "Showing X–Y of N" readout.
+   `total` must already reflect the FILTERED count (callers filtering
+   client-side or via query params should pass the filtered total, not the
+   unfiltered one), so this always matches what's actually on screen. */
+export function Pagination({ page, pageSize, total, onPage, onPageSize, pageSizeOptions = [25, 50, 100, 500] }) {
+  if (!total) return null;
   const pages = Math.max(1, Math.ceil(total / pageSize));
-  if (pages <= 1) return null;
+  const from = Math.min((page - 1) * pageSize + 1, total);
+  const to = Math.min(page * pageSize, total);
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-sm text-[color:var(--tx-3)] border-t border-[color:var(--bd)]">
-      <span>{total}</span>
-      <div className="flex items-center gap-2">
-        <button disabled={page <= 1} onClick={() => onPage(page - 1)}
-          className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40">‹</button>
-        <span className="tabular-nums">{page} / {pages}</span>
-        <button disabled={page >= pages} onClick={() => onPage(page + 1)}
-          className="gbtn gbtn-secondary gbtn--icon gbtn--sm disabled:opacity-40">›</button>
+    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs text-[color:var(--tx-3)] border-t border-[color:var(--bd)]">
+      <div className="flex items-center gap-3 flex-wrap">
+        <span>Showing {from}–{to} of {total}</span>
+        {onPageSize && (
+          <span className="flex items-center gap-1.5">
+            Rows per page:
+            <select value={pageSize} onChange={e => onPageSize(Number(e.target.value))} className="ginput !w-20 !py-1 !text-xs">
+              {pageSizeOptions.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </span>
+        )}
       </div>
+      {pages > 1 && (
+        <div className="flex items-center gap-1.5">
+          <button disabled={page <= 1} onClick={() => onPage(1)} className="gbtn gbtn-secondary gbtn--sm disabled:opacity-40">First</button>
+          <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="gbtn gbtn-secondary gbtn--sm disabled:opacity-40">‹ Prev</button>
+          <span className="px-2 tabular-nums">{page} / {pages}</span>
+          <button disabled={page >= pages} onClick={() => onPage(page + 1)} className="gbtn gbtn-secondary gbtn--sm disabled:opacity-40">Next ›</button>
+          <button disabled={page >= pages} onClick={() => onPage(pages)} className="gbtn gbtn-secondary gbtn--sm disabled:opacity-40">Last</button>
+        </div>
+      )}
     </div>
   );
 }

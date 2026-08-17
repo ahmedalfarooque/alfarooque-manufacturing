@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLang } from '@/lib/i18n';
-import { GlassCard, GlassInput, GlassTh, GlassTd, GlassSkeletonRows, GlassBadge, GlassButton, toast } from '@/components/glass';
+import { GlassCard, GlassInput, GlassTh, GlassTd, GlassSkeletonRows, GlassBadge, GlassButton, GlassPagination, toast } from '@/components/glass';
 import { MetricCard, CRMEmptyState } from '@/components/CRMWidgets';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
@@ -13,11 +13,17 @@ export default function CompaniesPage() {
   const { t, lang } = useLang();
   const [search, setSearch] = useState('');
   const [reportBusy, setReportBusy] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   const { data } = useLiveData(`/api/companies?${params}`, 20000);
   const companies = data?.companies || [];
+  /* No date field exists on this virtual grouping (see /api/companies), so
+     only pagination is standardized here — company name is already the
+     natural, stable sort (alphabetical, applied server-side). */
+  const pagedCompanies = companies.slice((page - 1) * pageSize, page * pageSize);
 
   const totalContacts = companies.reduce((s, c) => s + c.contactCount, 0);
   const totalOpenDeals = companies.reduce((s, c) => s + c.openDeals, 0);
@@ -62,7 +68,7 @@ export default function CompaniesPage() {
 
       <GlassCard>
         <div className="flex gap-3 mb-4">
-          <GlassInput placeholder="Search company…" value={search} onChange={e => setSearch(e.target.value)} className="flex-1" />
+          <GlassInput placeholder="Search company…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="flex-1" />
         </div>
 
         {!data ? (
@@ -70,28 +76,32 @@ export default function CompaniesPage() {
         ) : !companies.length ? (
           <CRMEmptyState title="No companies yet" text="Companies appear here once contacts have a company name set." />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[color:var(--bd)]">
-                <GlassTh>Company</GlassTh>
-                <GlassTh>Contacts</GlassTh>
-                <GlassTh>Open Opportunities</GlassTh>
-                <GlassTh>Total Deal Value</GlassTh>
-              </tr>
-            </thead>
-            <tbody>
-              {companies.map(c => (
-                <tr key={c.company} className="border-b border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)]">
-                  <GlassTd className="font-medium text-[color:var(--tx)]">
-                    <Link href={`/companies/${encodeURIComponent(c.company)}`} className="hover:text-[color:var(--pr)]">{c.company}</Link>
-                  </GlassTd>
-                  <GlassTd className="text-[color:var(--tx-3)]">{c.contactCount}</GlassTd>
-                  <GlassTd>{c.openDeals > 0 ? <GlassBadge tone="amber">{c.openDeals}</GlassBadge> : <span className="text-[color:var(--tx-4)]">0</span>}</GlassTd>
-                  <GlassTd className="text-[color:var(--tx-3)]" dir="ltr">{c.totalDealValue ? `SAR ${fmt(c.totalDealValue)}` : '—'}</GlassTd>
+          <>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[color:var(--bd)]">
+                  <GlassTh>Company</GlassTh>
+                  <GlassTh>Contacts</GlassTh>
+                  <GlassTh>Open Opportunities</GlassTh>
+                  <GlassTh>Total Deal Value</GlassTh>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pagedCompanies.map(c => (
+                  <tr key={c.company} className="border-b border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)]">
+                    <GlassTd className="font-medium text-[color:var(--tx)]">
+                      <Link href={`/companies/${encodeURIComponent(c.company)}`} className="hover:text-[color:var(--pr)]">{c.company}</Link>
+                    </GlassTd>
+                    <GlassTd className="text-[color:var(--tx-3)]">{c.contactCount}</GlassTd>
+                    <GlassTd>{c.openDeals > 0 ? <GlassBadge tone="amber">{c.openDeals}</GlassBadge> : <span className="text-[color:var(--tx-4)]">0</span>}</GlassTd>
+                    <GlassTd className="text-[color:var(--tx-3)]" dir="ltr">{c.totalDealValue ? `SAR ${fmt(c.totalDealValue)}` : '—'}</GlassTd>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <GlassPagination page={page} pageSize={pageSize} total={companies.length} onPage={setPage}
+              onPageSize={v => { setPageSize(v); setPage(1); }} />
+          </>
         )}
       </GlassCard>
     </div>
