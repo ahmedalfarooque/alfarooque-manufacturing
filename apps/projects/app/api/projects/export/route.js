@@ -19,8 +19,36 @@ export async function GET(req) {
   if (response) return response;
   if (session.role === 'external') return json({ error: 'Not permitted.' }, 403);
 
+  /* Mirrors the filtering in app/api/projects/route.js — the Excel export
+     must carry the same currently-filtered complete dataset the on-screen
+     list is showing (search/status/assignedUser/date range), never the
+     unconditional full table. */
+  const url = new URL(req.url);
+  const q = url.searchParams;
+  const search = (q.get('search') || '').trim();
+  const status = q.get('status') || 'All';
+  const assignedUser = q.get('assignedUser') || 'All';
+  const dateFrom = q.get('dateFrom');
+  const dateTo = q.get('dateTo');
+
   const sb = getDb();
-  const { data, error } = await sb.from('pm_projects').select('*').order('created_at', { ascending: false });
+
+  let assignedOnlyIds = null;
+  if (assignedUser !== 'All') {
+    const { data: rows } = await sb.from('pm_project_assignees').select('project_id').eq('user_id', assignedUser);
+    assignedOnlyIds = (rows || []).map(r => r.project_id);
+    if (!assignedOnlyIds.length) assignedOnlyIds = ['__none__'];
+  }
+
+  let query = sb.from('pm_projects').select('*');
+  if (assignedOnlyIds) query = query.in('id', assignedOnlyIds);
+  if (search) query = query.or(`project_name.ilike.%${search}%,customer_name.ilike.%${search}%,company_name.ilike.%${search}%`);
+  if (status !== 'All') query = query.eq('status', status);
+  if (dateFrom) query = query.gte('created_at', dateFrom);
+  if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59.999');
+  query = query.order('created_at', { ascending: false });
+
+  const { data, error } = await query;
   if (error) return new Response('Export failed', { status: 500 });
 
   const wb = new ExcelJS.Workbook();

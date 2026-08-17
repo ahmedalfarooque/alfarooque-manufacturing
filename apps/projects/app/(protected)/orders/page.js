@@ -9,6 +9,8 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Input, Button } from '@/components/ui';
+import DateFilter, { inDateFilter } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'manufacturing', 'quality_check', 'packed', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'completed', 'cancelled', 'returned', 'rejected'];
 export const STATUS_BADGE = {
@@ -30,8 +32,9 @@ export default function OrdersPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState('All');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState(25);
   const [busyId, setBusyId] = useState(null);
   const [viewOrderId, setViewOrderId] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
@@ -44,19 +47,23 @@ export default function OrdersPage() {
     const q = debouncedSearch.trim().toLowerCase();
     return allRows.filter(r => {
       if (status !== 'All' && r.status !== status) return false;
+      if (!inDateFilter(dateFilter, r.created_at)) return false;
       if (!q) return true;
       const name = r.guest_name || r.customer_name || '';
       const email = r.guest_email || r.customer_email || '';
       return [r.order_no, name, email].filter(Boolean).some(s => String(s).toLowerCase().includes(q));
     });
-  }, [allRows, status, debouncedSearch]);
+  }, [allRows, status, dateFilter, debouncedSearch]);
 
-  const { sorted: rows, sortKey, sortDir, toggleSort } = useSortableData(filtered);
+  /* Newest-first default over the complete filtered dataset, before
+     pagination — column-click sort (useSortableData) still overrides it. */
+  const dateSorted = useMemo(() => [...filtered].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))), [filtered]);
+
+  const { sorted: rows, sortKey, sortDir, toggleSort } = useSortableData(dateSorted);
   const total = rows.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, status]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, dateFilter]);
 
   async function deleteOrder(id) {
     if (!confirm(t('oq.confirmDeleteOrder'))) return;
@@ -102,10 +109,11 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
         <Input placeholder={t('oq.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
           className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ORDER_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
+        <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -156,14 +164,8 @@ export default function OrdersPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40">‹</button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40">›</button>
-        </div>
-      </div>
+      <ListPager page={page} pageSize={pageSize} total={total} shownCount={pageRows.length}
+        onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
 
       {viewOrderId && <OrderDetailsModal orderId={viewOrderId} onClose={() => setViewOrderId(null)} />}
     </Shell>

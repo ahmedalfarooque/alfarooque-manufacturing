@@ -9,6 +9,8 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Input, Th, Td, EmptyState } from '@/components/ui';
+import DateFilter, { inDateFilter } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 
 export const STATUS_BADGE = {
   pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -24,11 +26,12 @@ const ACTION_TD = 'px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-en
 function money(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }); }
 
 export default function QuotationRequestsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [me, setMe] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState('All');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [busyId, setBusyId] = useState(null);
@@ -48,14 +51,17 @@ export default function QuotationRequestsPage() {
     const q = debouncedSearch.trim().toLowerCase();
     return allRows.filter(r => {
       if (status !== 'All' && r.status !== status) return false;
+      if (!inDateFilter(dateFilter, r.quote_date)) return false;
       if (!q) return true;
       return [r.quote_number, r.customer_name, r.requested_by_name].filter(Boolean).some(s => s.toLowerCase().includes(q));
     });
-  }, [allRows, status, debouncedSearch]);
+  }, [allRows, status, dateFilter, debouncedSearch]);
 
-  const { sorted: rows, sortKey, sortDir, toggleSort } = useSortableData(filtered);
+  /* Newest-first over the complete filtered dataset, before pagination. */
+  const dateSorted = useMemo(() => [...filtered].sort((a, b) => String(b.quote_date || '').localeCompare(String(a.quote_date || ''))), [filtered]);
+
+  const { sorted: rows, sortKey, sortDir, toggleSort } = useSortableData(dateSorted);
   const total = rows.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
 
   const kpis = useMemo(() => {
@@ -69,7 +75,7 @@ export default function QuotationRequestsPage() {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
     fetch('/api/app-permissions', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => setCanDelete(!!d?.can_delete)).catch(() => {});
   }, []);
-  useEffect(() => { setPage(1); }, [debouncedSearch, status]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, dateFilter]);
 
   async function setRequestStatus(id, next, note = '') {
     setBusyId(id);
@@ -106,9 +112,10 @@ export default function QuotationRequestsPage() {
         <StatCard icon="x" tone="red" label={t('qr.kpi.rejected')} value={kpis.rejected} onClick={() => setStatus('rejected')} />
       </div>
 
-      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
         <Input placeholder={t('qr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
+        <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
       </div>
 
       {error && <div className="text-[#ef4444] text-sm mb-3">{error}</div>}
@@ -164,20 +171,8 @@ export default function QuotationRequestsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('common.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">‹</button>
-          <span className="px-3 py-1.5">{page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-200">›</button>
-        </div>
-      </div>
+      <ListPager page={page} pageSize={pageSize} total={total} shownCount={pageRows.length}
+        onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
     </Shell>
   );
 }

@@ -24,7 +24,12 @@ export async function GET(req) {
   const assignedUser = q.get('assignedUser') || 'All';
   const sort = SORTS[q.get('sort')] || SORTS.latest;
   const page = Math.max(1, parseInt(q.get('page') || '1', 10));
-  const pageSize = Math.min(100, Math.max(1, parseInt(q.get('pageSize') || '10', 10)));
+  const pageSize = Math.min(500, Math.max(1, parseInt(q.get('pageSize') || '10', 10)));
+  /* Inclusive local-calendar-date range (YYYY-MM-DD), matching the shared
+     DateFilter component's presetRange()/custom-range shape — filtered
+     BEFORE pagination so "Showing X-Y of N" reflects the filtered count. */
+  const dateFrom = q.get('dateFrom');
+  const dateTo = q.get('dateTo');
 
   const sb = getDb();
 
@@ -51,6 +56,8 @@ export async function GET(req) {
   if (status !== 'All') query = query.eq('status', status);
   if (company !== 'All') query = query.eq('company_name', company);
   if (customer !== 'All') query = query.eq('customer_name', customer);
+  if (dateFrom) query = query.gte('created_at', dateFrom);
+  if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59.999');
 
   query = query.order(sort.column, { ascending: sort.ascending })
     .range((page - 1) * pageSize, page * pageSize - 1);

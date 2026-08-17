@@ -7,6 +7,8 @@ import { useLiveData } from '@/lib/useLiveData';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Input, EmptyState, Th, Td, Button } from '@/components/ui';
+import DateFilter, { inDateFilter } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
 export const QUOTE_STATUS_BADGE = {
@@ -24,6 +26,9 @@ export default function QuotesPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState('All');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [busyId, setBusyId] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
 
@@ -35,10 +40,18 @@ export default function QuotesPage() {
     const q = debouncedSearch.trim().toLowerCase();
     return allRows.filter(r => {
       if (status !== 'All' && r.status !== status) return false;
+      if (!inDateFilter(dateFilter, r.created_at)) return false;
       if (!q) return true;
       return [r.name, r.email, r.product].filter(Boolean).some(s => String(s).toLowerCase().includes(q));
     });
-  }, [allRows, status, debouncedSearch]);
+  }, [allRows, status, dateFilter, debouncedSearch]);
+
+  /* Newest-first over the complete filtered dataset, before pagination. */
+  const sorted = useMemo(() => [...filtered].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))), [filtered]);
+  const total = sorted.length;
+  const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, dateFilter]);
 
   async function deleteQuote(id) {
     if (!confirm(t('oq.confirmDeleteQuote'))) return;
@@ -61,7 +74,7 @@ export default function QuotesPage() {
           { key: 'name', header: t('oq.col.name') }, { key: 'contact', header: t('oq.col.contact') },
           { key: 'product', header: t('oq.col.product') }, { key: 'status', header: t('oq.col.status') }, { key: 'date', header: t('oq.col.date') },
         ],
-        rows: filtered.map(r => ({
+        rows: sorted.map(r => ({
           name: r.name || '—', contact: r.email || r.phone || '—', product: r.product || '—',
           status: trEnum(t, 'status', r.status), date: new Date(r.created_at).toLocaleDateString(),
         })),
@@ -75,14 +88,15 @@ export default function QuotesPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h2 className="text-lg font-semibold">{t('oq.quotesTitle')}</h2>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => runReport('print')} disabled={!filtered.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
-          <Button variant="ghost" onClick={() => runReport('save')} disabled={!filtered.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!sorted.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
         </div>
       </div>
 
-      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
         <Input placeholder={t('oq.searchQuotesPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...QUOTE_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
+        <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -103,9 +117,9 @@ export default function QuotesPage() {
             <tbody>
               {!data ? (
                 <tr><td colSpan={6} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
-              ) : filtered.length === 0 ? (
+              ) : pageRows.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState text={t('oq.noQuotesFound')} /></td></tr>
-              ) : filtered.map(r => (
+              ) : pageRows.map(r => (
                 <tr key={r.id} onClick={() => { window.location.href = '/quotes/' + r.id; }}
                   className="cursor-pointer transition-colors duration-150 hover:bg-[color:var(--pr-soft)]">
                   <Td>{r.name || '—'}</Td>
@@ -127,6 +141,9 @@ export default function QuotesPage() {
           </table>
         </div>
       </div>
+
+      <ListPager page={page} pageSize={pageSize} total={total} shownCount={pageRows.length}
+        onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
     </Shell>
   );
 }

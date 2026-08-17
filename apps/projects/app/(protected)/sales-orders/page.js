@@ -1,11 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Field, Input, Modal, Textarea } from '@/components/ui';
+import DateFilter, { inDateFilter } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 
 const REFRESH_MS = 15000;
 const STATUSES = ['Draft', 'Reserved', 'Delivered', 'Invoiced', 'Paid', 'Cancelled'];
@@ -22,12 +24,21 @@ function money(n, c) { return `${c || 'SAR'} ${Number(n || 0).toLocaleString('en
 export default function SalesOrdersPage() {
   const { t, lang } = useLanguage();
   const [status, setStatus] = useState('All');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState(false);
   const [reportBusy, setReportBusy] = useState('');
   const { data, error, refresh } = useLiveData('/api/sales-orders', REFRESH_MS);
   const rows = data?.salesOrders || [];
 
-  const filtered = useMemo(() => status === 'All' ? rows : rows.filter(r => r.status === status), [rows, status]);
+  const filtered = useMemo(() => rows.filter(r => (status === 'All' || r.status === status) && inDateFilter(dateFilter, r.created_at)), [rows, status, dateFilter]);
+  /* Newest-first over the complete filtered dataset, before pagination. */
+  const sorted = useMemo(() => [...filtered].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))), [filtered]);
+  const total = sorted.length;
+  const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => { setPage(1); }, [status, dateFilter]);
 
   async function runReport(action) {
     setReportBusy(action);
@@ -39,7 +50,7 @@ export default function SalesOrdersPage() {
           { key: 'number', header: t('so.col.number') }, { key: 'customer', header: t('so.col.customer') },
           { key: 'total', header: t('so.col.total') }, { key: 'status', header: t('so.col.status') }, { key: 'date', header: t('so.col.date') },
         ],
-        rows: filtered.map(r => ({
+        rows: sorted.map(r => ({
           number: r.so_number || r.id.slice(0, 8), customer: r.customer_name, total: money(r.total_amount, r.currency),
           status: trEnum(t, 'status', r.status), date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '—',
         })),
@@ -54,14 +65,15 @@ export default function SalesOrdersPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h2 className="text-lg font-semibold">{t('so.title')}</h2>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => runReport('print')} disabled={!filtered.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
-          <Button variant="ghost" onClick={() => runReport('save')} disabled={!filtered.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!sorted.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.exportPdf')}</Button>
           <Button onClick={() => setModal(true)}>{t('so.new')}</Button>
         </div>
       </div>
 
-      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
         <Dropdown value={status} onChange={setStatus} options={['All', ...STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
+        <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -80,9 +92,9 @@ export default function SalesOrdersPage() {
           <tbody>
             {!data ? (
               <tr><td colSpan={5} className="py-8 text-center text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : pageRows.length === 0 ? (
               <tr><td colSpan={5} className="py-8 text-center text-[color:var(--tx-3)]">{t('so.noneFound')}</td></tr>
-            ) : filtered.map(r => (
+            ) : pageRows.map(r => (
               <tr key={r.id} className="border-b border-[color:var(--bd)] last:border-0 hover:bg-[color:var(--pr-soft)] cursor-pointer" onClick={() => window.location.href = '/sales-orders/' + r.id}>
                 <td className="py-2.5 px-4 whitespace-nowrap" dir="ltr">{r.so_number || r.id.slice(0, 8)}</td>
                 <td className="px-3 py-2.5">{r.customer_name}</td>
@@ -94,6 +106,9 @@ export default function SalesOrdersPage() {
           </tbody>
         </table>
       </div>
+
+      <ListPager page={page} pageSize={pageSize} total={total} shownCount={pageRows.length}
+        onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
 
       {modal && <NewSalesOrderModal onClose={() => setModal(false)} onSaved={id => { setModal(false); refresh(); window.location.href = '/sales-orders/' + id; }} />}
     </Shell>

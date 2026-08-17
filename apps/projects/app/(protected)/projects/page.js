@@ -9,6 +9,8 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import DateFilter, { inDateFilter, presetRange } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 
 const STATUS_BADGE = {
   Running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -38,8 +40,14 @@ export default function ProjectsPage() {
      they just clicked. */
   const [status, setStatus] = useState('All');
   const [assignedUser, setAssignedUser] = useState('All');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [users, setUsers] = useState([]);
   const [modal, setModal] = useState(null);
+
+  /* Server-side pagination means the date range has to be resolved into
+     concrete from/to strings here and sent as query params (unlike the
+     client-filtered list pages, which just call inDateFilter() locally). */
+  const resolvedDateRange = dateFilter.preset === 'custom' ? dateFilter : presetRange(dateFilter.preset);
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get('status');
@@ -51,7 +59,11 @@ export default function ProjectsPage() {
     if (me?.role === 'external') return;
     fetch('/api/users', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setUsers(d.users || [])).catch(() => {});
   }, [me]);
-  const url = '/api/projects?' + new URLSearchParams({ search: debouncedSearch, status, assignedUser, page: String(page), pageSize: String(pageSize) }).toString();
+  const url = '/api/projects?' + new URLSearchParams({
+    search: debouncedSearch, status, assignedUser, page: String(page), pageSize: String(pageSize),
+    ...(resolvedDateRange.from ? { dateFrom: resolvedDateRange.from } : {}),
+    ...(resolvedDateRange.to ? { dateTo: resolvedDateRange.to } : {}),
+  }).toString();
   const { data, error, refresh } = useLiveData(url, REFRESH_MS);
   const rawRows = data?.projects || [];
   const total = data?.total || 0;
@@ -60,7 +72,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
-  useEffect(() => { setPage(1); }, [debouncedSearch]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, dateFilter]);
 
   async function saveProject(form, mode, id) {
     const reqUrl = mode === 'add' ? '/api/projects' : `/api/projects/${id}`;
@@ -81,18 +93,30 @@ export default function ProjectsPage() {
     if (res.ok) refresh();
   }
 
-  function exportExcel() { window.location.href = '/api/projects/export'; }
+  /* Export the CURRENTLY FILTERED dataset (search/status/assignedUser/date
+     range) — never the unconditional full table — matching what's on
+     screen, same as the PDF/print report below. */
+  function exportExcel() {
+    const params = new URLSearchParams({ search: debouncedSearch, status, assignedUser });
+    if (resolvedDateRange.from) params.set('dateFrom', resolvedDateRange.from);
+    if (resolvedDateRange.to) params.set('dateTo', resolvedDateRange.to);
+    window.location.href = '/api/projects/export?' + params.toString();
+  }
 
   /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same
      as the QuotePro and Car Inventory apps: branded header/footer on
-     every page, fitted table, page numbers. Fetches ALL projects through
-     the existing list API (pages of 100 — the API's max) so the PDF
-     carries the same complete dataset as the Excel export, with the
-     same columns. No API changes. */
+     every page, fitted table, page numbers. Fetches ALL MATCHING projects
+     (current search/status/assignedUser/date filters, same as the on-screen
+     list and the Excel export above) through the existing list API in
+     pages of 500 — the API's max — so the PDF carries the same complete
+     filtered dataset, with the same columns. */
   async function buildReport(action) {
     const all = [];
     for (let p = 1; p <= 200; p++) {
-      const res = await fetch('/api/projects?' + new URLSearchParams({ status: 'All', page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
+      const params = new URLSearchParams({ search: debouncedSearch, status, assignedUser, page: String(p), pageSize: '500' });
+      if (resolvedDateRange.from) params.set('dateFrom', resolvedDateRange.from);
+      if (resolvedDateRange.to) params.set('dateTo', resolvedDateRange.to);
+      const res = await fetch('/api/projects?' + params.toString(), { credentials: 'same-origin' }).catch(() => null);
       const d = res && res.ok ? await res.json() : null;
       if (!d || !Array.isArray(d.projects) || d.projects.length === 0) break;
       all.push(...d.projects);
@@ -123,8 +147,6 @@ export default function ProjectsPage() {
      the live app page — printing used to capture the sidebar/topbar too. */
   function printReport() { return buildReport('print'); }
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
   return (
     <Shell active="/projects">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -140,7 +162,7 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <div className="glass-card p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="glass-card p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
         <Input placeholder={t('projects.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={v => { setPage(1); setStatus(v); }}
           options={['All', 'Running', 'Completed', 'Upcoming', 'On Hold'].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
@@ -149,6 +171,7 @@ export default function ProjectsPage() {
             options={[['All', t('projects.allUsers')], ...users.map(u => [u.id, u.full_name || u.email])]}
             placeholder={t('projects.filterByAssignedUser')} />
         )}
+        <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
       </div>
 
       {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
@@ -210,20 +233,8 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('common.showingEntries', { from: rows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + rows.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('common.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1">
-          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</Button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</Button>
-        </div>
-      </div>
+      <ListPager page={page} pageSize={pageSize} total={total} shownCount={rows.length}
+        onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
 
       {modal && <ProjectModal modal={modal} onClose={() => setModal(null)} onSave={saveProject} />}
     </Shell>

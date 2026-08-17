@@ -160,6 +160,10 @@ export const translations = {
     'common.exportExcel': 'Export Excel',
     'common.exportPdf': 'Export PDF',
     'common.print': 'Print',
+    'common.first': 'First page',
+    'common.previous': 'Previous page',
+    'common.next': 'Next page',
+    'common.last': 'Last page',
 
     // Projects page
     'projects.title': 'Projects',
@@ -701,6 +705,10 @@ export const translations = {
     'common.exportExcel': 'تصدير إكسل',
     'common.exportPdf': 'تصدير PDF',
     'common.print': 'طباعة',
+    'common.first': 'الصفحة الأولى',
+    'common.previous': 'الصفحة السابقة',
+    'common.next': 'الصفحة التالية',
+    'common.last': 'الصفحة الأخيرة',
 
     // Projects page
     'projects.title': 'المشاريع',

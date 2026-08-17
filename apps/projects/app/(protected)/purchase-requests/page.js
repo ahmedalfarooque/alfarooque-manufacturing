@@ -8,6 +8,8 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import StatCard from '@/components/StatCard';
 import { Button, Input, Th, Td } from '@/components/ui';
+import DateFilter, { inDateFilter } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
 
@@ -46,6 +48,7 @@ export default function PurchaseRequestsPage() {
   // Always starts at 'All' so server and client render identically (no hydration mismatch), then synced from ?status= right after mount.
   const [status, setStatus] = useState('All');
   const [priority, setPriority] = useState('All');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
@@ -63,15 +66,20 @@ export default function PurchaseRequestsPage() {
     return allRows.filter(r => {
       if (status !== 'All' && r.status !== status) return false;
       if (priority !== 'All' && r.priority !== priority) return false;
+      if (!inDateFilter(dateFilter, r.request_date)) return false;
       if (!q) return true;
       return [r.material_description, r.project_name, r.customer_name, r.requested_by_name, r.supplier]
         .filter(Boolean).some(s => s.toLowerCase().includes(q));
     });
-  }, [allRows, status, priority, debouncedSearch]);
+  }, [allRows, status, priority, dateFilter, debouncedSearch]);
 
-  const { sorted: rows, sortKey, sortDir, toggleSort } = useSortableData(filtered);
+  /* Newest-first default order over the COMPLETE filtered dataset, before
+     any column sort or pagination — a plain column-click sort (via
+     useSortableData below) still overrides this baseline. */
+  const dateSorted = useMemo(() => [...filtered].sort((a, b) => String(b.request_date || '').localeCompare(String(a.request_date || ''))), [filtered]);
+
+  const { sorted: rows, sortKey, sortDir, toggleSort } = useSortableData(dateSorted);
   const total = rows.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
 
   const kpis = useMemo(() => {
@@ -107,7 +115,7 @@ export default function PurchaseRequestsPage() {
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
-  useEffect(() => { setPage(1); }, [debouncedSearch, status, priority]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, priority, dateFilter]);
 
   async function deleteRequest(id) {
     if (!confirm(t('pr.deleteConfirm'))) return;
@@ -235,10 +243,13 @@ export default function PurchaseRequestsPage() {
         </div>
       </div>
 
-      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="glass-card glass-card--pad mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
         <Input placeholder={t('pr.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="col-span-2" />
         <Dropdown value={status} onChange={setStatus} options={['All', ...ALL_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         <Dropdown value={priority} onChange={setPriority} options={['All', 'Normal', 'Urgent', 'Critical'].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
+        <div className="col-span-2 md:col-span-4">
+          <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
+        </div>
       </div>
 
       {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
@@ -283,20 +294,8 @@ export default function PurchaseRequestsPage() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('common.showingEntries', { from: pageRows.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + pageRows.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('common.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1 items-center">
-          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹</Button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>›</Button>
-        </div>
-      </div>
+      <ListPager page={page} pageSize={pageSize} total={total} shownCount={pageRows.length}
+        onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
 
     </Shell>
   );

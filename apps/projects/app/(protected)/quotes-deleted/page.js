@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Input, Th, Td, Button } from '@/components/ui';
+import DateFilter, { inDateFilter } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 
 const QUOTE_STATUSES = ['new', 'contacted', 'quoted', 'converted', 'closed'];
 const RECOVERY_OPTIONS = ['All', 'green', 'orange', 'red'];
@@ -26,6 +28,9 @@ export default function DeletedQuotesPage() {
   const debouncedSearch = useDebouncedValue(search, 350);
   const [status, setStatus] = useState('All');
   const [recovery, setRecovery] = useState('All');
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [busyId, setBusyId] = useState(null);
   const [reportBusy, setReportBusy] = useState('');
 
@@ -44,8 +49,13 @@ export default function DeletedQuotesPage() {
       .catch(() => setRows([]));
   }
   useEffect(() => { load(); }, [debouncedSearch, status, recovery]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, recovery, dateFilter]);
 
-  const filtered = rows || [];
+  /* Date filter runs client-side on top of the server's already
+     newest-first (deleted_at desc) result. */
+  const filtered = useMemo(() => (rows || []).filter(r => inDateFilter(dateFilter, r.deleted_at)), [rows, dateFilter]);
+  const total = filtered.length;
+  const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   async function recover(id) {
     setBusyId(id);
@@ -106,6 +116,7 @@ export default function DeletedQuotesPage() {
         <Dropdown value={status} onChange={setStatus} options={['All', ...QUOTE_STATUSES].map(s => [s, s === 'All' ? t('common.all') : trEnum(t, 'status', s)])} />
         <Dropdown value={recovery} onChange={setRecovery}
           options={RECOVERY_OPTIONS.map(r => [r, r === 'All' ? t('oq.allRecovery') : t('oq.recovery' + r.charAt(0).toUpperCase() + r.slice(1))])} />
+        <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
       </div>
 
       {!softDeleteEnabled ? (
@@ -131,9 +142,9 @@ export default function DeletedQuotesPage() {
               <tbody>
                 {rows === null ? (
                   <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('common.loading')}</td></tr>
-                ) : filtered.length === 0 ? (
+                ) : pageRows.length === 0 ? (
                   <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-[color:var(--tx-3)]">{t('oq.noDeletedQuotesFound')}</td></tr>
-                ) : filtered.map(r => {
+                ) : pageRows.map(r => {
                   const daysText = r.days_remaining <= 0 ? t('oq.expiresToday') : t('oq.daysLeft', { n: r.days_remaining });
                   return (
                     <tr key={r.id}>
@@ -159,6 +170,11 @@ export default function DeletedQuotesPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {softDeleteEnabled && (
+        <ListPager page={page} pageSize={pageSize} total={total} shownCount={pageRows.length}
+          onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
       )}
     </Shell>
   );

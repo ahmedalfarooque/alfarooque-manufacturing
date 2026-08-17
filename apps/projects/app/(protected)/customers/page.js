@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { useLiveData } from '@/lib/useLiveData';
@@ -8,6 +8,8 @@ import { useLanguage } from '@/lib/i18n';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import DateFilter, { inDateFilter } from '@/components/shared/DateFilter';
+import ListPager from '@/components/shared/ListPager';
 
 const EMPTY_FORM = { full_name: '', company_name: '', email: '', mobile_number: '', vat_number: '', cr_number: '', address: '', city: '', country: '', notes: '' };
 const REFRESH_MS = 15000;
@@ -18,6 +20,7 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 350);
   const [modal, setModal] = useState(null); // { mode: 'add'|'edit'|'view', data }
+  const [dateFilter, setDateFilter] = useState({ preset: 'all', from: null, to: null });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [reportBusy, setReportBusy] = useState('');
@@ -26,15 +29,18 @@ export default function CustomersPage() {
   const url = '/api/customers' + (debouncedSearch ? '?search=' + encodeURIComponent(debouncedSearch) : '');
   const { data, error, refresh } = useLiveData(url, REFRESH_MS);
   const allCustomers = data?.customers || [];
-  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(allCustomers);
+  const dateFiltered = useMemo(() => allCustomers.filter(c => inDateFilter(dateFilter, c.created_at)), [allCustomers, dateFilter]);
+  /* Newest-first over the complete filtered dataset, before pagination —
+     a column-click sort (useSortableData) still overrides this baseline. */
+  const dateSorted = useMemo(() => [...dateFiltered].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))), [dateFiltered]);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(dateSorted);
   const total = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const customers = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d && setMe(d.user)).catch(() => {});
   }, []);
-  useEffect(() => { setPage(1); }, [debouncedSearch]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, dateFilter]);
 
   async function saveCustomer(form, mode, id) {
     const url = mode === 'add' ? '/api/customers' : `/api/customers/${id}`;
@@ -90,8 +96,9 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <div className="glass-card p-4 mb-4">
+      <div className="glass-card p-4 mb-4 flex flex-wrap items-start gap-3">
         <Input placeholder={t('cust.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="w-full max-w-md" />
+        <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
       </div>
 
       {error && <div className="text-sm text-[#ef4444] mb-3">{error}</div>}
@@ -140,20 +147,8 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-[color:var(--tx-3)] flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <span>{t('common.showingEntries', { from: customers.length ? (page - 1) * pageSize + 1 : 0, to: (page - 1) * pageSize + customers.length, total })}</span>
-          <div className="flex items-center gap-1.5">
-            <span>{t('common.rows')}</span>
-            <Dropdown className="w-20" value={pageSize} onChange={v => { setPageSize(Number(v)); setPage(1); }} options={[['10', '10'], ['25', '25'], ['50', '50'], ['100', '100']]} />
-          </div>
-        </div>
-        <div className="flex gap-1">
-          <Button variant="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1">‹</Button>
-          <span className="px-3 py-1">{page} / {totalPages}</span>
-          <Button variant="ghost" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1">›</Button>
-        </div>
-      </div>
+      <ListPager page={page} pageSize={pageSize} total={total} shownCount={customers.length}
+        onPageChange={setPage} onPageSizeChange={v => { setPageSize(v); setPage(1); }} t={t} />
 
       {modal && <CustomerModal modal={modal} isAdmin={isAdmin} onClose={() => setModal(null)} onSave={saveCustomer} />}
     </Shell>
