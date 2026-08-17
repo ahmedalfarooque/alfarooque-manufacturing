@@ -76,52 +76,52 @@ export async function GET(req) {
   };
   kpis.netVat = (kpis.salesVat != null && kpis.purchaseVat != null) ? r2(kpis.salesVat - kpis.purchaseVat) : null;
 
-  /* Report catalog — grouped by business category, each entry says exactly
-     what's available. `href` points at the existing dedicated workspace
-     where one already exists (no duplicate report UI); `unavailable`
-     entries are real gaps (no GL/ledger source), never faked. */
+  /* Report catalog — grouped into a standard accounting/reporting structure
+     (Core Accounting / Financial Statements / Transactions / Inventory &
+     Cost / Management & Analysis) instead of the earlier generic grouping.
+     This is a pure regrouping of the SAME already-verified report entries —
+     no new SmartLife source was investigated or added here, and no
+     `available:false` entry was flipped to true without a real backing
+     source (still exactly the same items previously marked unavailable —
+     Income Statement/Financial Position/Cash Flow/Daily Move/Receipts/Cash
+     Receipts/Cost Center Details/Budgets — confirmed over three separate
+     investigations to have no real SmartLife source: no account
+     classification field, no bulk journal/ledger endpoint, no receipts/
+     payments endpoint, no cost-center detail-by-id endpoint). `href` points
+     at the existing dedicated workspace where one already exists (no
+     duplicate report UI). */
   const categories = [
-    { key: 'sales', label: 'Sales & Revenue', reports: [
-      { key: 'sales-report', name: 'Sales Report', description: 'Revenue and sales activity', href: '/smartlife/sales-invoices', available: hasSales },
-      { key: 'sales-by-customer', name: 'Sales by Customer', description: 'Revenue grouped by customer', href: '/smartlife/sales-invoices', available: hasSales },
-    ] },
-    { key: 'purchasing', label: 'Purchasing', reports: [
-      { key: 'purchase-report', name: 'Purchase Report', description: 'Purchasing activity and cost', href: '/smartlife/purchases', available: hasPurchases },
-      { key: 'purchase-by-supplier', name: 'Purchases by Supplier', description: 'Purchasing grouped by supplier', href: '/smartlife/purchases', available: hasPurchases },
-    ] },
-    { key: 'receivables-payables', label: 'Receivables & Payables', reports: [
-      { key: 'receivables', name: 'Receivables', description: 'Outstanding customer balances', href: '/smartlife/sales-invoices', available: hasSales },
-      { key: 'payables', name: 'Payables', description: 'Outstanding supplier balances', href: '/smartlife/purchases', available: hasPurchases },
-    ] },
-    { key: 'vat', label: 'VAT / Tax', reports: [
-      { key: 'vat-summary', name: 'VAT Summary & Report', description: 'Sales, Sales VAT, Purchases, Purchase VAT, and Net VAT by period', href: '/vat', available: hasSales || hasPurchases },
-      { key: 'tax-rates', name: 'Tax Rates', description: 'Configured tax rates', href: '/smartlife/tax', available: true },
-    ] },
-    { key: 'projects', label: 'Projects', reports: [
-      { key: 'project-financials', name: 'Project Financials', description: 'Connected sales, purchases and payments per project', href: null, crossApp: 'projects', crossAppPath: '/projects', available: (connections.count || 0) > 0 },
-    ] },
-    { key: 'profitability', label: 'Profitability', reports: [
-      { key: 'gross-profit', name: 'Gross Profit', description: 'Sales revenue minus actual purchase cost', href: null, available: hasSales || hasPurchases },
-    ] },
-    { key: 'general-accounting', label: 'General Accounting', reports: [
-      { key: 'accounts', name: 'Accounts', description: 'SmartLife Chart of Accounts', href: '/smartlife/accounts', available: true },
+    { key: 'core-accounting', label: 'Core Accounting', reports: [
+      { key: 'accounts', name: 'Chart of Accounts', description: 'SmartLife Chart of Accounts', href: '/smartlife/accounts', available: true },
       { key: 'account-balances', name: 'Account Balances', description: 'Current balance per account', href: '/smartlife/account-balances', available: true },
       { key: 'trial-balance', name: 'Trial Balance', description: 'Every account with its current balance, presented as Debit/Credit', href: '/smartlife/trial-balance', available: true },
+    ] },
+    { key: 'financial-statements', label: 'Financial Statements', reports: [
+      { key: 'gross-profit', name: 'Gross Profit', description: 'Sales revenue minus actual purchase cost', href: null, available: hasSales || hasPurchases },
       { key: 'income-statement', name: 'Income Statement', description: 'Not available from SmartLife.', href: null, available: false },
       { key: 'financial-position', name: 'Financial Position', description: 'Not available from SmartLife.', href: null, available: false },
       { key: 'cash-flow', name: 'Cash Flow Statement', description: 'Not available from SmartLife.', href: null, available: false },
     ] },
     { key: 'transactions', label: 'Transactions', reports: [
+      { key: 'sales-report', name: 'Sales Report', description: 'Revenue and sales activity', href: '/smartlife/sales-invoices', available: hasSales },
+      { key: 'sales-by-customer', name: 'Sales by Customer', description: 'Revenue grouped by customer', href: '/smartlife/sales-invoices', available: hasSales },
+      { key: 'purchase-report', name: 'Purchase Report', description: 'Purchasing activity and cost', href: '/smartlife/purchases', available: hasPurchases },
+      { key: 'purchase-by-supplier', name: 'Purchases by Supplier', description: 'Purchasing grouped by supplier', href: '/smartlife/purchases', available: hasPurchases },
+      { key: 'receivables', name: 'Receivables', description: 'Outstanding customer balances', href: '/smartlife/sales-invoices', available: hasSales },
+      { key: 'payables', name: 'Payables', description: 'Outstanding supplier balances', href: '/smartlife/purchases', available: hasPurchases },
+      { key: 'vat-summary', name: 'VAT Summary & Report', description: 'Sales, Sales VAT, Purchases, Purchase VAT, and Net VAT by period', href: '/vat', available: hasSales || hasPurchases },
+      { key: 'tax-rates', name: 'Tax Rates', description: 'Configured tax rates', href: '/smartlife/tax', available: true },
       { key: 'daily-move', name: 'Daily Move', description: 'Not available from SmartLife.', href: null, available: false },
       { key: 'receipts', name: 'Receipts', description: 'Not available from SmartLife.', href: null, available: false },
       { key: 'cash-receipts', name: 'Cash Receipts', description: 'Not available from SmartLife.', href: null, available: false },
     ] },
-    { key: 'inventory-products', label: 'Inventory / Products', reports: [
+    { key: 'inventory-cost', label: 'Inventory & Cost', reports: [
       { key: 'inventory-report', name: 'Inventory Report', description: 'Stock levels and low-stock alerts', href: '/inventory', available: true },
       { key: 'product-balances', name: 'Product Balances', description: 'Aggregate stock valuation, plus Inventory Movement — Monthly Cost', href: '/smartlife/product-balances', available: true },
-    ] },
-    { key: 'management', label: 'Management', reports: [
       { key: 'cost-centers', name: 'Cost Centers', description: 'SmartLife cost center list', href: '/smartlife/cost-centers', available: true },
+    ] },
+    { key: 'management-analysis', label: 'Management & Analysis', reports: [
+      { key: 'project-financials', name: 'Project Financials', description: 'Connected sales, purchases and payments per project', href: null, crossApp: 'projects', crossAppPath: '/projects', available: (connections.count || 0) > 0 },
       { key: 'cost-center-details', name: 'Cost Center Details', description: 'Not available from SmartLife.', href: null, available: false },
       { key: 'budgets', name: 'Budgets', description: 'Not available from SmartLife.', href: null, available: false },
     ] },
