@@ -164,7 +164,15 @@ export default function QuotationsPage() {
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder={t('quote.searchNumber')} className="max-w-[200px]" />
           <DateFilter value={dateFilter} onChange={setDateFilter} t={t} lang={lang} />
           <div className="flex-1" />
-          <a href={'/api/export/quotations?lang=' + lang} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
+          <a href={(() => {
+            const { from: rFrom, to: rTo } = dateFilter.preset === 'custom' ? dateFilter : presetRange(dateFilter.preset);
+            const params = new URLSearchParams({ lang });
+            if (dq.trim()) params.set('q', dq.trim());
+            if (tab) params.set('status', tab);
+            if (rFrom) params.set('from', rFrom);
+            if (rTo) params.set('to', rTo);
+            return '/api/export/quotations?' + params;
+          })()} className="text-sm text-brand-600 dark:text-brand-400 hover:underline">⇩ {t('common.export')}</a>
           <Button variant="ghost" onClick={() => runReport('print')} disabled={!rows?.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
           <Button variant="ghost" onClick={() => runReport('save')} disabled={!rows?.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           <Button onClick={() => { setNewOpen(true); setCustomerId(''); setCustQ(''); setErr(null); }}>+ {t('quote.new')}</Button>

@@ -31,6 +31,7 @@ const MODULES = [
   { key:'tax', label:'Tax Rates', group:'Financial', supported:true },
   { key:'accounts', label:'Chart of Accounts', group:'Financial', supported:true },
   { key:'account-balances', label:'Account Balances', group:'Financial', supported:true },
+  { key:'trial-balance', label:'Trial Balance', group:'Financial', supported:true },
   { key:'cost-centers', label:'Cost Centers', group:'Financial', supported:true },
   { key:'gift-cards', label:'Gift Cards', group:'Other', supported:true },
   { key:'coupons', label:'Coupons', group:'Other', supported:true },
@@ -83,6 +84,7 @@ const SEARCH_FIELDS = {
   tax: ['name','rate','value','id'],
   accounts: ['name','account_name','code','account_code','id'],
   'account-balances': ['name','account_name','code','account_code','id'],
+  'trial-balance': ['account_number','account_name','id'],
   'cost-centers': ['name','code','id'],
   'gift-cards': ['number','code','name','id'],
   coupons: ['code','name','id'],
@@ -161,14 +163,21 @@ export default function SmartLifeResourcePage({ params }) {
   const [connectOpen,setConnectOpen] = useState(false); const [projectId,setProjectId] = useState(''); const [relationship,setRelationship] = useState(null); const [busy,setBusy] = useState(false);
   const [reportBusy,setReportBusy] = useState('');
   const [filterUniverse,setFilterUniverse] = useState([]);
+  /* Trial Balance is not a distinct SmartERP endpoint — it is the exact
+     same real accounting/account_balances data already used by the Account
+     Balances page, presented in the standard Debit/Credit trial-balance
+     format instead of a single signed balance column. Reusing the same
+     canonical resource (no new connector, no invented figures) — see
+     cell()/columns below for the debit/credit split. */
+  const backendResource = resource === 'trial-balance' ? 'account-balances' : resource;
   const dataUrl=useMemo(() => {
     if (resource === 'financial-reports') return '/api/smartlife/reports';
     if (resource === 'product-balances') return '/api/smartlife/product-balances';
     const query = new URLSearchParams({ offset:String(page*pageSize), limit:String(pageSize) });
     if (search.trim()) query.set('search',search.trim());
     if (resource === 'sales-invoices' || resource === 'purchases') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
-    return `/api/smartlife/${resource}?${query}`;
-  },[resource,page,search]);
+    return `/api/smartlife/${backendResource}?${query}`;
+  },[resource,backendResource,page,search]);
   const { data,error,loading,refresh } = useLiveData(dataUrl,supported?30000:0);
   const { data:syncData,refresh:refreshSync } = useLiveData('/api/smartlife/sync',15000);
   const records = Array.isArray(data?.records) ? data.records : [];
@@ -254,7 +263,7 @@ export default function SmartLifeResourcePage({ params }) {
       const query = new URLSearchParams({ offset: String(offset), limit: String(limit) });
       if (includeSearch && search.trim()) query.set('search', search.trim());
       if (resource === 'sales-invoices' || resource === 'purchases') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
-      const response = await fetch(`/api/smartlife/${resource}?${query}`, { credentials: 'same-origin' });
+      const response = await fetch(`/api/smartlife/${backendResource}?${query}`, { credentials: 'same-origin' });
       const payload = await response.json().catch(() => ({}));
       const batch = Array.isArray(payload.records) ? payload.records : [];
       if (!response.ok && !batch.length) throw new Error(payload.error || 'Could not load the complete report dataset.');
@@ -315,6 +324,11 @@ export default function SmartLifeResourcePage({ params }) {
        IDs with no account name. Verified against actual SmartERP records. */
     if (resource === 'accounts') return ['account_number', 'account_name'];
     if (resource === 'account-balances') return ['account_number', 'account_name', 'balance'];
+    /* Trial Balance: same account_number/account_name/balance real fields
+       as Account Balances, split into standard Debit/Credit columns by
+       cell() below — a display convention (positive balance = debit side,
+       negative = credit side), not an invented figure. */
+    if (resource === 'trial-balance') return ['account_number', 'account_name', 'debit', 'credit'];
     /* Tax Rates: real fields are id/code/name/rate/type — the generic
        `preferred` list below has no 'rate'/'type' entries, so it silently
        dropped the rate value entirely (the entire point of this report).
@@ -324,7 +338,7 @@ export default function SmartLifeResourcePage({ params }) {
     const present = new Set(records.flatMap(r => r && typeof r === 'object' ? Object.keys(r) : []));
     return preferred.filter(k => present.has(k)).slice(0,8).length ? preferred.filter(k => present.has(k)).slice(0,8) : [...present].slice(0,8);
   },[records,resource,isInvoiceWorkspace]);
-  const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate' };
+  const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate', debit:'Debit', credit:'Credit' };
   function resetInvoiceFilters() { setSearch(''); setCustomerFilter(''); setPaymentStatusFilter(''); setSaleStatusFilter(''); setDateFilter({ preset:'all', from:null, to:null }); }
 
   const relationshipRecordType = resource === 'purchases' ? 'purchase_invoice' : resource === 'sales-invoices' ? 'sales_invoice' : null;
@@ -370,7 +384,7 @@ export default function SmartLifeResourcePage({ params }) {
           : columns.map(c => ({ key: c, header: COLUMN_LABELS[c] || c.replaceAll('_', ' ') })));
       const reportRows = DOCUMENT_RESOURCES.has(resource)
         ? exportRows.map(r => { const v = invoiceView(r, resource); return { invoice_number: v.invoice_number, customer: v.customer, date: professionalDate(v.date), total: money(v.total, v.currency), paid: money(v.paid, v.currency), balance: money(v.balance, v.currency), status: resource === 'purchases' ? `${v.paymentStatus} · ${v.saleStatus || '—'}` : v.status }; })
-        : ['customers','suppliers','products','warehouses'].includes(resource)
+        : ['customers','suppliers','products','warehouses','trial-balance'].includes(resource)
         ? exportRows.map(r => Object.fromEntries(columns.map(c => [c, cell(r, c)])))
         : exportRows;
       /* Active filters are folded into the title itself (the shared report
@@ -445,6 +459,12 @@ export default function SmartLifeResourcePage({ params }) {
       return display(record?.[column]);
     }
     if (resource === 'account-balances' && column === 'balance') return record?.balance != null ? money(record.balance) : display(null);
+    if (resource === 'trial-balance') {
+      const balance = Number(record?.balance) || 0;
+      if (column === 'debit') return balance >= 0 && balance !== 0 ? money(balance) : display(null);
+      if (column === 'credit') return balance < 0 ? money(Math.abs(balance)) : display(null);
+      return display(record?.[column]);
+    }
     if(!DOCUMENT_RESOURCES.has(resource)) return display(record?.[column]);
     const view=invoiceView(record, resource); const key = column === 'supplier' ? 'customer' : column; const value=view[key];
     if (column === 'date' || column === 'due_date') return professionalDate(value);
@@ -513,6 +533,14 @@ export default function SmartLifeResourcePage({ params }) {
       {loading&&<div className="py-8 text-center text-[color:var(--tx-3)]">Loading latest SmartERP data…</div>}
       {!loading&&data?.connected&&!filtered.length&&<div className="py-8 text-center text-[color:var(--tx-3)]">No SmartERP records matched this view.</div>}
       {!loading&&data?.connected&&!!filtered.length&&<div className="mb-2 text-xs text-[color:var(--tx-3)]">Showing {page * pageSize + 1}–{Math.min(page * pageSize + filtered.length,totalRecords)} of {totalRecords}{usingCompleteFilterSet?' matched records':Number(data.total)>records.length?' SmartERP records':' records'}</div>}
+      {resource==='trial-balance'&&!loading&&!!filtered.length&&(()=>{
+        const debit=filtered.reduce((acc,r)=>acc+Math.max(0,Number(r?.balance)||0),0);
+        const credit=filtered.reduce((acc,r)=>acc+Math.max(0,-(Number(r?.balance)||0)),0);
+        return <div className="mb-3 grid grid-cols-2 gap-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm sm:grid-cols-2 print:hidden">
+          <Metric label="This page — Total Debit" value={money(debit)}/>
+          <Metric label="This page — Total Credit" value={money(credit)}/>
+        </div>;
+      })()}
       {isInvoiceWorkspace&&!loading&&!!filtered.length&&(()=>{
         const rows=filtered.map(r=>invoiceView(r,resource)); const currency=rows[0]?.currency||'SAR';
         const sum=key=>rows.reduce((acc,v)=>acc+(Number(v[key])||0),0);

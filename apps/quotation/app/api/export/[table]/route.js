@@ -111,8 +111,24 @@ export async function GET(req, { params }) {
     rows = def.example ? [def.example] : [];
   } else {
     const sb = getDb();
-    const { data, error } = await sb.from(def.table).select('*').is('deleted_at', null)
-      .order(def.order, { ascending: def.order !== 'created_at' }).limit(20000);
+    let query = sb.from(def.table).select('*').is('deleted_at', null)
+      .order(def.order, { ascending: def.order !== 'created_at' });
+    /* Excel must reflect the SAME search/status/date filters currently
+       active on the Quotations page — not a static unfiltered dump —
+       matching the filter params /api/quotations already accepts. Other
+       exports here have no on-screen filters to respect, so this only
+       applies to `quotations`. */
+    if (params.table === 'quotations') {
+      const filterQ = (url.searchParams.get('q') || '').trim();
+      const status = url.searchParams.get('status') || '';
+      const dateFrom = url.searchParams.get('from') || '';
+      const dateTo = url.searchParams.get('to') || '';
+      if (status) query = query.eq('status', status);
+      if (filterQ) query = query.ilike('quote_number', `%${filterQ.replace(/[%,()]/g, '')}%`);
+      if (dateFrom) query = query.gte('quote_date', dateFrom);
+      if (dateTo) query = query.lte('quote_date', dateTo);
+    }
+    const { data, error } = await query.limit(20000);
     if (error) return json({ error: error.message }, 500);
     rows = (data || []).map(r => def.map ? def.map(r) : { ...r });
     /* Localize stored text values so the export reads in one language. */

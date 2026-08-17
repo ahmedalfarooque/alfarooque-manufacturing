@@ -104,7 +104,7 @@ export async function GET(req) {
     { key: 'general-accounting', label: 'General Accounting', reports: [
       { key: 'accounts', name: 'Accounts', description: 'SmartLife Chart of Accounts', href: '/smartlife/accounts', available: true },
       { key: 'account-balances', name: 'Account Balances', description: 'Current balance per account', href: '/smartlife/account-balances', available: true },
-      { key: 'trial-balance', name: 'Trial Balance', description: 'Not available from SmartLife.', href: null, available: false },
+      { key: 'trial-balance', name: 'Trial Balance', description: 'Every account with its current balance, presented as Debit/Credit', href: '/smartlife/trial-balance', available: true },
       { key: 'income-statement', name: 'Income Statement', description: 'Not available from SmartLife.', href: null, available: false },
       { key: 'financial-position', name: 'Financial Position', description: 'Not available from SmartLife.', href: null, available: false },
       { key: 'cash-flow', name: 'Cash Flow Statement', description: 'Not available from SmartLife.', href: null, available: false },
