@@ -608,7 +608,23 @@ export default function SmartLifeResourcePage({ params }) {
           <Metric label="Paid / Balance" value={`${money(sum('paid'),currency)} / ${money(sum('balance'),currency)}`}/>
         </div>;
       })()}
-      {!!filtered.length&&<div className="overflow-auto"><table className="w-full text-sm"><thead><tr className="border-b border-[color:var(--bd)]">{columns.map(c=><th key={c} className="p-3 text-start text-xs uppercase text-[color:var(--tx-3)]">{c==='customer'?partyLabel:(COLUMN_LABELS[c] || c.replaceAll('_',' '))}</th>)}<th className="print:hidden">Actions</th></tr></thead><tbody>{filtered.map((record,index)=><tr key={externalId(record)||index} className="border-b border-[color:var(--bd)]">{columns.map(c=><td key={c} className="max-w-64 truncate p-3">{cell(record,c)}</td>)}<td className="p-3 print:hidden"><div className="flex gap-1"><GlassButton variant="secondary" size="sm" onClick={()=>setSelected(record)}>View</GlassButton>{DOCUMENT_RESOURCES.has(resource)&&<a href={`${printBase}/${externalId(record)}/print`} target="_blank" rel="noreferrer"><GlassButton variant="secondary" size="sm">PDF</GlassButton></a>}{DOCUMENT_RESOURCES.has(resource)&&<GlassButton size="sm" onClick={()=>{setSelected(record);setProjectId('');setConnectOpen(true);}}>Connect Project</GlassButton>}</div></td></tr>)}</tbody></table></div>}
+      {!!filtered.length&&<div className="overflow-auto"><table className="w-full text-sm"><thead>
+        {/* Trial Balance groups Debit/Credit under a "Current Balance"
+           header, matching SmartLife's own report layout (Beginning-of-
+           period/Period-balance groups are NOT shown here since no real
+           SmartLife source provides that data — see the ENGINEERING NOTE
+           above; only the group SmartLife's own real account_balances data
+           actually supports is rendered). */}
+        {resource==='trial-balance'&&(()=>{
+          const balanceGroupSpan=(tbShowDebit?1:0)+(tbShowCredit?1:0);
+          return <tr className="border-b border-[color:var(--bd)]">
+            <th colSpan={2}/>
+            {balanceGroupSpan>0&&<th colSpan={balanceGroupSpan} className="p-2 text-center text-xs uppercase text-[color:var(--tx-3)] border-s border-[color:var(--bd)]">Current Balance</th>}
+            {tbShowBalance&&<th className="border-s border-[color:var(--bd)]"/>}
+            <th className="print:hidden"/>
+          </tr>;
+        })()}
+        <tr className="border-b border-[color:var(--bd)]">{columns.map(c=><th key={c} className="p-3 text-start text-xs uppercase text-[color:var(--tx-3)]">{c==='customer'?partyLabel:(COLUMN_LABELS[c] || c.replaceAll('_',' '))}</th>)}<th className="print:hidden">Actions</th></tr></thead><tbody>{filtered.map((record,index)=><tr key={externalId(record)||index} className="border-b border-[color:var(--bd)]">{columns.map(c=><td key={c} className="max-w-64 truncate p-3">{cell(record,c)}</td>)}<td className="p-3 print:hidden"><div className="flex gap-1"><GlassButton variant="secondary" size="sm" onClick={()=>setSelected(record)}>View</GlassButton>{DOCUMENT_RESOURCES.has(resource)&&<a href={`${printBase}/${externalId(record)}/print`} target="_blank" rel="noreferrer"><GlassButton variant="secondary" size="sm">PDF</GlassButton></a>}{DOCUMENT_RESOURCES.has(resource)&&<GlassButton size="sm" onClick={()=>{setSelected(record);setProjectId('');setConnectOpen(true);}}>Connect Project</GlassButton>}</div></td></tr>)}</tbody></table></div>}
       {resource!=='financial-reports'&&resource!=='product-balances'&&totalRecords>0&&<div className="mt-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="text-xs text-[color:var(--tx-3)] flex items-center gap-3 flex-wrap">
           <span>Showing {Math.min(page*pageSize+1,totalRecords)}–{Math.min((page+1)*pageSize,totalRecords)} of {totalRecords} {usingCompleteFilterSet?'matched':'source'} records</span>
