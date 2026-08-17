@@ -5,6 +5,7 @@ const { parseCookies, COOKIE_NAME } = require('@/lib/auth');
 const { SSO_COOKIE_NAME } = require('@/lib/sso');
 const { SmartLifeConfigurationError, readSmartLife } = require('@/lib/smartlife');
 const { getDb } = require('@/lib/db');
+const { computePeriodActivity } = require('@/lib/financialReportData');
 
 /* Purchases and Sales Invoices are already fully synchronized into
    erp_financial_source_records by the existing canonical Sync job
@@ -41,12 +42,18 @@ async function readLocalFirstAccountBalances(req) {
     .select('raw_payload', { count: 'exact' })
     .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife');
   if (search) query = query.or(`account_number.ilike.%${search}%,account_name.ilike.%${search}%`);
-  const { data, count, error } = await query.order('account_number', { ascending: true }).range(offset, offset + limit - 1);
+  const from = (params.get('from') || '').trim();
+  const to = (params.get('to') || '').trim();
+  const [{ data, count, error }, periodActivity] = await Promise.all([
+    query.order('account_number', { ascending: true }).range(offset, offset + limit - 1),
+    computePeriodActivity(sb, from, to).catch(() => null),
+  ]);
   if (error) throw error;
   return json({
     source: 'SmartERP (local synchronized snapshot)', connected: true,
     records: (data || []).map(row => row.raw_payload),
     total: count || 0, page: Math.floor(offset / limit) + 1, offset, limit,
+    periodActivity,
   });
 }
 

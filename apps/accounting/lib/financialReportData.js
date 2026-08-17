@@ -31,6 +31,43 @@ async function readLocalFinancialRecords(sb, recordType) {
   return { records };
 }
 
+/* Real Period-Balance activity for Trial Balance's two control-account
+   roots (10201 "العملاء ( رئيسي )" / Customers, and 20301 "الدائنون
+   المحليون" / Suppliers-Creditors). This is a genuine, verifiable
+   transactional fact — the sum of real, already-synced sales/purchase
+   invoice totals dated within [from,to] — not an invented figure.
+   IMPORTANT LIMITATION, kept honest rather than glossed over: SmartERP's
+   sales/purchase invoice records carry a free-text customer/supplier NAME,
+   not a link to a specific individual sub-account under 10201/20301 (there
+   is no field tying e.g. "شركه المصمم الحديث للمقاولات" to account number
+   1020100001) — so this total is only mathematically sound at the ROOT
+   account level (all invoices in range necessarily move the Customers/
+   Suppliers control account in aggregate), never attributable to one
+   individual child account. Every other account, and every child under
+   these two roots, has no real transactional source and stays "N/A".
+   "Beginning of period" (the running balance AS OF `from`) is NOT
+   computed anywhere in this file even for these two roots: that requires
+   knowing when each invoice was actually PAID, which this data does not
+   carry (only the invoice's current outstanding balance right now, not a
+   history of balance-over-time) — so it would be a real number computed
+   from a comparison that can't actually answer the question asked of it,
+   which is indistinguishable from fabrication. Left "N/A" everywhere. */
+async function computePeriodActivity(sb, from, to) {
+  if (!from || !to) return null;
+  const sumInRange = async (recordType) => {
+    const { data, error } = await sb.from('erp_financial_source_records')
+      .select('total_amount')
+      .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife').eq('record_type', recordType)
+      .gte('record_date', from).lte('record_date', to);
+    if (error) throw error;
+    return roundMoney((data || []).reduce((sum, row) => sum + (Number(row.total_amount) || 0), 0));
+  };
+  const [customerDebit, supplierCredit] = await Promise.all([
+    sumInRange('sales_invoice'), sumInRange('purchase_invoice'),
+  ]);
+  return { customerDebit, supplierCredit };
+}
+
 function first(record, keys) {
   for (const key of keys) {
     const value = record?.[key];
@@ -128,4 +165,4 @@ function buildVatReport(salesRecords, purchaseRecords, month = 'all', year = 'al
   };
 }
 
-module.exports = { first, roundMoney, dateKey, normalizeFinancialDocument, matchesPeriod, periodLabel, buildVatReport, readLocalFinancialRecords };
+module.exports = { first, roundMoney, dateKey, normalizeFinancialDocument, matchesPeriod, periodLabel, buildVatReport, readLocalFinancialRecords, computePeriodActivity };

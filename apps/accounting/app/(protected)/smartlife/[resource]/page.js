@@ -180,6 +180,19 @@ export default function SmartLifeResourcePage({ params }) {
   const [tbShowPeriod,setTbShowPeriod] = useState(false);
   const [tbShowCurrent,setTbShowCurrent] = useState(true);
   const [tbShowBalance,setTbShowBalance] = useState(false);
+  /* Period From/To — real, functional dates (unlike Branch/Account
+     Type/Cost Center below, which stay disabled placeholders). Drives a
+     genuine server-side aggregate (computePeriodActivity in
+     lib/financialReportData.js): the sum of real, already-synced sales/
+     purchase invoice totals within [from,to] — mathematically sound only
+     at the two control-account ROOTS (10201 Customers / 20301 Suppliers),
+     since individual invoices aren't linked to a specific child account.
+     Fiscal Year is a convenience that fills From/To to that calendar year;
+     2025/2026 are the two years actually present in the synced invoice
+     data (verified via the real min/max record_date), not a guess. */
+  const [tbFiscalYear,setTbFiscalYear] = useState('');
+  const [tbPeriodFrom,setTbPeriodFrom] = useState('');
+  const [tbPeriodTo,setTbPeriodTo] = useState('');
   /* Show parents / Show customers / Show suppliers — real structural
      filters derived from the actual account_number hierarchy already
      synced (never fabricated): a "parent" account is simply one that has
@@ -239,9 +252,11 @@ export default function SmartLifeResourcePage({ params }) {
     const query = new URLSearchParams({ offset:String(page*pageSize), limit:String(pageSize) });
     if (search.trim()) query.set('search',search.trim());
     if (resource === 'sales-invoices' || resource === 'purchases') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
+    if (resource === 'trial-balance' && tbPeriodFrom && tbPeriodTo) { query.set('from', tbPeriodFrom); query.set('to', tbPeriodTo); }
     return `/api/smartlife/${backendResource}?${query}`;
-  },[resource,backendResource,page,pageSize,search]);
+  },[resource,backendResource,page,pageSize,search,tbPeriodFrom,tbPeriodTo]);
   const { data,error,loading,refresh } = useLiveData(dataUrl,supported?30000:0);
+  const periodActivity = resource === 'trial-balance' ? data?.periodActivity : null;
   const { data:syncData,refresh:refreshSync } = useLiveData('/api/smartlife/sync',15000);
   const records = Array.isArray(data?.records) ? data.records : [];
   const optionRecords = filterUniverse.length ? filterUniverse : records;
@@ -591,7 +606,24 @@ export default function SmartLifeResourcePage({ params }) {
          looks real. A plain string (not JSX) so it also comes through
          correctly in the Excel/PDF export, which calls this same cell()
          function to build row data, not just screen markup. */
-      if (column === 'beginning_debit' || column === 'beginning_credit' || column === 'period_debit' || column === 'period_credit') return 'N/A';
+      /* Period Debit/Credit: real, computed server-side (computePeriodActivity
+         in lib/financialReportData.js) from the sum of actual synced sales/
+         purchase invoice totals within the selected From/To range — but
+         only meaningful at the two control-account ROOTS (10201 Customers /
+         20301 Suppliers), since no individual invoice is linked to one
+         specific child account. Every other row, and Beginning-of-period
+         everywhere, stays the honest "N/A" — see the ENGINEERING NOTE
+         above for exactly why Beginning can't be computed even here. */
+      const accountNo = String(record?.account_number || '');
+      if (column === 'period_debit') {
+        if (accountNo === CUSTOMER_ROOT_PREFIX && periodActivity) return money(periodActivity.customerDebit);
+        return 'N/A';
+      }
+      if (column === 'period_credit') {
+        if (accountNo === SUPPLIER_ROOT_PREFIX && periodActivity) return money(periodActivity.supplierCredit);
+        return 'N/A';
+      }
+      if (column === 'beginning_debit' || column === 'beginning_credit') return 'N/A';
       return display(record?.[column]);
     }
     if(!DOCUMENT_RESOURCES.has(resource)) return display(record?.[column]);
@@ -635,21 +667,33 @@ export default function SmartLifeResourcePage({ params }) {
           /* Visual structure only — matches the SmartLife report's top
              control row (Fiscal Year / Period From-To / Branch-Warehouse /
              Account Type / Cost Center) so the page is recognizable next to
-             the real SmartLife report. Every control here is disabled: the
-             real synced account_balances data has none of these dimensions
-             (no period, no branch link, no account-type classification, no
-             cost-center link) — confirmed across three separate
-             investigations of the full documented SmartERP API surface, see
-             the ENGINEERING NOTE above. A disabled, clearly inert control is
-             honest; a working-looking one with no real effect would not be. */
-          <div className="mb-2 flex flex-wrap items-end gap-4 rounded-xl border border-dashed border-[color:var(--bd)] p-3 text-sm opacity-60 cursor-not-allowed" title="Not available — SmartERP's account balances data has no fiscal year, period, branch, account-type, or cost-center dimension.">
-            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Fiscal Year<GlassSelect disabled value="" className="w-24"><option value="">2026</option></GlassSelect></label>
-            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Period From<GlassInput disabled type="date" className="w-36"/></label>
-            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Period To<GlassInput disabled type="date" className="w-36"/></label>
-            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Branch / Warehouse<GlassSelect disabled value="" className="w-36"><option value="">All Warehouses</option></GlassSelect></label>
-            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Account Type<GlassSelect disabled value="" className="w-32"><option value="">All</option></GlassSelect></label>
-            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Cost Center<GlassSelect disabled value="" className="w-32"><option value=""></option></GlassSelect></label>
-            <span className="pb-1.5 text-[11px] italic text-[color:var(--tx-4)]">🔒 Not available from SmartLife</span>
+             the real SmartLife report. Fiscal Year/Period From/To are REAL
+             and functional (see the tbPeriodFrom/tbPeriodTo comment above) —
+             everything else in the second row stays disabled: the real
+             synced account_balances data has no branch link, no account-
+             type classification, and no cost-center link — confirmed across
+             four separate investigations of the full documented SmartERP
+             API surface, see the ENGINEERING NOTE above. A disabled,
+             clearly inert control is honest; a working-looking one with no
+             real effect would not be. */
+          <div className="mb-2 flex flex-wrap items-end gap-4 rounded-xl border border-[color:var(--bd)] p-3 text-sm">
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-3)]">Fiscal Year
+              <GlassSelect value={tbFiscalYear} onChange={e=>{const y=e.target.value; setTbFiscalYear(y); if(y){setTbPeriodFrom(`${y}-01-01`);setTbPeriodTo(`${y}-12-31`);} else {setTbPeriodFrom('');setTbPeriodTo('');}}} className="w-24">
+                <option value="">All</option><option value="2025">2025</option><option value="2026">2026</option>
+              </GlassSelect>
+            </label>
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-3)]">Period From
+              <GlassInput type="date" value={tbPeriodFrom} onChange={e=>{setTbPeriodFrom(e.target.value);setTbFiscalYear('');}} className="w-36"/>
+            </label>
+            <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-3)]">Period To
+              <GlassInput type="date" value={tbPeriodTo} onChange={e=>{setTbPeriodTo(e.target.value);setTbFiscalYear('');}} className="w-36"/>
+            </label>
+            <div className="flex flex-wrap items-end gap-4 opacity-60 cursor-not-allowed" title="Not available — SmartERP's account balances data has no branch, account-type, or cost-center dimension.">
+              <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Branch / Warehouse<GlassSelect disabled value="" className="w-36"><option value="">All Warehouses</option></GlassSelect></label>
+              <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Account Type<GlassSelect disabled value="" className="w-32"><option value="">All</option></GlassSelect></label>
+              <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-[color:var(--tx-4)]">Cost Center<GlassSelect disabled value="" className="w-32"><option value=""></option></GlassSelect></label>
+              <span className="pb-1.5 text-[11px] italic text-[color:var(--tx-4)]">🔒 Not available from SmartLife</span>
+            </div>
           </div>
         )}
         <ListToolbar className="mb-4">
@@ -669,7 +713,7 @@ export default function SmartLifeResourcePage({ params }) {
             <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]" title="Column structure only — SmartLife's own period-movement/journal data for this group is not exposed by the accessible API, so its cells show N/A"><input type="checkbox" checked={tbShowPeriod} onChange={e=>setTbShowPeriod(e.target.checked)}/> Period balance<span className="text-[color:var(--tx-4)]">ⓘ</span></label>
             <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCurrent} onChange={e=>setTbShowCurrent(e.target.checked)}/> Current balance</label>
             <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowBalance} onChange={e=>setTbShowBalance(e.target.checked)}/> Balance</label>
-            <GlassButton variant="secondary" size="sm" onClick={()=>{setSearch('');setTbShowParents(false);setTbShowCustomers(false);setTbShowSuppliers(false);}}>Reset</GlassButton>
+            <GlassButton variant="secondary" size="sm" onClick={()=>{setSearch('');setTbShowParents(false);setTbShowCustomers(false);setTbShowSuppliers(false);setTbFiscalYear('');setTbPeriodFrom('');setTbPeriodTo('');}}>Reset</GlassButton>
           </>) : (!['customers','suppliers','warehouses'].includes(resource) && <GlassSelect value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{statusValues.map(s=><option key={s}>{s}</option>)}</GlassSelect>)}
           <GlassButton variant="secondary" onClick={()=>runReport('print')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='print'?'Preparing…':'Print'}</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('save')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='save'?'Generating…':'⤓ Download PDF'}</GlassButton>
