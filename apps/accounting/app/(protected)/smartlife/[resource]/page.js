@@ -161,15 +161,34 @@ export default function SmartLifeResourcePage({ params }) {
   const [categoryFilter,setCategoryFilter] = useState(''); const [unitFilter,setUnitFilter] = useState(''); const [typeFilter,setTypeFilter] = useState('');
   /* Trial Balance column toggles — real, working switches over the one
      real `balance` field SmartERP exposes (id/account_number/account_name/
-     balance only). SmartERP has no fiscal-year, branch, cost-center link,
-     account-type classification, or beginning/period-balance breakdown on
-     this resource, so those SmartLife-report controls are NOT built here —
-     adding them would mean fabricated columns with no real data behind
-     them, which is explicitly disallowed. Debit/Credit/Balance are genuine
-     alternate views of the same real number, toggle instantly, and are
-     picked up by Print/PDF/Excel automatically since runReport() already
-     builds its export columns from this same `columns` array. */
+     balance only). Debit/Credit/Balance are genuine alternate views of the
+     same real number, toggle instantly, and are picked up by Print/PDF/
+     Excel automatically since runReport() already builds its export
+     columns from this same `columns` array. */
   const [tbShowDebit,setTbShowDebit] = useState(true); const [tbShowCredit,setTbShowCredit] = useState(true); const [tbShowBalance,setTbShowBalance] = useState(false);
+  /* Show parents / Show customers / Show suppliers — real structural
+     filters derived from the actual account_number hierarchy already
+     synced (never fabricated): a "parent" account is simply one that has
+     at least one other real account whose number starts with it (computed
+     over the complete local 790-account set below). The customer/supplier
+     root account numbers (10201 "العملاء ( رئيسي )" / 20301 "الدائنون
+     المحليون") were found by inspecting the real synced account names —
+     verified live: every account whose number starts with 10201 is a real
+     customer sub-account (e.g. 1020100095 "عملاء بيع المصنع"), and every
+     20301-prefixed account is a real supplier/creditor sub-account (e.g.
+     203010000001 "مورد عام"). This is a real relationship read out of the
+     synced data, not an invented one.
+     Fiscal Year / Period From-To / Branch-Warehouse / Account Type /
+     Cost Center are rendered as disabled controls further down — SmartERP's
+     real account_balances resource has none of those dimensions (confirmed
+     over three separate investigations; see the ENGINEERING NOTE above),
+     so they are shown (to keep the report's visual structure recognizable
+     against the real SmartLife report) but intentionally inert, never a
+     working-looking fake filter. */
+  const CUSTOMER_ROOT_PREFIX = '10201'; const SUPPLIER_ROOT_PREFIX = '20301';
+  const [tbShowParents,setTbShowParents] = useState(false);
+  const [tbShowCustomers,setTbShowCustomers] = useState(false);
+  const [tbShowSuppliers,setTbShowSuppliers] = useState(false);
   const [page,setPage] = useState(0); const [pageSize,setPageSize] = useState(25);
   const [connectOpen,setConnectOpen] = useState(false); const [projectId,setProjectId] = useState(''); const [relationship,setRelationship] = useState(null); const [busy,setBusy] = useState(false);
   const [reportBusy,setReportBusy] = useState('');
@@ -223,7 +242,19 @@ export default function SmartLifeResourcePage({ params }) {
   [optionRecords,resource]);
   const localFiltersActive = isInvoiceWorkspace
     ? !!(customerFilter || paymentStatusFilter || saleStatusFilter || (dateFilter?.preset && dateFilter.preset !== 'all'))
-    : resource === 'products' && !!(categoryFilter || unitFilter || typeFilter);
+    : resource === 'products' ? !!(categoryFilter || unitFilter || typeFilter)
+    : resource === 'trial-balance' && !!(tbShowParents || tbShowCustomers || tbShowSuppliers);
+  /* "Parent" is a real structural fact read off the complete synced
+     account_number set — an account is a parent if some OTHER real
+     account's number starts with it. Computed once over the full 790-row
+     background-fetched dataset, not per visible page. */
+  const trialBalanceParentNumbers = useMemo(() => {
+    if (resource !== 'trial-balance' || !filterUniverse.length) return null;
+    const numbers = filterUniverse.map(r => String(r?.account_number || ''));
+    const set = new Set();
+    for (const a of numbers) { if (a && numbers.some(b => b !== a && b.startsWith(a))) set.add(a); }
+    return set;
+  }, [resource, filterUniverse]);
   /* SmartLife-backed lists must preserve SmartERP's own record order, never
      an opinionated client-side re-sort — sort_by=date&sort_type=desc is sent
      upstream (honored by some endpoints, silently ignored by others) and
@@ -258,8 +289,16 @@ export default function SmartLifeResourcePage({ params }) {
       if (typeFilter && String(record?.type || '') !== typeFilter) return false;
       return true;
     }
+    if (resource === 'trial-balance') {
+      if (search && !searchable(record, resource).includes(search.toLowerCase())) return false;
+      const accountNumber = String(record?.account_number || '');
+      if (tbShowParents && !(trialBalanceParentNumbers && trialBalanceParentNumbers.has(accountNumber))) return false;
+      if (tbShowCustomers && !accountNumber.startsWith(CUSTOMER_ROOT_PREFIX)) return false;
+      if (tbShowSuppliers && !accountNumber.startsWith(SUPPLIER_ROOT_PREFIX)) return false;
+      return true;
+    }
     return (!search || searchable(record, resource).includes(search.toLowerCase())) && (!status || String(record?.status || record?.payment_status || '') === status);
-  }),[candidateRecords,search,status,resource,isInvoiceWorkspace,customerFilter,paymentStatusFilter,saleStatusFilter,dateFilter,categoryFilter,unitFilter,typeFilter]);
+  }),[candidateRecords,search,status,resource,isInvoiceWorkspace,customerFilter,paymentStatusFilter,saleStatusFilter,dateFilter,categoryFilter,unitFilter,typeFilter,tbShowParents,tbShowCustomers,tbShowSuppliers,trialBalanceParentNumbers]);
   const totalRecords = usingCompleteFilterSet ? filteredRecords.length : (Number(data?.total) || records.length);
   const totalPages = Math.max(1,Math.ceil(totalRecords/pageSize));
   const filtered = usingCompleteFilterSet ? filteredRecords.slice(page * pageSize, (page + 1) * pageSize) : filteredRecords;
@@ -281,6 +320,13 @@ export default function SmartLifeResourcePage({ params }) {
         && (!categoryFilter || String(record?.category || '').trim() === categoryFilter)
         && (!unitFilter || String(record?.unit || '') === unitFilter)
         && (!typeFilter || String(record?.type || '') === typeFilter);
+    }
+    if (resource === 'trial-balance') {
+      const accountNumber = String(record?.account_number || '');
+      return (!search || searchable(record, resource).includes(search.toLowerCase()))
+        && (!tbShowParents || (trialBalanceParentNumbers && trialBalanceParentNumbers.has(accountNumber)))
+        && (!tbShowCustomers || accountNumber.startsWith(CUSTOMER_ROOT_PREFIX))
+        && (!tbShowSuppliers || accountNumber.startsWith(SUPPLIER_ROOT_PREFIX));
     }
     return (!search || searchable(record, resource).includes(search.toLowerCase()))
       && (!status || String(record?.status || record?.payment_status || '') === status);
@@ -534,7 +580,27 @@ export default function SmartLifeResourcePage({ params }) {
           <GlassButton variant="secondary" onClick={()=>runReport('save')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='save'?'Generating…':'⤓ Download PDF'}</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('excel')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='excel'?'Generating…':'⤓ Download Excel'}</GlassButton>
         </ListToolbar>
-      ) : (
+      ) : (<>
+        {resource==='trial-balance' && (
+          /* Visual structure only — matches the SmartLife report's top
+             control row (Fiscal Year / Period From-To / Branch-Warehouse /
+             Account Type / Cost Center) so the page is recognizable next to
+             the real SmartLife report. Every control here is disabled: the
+             real synced account_balances data has none of these dimensions
+             (no period, no branch link, no account-type classification, no
+             cost-center link) — confirmed across three separate
+             investigations of the full documented SmartERP API surface, see
+             the ENGINEERING NOTE above. A disabled, clearly inert control is
+             honest; a working-looking one with no real effect would not be. */
+          <div className="mb-2 flex flex-wrap items-center gap-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm opacity-60" title="Not available — SmartERP's account balances data has no fiscal year, period, branch, account-type, or cost-center dimension.">
+            <label className="flex items-center gap-1.5 text-xs">Fiscal Year<GlassSelect disabled value="" className="w-24"><option value="">2026</option></GlassSelect></label>
+            <label className="flex items-center gap-1.5 text-xs">Period<GlassInput disabled type="date" className="w-36"/>–<GlassInput disabled type="date" className="w-36"/></label>
+            <label className="flex items-center gap-1.5 text-xs">Branch / Warehouse<GlassSelect disabled value="" className="w-36"><option value="">All Warehouses</option></GlassSelect></label>
+            <label className="flex items-center gap-1.5 text-xs">Account Type<GlassSelect disabled value="" className="w-32"><option value="">All</option></GlassSelect></label>
+            <label className="flex items-center gap-1.5 text-xs">Cost Center<GlassSelect disabled value="" className="w-32"><option value=""></option></GlassSelect></label>
+            <span className="text-[11px] italic text-[color:var(--tx-4)]">(not available from SmartLife)</span>
+          </div>
+        )}
         <ListToolbar className="mb-4">
           <GlassInput className="min-w-56 flex-1" placeholder={`Search ${LABELS[resource]}…`} value={search} onChange={e=>setSearch(e.target.value)}/>
           {resource==='products' ? (<>
@@ -543,15 +609,21 @@ export default function SmartLifeResourcePage({ params }) {
             <GlassSelect value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="">All types</option>{typeValues.map(t=><option key={t}>{t}</option>)}</GlassSelect>
             <GlassButton variant="secondary" size="sm" onClick={()=>{setSearch('');setCategoryFilter('');setUnitFilter('');setTypeFilter('');}}>Reset</GlassButton>
           </>) : resource==='trial-balance' ? (<>
-            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowDebit} onChange={e=>setTbShowDebit(e.target.checked)}/> Debit</label>
-            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCredit} onChange={e=>setTbShowCredit(e.target.checked)}/> Credit</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowParents} onChange={e=>setTbShowParents(e.target.checked)}/> Show parents accounts</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={!tbShowParents&&!tbShowCustomers&&!tbShowSuppliers} onChange={()=>{setTbShowParents(false);setTbShowCustomers(false);setTbShowSuppliers(false);}}/> All Accounts</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCustomers} onChange={e=>setTbShowCustomers(e.target.checked)}/> Show customers</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowSuppliers} onChange={e=>setTbShowSuppliers(e.target.checked)}/> Show suppliers</label>
+            <span className="mx-1 h-4 border-s border-[color:var(--bd)]"/>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowDebit} onChange={e=>setTbShowDebit(e.target.checked)}/> Current balance: Debit</label>
+            <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowCredit} onChange={e=>setTbShowCredit(e.target.checked)}/> Current balance: Credit</label>
             <label className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]"><input type="checkbox" checked={tbShowBalance} onChange={e=>setTbShowBalance(e.target.checked)}/> Balance</label>
+            <GlassButton variant="secondary" size="sm" onClick={()=>{setSearch('');setTbShowParents(false);setTbShowCustomers(false);setTbShowSuppliers(false);}}>Reset</GlassButton>
           </>) : (!['customers','suppliers','warehouses'].includes(resource) && <GlassSelect value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{statusValues.map(s=><option key={s}>{s}</option>)}</GlassSelect>)}
           <GlassButton variant="secondary" onClick={()=>runReport('print')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='print'?'Preparing…':'Print'}</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('save')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='save'?'Generating…':'⤓ Download PDF'}</GlassButton>
           <GlassButton variant="secondary" onClick={()=>runReport('excel')} disabled={!filtered.length||!!reportBusy}>{reportBusy==='excel'?'Generating…':'⤓ Download Excel'}</GlassButton>
         </ListToolbar>
-      )}
+      </>)}
       {(error||data?.connected===false)&&(()=>{
         const tone = data?.permission_required ? 'amber' : (data?.endpoint_unavailable ? 'amber' : 'red');
         const title = data?.permission_required ? 'Permission required'
@@ -578,8 +650,7 @@ export default function SmartLifeResourcePage({ params }) {
          these totals. */}
       {resource==='trial-balance'&&!loading&&!!filtered.length&&(()=>{
         if(!filterUniverse.length) return <div className="mb-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm text-[color:var(--tx-3)] print:hidden">Loading complete totals…</div>;
-        const needle=search.trim().toLowerCase();
-        const summarySource=needle?filterUniverse.filter(r=>searchable(r,resource).includes(needle)):filterUniverse;
+        const summarySource=filterUniverse.filter(matchesActiveFilters);
         const debit=summarySource.reduce((acc,r)=>acc+Math.max(0,Number(r?.balance)||0),0);
         const credit=summarySource.reduce((acc,r)=>acc+Math.max(0,-(Number(r?.balance)||0)),0);
         return <div className="mb-3 grid grid-cols-2 gap-3 rounded-xl border border-[color:var(--bd)] p-3 text-sm sm:grid-cols-2 print:hidden">
