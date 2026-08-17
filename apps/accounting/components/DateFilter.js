@@ -100,6 +100,14 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
   const [open, setOpen] = useState(false);
   const [draftFrom, setDraftFrom] = useState(value?.from || '');
   const [draftTo, setDraftTo] = useState(value?.to || '');
+  /* Clicking "Custom Range" must reveal the From/To inputs immediately —
+     previously it only set `open=true` and never touched `value.preset`
+     (that only happens on Apply), so the inputs' render condition
+     (`value?.preset === 'custom' || draftFrom || draftTo`) stayed false
+     and nothing appeared: a silent dead click, reproduced live. This local
+     flag decouples "show the custom inputs" from "a custom range is
+     actually applied", which only changes via applyCustom()/reset(). */
+  const [showCustom, setShowCustom] = useState(value?.preset === 'custom');
   const ref = useRef(null);
 
   useEffect(() => {
@@ -109,7 +117,8 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
   }, []);
 
   function pick(presetKey) {
-    if (presetKey === 'custom') { setOpen(true); return; }
+    if (presetKey === 'custom') { setShowCustom(true); return; }
+    setShowCustom(false);
     onChange({ preset: presetKey, from: null, to: null });
     setOpen(false);
   }
@@ -121,7 +130,7 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
 
   function reset() {
     onChange({ preset: 'all', from: null, to: null });
-    setDraftFrom(''); setDraftTo('');
+    setDraftFrom(''); setDraftTo(''); setShowCustom(false);
     setOpen(false);
   }
 
@@ -143,7 +152,7 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
               </button>
             ))}
           </div>
-          {(value?.preset === 'custom' || draftFrom || draftTo) && (
+          {(showCustom || value?.preset === 'custom' || draftFrom || draftTo) && (
             <div className="mt-2 space-y-2 border-t border-[color:var(--bd)] pt-2">
               <label className="block text-xs text-[color:var(--tx-3)]">{tr(t, lang, 'from')}
                 <GlassInput type="date" value={draftFrom} onChange={e => setDraftFrom(e.target.value)} />

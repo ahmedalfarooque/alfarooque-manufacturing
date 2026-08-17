@@ -166,7 +166,7 @@ export default function SmartLifeResourcePage({ params }) {
     if (resource === 'product-balances') return '/api/smartlife/product-balances';
     const query = new URLSearchParams({ offset:String(page*pageSize), limit:String(pageSize) });
     if (search.trim()) query.set('search',search.trim());
-    if (resource === 'sales-invoices') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
+    if (resource === 'sales-invoices' || resource === 'purchases') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
     return `/api/smartlife/${resource}?${query}`;
   },[resource,page,search]);
   const { data,error,loading,refresh } = useLiveData(dataUrl,supported?30000:0);
@@ -185,8 +185,19 @@ export default function SmartLifeResourcePage({ params }) {
   const localFiltersActive = isInvoiceWorkspace
     ? !!(customerFilter || paymentStatusFilter || saleStatusFilter || (dateFilter?.preset && dateFilter.preset !== 'all'))
     : resource === 'products' && !!(categoryFilter || unitFilter || typeFilter);
-  const usingCompleteFilterSet = localFiltersActive && filterUniverse.length > 0;
-  const candidateRecords = usingCompleteFilterSet ? filterUniverse : records;
+  /* SmartERP's sort_by=date/sort_type=desc query params are honored by some
+     list endpoints but silently ignored by others (confirmed live: Purchases
+     returned rows in upload order regardless of these params). Rather than
+     trust per-resource upstream sort support, invoice-workspace resources
+     always paginate the already-fetched complete dataset (filterUniverse,
+     loaded below for filtering anyway) sorted newest-first client-side —
+     correct regardless of what the upstream endpoint does with sort params. */
+  const usingCompleteFilterSet = filterUniverse.length > 0 && (localFiltersActive || isInvoiceWorkspace);
+  const sortedFilterUniverse = useMemo(() => {
+    if (!isInvoiceWorkspace) return filterUniverse;
+    return [...filterUniverse].sort((a, b) => String(invoiceView(b, resource).date || '').localeCompare(String(invoiceView(a, resource).date || '')));
+  }, [filterUniverse, isInvoiceWorkspace, resource]);
+  const candidateRecords = usingCompleteFilterSet ? (isInvoiceWorkspace ? sortedFilterUniverse : filterUniverse) : records;
   const filteredRecords = useMemo(() => candidateRecords.filter(record => {
     if (isInvoiceWorkspace) {
       const view = invoiceView(record, resource);
@@ -241,7 +252,7 @@ export default function SmartLifeResourcePage({ params }) {
     for (let offset = 0, guard = 0; guard < 100; guard += 1) {
       const query = new URLSearchParams({ offset: String(offset), limit: String(limit) });
       if (includeSearch && search.trim()) query.set('search', search.trim());
-      if (resource === 'sales-invoices') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
+      if (resource === 'sales-invoices' || resource === 'purchases') { query.set('sort_by', 'date'); query.set('sort_type', 'desc'); }
       const response = await fetch(`/api/smartlife/${resource}?${query}`, { credentials: 'same-origin' });
       const payload = await response.json().catch(() => ({}));
       const batch = Array.isArray(payload.records) ? payload.records : [];
