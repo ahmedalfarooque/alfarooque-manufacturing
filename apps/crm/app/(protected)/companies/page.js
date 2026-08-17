@@ -4,14 +4,15 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLang } from '@/lib/i18n';
-import { GlassCard, GlassInput, GlassTh, GlassTd, GlassSkeletonRows, GlassBadge } from '@/components/glass';
+import { GlassCard, GlassInput, GlassTh, GlassTd, GlassSkeletonRows, GlassBadge, GlassButton, toast } from '@/components/glass';
 import { MetricCard, CRMEmptyState } from '@/components/CRMWidgets';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 2 }); }
 
 export default function CompaniesPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [search, setSearch] = useState('');
+  const [reportBusy, setReportBusy] = useState('');
 
   const params = new URLSearchParams();
   if (search) params.set('search', search);
@@ -22,10 +23,34 @@ export default function CompaniesPage() {
   const totalOpenDeals = companies.reduce((s, c) => s + c.openDeals, 0);
   const totalValue = companies.reduce((s, c) => s + c.totalDealValue, 0);
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: 'Companies',
+        columns: [
+          { key: 'company', header: 'Company' }, { key: 'contacts', header: 'Contacts' },
+          { key: 'openDeals', header: 'Open Opportunities' }, { key: 'value', header: 'Total Deal Value' },
+        ],
+        rows: companies.map(c => ({
+          company: c.company || '—', contacts: c.contactCount, openDeals: c.openDeals,
+          value: c.totalDealValue ? `SAR ${fmt(c.totalDealValue)}` : '—',
+        })),
+        lang, fileName: 'companies-report.pdf', action,
+      });
+    } catch (e) { toast('Report generation failed', 'error'); }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[color:var(--tx)]">{t('companies')}</h1>
+        <div className="flex items-center gap-2">
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!companies.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!companies.length || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('downloadPdf')}</GlassButton>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">

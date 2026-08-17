@@ -1,15 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { useLang } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
-import { GlassSkeletonRows } from '@/components/glass';
+import { GlassSkeletonRows, GlassButton, toast } from '@/components/glass';
 import { MetricCard, SectionCard, DistributionRow, CRMEmptyRow } from '@/components/CRMWidgets';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-SA', { minimumFractionDigits: 0 }); }
 
 export default function AnalyticsPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { data } = useLiveData('/api/analytics', 30000);
+  const [reportBusy, setReportBusy] = useState('');
 
   const leadFunnel = data?.leadFunnel || [];
   const dealsByStage = data?.dealsByStage || [];
@@ -27,9 +29,39 @@ export default function AnalyticsPage() {
   const totalOpenDealValue = dealsByStage.filter(r => !r.stage.startsWith('Closed')).reduce((s, r) => s + r.value, 0);
   const totalContacts = contactsByType.reduce((s, r) => s + r.count, 0);
 
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      const rows = [
+        ...leadFunnel.map(r => ({ section: 'Lead Funnel', metric: r.status, value: r.count })),
+        ...dealsByStage.map(r => ({ section: 'Opportunities by Stage', metric: r.stage, value: r.count })),
+        ...topCompanies.map(r => ({ section: 'Top Companies', metric: r.company, value: `SAR ${fmt(r.value)}` })),
+        ...contactsByType.map(r => ({ section: 'Contacts by Type', metric: r.type, value: r.count })),
+        ...monthlyTrend.flatMap(r => [
+          { section: 'Monthly Trend', metric: `${r.month} — Contacts`, value: r.contacts },
+          { section: 'Monthly Trend', metric: `${r.month} — Leads`, value: r.leads },
+          { section: 'Monthly Trend', metric: `${r.month} — Opportunities`, value: r.deals },
+        ]),
+      ];
+      await exportReportPdf({
+        title: 'CRM Analytics',
+        columns: [{ key: 'section', header: 'Section' }, { key: 'metric', header: 'Metric' }, { key: 'value', header: 'Value' }],
+        rows, lang, fileName: 'crm-analytics-report.pdf', action,
+      });
+    } catch (e) { toast('Report generation failed', 'error'); }
+    finally { setReportBusy(''); }
+  }
+
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-[color:var(--tx)]">{t('analytics')}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-[color:var(--tx)]">{t('analytics')}</h1>
+        <div className="flex items-center gap-2">
+          <GlassButton variant="secondary" onClick={() => runReport('print')} disabled={!data || !!reportBusy}>{reportBusy === 'print' ? '…' : t('print')}</GlassButton>
+          <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!data || !!reportBusy}>⇩ {reportBusy === 'save' ? '…' : t('downloadPdf')}</GlassButton>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <MetricCard label="Total Leads" value={data ? totalLeads : '—'} icon="flag" tone="cyan" />
