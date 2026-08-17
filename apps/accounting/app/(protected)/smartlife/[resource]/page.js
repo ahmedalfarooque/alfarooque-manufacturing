@@ -179,7 +179,26 @@ export default function SmartLifeResourcePage({ params }) {
      Balances page, presented in the standard Debit/Credit trial-balance
      format instead of a single signed balance column. Reusing the same
      canonical resource (no new connector, no invented figures) — see
-     cell()/columns below for the debit/credit split. */
+     cell()/columns below for the debit/credit split.
+
+     ENGINEERING NOTE (not shown to users): the real SmartLife web app's own
+     Trial Balance report additionally shows Fiscal Year / Branch-Warehouse /
+     Account Type / Cost Center filters and Beginning-of-period / Period /
+     Current-balance debit-credit columns. Investigated and confirmed real —
+     apps/shared/integrationPlatform.js's accounting/get_entry/{id} endpoint
+     returns genuine date/year/branch_id/branch_name/cost_center_id/
+     cost_center_name/debit-credit lines per journal entry — but it is a
+     single-entry GET-BY-ID only; the full 44-endpoint documented SmartERP
+     surface has no bulk journal/ledger LIST endpoint to enumerate entries
+     with, and brute-forcing an unknown ID range was explicitly ruled out
+     (unbounded, no total-count signal, not idempotent-sync-safe). DO NOT
+     fabricate Beginning/Period/Branch/Account-Type/Cost-Center data to
+     visually match that report. If a real bulk journal/ledger endpoint is
+     ever added to integrationPlatform.js, wire it in as:
+       SmartLife journal/ledger endpoint → canonical connector → new local
+       snapshot table (same upsert-by-external-id pattern as
+       erp_smartlife_account_balances) → extend this page's columns/toggles
+     without needing to rewrite the existing Debit/Credit/Balance view. */
   const backendResource = resource === 'trial-balance' ? 'account-balances' : resource;
   const dataUrl=useMemo(() => {
     if (resource === 'financial-reports') return '/api/smartlife/reports';

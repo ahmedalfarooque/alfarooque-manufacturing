@@ -11,9 +11,6 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
-const { parseCookies, COOKIE_NAME } = require('@/lib/auth');
-const { SSO_COOKIE_NAME } = require('@/lib/sso');
-const { readSmartLife } = require('@/lib/smartlife');
 
 export async function GET(req) {
   const { response } = await requireAction(req, 'view');
@@ -23,10 +20,17 @@ export async function GET(req) {
   if (error) return json({ error: 'Could not load warehouses.' }, 500);
   if (data && data.length) return json({ warehouses: data.map(w => ({ ...w, read_only: false })) });
 
+  /* Local-first: crm_record_mappings already holds SmartLife's warehouses
+     (same canonical sync job as Products/Purchases/Sales Invoices/Account
+     Balances) — reading it instead of a live SmartLife call means a normal
+     page load never hits SmartERP; only the Sync button does. */
   try {
-    const cookies = parseCookies(req.headers.get('cookie'));
-    const result = await readSmartLife('warehouses', { appToken: cookies[COOKIE_NAME], ssoToken: cookies[SSO_COOKIE_NAME] }, {});
-    const warehouses = result.records.map(r => ({ id: r.id, name: r.name, code: null, address: null, city: null, is_active: true, read_only: true }));
+    const { data: mappings, error: mapError } = await sb.from('crm_record_mappings')
+      .select('metadata').eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife').eq('entity_type', 'warehouses');
+    if (mapError) throw mapError;
+    const warehouses = (mappings || []).map(m => m.metadata?.raw_payload).filter(Boolean)
+      .map(r => ({ id: r.id, name: r.name, code: null, address: null, city: null, is_active: true, read_only: true }))
+      .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
     return json({ warehouses });
   } catch (_) {
     return json({ warehouses: [] });

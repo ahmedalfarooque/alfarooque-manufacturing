@@ -2,8 +2,8 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
-const { readAllSmartLife, classifySmartErpError } = require('../../../../../shared/integrationPlatform');
-const { buildVatReport } = require('@/lib/financialReportData');
+const { classifySmartErpError } = require('../../../../../shared/integrationPlatform');
+const { buildVatReport, readLocalFinancialRecords } = require('@/lib/financialReportData');
 
 export async function GET(req) {
   const { response } = await requireAction(req, 'view'); if (response) return response;
@@ -15,13 +15,13 @@ export async function GET(req) {
   try {
     const sb = getDb();
     const [sales, purchases] = await Promise.all([
-      readAllSmartLife(sb, 'sales-invoices', { limit: '500' }, { maxPages: 20 }),
-      readAllSmartLife(sb, 'purchases', { limit: '500' }, { maxPages: 20 }),
+      readLocalFinancialRecords(sb, 'sales_invoice'),
+      readLocalFinancialRecords(sb, 'purchase_invoice'),
     ]);
     return json({
-      source: 'SmartLife live read-only data', connected: true,
+      source: 'SmartLife synchronized local snapshot', connected: true,
       ...buildVatReport(sales.records, purchases.records, month, year, from, to),
-      sourceCounts: { sales: sales.total, purchases: purchases.total },
+      sourceCounts: { sales: sales.records.length, purchases: purchases.records.length },
     });
   } catch (error) {
     const classification = classifySmartErpError(error);

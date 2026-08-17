@@ -1,5 +1,36 @@
 'use strict';
 
+/* Purchases and Sales Invoices are local-first (erp_financial_source_records,
+   kept current by the existing canonical Sync job). VAT Report and the
+   Financial Reports hub used to call readAllSmartLife() directly for these
+   same two resources on every page load — a live, up-to-20-page SmartERP
+   walk that duplicated data already sitting in Postgres. That live call
+   existed specifically because the local snapshot could disagree with a
+   separate live Dashboard read; now that Purchases/Sales Invoices pages
+   themselves also read this same table, everything already agrees by
+   construction, so the duplicate live fetch is removed here too — raw_payload
+   is the exact original SmartERP record, so callers mapping over
+   `.records` need no changes. */
+async function readLocalFinancialRecords(sb, recordType) {
+  /* PostgREST caps an unranged select at its default row limit (1,000) —
+     without an explicit .range() a table with more rows than that (e.g.
+     1,987 purchases) would silently truncate. Walk in pages until a
+     short page signals the end, same stop condition used elsewhere in
+     this codebase for paginated SmartERP reads. */
+  const pageSize = 1000;
+  const records = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await sb.from('erp_financial_source_records')
+      .select('raw_payload')
+      .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife').eq('record_type', recordType)
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    records.push(...(data || []).map(row => row.raw_payload));
+    if (!data || data.length < pageSize) break;
+  }
+  return { records };
+}
+
 function first(record, keys) {
   for (const key of keys) {
     const value = record?.[key];
@@ -97,4 +128,4 @@ function buildVatReport(salesRecords, purchaseRecords, month = 'all', year = 'al
   };
 }
 
-module.exports = { first, roundMoney, dateKey, normalizeFinancialDocument, matchesPeriod, periodLabel, buildVatReport };
+module.exports = { first, roundMoney, dateKey, normalizeFinancialDocument, matchesPeriod, periodLabel, buildVatReport, readLocalFinancialRecords };

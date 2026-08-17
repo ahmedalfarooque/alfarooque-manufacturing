@@ -11,7 +11,7 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
-const { readAllSmartLife } = require('../../../../../shared/integrationPlatform');
+const { readLocalFinancialRecords } = require('@/lib/financialReportData');
 
 function r2(value) { return Math.round((Number(value) || 0) * 100) / 100; }
 function first(record, keys) { for (const k of keys) if (record?.[k] != null && record[k] !== '') return record[k]; return null; }
@@ -19,15 +19,17 @@ function first(record, keys) { for (const k of keys) if (record?.[k] != null && 
 export async function GET(req) {
   const { response } = await requireAction(req, 'view'); if (response) return response;
   const sb = getDb();
-  /* KPI totals are computed LIVE against the full real dataset (same
-     readAllSmartLife() the Dashboard API uses) rather than the local
-     erp_financial_source_records snapshot — that snapshot can be stale
-     relative to the live account and previously produced a DIFFERENT
-     "Total Purchases" figure than the Dashboard for the same real data,
-     which is exactly the kind of inconsistency this fix removes. */
+  /* KPI totals now read the same local snapshot (erp_financial_source_records)
+     the Purchases/Sales Invoices pages themselves read — previously this
+     called readAllSmartLife() live (a full up-to-20-page SmartERP walk on
+     every Reports-hub page load) specifically because that snapshot could
+     disagree with a separate live figure elsewhere. Now that the
+     Purchases/Sales Invoices pages are also local-first, everything reads
+     the one same table, so they agree by construction — the duplicate live
+     fetch this comment used to justify is gone. */
   const [salesResult, purchasesResult, payments, connections, integration] = await Promise.all([
-    readAllSmartLife(sb, 'sales-invoices', { limit: '500' }, { maxPages: 20 }).catch(() => ({ records: [] })),
-    readAllSmartLife(sb, 'purchases', { limit: '500' }, { maxPages: 20 }).catch(() => ({ records: [] })),
+    readLocalFinancialRecords(sb, 'sales_invoice').catch(() => ({ records: [] })),
+    readLocalFinancialRecords(sb, 'purchase_invoice').catch(() => ({ records: [] })),
     sb.from('erp_project_payments').select('direction,amount,origin'),
     sb.from('erp_financial_connections').select('id', { count: 'exact', head: true }),
     sb.from('crm_integrations').select('status,last_sync_at,last_error').eq('tenant_id', 'alfarooque').eq('integration_key', 'smartlife').maybeSingle(),
