@@ -645,7 +645,9 @@ function FinancialReportsView({ data, error, loading, lastSync, sync, busy, lang
                 <div className="mt-3 flex gap-2">
                   {r.available && r.href
                     ? <a href={r.href}><GlassButton size="sm">View</GlassButton></a>
-                    : <GlassButton size="sm" disabled>{r.available ? 'View in module' : 'Not available from SmartLife'}</GlassButton>}
+                    : r.available && r.crossApp
+                    ? <a href={`${getAppUrl(r.crossApp)}${r.crossAppPath || ''}`} target="_blank" rel="noreferrer"><GlassButton size="sm">Open in {r.crossApp === 'projects' ? 'ProTrack' : r.crossApp}</GlassButton></a>
+                    : <GlassButton size="sm" disabled>{r.available ? 'Shown above' : 'Not available from SmartLife'}</GlassButton>}
                 </div>
               </GlassCard>
             ))}

@@ -86,7 +86,7 @@ export async function GET(req) {
       { key: 'tax-rates', name: 'Tax Rates', description: 'Configured tax rates', href: '/smartlife/tax', available: true },
     ] },
     { key: 'projects', label: 'Projects', reports: [
-      { key: 'project-financials', name: 'Project Financials', description: 'Connected sales, purchases and payments per project', href: null, available: (connections.count || 0) > 0 },
+      { key: 'project-financials', name: 'Project Financials', description: 'Connected sales, purchases and payments per project', href: null, crossApp: 'projects', crossAppPath: '/projects', available: (connections.count || 0) > 0 },
     ] },
     { key: 'profitability', label: 'Profitability', reports: [
       { key: 'gross-profit', name: 'Gross Profit', description: 'Sales revenue minus actual purchase cost', href: null, available: hasSales || hasPurchases },
