@@ -128,7 +128,7 @@ export default function PurchaseRequestsPage() {
   function toReportRow(r) {
     return {
       number: r.pr_number || r.id.slice(0, 8), title: r.title || '—', priority: trEnum(t, 'priority', r.priority),
-      requestedBy: r.platform_users?.full_name || '—', status: trEnum(t, 'prStatus', r.status),
+      requestedBy: r.requester?.full_name || '—', status: trEnum(t, 'prStatus', r.status),
       date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '—',
     };
   }
@@ -193,7 +193,7 @@ export default function PurchaseRequestsPage() {
                   <td className="px-4 py-3 font-mono text-xs">{r.pr_number || r.id.slice(0, 8)}</td>
                   <td className="px-4 py-3 font-medium">{r.title}</td>
                   <td className={'px-4 py-3 font-medium ' + (PRIORITY_COLORS[r.priority] || '')}>{trEnum(t, 'priority', r.priority)}</td>
-                  <td className="px-4 py-3 text-[color:var(--tx-3)]">{r.platform_users?.full_name || '—'}</td>
+                  <td className="px-4 py-3 text-[color:var(--tx-3)]">{r.requester?.full_name || '—'}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={'text-xs px-2 py-0.5 rounded-full ' + (STATUS_COLORS[r.status] || '')}>
                       {trEnum(t, 'prStatus', r.status)}

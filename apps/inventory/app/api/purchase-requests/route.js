@@ -14,7 +14,7 @@ export async function GET(req) {
   const status = searchParams.get('status');
 
   let q = sb.from('inv_purchase_requests')
-    .select('*, platform_users!requested_by(full_name), platform_users!approved_by(full_name), inv_purchase_request_items(*)', { count: 'exact' });
+    .select('*, requester:platform_users!requested_by(full_name), approver:platform_users!approved_by(full_name), inv_purchase_request_items(*)', { count: 'exact' });
   if (status) q = q.eq('status', status);
 
   const { data, count, error } = await q.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
