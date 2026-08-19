@@ -131,10 +131,10 @@ export default function Shell({ children, active }) {
                     className={
                       'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
                       (isActive
-                        ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
+                        ? 'nav-active bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
                         : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
                     }>
-                    <GlassIcon name={item.icon} size={18} bare />
+                    <GlassIcon name={item.icon} size={21} bare />
                     <span>{lang === 'ar' ? item.labelAr : item.label}</span>
                   </a>
                 );

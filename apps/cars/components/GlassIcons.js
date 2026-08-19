@@ -10,7 +10,7 @@
 
 import { useEffect } from 'react';
 
-const KEY = 'af-glass-icons-v4';
+const KEY = 'af-glass-icons-v5';
 const URL = '/glass-icons.svg';
 
 /* Icons whose glass "plate" (frosted tile background) uses a differently-

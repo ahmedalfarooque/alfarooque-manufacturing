@@ -139,10 +139,10 @@ export default function Shell({ children, session }) {
                 className={
                   'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ' +
                   (active
-                    ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
+                    ? 'nav-active bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
                     : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
                 }>
-                <GlassIcon name={item.icon} size={20} className="shrink-0" bare />{item.label || t(item.key)}
+                <GlassIcon name={item.icon} size={21} className="shrink-0" bare />{item.label || t(item.key)}
               </Link>
             );
           })}

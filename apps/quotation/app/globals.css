@@ -650,3 +650,14 @@ html.dark .gtoast { background: linear-gradient(155deg, rgba(17,28,46,0.92), rgb
   .glass-ctrl.lang-toggle-btn { width: auto; height: 44px; padding: 0 14px; border-radius: 40px; font-size: 13px; gap: 0; }
   .glass-ctrl.lang-toggle-btn .ctrl-label { display: inline; font-size: 12px; }
 }
+
+/* Active sidebar nav item sits on a translucent blue tint
+   (--sidebar-active-bg) that is close in hue to the icon's own blue/cyan
+   gradient tint (--gi-t) - same color on similar color reads as low
+   contrast. The icon glyph's color comes from a single shared SVG
+   gradient definition (one <defs> block, referenced by every <use>
+   everywhere in the app), so it can't be recolored per nav item via a
+   CSS custom-property override the way theme switching works. Forcing
+   it to solid white via filter is the reliable way to match the active
+   item's already-white text without touching the shared icon defs. */
+.nav-active svg.gicon { filter: brightness(0) invert(1); }

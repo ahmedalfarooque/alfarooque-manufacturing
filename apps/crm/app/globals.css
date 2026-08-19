@@ -714,3 +714,14 @@ html.dark .crm-avatar--violet  { color: #c4b5fd; }
   font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--tx-4);
 }
+
+/* Active sidebar nav item sits on a translucent blue tint
+   (--sidebar-active-bg) that is close in hue to the icon's own blue/cyan
+   gradient tint (--gi-t) - same color on similar color reads as low
+   contrast. The icon glyph's color comes from a single shared SVG
+   gradient definition (one <defs> block, referenced by every <use>
+   everywhere in the app), so it can't be recolored per nav item via a
+   CSS custom-property override the way theme switching works. Forcing
+   it to solid white via filter is the reliable way to match the active
+   item's already-white text without touching the shared icon defs. */
+.nav-active svg.gicon { filter: brightness(0) invert(1); }
