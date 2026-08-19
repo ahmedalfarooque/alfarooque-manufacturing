@@ -17,38 +17,49 @@ html.dark { color-scheme: dark; }
    three copies identical.
    ═══════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Surfaces — deepened slightly from the original #F4F8FB/#EAF1F7 pair,
-     which read as too bright/washed-out; still clearly a light theme, just
-     with enough tone for cards/nav to visibly separate from the page. */
-  --bg:      #ECF1F5;
-  --bg-2:    #E1E9F0;
-  --bg-card: rgba(255,255,255,0.85);
-  --bd:      rgba(15,42,64,0.16);
-  --bd-2:    rgba(15,42,64,0.22);
-  /* Text — tx-2/tx-3/tx-4 darkened a step each for stronger contrast on
-     table headers, secondary labels and placeholder/helper text; tx stays
-     the same near-black primary. */
-  --tx:      #0B1B29;
-  --tx-2:    #2B4457;
-  --tx-3:    #47607A;
-  --tx-4:    #6E8398;
-  /* Cyan accent */
-  --pr:      #0891B2;
-  --pr-2:    #0E7490;
-  --pr-soft: rgba(6,182,212,0.14);
-  --nav-bg:  rgba(255,255,255,0.80);
-  /* Elevation — slightly stronger shadows so cards read with real depth
-     against the now-less-stark background. */
-  --sh-sm:   0 1px 2px rgba(11,27,41,0.07), 0 4px 14px rgba(11,27,41,0.08);
-  --sh-md:   0 2px 8px rgba(11,27,41,0.08), 0 14px 34px rgba(11,27,41,0.11);
-  --sh-lg:   0 6px 16px rgba(11,27,41,0.10), 0 28px 60px rgba(11,27,41,0.14);
-  /* Ambient orb tints (light) — trimmed back to stay subtle against the
-     slightly deeper background. */
-  --orb-1:   rgba(6,182,212,0.14);
-  --orb-2:   rgba(14,165,233,0.11);
-  --orb-3:   rgba(45,212,191,0.09);
-  --grid-ln: rgba(15,42,64,0.06);
-  --radius:  16px;
+  /* Professional enterprise light theme — flat surfaces, restrained
+     shadows, AL FAROOQUE blue accent. Replaces the earlier cyan-glass
+     palette; every consumer (.glass-card/.gbtn/.gtable/.ginput/.gmodal
+     etc. below) reads these same variables, so this token swap alone
+     re-themes every existing page/component with zero markup changes. */
+  --bg:      #F1F4F8;
+  --bg-2:    #E7ECF2;
+  --bg-card: #FFFFFF;
+  --bd:      rgba(15,42,64,0.10);
+  --bd-2:    rgba(15,42,64,0.14);
+  --tx:      #0F1F2E;
+  --tx-2:    #33475B;
+  --tx-3:    #57708A;
+  --tx-4:    #7C8FA3;
+  /* AL FAROOQUE blue accent (was cyan) */
+  --pr:      #2563EB;
+  --pr-2:    #1D4ED8;
+  --pr-soft: rgba(37,99,235,0.10);
+  --nav-bg:  #FFFFFF;
+  /* Deep navy — the app chrome (sidebar + header) only; every other
+     surface stays on --bg/--bg-card above. Dedicated text tokens because
+     near-black --tx text is unreadable on this dark background. */
+  --sidebar-bg:          #0F2A44;
+  --sidebar-bg-2:        #0B2237;
+  --sidebar-border:      rgba(255,255,255,0.08);
+  --sidebar-text:        #EAF1F8;
+  --sidebar-text-muted:  #93A7BD;
+  --sidebar-active-bg:   rgba(37,99,235,0.28);
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-hover-bg:    rgba(255,255,255,0.06);
+  /* Restrained elevation — thin border does most of the separation work,
+     shadows are a light finishing touch, not a glow effect. */
+  --sh-sm:   0 1px 2px rgba(15,42,64,0.06);
+  --sh-md:   0 2px 6px rgba(15,42,64,0.08);
+  --sh-lg:   0 8px 20px rgba(15,42,64,0.12);
+  /* Ambient orb layer retired for the professional theme (kept as inert
+     tokens so layout.js's <div className="af-ambient"> markup, still
+     present, paints nothing rather than requiring a JSX removal). */
+  --orb-1:   transparent;
+  --orb-2:   transparent;
+  --orb-3:   transparent;
+  --grid-ln: transparent;
+  --radius:  10px;
 }
 html.dark {
   --bg:      #060B16;
@@ -147,8 +158,8 @@ body {
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(6,182,212,.32); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
-::-webkit-scrollbar-thumb:hover { background: rgba(6,182,212,.5); background-clip: padding-box; }
+::-webkit-scrollbar-thumb { background: rgba(37,99,235,.32); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(37,99,235,.5); background-clip: padding-box; }
 html.dark ::-webkit-scrollbar-thumb { background: rgba(34,211,238,.28); background-clip: padding-box; }
 html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(34,211,238,.45); background-clip: padding-box; }
 
@@ -156,7 +167,7 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(34,211,238,.45); ba
    Tints ride on CSS vars the sprite's gradients read; they live on the
    injected #giSpriteRoot. Retinted to the cyan/steel/aqua family. ═══ */
 #giSpriteRoot svg {
-  --gi-t:  #0891B2; --gi-t2: #155E75; --gi-hl: #FFFFFF;
+  --gi-t:  #2563EB; --gi-t2: #1D4ED8; --gi-hl: #FFFFFF;
   --gw-t:  #C2740E; --gw-t2: #7A4A0E;   /* wood  */
   --gs-t:  #4B6B86; --gs-t2: #2B4256;   /* steel */
   --ga-t:  #0E9AA7; --ga-t2: #0B6470;   /* aluminium */
@@ -194,24 +205,12 @@ html.dark #giSpriteRoot svg {
   align-items: center;
   justify-content: center;
   height: 44px; width: 44px;
-  border-radius: 13px;
+  border-radius: 10px;
   border: 1px solid var(--bd-2);
-  background: linear-gradient(150deg, var(--pr-soft), transparent 75%), var(--bg-card);
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  background: var(--pr-soft);
   flex-shrink: 0;
   overflow: hidden;
 }
-.icon-tile::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35), transparent 60%);
-  opacity: 0.6;
-  pointer-events: none;
-}
-html.dark .icon-tile::after { background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.10), transparent 60%); }
 .icon-tile--sm { height: 34px; width: 34px; border-radius: 10px; }
 .icon-tile--lg { height: 56px; width: 56px; border-radius: 16px; }
 
@@ -222,11 +221,9 @@ html.dark .icon-tile::after { background: radial-gradient(circle at 30% 20%, rgb
   justify-content: center;
   gap: 6px;
   padding: 8px 14px;
-  border-radius: 40px;
+  border-radius: 8px;
   border: 1px solid var(--bd-2);
-  background: var(--nav-bg);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: var(--bg-card);
   color: var(--tx-3);
   font-family: inherit;
   font-size: 11px;
@@ -242,7 +239,7 @@ html.dark .icon-tile::after { background: radial-gradient(circle at 30% 20%, rgb
 }
 .glass-ctrl:hover {
   background: var(--pr-soft);
-  border-color: rgba(6,182,212,0.4);
+  border-color: rgba(37,99,235,0.4);
   color: var(--tx);
   transform: translateY(-2px);
   box-shadow: var(--sh-md), 0 0 22px var(--pr-soft);
@@ -253,6 +250,25 @@ html.dark .glass-ctrl:hover { border-color: rgba(34,211,238,0.45); }
   border-color: var(--pr);
   box-shadow: 0 0 0 3px var(--pr-soft);
 }
+/* Topbar sits on the navy sidebar-bg, not --bg-card — its controls need
+   the light-on-navy sidebar tokens instead of the default dark-on-light
+   ones, or they'd render unreadable navy-on-navy. */
+.af-topbar .glass-ctrl {
+  background: var(--sidebar-hover-bg);
+  border-color: var(--sidebar-border);
+  color: var(--sidebar-text-muted);
+  box-shadow: none;
+}
+.af-topbar .glass-ctrl:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.18);
+  color: var(--sidebar-active-text);
+  box-shadow: none;
+}
+.af-topbar .lang-btn { color: var(--sidebar-text-muted); }
+.af-topbar .lang-btn:hover, .af-topbar .lang-btn.active { color: var(--sidebar-active-text); background: var(--sidebar-hover-bg); }
+.af-topbar .lang-switcher { background: transparent; border-color: var(--sidebar-border); }
+
 .glass-ctrl .gicon { opacity: 1; }
 .glass-ctrl .ctrl-icon {
   font-size: 14px;
@@ -270,8 +286,6 @@ html.dark .glass-ctrl:hover { border-color: rgba(34,211,238,0.45); }
   border-radius: 40px;
   overflow: hidden;
   background: var(--nav-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   flex-shrink: 0;
 }
 .lang-btn {
@@ -328,8 +342,6 @@ html[dir="rtl"] .lang-btn.ar-btn { border-left: none; border-right: 1px solid va
   border: 1px solid var(--bd-2);
   background: var(--bg-card);
   color: var(--tx);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
   box-shadow: var(--sh-sm);
   transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
     box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.2s ease;
@@ -348,19 +360,20 @@ html[dir="rtl"] .lang-btn.ar-btn { border-left: none; border-right: 1px solid va
 .gbtn--icon.gbtn--sm { padding: 7px; width: 34px; height: 34px; }
 .gbtn--block { width: 100%; }
 
-/* Primary — cyan glass */
+/* Primary — solid AL FAROOQUE blue (light theme). Dark theme keeps its
+   existing translucent cyan-glass treatment, untouched. */
 .gbtn-primary {
-  background: linear-gradient(150deg, rgba(6,182,212,0.18), rgba(6,182,212,0.08));
-  border-color: rgba(6,182,212,0.42);
-  color: #06687e;
+  background: var(--pr);
+  border-color: var(--pr);
+  color: #FFFFFF;
 }
-.gbtn-primary:hover { background: linear-gradient(150deg, rgba(6,182,212,0.26), rgba(6,182,212,0.12)); border-color: rgba(6,182,212,0.6); box-shadow: var(--sh-md), 0 0 22px rgba(6,182,212,0.22); }
+.gbtn-primary:hover { background: var(--pr-2); border-color: var(--pr-2); box-shadow: var(--sh-md); }
 html.dark .gbtn-primary { background: linear-gradient(150deg, rgba(34,211,238,0.20), rgba(34,211,238,0.07)); border-color: rgba(34,211,238,0.42); color: #a8f2ff; }
 html.dark .gbtn-primary:hover { background: linear-gradient(150deg, rgba(34,211,238,0.30), rgba(34,211,238,0.12)); border-color: rgba(34,211,238,0.62); box-shadow: var(--sh-md), 0 0 26px rgba(34,211,238,0.28); }
 
-/* Secondary — neutral transparent glass */
+/* Secondary — neutral flat surface */
 .gbtn-secondary { background: var(--bg-card); border-color: var(--bd-2); color: var(--tx-2); }
-.gbtn-secondary:hover { border-color: rgba(6,182,212,0.4); color: var(--tx); background: var(--pr-soft); }
+.gbtn-secondary:hover { border-color: rgba(37,99,235,0.4); color: var(--tx); background: var(--pr-soft); }
 html.dark .gbtn-secondary:hover { border-color: rgba(34,211,238,0.4); }
 
 /* Ghost — minimal, borderless until hover */
@@ -398,15 +411,13 @@ html.dark .gbtn-danger { color: #fca5a5; }
   position: relative;
   border-radius: var(--radius);
   border: 1px solid var(--bd-2);
-  background: linear-gradient(155deg, rgba(255,255,255,0.86) 0%, rgba(240,247,252,0.66) 100%);
-  backdrop-filter: blur(22px) saturate(170%);
-  -webkit-backdrop-filter: blur(22px) saturate(170%);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.85) inset, var(--sh-md);
-  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.3s ease;
+  background: var(--bg-card);
+  box-shadow: var(--sh-sm);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .glass-card:hover {
-  border-color: rgba(6,182,212,0.32);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.85) inset, var(--sh-lg), 0 0 30px rgba(6,182,212,0.08);
+  border-color: rgba(37,99,235,0.28);
+  box-shadow: var(--sh-md);
 }
 html.dark .glass-card {
   background: linear-gradient(155deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.022) 100%);
@@ -430,8 +441,6 @@ html.dark .glass-card:hover {
   font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--tx-3);
   background: var(--nav-bg);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
   border-bottom: 1px solid var(--bd-2);
   white-space: nowrap;
 }
@@ -451,8 +460,6 @@ html.dark .glass-card:hover {
   border-radius: 11px;
   border: 1px solid var(--bd-2);
   background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   padding: 11px 13px;
   font-size: 13px;
   color: var(--tx);
@@ -547,15 +554,13 @@ html[dir="rtl"] .gfield-float > label { transform-origin: right center; }
   padding: 3px 10px; border-radius: 999px;
   font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
   border: 1px solid transparent;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 /* ═══ Glass tabs / segmented ═══ */
-.gtabs { display: inline-flex; gap: 3px; padding: 4px; border-radius: 12px; border: 1px solid var(--bd-2); background: var(--bg-card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.gtabs { display: inline-flex; gap: 3px; padding: 4px; border-radius: 12px; border: 1px solid var(--bd-2); background: var(--bg-card); }
 .gtab { padding: 7px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: var(--tx-3); background: transparent; border: none; cursor: pointer; transition: color 0.2s ease, background 0.2s ease; white-space: nowrap; }
 .gtab:hover { color: var(--tx); }
-.gtab.active { color: var(--pr); background: var(--pr-soft); box-shadow: inset 0 0 0 1px rgba(6,182,212,0.22); }
+.gtab.active { color: var(--pr); background: var(--pr-soft); box-shadow: inset 0 0 0 1px rgba(37,99,235,0.22); }
 html.dark .gtab.active { box-shadow: inset 0 0 0 1px rgba(34,211,238,0.28); }
 
 /* ═══ Glass modal ═══ */
@@ -569,11 +574,9 @@ html.dark .gtab.active { box-shadow: inset 0 0 0 1px rgba(34,211,238,0.28); }
 .gmodal-panel {
   position: relative;
   z-index: 51;
-  border-radius: 22px;
+  border-radius: 14px;
   border: 1px solid var(--bd-2);
-  background: linear-gradient(160deg, rgba(255,255,255,0.94), rgba(240,247,252,0.82));
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  background: var(--bg-card);
   box-shadow: var(--sh-lg);
   animation: gmodal-rise 0.28s cubic-bezier(0.22,1,0.36,1);
 }
@@ -592,7 +595,7 @@ html.dark .gmodal-panel { background: linear-gradient(160deg, rgba(17,28,46,0.92
 }
 .gskeleton::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(6,182,212,0.14), transparent);
+  background: linear-gradient(90deg, transparent, rgba(37,99,235,0.14), transparent);
   transform: translateX(-100%);
   animation: gskel 1.3s ease-in-out infinite;
 }
@@ -607,9 +610,7 @@ html.dark .gskeleton::after { background: linear-gradient(90deg, transparent, rg
   min-width: 240px; max-width: 380px;
   padding: 12px 14px; border-radius: 13px;
   border: 1px solid var(--bd-2);
-  background: linear-gradient(155deg, rgba(255,255,255,0.92), rgba(240,247,252,0.8));
-  backdrop-filter: blur(24px) saturate(170%);
-  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  background: var(--bg-card);
   box-shadow: var(--sh-lg);
   color: var(--tx);
   font-size: 13px;

@@ -103,16 +103,16 @@ export default function Shell({ children, active }) {
       <ModuleActionVisibility />
       {/* Sidebar */}
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
-        'bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 border-e border-[color:var(--bd)] ' +
+        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform af-sidebar ' +
+        'bg-[color:var(--sidebar-bg)] border-e border-[color:var(--sidebar-border)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
       }>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-[color:var(--bd)] shrink-0">
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-[color:var(--sidebar-border)] shrink-0">
           <img src="/logo.png" alt="AF" className="h-9 w-9 object-contain rounded-xl" />
           <div>
-            <div className="text-[color:var(--tx)] font-bold text-sm leading-tight">AL FAROOQUE</div>
-            <div className="text-[color:var(--tx-3)] text-[10px]">{lang === 'ar' ? 'المحاسبة' : 'Accounting'}</div>
+            <div className="text-[color:var(--sidebar-active-text)] font-bold text-sm leading-tight">AL FAROOQUE</div>
+            <div className="text-[color:var(--sidebar-text-muted)] text-[10px]">{lang === 'ar' ? 'المحاسبة' : 'Accounting'}</div>
           </div>
         </div>
         {/* Nav */}
@@ -120,7 +120,7 @@ export default function Shell({ children, active }) {
           {NAV_GROUPS.map((section, sectionIndex) => (
             <div key={section.group || `ungrouped-${sectionIndex}`}>
               {section.group && (
-                <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--tx-4)]">
+                <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-text-muted)]">
                   {lang === 'ar' ? section.groupAr : section.group}
                 </div>
               )}
@@ -131,8 +131,8 @@ export default function Shell({ children, active }) {
                     className={
                       'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
                       (isActive
-                        ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] border border-[rgba(6,182,212,0.25)]'
-                        : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
+                        ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
+                        : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
                     }>
                     <GlassIcon name={item.icon} size={18} />
                     <span>{lang === 'ar' ? item.labelAr : item.label}</span>
@@ -144,9 +144,9 @@ export default function Shell({ children, active }) {
         </nav>
         {/* User */}
         {user && (
-          <div className="px-4 py-3 border-t border-[color:var(--bd)] shrink-0">
-            <div className="text-xs font-medium text-[color:var(--tx-2)] truncate">{user.email}</div>
-            <div className="text-[10px] text-[color:var(--tx-4)] capitalize">{user.role}</div>
+          <div className="px-4 py-3 border-t border-[color:var(--sidebar-border)] shrink-0">
+            <div className="text-xs font-medium text-[color:var(--sidebar-text)] truncate">{user.email}</div>
+            <div className="text-[10px] text-[color:var(--sidebar-text-muted)] capitalize">{user.role}</div>
           </div>
         )}
       </aside>
@@ -157,7 +157,7 @@ export default function Shell({ children, active }) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="h-16 shrink-0 flex items-center gap-3 px-4 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-xl">
+        <header className="af-topbar h-16 shrink-0 flex items-center gap-3 px-4 border-b border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-bg)]">
           <button className="lg:hidden glass-ctrl gbtn--icon" onClick={() => setSidebarOpen(o => !o)}>☰</button>
           <div className="flex-1" />
           <AppSwitcherButtons user={user} />
