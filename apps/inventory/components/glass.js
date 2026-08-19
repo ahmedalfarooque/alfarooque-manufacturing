@@ -44,7 +44,7 @@ export function IconTile({ size, className = '', children }) {
 /* ── Badge (tone-tinted transparent glass) ── */
 const BADGE_TONE = {
   neutral: 'text-[color:var(--tx-2)] border-[color:var(--bd-2)] bg-[color:var(--bg-card)]',
-  cyan:    'text-[#0b7c93] dark:text-[#67e8f9] border-[rgba(6,182,212,0.4)] bg-[rgba(6,182,212,0.12)]',
+  cyan:    'text-[#1d4ed8] dark:text-[#67e8f9] border-[rgba(37,99,235,0.4)] dark:border-[rgba(6,182,212,0.4)] bg-[rgba(37,99,235,0.1)] dark:bg-[rgba(6,182,212,0.12)]',
   emerald: 'text-[#067a55] dark:text-[#6ee7b7] border-[rgba(16,185,129,0.4)] bg-[rgba(16,185,129,0.12)]',
   amber:   'text-[#a9660a] dark:text-[#fcd34d] border-[rgba(245,158,11,0.42)] bg-[rgba(245,158,11,0.13)]',
   red:     'text-[#c2362f] dark:text-[#fca5a5] border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.12)]',
@@ -153,22 +153,24 @@ export function GlassToast({ toast, onClose }) {
   );
 }
 
-/* ── Chart theming helper for recharts (colors read the cyan palette). ── */
-export const CHART_COLORS = ['#06B6D4', '#0EA5E9', '#2DD4BF', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#64748B'];
+/* ── Chart theming helper for recharts (semantic enterprise palette —
+   blue primary, matching the flat navy-sidebar/blue-accent theme; dark
+   mode's actual --pr accent is cyan, so primary/primarySoft stay
+   theme-aware to match). ── */
+export const CHART_COLORS = ['#2563EB', '#0EA5E9', '#2DD4BF', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#64748B'];
 export function chartTheme(dark) {
   return {
     grid: dark ? 'rgba(120,190,230,0.10)' : 'rgba(15,42,64,0.08)',
     axis: dark ? '#8299AE' : '#5B7690',
     tooltip: {
-      background: dark ? 'rgba(11,20,36,0.92)' : 'rgba(255,255,255,0.95)',
+      background: dark ? 'rgba(11,20,36,0.95)' : 'rgba(255,255,255,0.98)',
       border: dark ? '1px solid rgba(120,190,230,0.18)' : '1px solid rgba(15,42,64,0.12)',
       borderRadius: 12,
-      backdropFilter: 'blur(16px)',
       color: dark ? '#E8F1F8' : '#0B1B29',
       boxShadow: '0 10px 34px rgba(0,0,0,0.25)',
       fontSize: 12,
     },
-    primary: '#06B6D4',
-    primarySoft: dark ? 'rgba(34,211,238,0.25)' : 'rgba(6,182,212,0.2)',
+    primary: dark ? '#22D3EE' : '#2563EB',
+    primarySoft: dark ? 'rgba(34,211,238,0.25)' : 'rgba(37,99,235,0.2)',
   };
 }

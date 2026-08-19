@@ -15,6 +15,7 @@ import { GlassIcon } from '@/components/GlassIcons';
 import { useLanguage } from '@/lib/i18n';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassModal, GlassInput, GlassSelect, GlassTextarea, GlassToast, GlassButton, GlassBadge } from '@/components/glass';
+import ListPagination from '@/components/Pagination';
 
 const REFRESH_MS = 30000;
 
@@ -372,25 +373,25 @@ export default function ProductsPage() {
 
       <div className="glass-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-[color:var(--bd)] bg-[color:var(--bg-card)]">
+          <table className="gtable text-sm">
+            <thead>
               <tr>
-                <th className="text-start px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('common.name')}</th>
-                <th className="text-start px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('products.sku')}</th>
-                <th className="text-start px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('common.category')}</th>
-                <th className="text-end px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('stock.qtyOnHand')}</th>
-                <th className="text-end px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('products.costPrice')}</th>
-                <th className="text-center px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('common.status')}</th>
-                <th className="px-4 py-3"></th>
+                <th className="text-start">{t('common.name')}</th>
+                <th className="text-start">{t('products.sku')}</th>
+                <th className="text-start">{t('common.category')}</th>
+                <th className="text-end">{t('stock.qtyOnHand')}</th>
+                <th className="text-end">{t('products.costPrice')}</th>
+                <th className="text-center">{t('common.status')}</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[color:var(--bd)]">
+            <tbody>
               {products.length === 0 && (
                 <tr><td colSpan={7} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>
               )}
               {products.map(p => (
-                <tr key={p.id} className="hover:bg-[color:var(--pr-soft)] transition-colors cursor-pointer" onClick={() => (p.read_only ? openView(p) : openEdit(p))}>
-                  <td className="px-4 py-3 font-medium">
+                <tr key={p.id} className="cursor-pointer" onClick={() => (p.read_only ? openView(p) : openEdit(p))}>
+                  <td className="font-medium">
                     {p.name}
                     {p.read_only && (
                       <GlassBadge tone={p.business_role === 'unclassified' ? 'amber' : 'cyan'} className="ms-2" title={t('sl.readOnlySource')}>
@@ -398,16 +399,16 @@ export default function ProductsPage() {
                       </GlassBadge>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[color:var(--tx-3)]">{p.sku || '—'}</td>
-                  <td className="px-4 py-3 text-[color:var(--tx-3)]">{p.category_name || p.inv_categories?.name || '—'}</td>
-                  <td className="px-4 py-3 text-end font-semibold">{Number(p.qty_on_hand || 0).toLocaleString()} <span className="text-[color:var(--tx-3)] font-normal text-xs">{p.unit_name || p.inv_units?.symbol || ''}</span></td>
-                  <td className="px-4 py-3 text-end">{money(p.cost_price)}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={'text-xs px-2 py-0.5 rounded-full ' + (p.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-[color:var(--pr-soft)] text-[color:var(--tx-3)]')}>
+                  <td className="text-[color:var(--tx-3)]">{p.sku || '—'}</td>
+                  <td className="text-[color:var(--tx-3)]">{p.category_name || p.inv_categories?.name || '—'}</td>
+                  <td className="text-end font-semibold tabular-nums">{Number(p.qty_on_hand || 0).toLocaleString()} <span className="text-[color:var(--tx-3)] font-normal text-xs">{p.unit_name || p.inv_units?.symbol || ''}</span></td>
+                  <td className="text-end tabular-nums">{money(p.cost_price)}</td>
+                  <td className="text-center">
+                    <GlassBadge tone={p.is_active ? 'emerald' : 'slate'}>
                       {p.is_active ? t('common.active') : t('common.inactive')}
-                    </span>
+                    </GlassBadge>
                   </td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                  <td onClick={e => e.stopPropagation()}>
                     <div className="flex items-center gap-1 justify-end">
                       <button onClick={() => runSingleReport(p, 'print')} className="gbtn gbtn-ghost gbtn--sm" disabled={!!reportBusy}>{t('materials.print')}</button>
                       <button onClick={() => runSingleReport(p, 'save')} className="gbtn gbtn-ghost gbtn--sm" disabled={!!reportBusy}>{t('materials.downloadPdf')}</button>
@@ -440,25 +441,8 @@ export default function ProductsPage() {
             </tbody>
           </table>
         </div>
-        {total > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-[color:var(--bd)] text-sm text-[color:var(--tx-3)]">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span>{t('common.showing', { from: total ? (page - 1) * pageSize + 1 : 0, to: Math.min(page * pageSize, total), total })}</span>
-              <span className="flex items-center gap-1.5">
-                <GlassSelect value={String(pageSize)} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="w-20">
-                  <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="500">500</option>
-                </GlassSelect>
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(1)} className="gbtn gbtn-ghost gbtn--sm">First</button>
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.prev')}</button>
-              <span className="px-2 self-center">{page} / {Math.max(1, Math.ceil(total / pageSize))}</span>
-              <button disabled={page * pageSize >= total} onClick={() => setPage(p => p + 1)} className="gbtn gbtn-ghost gbtn--sm">{t('common.next')}</button>
-              <button disabled={page * pageSize >= total} onClick={() => setPage(Math.max(1, Math.ceil(total / pageSize)))} className="gbtn gbtn-ghost gbtn--sm">Last</button>
-            </div>
-          </div>
-        )}
+        <ListPagination page={page} pageSize={pageSize} total={total}
+          onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} t={t} />
       </div>
 
       {(modal === 'add' || modal === 'edit') && (

@@ -129,35 +129,35 @@ export default function StockPage() {
 
       <div className="glass-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-[color:var(--bd)] bg-[color:var(--bg-card)]">
+          <table className="gtable text-sm">
+            <thead>
               <tr>
-                <th className="text-start px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('common.name')}</th>
-                <th className="text-start px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('common.code')}</th>
-                <th className="text-start px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('nav.warehouses')}</th>
-                <th className="text-start px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('nav.locations')}</th>
-                <th className="text-end px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('stock.qtyOnHand')}</th>
-                <th className="text-end px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('stock.qtyReserved')}</th>
-                <th className="text-end px-4 py-3 font-medium text-[color:var(--tx-3)]">{t('stock.avgCost')}</th>
-                <th className="px-4 py-3"></th>
+                <th className="text-start">{t('common.name')}</th>
+                <th className="text-start">{t('common.code')}</th>
+                <th className="text-start">{t('nav.warehouses')}</th>
+                <th className="text-start">{t('nav.locations')}</th>
+                <th className="text-end">{t('stock.qtyOnHand')}</th>
+                <th className="text-end">{t('stock.qtyReserved')}</th>
+                <th className="text-end">{t('stock.avgCost')}</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[color:var(--bd)]">
+            <tbody>
               {stock.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-[color:var(--tx-3)]">{t('common.noData')}</td></tr>}
               {stock.map(row => {
                 const name = row.inv_products?.name || row.inv_materials?.name || '—';
                 const code = row.inv_products?.sku || row.inv_materials?.material_code || '—';
                 const qty = Number(row.qty_on_hand || 0);
                 return (
-                  <tr key={row.id} className={'hover:bg-[color:var(--pr-soft)] transition-colors' + (qty <= 0 ? ' opacity-60' : '')}>
-                    <td className="px-4 py-3 font-medium">{name}</td>
-                    <td className="px-4 py-3 text-[color:var(--tx-3)]">{code}</td>
-                    <td className="px-4 py-3 text-[color:var(--tx-3)]">{row.inv_warehouses?.name || '—'}</td>
-                    <td className="px-4 py-3 text-[color:var(--tx-3)]">{row.inv_locations?.name || '—'}</td>
-                    <td className={'px-4 py-3 text-end font-semibold ' + (qty <= 0 ? 'text-red-500' : qty <= 5 ? 'text-amber-500' : '')}>{qty.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-end text-[color:var(--tx-3)]">{Number(row.qty_reserved || 0).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-end">SAR {Number(row.avg_cost || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3">
+                  <tr key={row.id} className={qty <= 0 ? 'opacity-60' : ''}>
+                    <td className="font-medium">{name}</td>
+                    <td className="text-[color:var(--tx-3)]">{code}</td>
+                    <td className="text-[color:var(--tx-3)]">{row.inv_warehouses?.name || '—'}</td>
+                    <td className="text-[color:var(--tx-3)]">{row.inv_locations?.name || '—'}</td>
+                    <td className={'text-end font-semibold tabular-nums ' + (qty <= 0 ? 'text-red-500' : qty <= 5 ? 'text-amber-500' : '')}>{qty.toLocaleString()}</td>
+                    <td className="text-end tabular-nums text-[color:var(--tx-3)]">{Number(row.qty_reserved || 0).toLocaleString()}</td>
+                    <td className="text-end tabular-nums">SAR {Number(row.avg_cost || 0).toFixed(2)}</td>
+                    <td>
                       <button onClick={() => openAdjust(row)} className="gbtn gbtn-ghost gbtn--sm" title={t('stock.adjust')}>
                         <GlassIcon name="edit" size={14} bare />{t('stock.adjust')}
                       </button>
