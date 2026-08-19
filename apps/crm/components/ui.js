@@ -101,7 +101,7 @@ export function Modal({ title, children, onClose, wide, footer }) {
         </div>
         <div className="px-5 lg:px-6 py-5">{children}</div>
         {footer && (
-          <div className="sticky bottom-0 px-5 lg:px-6 py-3.5 border-t border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-xl rounded-b-[22px] flex items-center justify-end gap-2">
+          <div className="sticky bottom-0 px-5 lg:px-6 py-3.5 border-t border-[color:var(--bd)] bg-[color:var(--nav-bg)] rounded-b-[14px] flex items-center justify-end gap-2">
             {footer}
           </div>
         )}
