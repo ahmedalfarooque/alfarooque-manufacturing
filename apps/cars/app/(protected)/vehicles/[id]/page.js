@@ -8,6 +8,7 @@ import { expiryInfo } from '@/lib/expiry';
 import { VehicleModal } from '@/app/(protected)/vehicles/page';
 import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
 import { Button } from '@/components/ui';
+import { GlassIcon } from '@/components/GlassIcons';
 
 const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -66,7 +67,7 @@ export default function VehicleViewPage() {
 
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
         <div className="glass-card glass-card--pad flex flex-col items-center text-center">
-          <div className="h-24 w-24 rounded-full bg-slate-700 text-white flex items-center justify-center text-2xl font-medium mb-3">🚚</div>
+          <span className="icon-tile icon-tile--lg mb-3"><GlassIcon name="truck" size={26} bare /></span>
           <div className="font-semibold">{v.name || v.vehicle_number}</div>
           <div className="text-xs text-[color:var(--tx-3)]">{trEnum(t, 'vtype', v.type)} · {trEnum(t, 'fuel', v.fuel_type)}</div>
           <div className="text-xs text-[color:var(--tx-3)] mt-1">{v.drivers?.full_name ? t('vehicleView.driverPrefix', { name: v.drivers.full_name }) : (v.driver || t('vehicleView.noDriver'))}</div>

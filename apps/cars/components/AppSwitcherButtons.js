@@ -59,7 +59,7 @@ export default function AppSwitcherButtons({ user }) {
         return (
           <button key={id} type="button" onClick={() => go(id)} disabled={busy === id}
             aria-current={isActive ? 'page' : undefined} title={L[id]}
-            className={'glass-ctrl app-switch-btn' + (isActive ? ' !bg-[color:var(--pr-soft)] !text-[color:var(--pr)] !border-[rgba(6,182,212,0.4)]' : '')}>
+            className={'glass-ctrl app-switch-btn' + (isActive ? ' !bg-[color:var(--pr-soft)] !text-[color:var(--pr)] !border-[color:var(--pr)]' : '')}>
             <span className="ctrl-label whitespace-nowrap">{L[id]}{busy === id ? '…' : ''}</span>
           </button>
         );

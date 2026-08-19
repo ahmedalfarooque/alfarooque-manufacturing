@@ -142,7 +142,7 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
         📅 {dateFilterLabel(value, t, lang)}
       </GlassButton>
       {open && (
-        <div className="absolute z-20 mt-1 w-64 rounded-xl border border-[color:var(--bd)] bg-[color:var(--nav-bg)] p-2 shadow-xl backdrop-blur-xl">
+        <div className="glass-card glass-card--flat absolute z-20 mt-1 w-64 !rounded-xl p-2">
           <div className="grid grid-cols-2 gap-1">
             {presets.map(p => (
               <button key={p.key} onClick={() => pick(p.key)}

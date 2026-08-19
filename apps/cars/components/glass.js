@@ -115,7 +115,7 @@ function _subscribe(fn) { _subs.add(fn); return () => _subs.delete(fn); }
 function _snapshot() { return _toasts; }
 
 const TOAST_ACCENT = {
-  neutral: 'var(--pr)', cyan: '#06b6d4', emerald: '#10b981',
+  neutral: 'var(--pr)', cyan: '#2563eb', emerald: '#10b981',
   amber: '#f59e0b', red: '#ef4444',
 };
 export function GlassToastHost() {
@@ -136,7 +136,7 @@ export function GlassToastHost() {
 }
 
 /* ── Chart theming helper for recharts (colors read the cyan palette). ── */
-export const CHART_COLORS = ['#06B6D4', '#0EA5E9', '#2DD4BF', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#64748B'];
+export const CHART_COLORS = ['#2563EB', '#0EA5E9', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#64748B', '#0891B2'];
 export function chartTheme(dark) {
   return {
     grid: dark ? 'rgba(120,190,230,0.10)' : 'rgba(15,42,64,0.08)',
@@ -150,7 +150,7 @@ export function chartTheme(dark) {
       boxShadow: '0 10px 34px rgba(0,0,0,0.25)',
       fontSize: 12,
     },
-    primary: '#06B6D4',
-    primarySoft: dark ? 'rgba(34,211,238,0.25)' : 'rgba(6,182,212,0.2)',
+    primary: dark ? '#22D3EE' : '#2563EB',
+    primarySoft: dark ? 'rgba(34,211,238,0.25)' : 'rgba(37,99,235,0.2)',
   };
 }
