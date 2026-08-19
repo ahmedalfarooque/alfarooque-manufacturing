@@ -81,28 +81,28 @@ export default function Shell({ children, active }) {
       <ModuleActionVisibility />
       {/* Sidebar */}
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
-        'bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 border-e border-[color:var(--bd)] ' +
+        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform af-sidebar ' +
+        'bg-[color:var(--sidebar-bg)] border-e border-[color:var(--sidebar-border)] ' +
         'shadow-[8px_0_40px_rgba(11,27,41,0.06)] dark:shadow-[8px_0_40px_rgba(0,0,0,0.4)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-[color:var(--bd)]">
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-[color:var(--sidebar-border)]">
           <span className="icon-tile icon-tile--sm !p-0 overflow-hidden">
             <img src="/logo.png" alt="AL FAROOQUE" className="h-6 w-6 object-contain" />
           </span>
           <div>
-            <div className="font-semibold text-sm leading-tight">Inventory</div>
-            <div className="text-[11px] text-[color:var(--tx-4)]">{t('shell.tagline')}</div>
+            <div className="font-semibold text-sm leading-tight text-[color:var(--sidebar-active-text)]">Inventory</div>
+            <div className="text-[11px] text-[color:var(--sidebar-text-muted)]">{t('shell.tagline')}</div>
           </div>
         </div>
-        <div className="px-5 pt-3 pb-1 text-[11px] uppercase tracking-wider text-[color:var(--tx-4)]">{user?.role ? trEnum(t, 'role', user.role) : ' '}</div>
-        <div className="mx-3 mb-1 flex items-center gap-2.5 rounded-xl px-3 py-2.5 border border-[color:var(--bd)] bg-[color:var(--bg-card)]">
-          <span className="h-8 w-8 rounded-full grid place-items-center text-xs font-semibold text-[color:var(--pr)] bg-[color:var(--pr-soft)] border border-[rgba(6,182,212,0.3)] shrink-0">
+        <div className="px-5 pt-3 pb-1 text-[11px] uppercase tracking-wider text-[color:var(--sidebar-text-muted)]">{user?.role ? trEnum(t, 'role', user.role) : ' '}</div>
+        <div className="mx-3 mb-1 flex items-center gap-2.5 rounded-xl px-3 py-2.5 border border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-hover-bg)]">
+          <span className="h-8 w-8 rounded-full grid place-items-center text-xs font-semibold text-[color:var(--sidebar-active-text)] bg-[color:var(--sidebar-active-bg)] border border-[color:var(--sidebar-border)] shrink-0">
             {(user?.full_name || user?.email || '?').slice(0, 1).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <div className="text-sm truncate">{user?.full_name || t('shell.loading')}</div>
-            <div className="text-[11px] text-[color:var(--tx-4)] capitalize truncate">{user?.role ? trEnum(t, 'role', user.role) : ''}</div>
+            <div className="text-sm truncate text-[color:var(--sidebar-text)]">{user?.full_name || t('shell.loading')}</div>
+            <div className="text-[11px] text-[color:var(--sidebar-text-muted)] capitalize truncate">{user?.role ? trEnum(t, 'role', user.role) : ''}</div>
           </div>
         </div>
         <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
@@ -111,8 +111,8 @@ export default function Shell({ children, active }) {
               className={
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ' +
                 (active === item.href
-                  ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] shadow-[inset_0_0_0_1px_rgba(6,182,212,0.28)]'
-                  : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
+                  ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
+                  : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
               }>
               <GlassIcon name={item.icon} size={20} className="shrink-0" />{item.key === 'Users' ? 'Users' : t(item.key)}
             </a>
@@ -124,10 +124,10 @@ export default function Shell({ children, active }) {
 
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 flex items-center justify-between gap-3 px-4 lg:px-6 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
+        <header className="af-topbar h-16 flex items-center justify-between gap-3 px-4 lg:px-6 border-b border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-bg)] sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <button className="lg:hidden gbtn gbtn-ghost gbtn--icon gbtn--sm text-xl" onClick={() => setSidebarOpen(true)} aria-label="Menu">☰</button>
-            <h1 className="font-semibold text-lg hidden sm:block">{t(NAV.find(n => n.href === active)?.key) || active.replace('/', '')}</h1>
+            <button className="lg:hidden gbtn gbtn-ghost gbtn--icon gbtn--sm text-xl text-[color:var(--sidebar-text)]" onClick={() => setSidebarOpen(true)} aria-label="Menu">☰</button>
+            <h1 className="font-semibold text-lg hidden sm:block text-[color:var(--sidebar-active-text)]">{t(NAV.find(n => n.href === active)?.key) || active.replace('/', '')}</h1>
           </div>
           <div className="flex items-center gap-3 flex-1 max-w-md relative">
             <input
