@@ -57,7 +57,7 @@ export default function DashboardPage() {
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 gfade-up">
             <div className="lg:col-span-2">
               <StatCard icon="chart" tone="brand" href="/quotations" label={t('dashboard.totalQuotations')} value={formatNumber(stats.total || 0)} sub={t('dashboard.allTime')}
-                bars={{ values: [stats.draft || 0, stats.pending || 0, stats.sent || 0, stats.accepted || 0], colors: ['#F59E0B', '#0EA5E9', '#06B6D4', '#10B981'] }} />
+                bars={{ values: [stats.draft || 0, stats.pending || 0, stats.sent || 0, stats.accepted || 0], colors: ['#F59E0B', '#0EA5E9', '#2563EB', '#10B981'] }} />
             </div>
             <StatCard icon="receipt" tone="brand" href="/reports" label={t('dashboard.quotedValueMonth')} value={formatNumber(stats.quotedMonth || 0, { minimumFractionDigits: 2 })} sub={t('dashboard.thisMonth')}
               trend={stats.monthly} trendKey="quoted" trendLabelKey="month" />

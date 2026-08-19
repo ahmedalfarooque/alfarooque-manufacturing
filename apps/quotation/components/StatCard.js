@@ -8,12 +8,22 @@ const TONE_COLOR = {
   emerald: '#10B981',
   amber: '#F59E0B',
   red: '#EF4444',
-  brand: '#06B6D4',
-  cyan: '#06B6D4',
+  brand: '#2563EB',
+  cyan: '#2563EB',
   blue: '#0EA5E9',
   violet: '#8B5CF6',
   teal: '#2DD4BF',
 };
+
+/* Left-accent bar tone — mirrors the accounting dashboard's KPI_ACCENT
+   convention (success=green, danger=red, everything else=the tone's own
+   color) so QuotePro's stat cards get the same compact enterprise-ERP
+   "colored edge" treatment instead of reading as a bare glass tile. */
+function accentColor(tone, color) {
+  if (tone === 'emerald') return '#10b981';
+  if (tone === 'red') return '#ef4444';
+  return color;
+}
 
 export default function StatCard({ icon, label, value, sub, tone, href, onClick, trend, trendKey = 'value', trendLabelKey = 'label', ringPct, bars, typewriter }) {
   const color = TONE_COLOR[tone] || TONE_COLOR.slate;
@@ -22,7 +32,8 @@ export default function StatCard({ icon, label, value, sub, tone, href, onClick,
   const chartKey = trend ? JSON.stringify(trend) : bars ? bars.values.join(',') : String(ringPct);
   return (
     <Tag {...(href ? { href } : {})} {...(onClick ? { onClick, type: 'button' } : {})}
-      className={'glass-card glass-card--pad flex flex-col gap-2 text-start w-full' + (clickable ? ' cursor-pointer' : '')}>
+      className={'glass-card glass-card--pad flex flex-col gap-2 text-start w-full overflow-hidden' + (clickable ? ' cursor-pointer' : '')}>
+      <span className="absolute inset-y-0 start-0 w-[3px]" style={{ background: accentColor(tone, color) }} aria-hidden="true" />
       <span className="icon-tile relative" aria-hidden="true">
         <span className="absolute inset-0.5 rounded-[11px]" style={{ background: `radial-gradient(circle at 35% 25%, ${color}38, transparent 72%)` }} />
         <GlassIcon name={icon} size={38} bare className="relative" />

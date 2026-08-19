@@ -136,7 +136,7 @@ export function GlassToastHost() {
 }
 
 /* ── Chart theming helper for recharts (colors read the cyan palette). ── */
-export const CHART_COLORS = ['#06B6D4', '#0EA5E9', '#2DD4BF', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#64748B'];
+export const CHART_COLORS = ['#2563EB', '#0EA5E9', '#2DD4BF', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#64748B'];
 export function chartTheme(dark) {
   return {
     grid: dark ? 'rgba(120,190,230,0.10)' : 'rgba(15,42,64,0.08)',
