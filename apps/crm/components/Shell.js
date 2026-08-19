@@ -23,7 +23,7 @@ const NAV = [
   { href: '/search', key: 'search', icon: 'search' },
   { href: '/deals', key: 'deals', icon: 'target' },
   { href: '/activities', key: 'activities', icon: 'clock' },
-  { href: '/pipeline', key: 'pipeline', icon: 'chart' },
+  { href: '/pipeline', key: 'pipeline', icon: 'kanban' },
   { href: '/workspace', key: 'workspace', icon: 'user' },
   { href: '/analytics', key: 'analytics', icon: 'chart' },
   { href: '/attention', key: 'attention', icon: 'bell' },
