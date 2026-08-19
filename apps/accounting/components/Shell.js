@@ -22,43 +22,43 @@ import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
    (no SmartERP expenses endpoint exists to replace it with). */
 const NAV_GROUPS = [
   { group: null, items: [
-    { href: '/dashboard', label: 'Dashboard', labelAr: 'الرئيسية', icon: 'receipt' },
+    { href: '/dashboard', label: 'Dashboard', labelAr: 'الرئيسية', icon: 'grid' },
   ] },
   { group: 'Accounting', groupAr: 'المحاسبة', items: [
-    { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'receipt' },
-    { href: '/smartlife/accounts', label: 'Chart of Accounts', labelAr: 'دليل الحسابات', icon: 'receipt' },
-    { href: '/smartlife/account-balances', label: 'Account Balances', labelAr: 'أرصدة الحسابات', icon: 'receipt' },
-    { href: '/smartlife/cost-centers', label: 'Cost Centers', labelAr: 'مراكز التكلفة', icon: 'receipt' },
-    { href: '/vat', label: 'VAT Report', labelAr: 'تقرير ضريبة القيمة المضافة', icon: 'receipt' },
+    { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'chart' },
+    { href: '/smartlife/accounts', label: 'Chart of Accounts', labelAr: 'دليل الحسابات', icon: 'ledger' },
+    { href: '/smartlife/account-balances', label: 'Account Balances', labelAr: 'أرصدة الحسابات', icon: 'balance' },
+    { href: '/smartlife/cost-centers', label: 'Cost Centers', labelAr: 'مراكز التكلفة', icon: 'target' },
+    { href: '/vat', label: 'VAT Report', labelAr: 'تقرير ضريبة القيمة المضافة', icon: 'percent-doc' },
   ] },
   { group: 'Sales', groupAr: 'المبيعات', items: [
-    { href: '/smartlife/sales-invoices', label: 'Sales Invoices', labelAr: 'فواتير المبيعات', icon: 'receipt' },
-    { href: '/smartlife/customers', label: 'Customers', labelAr: 'العملاء', icon: 'receipt' },
-    { href: '/smartlife/payments', label: 'Payments', labelAr: 'المدفوعات', icon: 'receipt' },
+    { href: '/smartlife/sales-invoices', label: 'Sales Invoices', labelAr: 'فواتير المبيعات', icon: 'invoice' },
+    { href: '/smartlife/customers', label: 'Customers', labelAr: 'العملاء', icon: 'users' },
+    { href: '/smartlife/payments', label: 'Payments', labelAr: 'المدفوعات', icon: 'card-pay' },
   ] },
   { group: 'Purchasing', groupAr: 'المشتريات', items: [
-    { href: '/smartlife/purchases', label: 'Purchase Invoices', labelAr: 'فواتير المشتريات', icon: 'receipt' },
-    { href: '/purchase-requests', label: 'Purchase Requests', labelAr: 'طلبات الشراء', icon: 'receipt' },
-    { href: '/smartlife/suppliers', label: 'Suppliers', labelAr: 'الموردون', icon: 'receipt' },
+    { href: '/smartlife/purchases', label: 'Purchase Invoices', labelAr: 'فواتير المشتريات', icon: 'invoice' },
+    { href: '/purchase-requests', label: 'Purchase Requests', labelAr: 'طلبات الشراء', icon: 'quote' },
+    { href: '/smartlife/suppliers', label: 'Suppliers', labelAr: 'الموردون', icon: 'users' },
   ] },
   { group: 'Inventory', groupAr: 'المخزون', items: [
-    { href: '/inventory', label: 'Inventory', labelAr: 'المخزون', icon: 'receipt' },
-    { href: '/smartlife/product-balances', label: 'Product Balances', labelAr: 'أرصدة المنتجات', icon: 'receipt' },
-    { href: '/smartlife/products', label: 'Products', labelAr: 'المنتجات', icon: 'receipt' },
-    { href: '/smartlife/categories', label: 'Categories', labelAr: 'الفئات', icon: 'receipt' },
-    { href: '/smartlife/brands', label: 'Brands', labelAr: 'العلامات التجارية', icon: 'receipt' },
-    { href: '/smartlife/units', label: 'Units', labelAr: 'الوحدات', icon: 'receipt' },
-    { href: '/smartlife/warehouses', label: 'Warehouses / Branches', labelAr: 'المستودعات / الفروع', icon: 'receipt' },
-    { href: '/smartlife/tax', label: 'Tax', labelAr: 'الضرائب', icon: 'receipt' },
+    { href: '/inventory', label: 'Inventory', labelAr: 'المخزون', icon: 'warehouse' },
+    { href: '/smartlife/product-balances', label: 'Product Balances', labelAr: 'أرصدة المنتجات', icon: 'balance' },
+    { href: '/smartlife/products', label: 'Products', labelAr: 'المنتجات', icon: 'box' },
+    { href: '/smartlife/categories', label: 'Categories', labelAr: 'الفئات', icon: 'folder' },
+    { href: '/smartlife/brands', label: 'Brands', labelAr: 'العلامات التجارية', icon: 'tag' },
+    { href: '/smartlife/units', label: 'Units', labelAr: 'الوحدات', icon: 'ruler' },
+    { href: '/smartlife/warehouses', label: 'Warehouses / Branches', labelAr: 'المستودعات / الفروع', icon: 'warehouse' },
+    { href: '/smartlife/tax', label: 'Tax', labelAr: 'الضرائب', icon: 'percent-doc' },
   ] },
   { group: 'Other', groupAr: 'أخرى', items: [
-    { href: '/smartlife/gift-cards', label: 'Gift Cards', labelAr: 'بطاقات الهدايا', icon: 'receipt' },
-    { href: '/smartlife/coupons', label: 'Coupons', labelAr: 'القسائم', icon: 'receipt' },
-    { href: '/users', label: 'Users', labelAr: 'المستخدمون', icon: 'receipt', adminOnly: true },
-    { href: '/smartlife/cashiers', label: 'Cashiers', labelAr: 'الصرافون', icon: 'receipt' },
+    { href: '/smartlife/gift-cards', label: 'Gift Cards', labelAr: 'بطاقات الهدايا', icon: 'gift' },
+    { href: '/smartlife/coupons', label: 'Coupons', labelAr: 'القسائم', icon: 'ticket' },
+    { href: '/users', label: 'Users', labelAr: 'المستخدمون', icon: 'user', adminOnly: true },
+    { href: '/smartlife/cashiers', label: 'Cashiers', labelAr: 'الصرافون', icon: 'cashier' },
   ] },
   { group: null, items: [
-    { href: '/settings', label: 'Settings', labelAr: 'الإعدادات', icon: 'settings' },
+    { href: '/settings', label: 'Settings', labelAr: 'الإعدادات', icon: 'gear' },
   ] },
 ];
 
@@ -168,7 +168,8 @@ export default function Shell({ children, active }) {
             <GlassIcon name={dark ? 'sun' : 'moon'} size={16} className="ctrl-icon" />
           </button>
           <button type="button" onClick={logout} className="glass-ctrl" title="Logout">
-            <GlassIcon name="log-out" size={16} className="ctrl-icon" />
+            <GlassIcon name="logout" size={16} className="ctrl-icon" />
+            <span className="ctrl-label">{lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
           </button>
         </header>
         {/* Page content */}
