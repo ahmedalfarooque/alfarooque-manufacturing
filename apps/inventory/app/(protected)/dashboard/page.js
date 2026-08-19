@@ -35,26 +35,26 @@ export default function DashboardPage() {
     <Shell active="/dashboard">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 gfade-up">
         <a href="/products" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
-          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="package" size={20} bare /></span>
+          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="box" size={20} bare /></span>
           <span className="text-sm font-medium truncate">{t('products.addProduct')}</span>
         </a>
         <a href="/purchase-requests" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
-          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="clipboard" size={20} bare /></span>
+          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="quote" size={20} bare /></span>
           <span className="text-sm font-medium truncate">{t('pr.addRequest')}</span>
         </a>
         <a href="/goods-receipts" className="glass-card glass-card--pad flex items-center gap-3 hover:bg-[color:var(--pr-soft)] transition-colors duration-200">
-          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="check-square" size={20} bare /></span>
+          <span className="icon-tile icon-tile--sm shrink-0"><GlassIcon name="receipt" size={20} bare /></span>
           <span className="text-sm font-medium truncate">{t('gr.addReceipt')}</span>
         </a>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 gfade-up">
-        <StatCard icon="package" tone="brand" label={t('dash.totalProducts')} value={fmt(stats.totalProducts)} sub={t('dash.activeProducts')} href="/products" />
-        <StatCard icon="box" tone="emerald" label={t('dash.stockValue')} value={'SAR ' + fmtNum(stats.stockValue)} sub={t('dash.totalInventoryValue')} />
+        <StatCard icon="box" tone="brand" label={t('dash.totalProducts')} value={fmt(stats.totalProducts)} sub={t('dash.activeProducts')} href="/products" />
+        <StatCard icon="balance" tone="emerald" label={t('dash.stockValue')} value={'SAR ' + fmtNum(stats.stockValue)} sub={t('dash.totalInventoryValue')} />
         <StatCard icon="bell" tone={stats.lowStockCount > 0 ? 'amber' : 'emerald'} label={t('dash.lowStock')} value={fmt(stats.lowStockCount)} sub={t('dash.itemsBelowMinimum')} href="/stock" />
         <StatCard icon="x" tone={stats.outOfStock > 0 ? 'red' : 'emerald'} label={t('dash.outOfStock')} value={fmt(stats.outOfStock)} sub={t('dash.zeroQtyItems')} href="/stock" />
-        <StatCard icon="clipboard" tone="amber" label={t('dash.pendingPRs')} value={fmt(stats.pendingPRs)} sub={t('dash.awaitingApproval')} href="/purchase-requests" />
-        <StatCard icon="file-text" tone="blue" label={t('dash.pendingPOs')} value={fmt(stats.pendingPOs)} sub={t('dash.openOrders')} href="/purchase-orders" />
+        <StatCard icon="quote" tone="amber" label={t('dash.pendingPRs')} value={fmt(stats.pendingPRs)} sub={t('dash.awaitingApproval')} href="/purchase-requests" />
+        <StatCard icon="invoice" tone="blue" label={t('dash.pendingPOs')} value={fmt(stats.pendingPOs)} sub={t('dash.openOrders')} href="/purchase-orders" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mb-6 gfade-up">

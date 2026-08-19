@@ -8,23 +8,34 @@ import { GlassToastHost } from '@/components/glass';
 import { readPref, writePref, THEME_PREF_COOKIE } from '@/lib/prefs';
 import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
 
+/* Icon names below must match a real <symbol id="gi-…"> in
+   public/glass-icons.svg — several were pointing at names that don't
+   exist in the sprite (package, building, map-pin, arrows, clipboard,
+   file-text, check-square, bar-chart, settings) and were rendering
+   blank. Fixed to existing symbols, following the same icon choices
+   already used for the equivalent SmartLife module in
+   apps/accounting/components/Shell.js where one exists (quote for
+   purchase requests, invoice for purchase orders/invoices, users for
+   suppliers). Stock (quantity/level) moved from 'box' to 'balance' so
+   it no longer collides with Products, which now legitimately owns
+   'box' (was the broken 'package'). */
 const NAV = [
   { href: '/dashboard',        key: 'nav.dashboard',       icon: 'dashboard' },
-  { href: '/products',         key: 'nav.products',        icon: 'package' },
+  { href: '/products',         key: 'nav.products',        icon: 'box' },
   { href: '/categories',       key: 'nav.categories',      icon: 'tag' },
-  { href: '/suppliers',        key: 'nav.suppliers',       icon: 'building' },
+  { href: '/suppliers',        key: 'nav.suppliers',       icon: 'users' },
   { href: '/warehouses',       key: 'nav.warehouses',      icon: 'warehouse' },
-  { href: '/locations',        key: 'nav.locations',       icon: 'map-pin' },
-  { href: '/stock',            key: 'nav.stock',           icon: 'box' },
-  { href: '/stock-movements',  key: 'nav.stockMovements',  icon: 'arrows' },
+  { href: '/locations',        key: 'nav.locations',       icon: 'pin' },
+  { href: '/stock',            key: 'nav.stock',           icon: 'balance' },
+  { href: '/stock-movements',  key: 'nav.stockMovements',  icon: 'ledger' },
   { href: '/reservations',     key: 'nav.reservations',    icon: 'shield' },
   { href: '/transfers',        key: 'nav.transfers',       icon: 'truck' },
-  { href: '/purchase-requests',key: 'nav.purchaseRequests',icon: 'clipboard' },
-  { href: '/purchase-orders',  key: 'nav.purchaseOrders',  icon: 'file-text' },
-  { href: '/goods-receipts',   key: 'nav.goodsReceipts',   icon: 'check-square' },
+  { href: '/purchase-requests',key: 'nav.purchaseRequests',icon: 'quote' },
+  { href: '/purchase-orders',  key: 'nav.purchaseOrders',  icon: 'invoice' },
+  { href: '/goods-receipts',   key: 'nav.goodsReceipts',   icon: 'receipt' },
   { href: '/goods-issues',     key: 'nav.goodsIssues',     icon: 'door' },
-  { href: '/reports',          key: 'nav.reports',         icon: 'bar-chart' },
-  { href: '/settings',         key: 'nav.settings',        icon: 'settings' },
+  { href: '/reports',          key: 'nav.reports',         icon: 'chart' },
+  { href: '/settings',         key: 'nav.settings',        icon: 'gear' },
   { href: '/users',            key: 'Users',               icon: 'users', adminOnly: true },
 ];
 
