@@ -391,8 +391,8 @@ export default function ProductsPage() {
               )}
               {products.map(p => (
                 <tr key={p.id} className="cursor-pointer" onClick={() => (p.read_only ? openView(p) : openEdit(p))}>
-                  <td className="font-medium">
-                    {p.name}
+                  <td className="font-medium max-w-[280px]">
+                    <span className="block truncate" title={p.name}>{p.name}</span>
                     {p.read_only && (
                       <GlassBadge tone={p.business_role === 'unclassified' ? 'amber' : 'cyan'} className="ms-2" title={t('sl.readOnlySource')}>
                         {ROLE_LABELS[p.business_role] || p.business_role}
