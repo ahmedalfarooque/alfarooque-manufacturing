@@ -10,7 +10,8 @@
    always the plain { preset, from, to } shape a caller can turn into
    client-side date-range filtering. */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { GlassButton, GlassInput } from '@/components/glass';
 
 const STRINGS = {
@@ -39,6 +40,11 @@ function PRESETS_FOR(t, lang) { return [
   { key: 'custom', label: tr(t, lang, 'custom') },
 ]; }
 const PRESETS = PRESETS_FOR(null, 'en');
+
+/* Popup width used both for layout and for the viewport-clamp math below —
+   keep this in sync with the `width` set on the popup element itself. */
+const POPUP_WIDTH = 256;
+const VIEWPORT_MARGIN = 8;
 
 /* Local-calendar-date string, NOT toISOString() — that converts to UTC
    first, which silently shifts the date backward for any timezone ahead
@@ -94,9 +100,56 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
      reset()), matching the fix already verified in Accounting's DateFilter. */
   const [showCustom, setShowCustom] = useState(value?.preset === 'custom');
   const ref = useRef(null);
+  const triggerRef = useRef(null);
+  const popupRef = useRef(null);
+  /* Rendered through a portal (see below), so the popup's on-screen
+     position is computed in JS from the trigger button's real viewport
+     rect rather than relying on CSS `position:absolute` inside whatever
+     ancestor happens to render this component — that absolute approach
+     is what let a table/toolbar/card ancestor's `overflow:hidden` (or
+     any transformed ancestor creating a new stacking context) clip the
+     lower half of the popup. `openUp`/`left` are recomputed whenever the
+     popup opens and on resize/scroll while it's open, flipping above the
+     trigger or clamping horizontally so the full popup always stays on
+     screen — this is layout/positioning only, no filtering/date logic. */
+  const [pos, setPos] = useState(null);
+
+  function place() {
+    const btn = triggerRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const popupHeight = popupRef.current?.offsetHeight || 260;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < popupHeight + VIEWPORT_MARGIN && rect.top > popupHeight + VIEWPORT_MARGIN;
+    let left = rect.left;
+    const maxLeft = window.innerWidth - POPUP_WIDTH - VIEWPORT_MARGIN;
+    if (left > maxLeft) left = Math.max(VIEWPORT_MARGIN, maxLeft);
+    if (left < VIEWPORT_MARGIN) left = VIEWPORT_MARGIN;
+    const top = openUp
+      ? Math.max(VIEWPORT_MARGIN, rect.top - popupHeight - 4)
+      : rect.bottom + 4;
+    setPos({ top, left, openUp });
+  }
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    place();
+    function onReposition() { place(); }
+    window.addEventListener('resize', onReposition);
+    window.addEventListener('scroll', onReposition, true);
+    return () => {
+      window.removeEventListener('resize', onReposition);
+      window.removeEventListener('scroll', onReposition, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, showCustom]);
 
   useEffect(() => {
-    function onDocClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    function onDocClick(e) {
+      if (ref.current && ref.current.contains(e.target)) return;
+      if (popupRef.current && popupRef.current.contains(e.target)) return;
+      setOpen(false);
+    }
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
@@ -123,11 +176,14 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
 
   return (
     <div className="relative" ref={ref}>
-      <GlassButton variant={active ? 'primary' : 'secondary'} size="sm" onClick={() => setOpen(o => !o)}>
-        📅 {dateFilterLabel(value, t, lang)}
-      </GlassButton>
-      {open && (
-        <div className="absolute z-20 mt-1 w-64 rounded-xl border border-[color:var(--bd)] bg-[color:var(--bg-card)] p-2 shadow-xl">
+      <span ref={triggerRef} className="inline-block">
+        <GlassButton variant={active ? 'primary' : 'secondary'} size="sm" onClick={() => setOpen(o => !o)}>
+          📅 {dateFilterLabel(value, t, lang)}
+        </GlassButton>
+      </span>
+      {open && pos && createPortal(
+        <div ref={popupRef} style={{ position: 'fixed', top: pos.top, left: pos.left, width: POPUP_WIDTH, zIndex: 1000 }}
+          className="rounded-xl border border-[color:var(--bd)] bg-[color:var(--bg-card)] p-2 shadow-xl">
           <div className="grid grid-cols-2 gap-1">
             {presets.map(p => (
               <button key={p.key} onClick={() => pick(p.key)}
@@ -151,7 +207,8 @@ export default function DateFilter({ value, onChange, t, lang = 'en' }) {
               </div>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
