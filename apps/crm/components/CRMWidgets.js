@@ -12,11 +12,15 @@ import Link from 'next/link';
 import { GlassCard, IconTile } from '@/components/glass';
 import { GlassIcon } from '@/components/GlassIcons';
 
-/* Executive KPI card: icon tile + big value + label + optional trend/sub. */
+/* Executive KPI card: thin colored left-accent bar (matches Accounting's
+   dashboard KPI treatment) + icon tile + big value + label + optional
+   trend/sub. The old version used a blurred glow blob behind the icon,
+   which read as a marketing/SaaS-demo card rather than an operational ERP
+   metric — replaced with a flat accent bar. */
 export function MetricCard({ icon, label, value, sub, tone = 'cyan', className = '' }) {
   return (
     <GlassCard className={'crm-metric relative overflow-hidden ' + className}>
-      <div className={'crm-metric-glow crm-metric-glow--' + tone} aria-hidden="true" />
+      <span className={'crm-metric-accent crm-metric-accent--' + tone} aria-hidden="true" />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium text-[color:var(--tx-3)] truncate">{label}</p>

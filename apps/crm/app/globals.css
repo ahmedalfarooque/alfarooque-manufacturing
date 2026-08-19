@@ -654,19 +654,25 @@ html.dark .gtoast { background: linear-gradient(155deg, rgba(17,28,46,0.92), rgb
 /* ═══ CRM widgets (Dashboard/Contacts/Deals/Pipeline/Activities) — reuses
    existing tokens only, no new palette. ═══ */
 .crm-metric { padding: 16px; }
-.crm-metric-glow {
-  position: absolute; top: -30%; right: -20%; width: 120px; height: 120px;
-  border-radius: 999px; filter: blur(30px); opacity: 0.35; pointer-events: none;
+/* Flat left accent bar (replaces the old blurred glow blob, which read as a
+   marketing/SaaS-demo card rather than an operational ERP metric). Matches
+   the KPI accent treatment already used on Accounting's dashboard. Uses
+   var(--pr) for the default/"cyan" tone so it resolves to enterprise blue
+   in the light theme and stays cyan in dark theme, same as every other
+   token-driven surface. */
+.crm-metric-accent {
+  position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 3px;
+  pointer-events: none;
 }
-.crm-metric-glow--cyan    { background: #06b6d4; }
-.crm-metric-glow--emerald { background: #10b981; }
-.crm-metric-glow--amber   { background: #f59e0b; }
-.crm-metric-glow--red     { background: #ef4444; }
-.crm-metric-glow--violet  { background: #8b5cf6; }
-.crm-metric-glow--slate   { background: #64748b; }
+.crm-metric-accent--cyan    { background: var(--pr); }
+.crm-metric-accent--emerald { background: #10b981; }
+.crm-metric-accent--amber   { background: #f59e0b; }
+.crm-metric-accent--red     { background: #ef4444; }
+.crm-metric-accent--violet  { background: #8b5cf6; }
+.crm-metric-accent--slate   { background: #64748b; }
 
 .crm-metric-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
-.crm-metric-icon--cyan    { color: #06b6d4; }
+.crm-metric-icon--cyan    { color: var(--pr); }
 .crm-metric-icon--emerald { color: #10b981; }
 .crm-metric-icon--amber   { color: #f59e0b; }
 .crm-metric-icon--red     { color: #ef4444; }
@@ -678,12 +684,11 @@ html.dark .gtoast { background: linear-gradient(155deg, rgba(17,28,46,0.92), rgb
   border-radius: 999px; font-weight: 600; flex-shrink: 0;
   border: 1px solid color-mix(in srgb, var(--bd-2) 100%, transparent);
 }
-.crm-avatar--cyan    { background: rgba(6,182,212,0.14);  color: #0b7c93; }
+.crm-avatar--cyan    { background: var(--pr-soft); color: var(--pr-2); }
 .crm-avatar--emerald { background: rgba(16,185,129,0.14); color: #067a55; }
 .crm-avatar--amber   { background: rgba(245,158,11,0.16); color: #a9660a; }
 .crm-avatar--red     { background: rgba(239,68,68,0.14);  color: #c2362f; }
 .crm-avatar--violet  { background: rgba(139,92,246,0.14); color: #6d43c7; }
-html.dark .crm-avatar--cyan    { color: #67e8f9; }
 html.dark .crm-avatar--emerald { color: #6ee7b7; }
 html.dark .crm-avatar--amber   { color: #fcd34d; }
 html.dark .crm-avatar--red     { color: #fca5a5; }
@@ -693,13 +698,13 @@ html.dark .crm-avatar--violet  { color: #c4b5fd; }
   width: 26px; height: 26px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; border: 1px solid var(--bd-2); background: var(--bg-card);
 }
-.crm-timeline-dot--cyan    { color: #06b6d4; }
+.crm-timeline-dot--cyan    { color: var(--pr); }
 .crm-timeline-dot--emerald { color: #10b981; }
 .crm-timeline-dot--amber   { color: #f59e0b; }
 .crm-timeline-dot--red     { color: #ef4444; }
 .crm-timeline-line { flex: 1; width: 1px; min-height: 12px; background: var(--bd); margin-top: 2px; }
 
-.crm-bar { background: linear-gradient(90deg, #06b6d4, #0ea5e9); }
+.crm-bar { background: linear-gradient(90deg, var(--pr), var(--pr-2)); }
 .crm-bar--emerald { background: linear-gradient(90deg, #10b981, #34d399); }
 .crm-bar--amber   { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 .crm-bar--red     { background: linear-gradient(90deg, #ef4444, #f87171); }

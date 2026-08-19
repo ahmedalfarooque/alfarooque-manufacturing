@@ -93,7 +93,7 @@ export default function PipelinePage() {
               <div className="space-y-2">
                 {col.deals.map(deal => (
                   <Link key={deal.id} href={`/deals/${deal.id}`}>
-                    <GlassCard className="hover:ring-1 hover:ring-cyan-500/50 transition-all cursor-pointer">
+                    <GlassCard className="hover:ring-1 hover:ring-[color:var(--pr)]/50 transition-all cursor-pointer">
                       <p className="text-[color:var(--tx)] text-sm font-medium">{deal.title}</p>
                       {deal.crm_contacts && (
                         <p className="text-[color:var(--tx-3)] text-xs mt-1 truncate">{deal.crm_contacts.name} · {deal.crm_contacts.company}</p>
