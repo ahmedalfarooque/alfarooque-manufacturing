@@ -457,4 +457,38 @@
       </g>
     </g>
   </symbol>
+
+  <!-- ── CRUD action glyphs — used by nearly every table row/toolbar
+       across all 6 apps (add/edit/delete/view buttons); several call
+       sites referenced gi-plus/gi-edit/gi-trash/gi-eye which never
+       existed in this sprite, rendering blank. ── -->
+  <symbol id="gi-plus" viewBox="0 0 96 96">
+    <g stroke="url(#giInkGrad)" stroke-width="7" stroke-linecap="round">
+      <line x1="48" y1="26" x2="48" y2="70"/>
+      <line x1="26" y1="48" x2="70" y2="48"/>
+    </g>
+  </symbol>
+
+  <symbol id="gi-edit" viewBox="0 0 96 96">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M58 26l12 12-38 38H20V64z"/>
+      <line x1="52" y1="32" x2="64" y2="44"/>
+    </g>
+  </symbol>
+
+  <symbol id="gi-trash" viewBox="0 0 96 96">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M26 32h44"/>
+      <path d="M32 32V26a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v6"/>
+      <path d="M30 32l3 40a4 4 0 0 0 4 4h22a4 4 0 0 0 4-4l3-40"/>
+      <line x1="42" y1="42" x2="42" y2="64"/>
+      <line x1="54" y1="42" x2="54" y2="64"/>
+    </g>
+  </symbol>
+
+  <symbol id="gi-eye" viewBox="0 0 96 96">
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+      d="M16 48s12-22 32-22 32 22 32 22-12 22-32 22-32-22-32-22z"/>
+    <circle cx="48" cy="48" r="10" fill="none" stroke="url(#giInkGrad)" stroke-width="6"/>
+  </symbol>
 </svg>
