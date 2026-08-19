@@ -10,12 +10,12 @@ import ModuleActionVisibility from '../../shared/ModuleActionVisibility';
 
 const NAV = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
-  { href: '/quotations', labelKey: 'nav.quotations', icon: 'receipt' },
+  { href: '/quotations', labelKey: 'nav.quotations', icon: 'quote' },
   { href: '/customers', labelKey: 'nav.customers', icon: 'users' },
   { href: '/catalogue', labelKey: 'nav.catalogue', icon: 'folder' },
   { href: '/materials', labelKey: 'nav.materials', icon: 'box' },
   { href: '/suppliers', labelKey: 'nav.suppliers', icon: 'truck' },
-  { href: '/labour', labelKey: 'nav.labour', icon: 'user' },
+  { href: '/labour', labelKey: 'nav.labour', icon: 'hardhat' },
   { href: '/machines', labelKey: 'nav.machines', icon: 'wrench' },
   { href: '/expenses', labelKey: 'nav.expenses', icon: 'bag' },
   { href: '/reports', labelKey: 'nav.reports', icon: 'chart' },
