@@ -20,11 +20,16 @@ function money(value, currency = 'SAR') {
   return `${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 }
 
+const KPI_ACCENT = { success: '#10b981', danger: '#ef4444', default: 'var(--pr)' };
+
 function Kpi({ label, value, tone }) {
   return (
-    <GlassCard className="p-4">
-      <div className="text-xs text-[color:var(--tx-3)]">{label}</div>
-      <div className={`mt-1 text-xl font-bold ${tone === 'danger' ? 'text-red-500' : tone === 'success' ? 'text-emerald-500' : 'text-[color:var(--tx)]'}`}>{value}</div>
+    <GlassCard className="p-4 relative overflow-hidden">
+      <span className="absolute inset-y-0 start-0 w-[3px]" style={{ background: KPI_ACCENT[tone] || KPI_ACCENT.default }} aria-hidden="true" />
+      <div className="ps-2">
+        <div className="text-xs text-[color:var(--tx-3)]">{label}</div>
+        <div className={`mt-1 text-xl font-bold ${tone === 'danger' ? 'text-red-500' : tone === 'success' ? 'text-emerald-500' : 'text-[color:var(--tx)]'}`}>{value}</div>
+      </div>
     </GlassCard>
   );
 }
@@ -92,7 +97,7 @@ export default function DashboardPage() {
                   <YAxis fontSize={12} />
                   <Tooltip formatter={v => money(v)} />
                   <Legend />
-                  <Bar dataKey="sales" name="Sales" fill="#06b6d4" />
+                  <Bar dataKey="sales" name="Sales" fill="#2563EB" />
                   <Bar dataKey="purchases" name="Purchases" fill="#f59e0b" />
                 </BarChart>
               </ResponsiveContainer>
