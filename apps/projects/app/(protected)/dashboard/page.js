@@ -89,11 +89,12 @@ export default function DashboardPage() {
 
       {/* ── Hero KPI + top project metrics ── */}
       <div className="grid lg:grid-cols-4 gap-4 mb-6 gfade-up">
-        <a href="/projects" className="glass-card glass-card--pad lg:col-span-2 flex flex-col sm:flex-row sm:items-center gap-5 cursor-pointer">
+        <a href="/projects" className="glass-card glass-card--pad lg:col-span-2 flex flex-col sm:flex-row sm:items-center gap-5 cursor-pointer relative overflow-hidden">
+          <span className="absolute inset-y-0 start-0 w-[3px]" style={{ background: 'var(--pr)' }} aria-hidden="true" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2.5 mb-3">
               <span className="icon-tile relative" aria-hidden="true">
-                <span className="absolute inset-0.5 rounded-[11px]" style={{ background: 'radial-gradient(circle at 35% 25%, #06B6D438, transparent 72%)' }} />
+                <span className="absolute inset-0.5 rounded-[11px]" style={{ background: 'radial-gradient(circle at 35% 25%, #2563EB38, transparent 72%)' }} />
                 <GlassIcon name="folder" size={38} bare className="relative" />
               </span>
               <span className="text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-semibold">{t('dashboard.totalProjects')}</span>

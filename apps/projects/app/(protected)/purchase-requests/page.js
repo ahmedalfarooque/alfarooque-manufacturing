@@ -14,7 +14,7 @@ import { useLanguage, trEnum } from '@/lib/i18n';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const PIE_COLORS = ['#f59e0b', '#6366f1', '#3b82f6', '#ef4444', '#f97316', '#a855f7', '#06b6d4', '#94a3b8', '#eab308', '#0ea5e9', '#10b981'];
+const PIE_COLORS = ['#f59e0b', '#6366f1', '#3b82f6', '#ef4444', '#f97316', '#a855f7', '#0d9488', '#94a3b8', '#eab308', '#0ea5e9', '#10b981'];
 
 export const STATUS_BADGE = {
   Pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -202,7 +202,7 @@ export default function PurchaseRequestsPage() {
               <XAxis dataKey="month" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#06B6D4" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

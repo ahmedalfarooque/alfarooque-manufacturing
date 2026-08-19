@@ -207,7 +207,7 @@ function AddLineForm({ soId, onAdded }) {
           )}
         </Field>
         {invResults && (invResults.products?.length > 0 || invResults.materials?.length > 0) && (
-          <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-lg border border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-xl shadow-lg">
+          <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto glass-card glass-card--flat !rounded-lg">
             {invResults.products?.map(p => (
               <button type="button" key={'p' + p.id} onClick={() => pickItem(p, 'product')} className="block w-full text-start px-3 py-2 text-sm hover:bg-[color:var(--pr-soft)]">{p.name} <span className="text-xs text-[color:var(--tx-3)]">({p.sku})</span></button>
             ))}

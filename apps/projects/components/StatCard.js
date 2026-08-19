@@ -8,9 +8,9 @@ const TONE_COLOR = {
   emerald: '#10B981',
   amber: '#F59E0B',
   red: '#EF4444',
-  brand: '#06B6D4',
-  cyan: '#06B6D4',
-  blue: '#0EA5E9',
+  brand: '#2563EB',
+  cyan: '#2563EB',
+  blue: '#2563EB',
   violet: '#8B5CF6',
   teal: '#2DD4BF',
 };
@@ -22,7 +22,8 @@ export default function StatCard({ icon, label, value, sub, tone, href, onClick,
   const chartKey = trend ? JSON.stringify(trend) : bars ? bars.values.join(',') : String(ringPct);
   return (
     <Tag {...(href ? { href } : {})} {...(onClick ? { onClick, type: 'button' } : {})}
-      className={'glass-card glass-card--pad flex flex-col gap-2 text-start w-full' + (clickable ? ' cursor-pointer' : '')}>
+      className={'glass-card glass-card--pad flex flex-col gap-2 text-start w-full relative overflow-hidden' + (clickable ? ' cursor-pointer' : '')}>
+      <span className="absolute inset-y-0 start-0 w-[3px]" style={{ background: color }} aria-hidden="true" />
       <span className="icon-tile relative" aria-hidden="true">
         <span className="absolute inset-0.5 rounded-[11px]" style={{ background: `radial-gradient(circle at 35% 25%, ${color}38, transparent 72%)` }} />
         <GlassIcon name={icon} size={38} bare className="relative" />

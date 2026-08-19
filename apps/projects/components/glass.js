@@ -136,21 +136,20 @@ export function GlassToastHost() {
 }
 
 /* ── Chart theming helper for recharts (colors read the cyan palette). ── */
-export const CHART_COLORS = ['#06B6D4', '#0EA5E9', '#2DD4BF', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#64748B'];
+export const CHART_COLORS = ['#2563EB', '#0EA5E9', '#2DD4BF', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#64748B'];
 export function chartTheme(dark) {
   return {
     grid: dark ? 'rgba(120,190,230,0.10)' : 'rgba(15,42,64,0.08)',
     axis: dark ? '#8299AE' : '#5B7690',
     tooltip: {
-      background: dark ? 'rgba(11,20,36,0.92)' : 'rgba(255,255,255,0.95)',
+      background: dark ? 'rgba(11,20,36,0.96)' : 'rgba(255,255,255,1)',
       border: dark ? '1px solid rgba(120,190,230,0.18)' : '1px solid rgba(15,42,64,0.12)',
-      borderRadius: 12,
-      backdropFilter: 'blur(16px)',
+      borderRadius: 10,
       color: dark ? '#E8F1F8' : '#0B1B29',
-      boxShadow: '0 10px 34px rgba(0,0,0,0.25)',
+      boxShadow: dark ? '0 4px 14px rgba(0,0,0,0.35)' : '0 2px 8px rgba(15,42,64,0.10)',
       fontSize: 12,
     },
-    primary: '#06B6D4',
-    primarySoft: dark ? 'rgba(34,211,238,0.25)' : 'rgba(6,182,212,0.2)',
+    primary: dark ? '#22D3EE' : '#2563EB',
+    primarySoft: dark ? 'rgba(34,211,238,0.25)' : 'rgba(37,99,235,0.16)',
   };
 }
