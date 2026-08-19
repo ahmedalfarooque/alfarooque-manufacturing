@@ -142,7 +142,7 @@ export default function Shell({ children, session }) {
                     ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
                     : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
                 }>
-                <GlassIcon name={item.icon} size={20} className="shrink-0" />{item.label || t(item.key)}
+                <GlassIcon name={item.icon} size={20} className="shrink-0" bare />{item.label || t(item.key)}
               </Link>
             );
           })}

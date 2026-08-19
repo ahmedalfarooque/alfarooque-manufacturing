@@ -135,7 +135,7 @@ export default function Shell({ children, active }) {
                   ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
                   : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
               }>
-              <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.labelKey)}
+              <GlassIcon name={item.icon} size={20} className="shrink-0" bare />{t(item.labelKey)}
             </a>
           ))}
         </nav>

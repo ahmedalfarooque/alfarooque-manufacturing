@@ -134,7 +134,7 @@ export default function Shell({ children, active }) {
                         ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
                         : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
                     }>
-                    <GlassIcon name={item.icon} size={18} />
+                    <GlassIcon name={item.icon} size={18} bare />
                     <span>{lang === 'ar' ? item.labelAr : item.label}</span>
                   </a>
                 );

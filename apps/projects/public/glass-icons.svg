@@ -102,7 +102,7 @@
   </symbol>
 
   <symbol id="gi-alu" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGradA)" stroke-width="6" stroke-linecap="round">
+    <g fill="none" stroke="url(#giInkGradA)" stroke-width="9" stroke-linecap="round">
       <rect x="29" y="29" width="38" height="38" rx="7" style="fill:var(--ga-t,#8FB6C4)" fill-opacity="0.16"/>
       <line x1="48" y1="31" x2="48" y2="65"/>
       <line x1="31" y1="48" x2="65" y2="48"/>
@@ -112,16 +112,16 @@
 
   <!-- ── About / values ────────────────────────────────────────── -->
   <symbol id="gi-target" viewBox="0 0 96 96">
-    <circle cx="48" cy="48" r="21" fill="none" stroke="url(#giInkGrad)" stroke-width="6"/>
-    <circle cx="48" cy="48" r="10" fill="none" stroke="url(#giInkGrad)" stroke-width="5" opacity="0.75"/>
+    <circle cx="48" cy="48" r="21" fill="none" stroke="url(#giInkGrad)" stroke-width="9"/>
+    <circle cx="48" cy="48" r="10" fill="none" stroke="url(#giInkGrad)" stroke-width="7.5" opacity="0.75"/>
     <circle cx="48" cy="48" r="3.6" fill="url(#giInkGrad)"/>
-    <path d="M48 27a21 21 0 0 1 15 6" style="stroke:var(--gi-hl,#fff)" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.4"/>
+    <path d="M48 27a21 21 0 0 1 15 6" style="stroke:var(--gi-hl,#fff)" stroke-width="7.5" stroke-linecap="round" fill="none" opacity="0.4"/>
   </symbol>
 
   <symbol id="gi-gear" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"
       d="M48 25l4.5 2.6 5.2-1 2.6 4.6 5 1.6.2 5.3 3.9 3.6-2.1 4.9 2.1 4.9-3.9 3.6-.2 5.3-5 1.6-2.6 4.6-5.2-1L48 71l-4.5-2.6-5.2 1-2.6-4.6-5-1.6-.2-5.3-3.9-3.6 2.1-4.9-2.1-4.9 3.9-3.6.2-5.3 5-1.6 2.6-4.6 5.2 1L48 25z"/>
-    <circle cx="48" cy="48" r="9.5" fill="none" stroke="url(#giInkGrad)" stroke-width="5.5"/>
+    <circle cx="48" cy="48" r="9.5" fill="none" stroke="url(#giInkGrad)" stroke-width="8"/>
   </symbol>
 
   <symbol id="gi-gem" viewBox="0 0 96 96">
@@ -133,7 +133,7 @@
   </symbol>
 
   <symbol id="gi-flag" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <line x1="33" y1="26" x2="33" y2="71"/>
       <path d="M33 29h27l-6 9 6 9H33z"/>
     </g>
@@ -141,9 +141,9 @@
 
   <!-- ── Header / utility ─────────────────────────────────────── -->
   <symbol id="gi-search" viewBox="0 0 96 96">
-    <circle cx="44" cy="44" r="14" fill="none" stroke="url(#giInkGrad)" stroke-width="6.5"/>
-    <line x1="55" y1="55" x2="67" y2="67" stroke="url(#giInkGrad)" stroke-width="7" stroke-linecap="round"/>
-    <path d="M35 37a12 12 0 0 1 9-4" style="stroke:var(--gi-hl,#fff)" stroke-width="4.5" stroke-linecap="round" fill="none" opacity="0.45"/>
+    <circle cx="44" cy="44" r="14" fill="none" stroke="url(#giInkGrad)" stroke-width="9.5"/>
+    <line x1="55" y1="55" x2="67" y2="67" stroke="url(#giInkGrad)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M35 37a12 12 0 0 1 9-4" style="stroke:var(--gi-hl,#fff)" stroke-width="9.5" stroke-linecap="round" fill="none" opacity="0.45"/>
   </symbol>
 
   <symbol id="gi-heart" viewBox="0 0 96 96">
@@ -155,12 +155,12 @@
     <g fill="url(#giInkGrad)">
       <path d="M32 38h32l3 30a4 4 0 0 1-4 4.4H33A4 4 0 0 1 29 68l3-30z"/>
     </g>
-    <path d="M40 44v-7a8 8 0 0 1 16 0v7" fill="none" stroke="url(#giInkGrad)" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M40 44v-7a8 8 0 0 1 16 0v7" fill="none" stroke="url(#giInkGrad)" stroke-width="8" stroke-linecap="round"/>
     <rect x="33" y="39" width="30" height="6" rx="3" style="fill:var(--gi-hl,#fff)" opacity="0.28"/>
   </symbol>
 
   <symbol id="gi-user" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="48" cy="38" r="11"/>
       <path d="M27 71c2-13 9.5-19 21-19s19 6 21 19"/>
     </g>
@@ -168,7 +168,7 @@
 
   <symbol id="gi-sun" viewBox="0 0 96 96">
     <circle cx="48" cy="48" r="12" fill="url(#giInkGrad)"/>
-    <g stroke="url(#giInkGrad)" stroke-width="5.5" stroke-linecap="round">
+    <g stroke="url(#giInkGrad)" stroke-width="8" stroke-linecap="round">
       <line x1="48" y1="24" x2="48" y2="30"/><line x1="48" y1="66" x2="48" y2="72"/>
       <line x1="24" y1="48" x2="30" y2="48"/><line x1="66" y1="48" x2="72" y2="48"/>
       <line x1="31" y1="31" x2="35.3" y2="35.3"/><line x1="60.7" y1="60.7" x2="65" y2="65"/>
@@ -195,13 +195,13 @@
 
   <symbol id="gi-mail" viewBox="0 0 96 96">
     <rect x="28" y="34" width="40" height="28" rx="6" fill="url(#giInkGrad)"/>
-    <path d="m30 38 18 13 18-13" fill="none" style="stroke:var(--gi-hl,#fff)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+    <path d="m30 38 18 13 18-13" fill="none" style="stroke:var(--gi-hl,#fff)" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
     <rect x="30" y="36" width="36" height="5" rx="2.5" style="fill:var(--gi-hl,#fff)" opacity="0.2"/>
   </symbol>
 
   <symbol id="gi-clock" viewBox="0 0 96 96">
     <circle cx="48" cy="48" r="20" fill="url(#giInkGrad)"/>
-    <path d="M48 37v12l9 6" fill="none" style="stroke:var(--gi-hl,#fff)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+    <path d="M48 37v12l9 6" fill="none" style="stroke:var(--gi-hl,#fff)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
     <ellipse cx="41" cy="38" rx="6" ry="3.6" style="fill:var(--gi-hl,#fff)" opacity="0.3" transform="rotate(-20 41 38)"/>
   </symbol>
 
@@ -215,15 +215,15 @@
   </symbol>
 
   <symbol id="gi-x" viewBox="0 0 96 96">
-    <g stroke="url(#giInkGrad)" stroke-width="7" stroke-linecap="round">
+    <g stroke="url(#giInkGrad)" stroke-width="10" stroke-linecap="round">
       <line x1="32" y1="32" x2="64" y2="64"/>
       <line x1="64" y1="32" x2="32" y2="64"/>
     </g>
   </symbol>
 
   <symbol id="gi-instagram" viewBox="0 0 96 96">
-    <rect x="29" y="29" width="38" height="38" rx="11" fill="none" stroke="url(#giInkGrad)" stroke-width="6"/>
-    <circle cx="48" cy="48" r="9.5" fill="none" stroke="url(#giInkGrad)" stroke-width="5.5"/>
+    <rect x="29" y="29" width="38" height="38" rx="11" fill="none" stroke="url(#giInkGrad)" stroke-width="9"/>
+    <circle cx="48" cy="48" r="9.5" fill="none" stroke="url(#giInkGrad)" stroke-width="8"/>
     <circle cx="60.5" cy="35.5" r="3.4" fill="url(#giInkGrad)"/>
   </symbol>
 
@@ -233,20 +233,20 @@
 
   <!-- ── Commerce / badges ────────────────────────────────────── -->
   <symbol id="gi-door" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M34 27h28v44H34z"/>
     <circle cx="56.5" cy="52" r="2.8" fill="url(#giInkGrad)"/>
-    <line x1="30" y1="71" x2="66" y2="71" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round"/>
+    <line x1="30" y1="71" x2="66" y2="71" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round"/>
   </symbol>
 
   <symbol id="gi-shield" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M48 26s7 4 19 5v17c0 12-8 19-19 23-11-4-19-11-19-23V31c12-1 19-5 19-5z"/>
-    <path d="m40 48 6 6 11-12" fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="m40 48 6 6 11-12" fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
 
   <symbol id="gi-box" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <path d="M48 27 68 37v22L48 69 28 59V37z"/>
       <path d="M28 37l20 10 20-10"/>
       <line x1="48" y1="47" x2="48" y2="69"/>
@@ -255,7 +255,7 @@
 
   <!-- ── App / dashboard ──────────────────────────────────────── -->
   <symbol id="gi-dashboard" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linejoin="round">
       <rect x="28" y="28" width="18" height="24" rx="4"/>
       <rect x="50" y="28" width="18" height="15" rx="4"/>
       <rect x="50" y="47" width="18" height="21" rx="4"/>
@@ -264,13 +264,13 @@
   </symbol>
 
   <symbol id="gi-bell" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M48 27c8.8 0 15 6.6 15 15.6V52l4.5 7.4a2.6 2.6 0 0 1-2.2 4H30.7a2.6 2.6 0 0 1-2.2-4L33 52v-9.4C33 33.6 39.2 27 48 27z"/>
-    <path d="M42.6 66a5.6 5.6 0 0 0 10.8 0" fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M42.6 66a5.6 5.6 0 0 0 10.8 0" fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round"/>
   </symbol>
 
   <symbol id="gi-truck" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="20" y="36" width="32" height="22" rx="3"/>
       <path d="M52 43h11l7 8v7H52z"/>
       <circle cx="34" cy="63" r="5.5"/>
@@ -279,25 +279,25 @@
   </symbol>
 
   <symbol id="gi-wrench" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M63 28a12.6 12.6 0 0 0-13 17L29 66a5.4 5.4 0 1 0 7.6 7.6l21-21A12.6 12.6 0 0 0 74 39l-7.4 7.4-8.4-2.2-2.2-8.4L63 28z"/>
   </symbol>
 
   <symbol id="gi-folder" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M28 34a5 5 0 0 1 5-5h11l5 6h19a5 5 0 0 1 5 5v25a5 5 0 0 1-5 5H33a5 5 0 0 1-5-5V34z"/>
   </symbol>
 
   <symbol id="gi-receipt" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M33 27h30v42l-5-3-5 3-5-3-5 3-5-3-5 3V27z"/>
-    <g stroke="url(#giInkGrad)" stroke-width="4" stroke-linecap="round">
+    <g stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round">
       <line x1="40" y1="38" x2="56" y2="38"/><line x1="40" y1="47" x2="56" y2="47"/><line x1="40" y1="56" x2="50" y2="56"/>
     </g>
   </symbol>
 
   <symbol id="gi-users" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="40" cy="38" r="9"/>
       <path d="M23 68c1.6-10 8-15 17-15s15.4 5 17 15"/>
       <path d="M60 43a8 8 0 1 0 0-16"/>
@@ -306,16 +306,16 @@
   </symbol>
 
   <symbol id="gi-chart" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <path d="M28 68V50m18 18V40m18 28V30"/>
       <line x1="24" y1="68" x2="72" y2="68"/>
     </g>
   </symbol>
 
   <symbol id="gi-logout" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M49 29H33a4 4 0 0 0-4 4v30a4 4 0 0 0 4 4h16"/>
-    <path d="M54 39l10 9-10 9M64 48H42" fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M54 39l10 9-10 9M64 48H42" fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
 
   <!-- ── ERP module icons — added for the professional-icon-system pass.
@@ -326,7 +326,7 @@
        distinct, meaningful icon per menu item instead of reusing one
        generic icon everywhere. ── -->
   <symbol id="gi-grid" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linejoin="round">
       <rect x="24" y="24" width="18" height="18" rx="3"/>
       <rect x="54" y="24" width="18" height="18" rx="3"/>
       <rect x="24" y="54" width="18" height="18" rx="3"/>
@@ -335,7 +335,7 @@
   </symbol>
 
   <symbol id="gi-ledger" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="27" y="22" width="42" height="52" rx="4"/>
       <line x1="35" y1="38" x2="61" y2="38"/>
       <line x1="35" y1="48" x2="61" y2="48"/>
@@ -344,7 +344,7 @@
   </symbol>
 
   <symbol id="gi-balance" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <line x1="48" y1="22" x2="48" y2="70"/>
       <line x1="26" y1="34" x2="70" y2="34"/>
       <path d="M26 34 16 52a10 10 0 0 0 20 0z"/>
@@ -354,7 +354,7 @@
   </symbol>
 
   <symbol id="gi-percent-doc" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="27" y="20" width="42" height="56" rx="4"/>
       <line x1="37" y1="42" x2="59" y2="60"/>
     </g>
@@ -363,7 +363,7 @@
   </symbol>
 
   <symbol id="gi-invoice" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <path d="M30 20h26l10 10v46a2 2 0 0 1-2 2H30a2 2 0 0 1-2-2V22a2 2 0 0 1 2-2z"/>
       <path d="M56 20v10h10"/>
       <line x1="36" y1="46" x2="60" y2="46"/>
@@ -373,7 +373,7 @@
   </symbol>
 
   <symbol id="gi-card-pay" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="18" y="30" width="60" height="40" rx="6"/>
       <line x1="18" y1="42" x2="78" y2="42"/>
       <line x1="28" y1="58" x2="44" y2="58"/>
@@ -381,7 +381,7 @@
   </symbol>
 
   <symbol id="gi-warehouse" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 44 48 24l30 20"/>
       <path d="M22 42v32h52V42"/>
       <line x1="40" y1="74" x2="40" y2="54"/>
@@ -390,12 +390,12 @@
   </symbol>
 
   <symbol id="gi-funnel" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M22 26h52l-18 24v22l-16 8V50z"/>
   </symbol>
 
   <symbol id="gi-kanban" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="18" y="22" width="18" height="52" rx="3"/>
       <rect x="39" y="22" width="18" height="34" rx="3"/>
       <rect x="60" y="22" width="18" height="44" rx="3"/>
@@ -403,7 +403,7 @@
   </symbol>
 
   <symbol id="gi-quote" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="24" y="20" width="48" height="56" rx="4"/>
       <path d="M36 40c-4.5 0-7 3.2-7 7.2s2.7 6.4 6 6.4"/>
       <path d="M53 40c-4.5 0-7 3.2-7 7.2s2.7 6.4 6 6.4"/>
@@ -411,7 +411,7 @@
   </symbol>
 
   <symbol id="gi-hardhat" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M22 60a26 26 0 0 1 52 0"/>
       <line x1="12" y1="60" x2="84" y2="60"/>
       <line x1="48" y1="30" x2="48" y2="22"/>
@@ -419,13 +419,13 @@
   </symbol>
 
   <symbol id="gi-ticket" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M18 36a6 6 0 0 0 0 12v4a4 4 0 0 0 4 4h52a4 4 0 0 0 4-4v-4a6 6 0 0 1 0-12v-4a4 4 0 0 0-4-4H22a4 4 0 0 0-4 4z"/>
-    <line x1="48" y1="30" x2="48" y2="66" stroke="url(#giInkGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 8"/>
+    <line x1="48" y1="30" x2="48" y2="66" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-dasharray="1 8"/>
   </symbol>
 
   <symbol id="gi-gift" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="22" y="42" width="52" height="32" rx="3"/>
       <line x1="22" y1="54" x2="74" y2="54"/>
       <line x1="48" y1="42" x2="48" y2="74"/>
@@ -435,7 +435,7 @@
   </symbol>
 
   <symbol id="gi-cashier" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <rect x="20" y="40" width="56" height="30" rx="4"/>
       <path d="M28 40V28a4 4 0 0 1 4-4h32a4 4 0 0 1 4 4v12"/>
       <line x1="38" y1="54" x2="58" y2="54"/>
@@ -443,15 +443,15 @@
   </symbol>
 
   <symbol id="gi-tag" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M42 22h24a4 4 0 0 1 4 4v24L36 84 18 66z"/>
     <circle cx="58" cy="38" r="4" fill="url(#giInkGrad)"/>
   </symbol>
 
   <symbol id="gi-ruler" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round">
       <rect x="14" y="38" width="68" height="20" rx="3" transform="rotate(-20 48 48)"/>
-      <g transform="rotate(-20 48 48)" stroke-width="5.5">
+      <g transform="rotate(-20 48 48)" stroke-width="8">
         <line x1="30" y1="38" x2="30" y2="50"/>
         <line x1="48" y1="38" x2="48" y2="50"/>
         <line x1="66" y1="38" x2="66" y2="50"/>
@@ -464,21 +464,21 @@
        sites referenced gi-plus/gi-edit/gi-trash/gi-eye which never
        existed in this sprite, rendering blank. ── -->
   <symbol id="gi-plus" viewBox="0 0 96 96">
-    <g stroke="url(#giInkGrad)" stroke-width="7" stroke-linecap="round">
+    <g stroke="url(#giInkGrad)" stroke-width="10" stroke-linecap="round">
       <line x1="48" y1="26" x2="48" y2="70"/>
       <line x1="26" y1="48" x2="70" y2="48"/>
     </g>
   </symbol>
 
   <symbol id="gi-edit" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <path d="M58 26l12 12-38 38H20V64z"/>
       <line x1="52" y1="32" x2="64" y2="44"/>
     </g>
   </symbol>
 
   <symbol id="gi-trash" viewBox="0 0 96 96">
-    <g fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <path d="M26 32h44"/>
       <path d="M32 32V26a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v6"/>
       <path d="M30 32l3 40a4 4 0 0 0 4 4h22a4 4 0 0 0 4-4l3-40"/>
@@ -488,8 +488,8 @@
   </symbol>
 
   <symbol id="gi-eye" viewBox="0 0 96 96">
-    <path fill="none" stroke="url(#giInkGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+    <path fill="none" stroke="url(#giInkGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
       d="M16 48s12-22 32-22 32 22 32 22-12 22-32 22-32-22-32-22z"/>
-    <circle cx="48" cy="48" r="10" fill="none" stroke="url(#giInkGrad)" stroke-width="6"/>
+    <circle cx="48" cy="48" r="10" fill="none" stroke="url(#giInkGrad)" stroke-width="9"/>
   </symbol>
 </svg>
