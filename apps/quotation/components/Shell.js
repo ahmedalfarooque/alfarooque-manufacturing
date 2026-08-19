@@ -104,27 +104,26 @@ export default function Shell({ children, active }) {
     <div className="min-h-screen flex text-[color:var(--tx)]">
       <ModuleActionVisibility />
       <aside className={
-        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform ' +
-        'bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 border-e border-[color:var(--bd)] ' +
-        'shadow-[8px_0_40px_rgba(11,27,41,0.06)] dark:shadow-[8px_0_40px_rgba(0,0,0,0.4)] ' +
+        'fixed lg:static z-40 inset-y-0 start-0 w-64 shrink-0 flex flex-col transition-transform af-sidebar ' +
+        'bg-[color:var(--sidebar-bg)] border-e border-[color:var(--sidebar-border)] ' +
         (sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:!translate-x-0')
       }>
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-[color:var(--bd)]">
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-[color:var(--sidebar-border)]">
           <span className="icon-tile icon-tile--sm !p-0 overflow-hidden">
             <img src="/logo.png" alt="AL FAROOQUE" className="h-6 w-6 object-contain" />
           </span>
           <div>
-            <div className="font-semibold text-sm leading-tight">{t('shell.appName')}</div>
-            <div className="text-[11px] text-[color:var(--tx-4)]">{t('shell.appTagline')}</div>
+            <div className="font-semibold text-sm leading-tight text-[color:var(--sidebar-active-text)]">{t('shell.appName')}</div>
+            <div className="text-[11px] text-[color:var(--sidebar-text-muted)]">{t('shell.appTagline')}</div>
           </div>
         </div>
-        <a href="/profile" className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 border border-[color:var(--bd)] bg-[color:var(--bg-card)] hover:border-[rgba(6,182,212,0.35)] transition-colors">
-          <span className="h-8 w-8 rounded-full grid place-items-center text-xs font-semibold text-[color:var(--pr)] bg-[color:var(--pr-soft)] border border-[rgba(6,182,212,0.3)] shrink-0">
+        <a href="/profile" className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 border border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-hover-bg)] hover:border-[rgba(37,99,235,0.4)] transition-colors">
+          <span className="h-8 w-8 rounded-full grid place-items-center text-xs font-semibold text-[color:var(--sidebar-active-text)] bg-[color:var(--sidebar-active-bg)] border border-[rgba(37,99,235,0.3)] shrink-0">
             {(user?.full_name || user?.email || '?').slice(0, 1).toUpperCase()}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-sm truncate">{user?.full_name || t('shell.loading')}</div>
-            <div className="text-[11px] text-[color:var(--tx-4)] truncate">{user?.role ? t('role.' + user.role) : ''}</div>
+            <div className="text-sm truncate text-[color:var(--sidebar-text)]">{user?.full_name || t('shell.loading')}</div>
+            <div className="text-[11px] text-[color:var(--sidebar-text-muted)] truncate">{user?.role ? t('role.' + user.role) : ''}</div>
           </div>
         </a>
         <nav className="flex-1 px-3 space-y-1 mt-3 overflow-y-auto">
@@ -133,8 +132,8 @@ export default function Shell({ children, active }) {
               className={
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ' +
                 (active === item.href
-                  ? 'bg-[color:var(--pr-soft)] text-[color:var(--pr)] shadow-[inset_0_0_0_1px_rgba(6,182,212,0.28)]'
-                  : 'text-[color:var(--tx-2)] hover:bg-[color:var(--pr-soft)] hover:text-[color:var(--tx)]')
+                  ? 'bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
+                  : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
               }>
               <GlassIcon name={item.icon} size={20} className="shrink-0" />{t(item.labelKey)}
             </a>
@@ -145,10 +144,10 @@ export default function Shell({ children, active }) {
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[color:var(--bd)] bg-[color:var(--nav-bg)] backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-20">
+        <header className="af-topbar min-h-16 flex flex-wrap items-center justify-between gap-y-2 py-2 lg:h-16 lg:py-0 px-3 sm:px-4 lg:px-6 border-b border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-bg)] sticky top-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
-            <button className="lg:hidden gbtn gbtn-ghost gbtn--icon gbtn--sm text-xl" onClick={() => setSidebarOpen(true)} aria-label={t('shell.openMenu')}>☰</button>
-            <h1 className="font-semibold text-lg capitalize truncate">{(() => {
+            <button className="lg:hidden gbtn gbtn-ghost gbtn--icon gbtn--sm text-xl text-[color:var(--sidebar-text)]" onClick={() => setSidebarOpen(true)} aria-label={t('shell.openMenu')}>☰</button>
+            <h1 className="font-semibold text-lg capitalize truncate text-[color:var(--sidebar-active-text)]">{(() => {
               if (active === '/profile') return t('profile.title');
               const navItem = NAV.find(i => i.href === active);
               return navItem ? t(navItem.labelKey) : String(active || '').replace('/', '');
