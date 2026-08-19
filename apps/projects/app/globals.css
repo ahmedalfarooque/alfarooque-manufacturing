@@ -432,6 +432,29 @@ html.dark .glass-card:hover {
 .glass-card--flat { transition: box-shadow 0.3s ease, border-color 0.3s ease; }
 .glass-card--flat:hover { transform: none; }
 
+/* ═══ Frosted card — a restrained, Apple-style glass surface reserved for
+   dashboard/KPI cards ONLY (never tables, forms, or modals — those stay
+   fully flat/opaque for readability). Subtle translucency + a soft top
+   highlight + gentle blur read as a premium material even on a flat page
+   background; the blur itself is a light touch (6px), not a heavy frost,
+   so it never risks looking like cheap 2015-era glassmorphism. ═══ */
+.glass-card--frosted {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px) saturate(150%);
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, var(--sh-sm);
+}
+.glass-card--frosted:hover {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, var(--sh-md);
+}
+html.dark .glass-card--frosted {
+  background: rgba(17,28,46,0.86);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, var(--sh-sm);
+}
+html.dark .glass-card--frosted:hover {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, var(--sh-md), 0 0 22px rgba(34,211,238,0.1);
+}
+
 /* ═══ Glass table — sticky header, hover rows, cyan selection wash. ═══ */
 .gtable { width: 100%; border-collapse: separate; border-spacing: 0; }
 .gtable thead th {

@@ -19,7 +19,7 @@ import { GlassIcon } from '@/components/GlassIcons';
    metric — replaced with a flat accent bar. */
 export function MetricCard({ icon, label, value, sub, tone = 'cyan', className = '' }) {
   return (
-    <GlassCard className={'crm-metric relative overflow-hidden ' + className}>
+    <GlassCard frosted className={'crm-metric relative overflow-hidden ' + className}>
       <span className={'crm-metric-accent crm-metric-accent--' + tone} aria-hidden="true" />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

@@ -30,8 +30,8 @@ export const GlassPagination = Pagination;
 export { Th as GlassTh, Td as GlassTd };
 
 /* ── Card ── */
-export function GlassCard({ as: Tag = 'div', pad, flat, className = '', children, ...rest }) {
-  const cls = ['glass-card', pad ? 'glass-card--pad' : '', flat ? 'glass-card--flat' : '', className].filter(Boolean).join(' ');
+export function GlassCard({ as: Tag = 'div', pad, flat, frosted, className = '', children, ...rest }) {
+  const cls = ['glass-card', pad ? 'glass-card--pad' : '', flat ? 'glass-card--flat' : '', frosted ? 'glass-card--frosted' : '', className].filter(Boolean).join(' ');
   return <Tag className={cls} {...rest}>{children}</Tag>;
 }
 

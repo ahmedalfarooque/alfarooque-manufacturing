@@ -32,7 +32,7 @@ export default function StatCard({ icon, label, value, sub, tone, href, onClick,
   const chartKey = trend ? JSON.stringify(trend) : bars ? bars.values.join(',') : String(ringPct);
   return (
     <Tag {...(href ? { href } : {})} {...(onClick ? { onClick, type: 'button' } : {})}
-      className={'glass-card glass-card--pad flex flex-col gap-2 text-start w-full overflow-hidden' + (clickable ? ' cursor-pointer' : '')}>
+      className={'glass-card glass-card--frosted glass-card--pad flex flex-col gap-2 text-start w-full overflow-hidden' + (clickable ? ' cursor-pointer' : '')}>
       <span className="absolute inset-y-0 start-0 w-[3px]" style={{ background: accentColor(tone, color) }} aria-hidden="true" />
       <span className="icon-tile relative" aria-hidden="true">
         <span className="absolute inset-0.5 rounded-[11px]" style={{ background: `radial-gradient(circle at 35% 25%, ${color}38, transparent 72%)` }} />
