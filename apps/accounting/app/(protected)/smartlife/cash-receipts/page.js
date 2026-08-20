@@ -1,29 +1,37 @@
 'use client';
 
-import BlockedTransactionReport from '@/components/BlockedTransactionReport';
+import LedgerReport from '@/components/LedgerReport';
 
+/* One row per real SmartERP cash-receipt document (ledger entry type
+   'catch_receipt' — SmartERP's own key for a cash receipt). */
 const COLUMNS = [
   { key: 'receipt_number', label: 'Receipt #' },
+  { key: 'reference', label: 'Reference' },
   { key: 'date', label: 'Date' },
-  { key: 'cash_account', label: 'Cash Account' },
-  { key: 'customer', label: 'Customer' },
-  { key: 'payment_method', label: 'Payment Method' },
+  { key: 'debit_account_number', label: 'Cash A/C #' },
+  { key: 'debit_account', label: 'Cash Account (Debit)' },
+  { key: 'credit_account_number', label: 'Credit A/C #' },
+  { key: 'credit_account', label: 'Credit Account' },
+  { key: 'description', label: 'Description', wide: true },
+  { key: 'cost_center', label: 'Cost Center' },
   { key: 'amount', label: 'Amount', numeric: true },
   { key: 'currency', label: 'Currency' },
-  { key: 'reference', label: 'Reference' },
-  { key: 'description', label: 'Description' },
   { key: 'branch', label: 'Branch' },
-  { key: 'warehouse', label: 'Warehouse' },
-  { key: 'status', label: 'Status' },
+];
+
+const TOTALS = [
+  { label: 'Cash Receipts', key: 'rows', numeric: false },
+  { label: 'Total Amount', key: 'amount' },
 ];
 
 export default function CashReceiptsPage() {
   return (
-    <BlockedTransactionReport
+    <LedgerReport
       title="Cash Receipts"
-      description="Cash-account receipt records — requires a real SmartERP transaction endpoint"
+      description="SmartERP cash-receipt documents from the synchronized general ledger"
       apiPath="/api/smartlife/cash-receipts"
       columns={COLUMNS}
+      totalsSpec={TOTALS}
     />
   );
 }

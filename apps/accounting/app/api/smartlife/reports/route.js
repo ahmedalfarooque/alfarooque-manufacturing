@@ -12,7 +12,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
 const { readLocalFinancialRecords } = require('@/lib/financialReportData');
-const { getDailyMove, getReceipts, getCashReceipts } = require('@/lib/smartlifeTransactionAdapter');
+const { ledgerReportSummary } = require('@/lib/ledgerSummary');
 
 function r2(value) { return Math.round((Number(value) || 0) * 100) / 100; }
 function first(record, keys) { for (const k of keys) if (record?.[k] != null && record[k] !== '') return record[k]; return null; }
@@ -34,10 +34,10 @@ export async function GET(req) {
     sb.from('erp_project_payments').select('direction,amount,origin'),
     sb.from('erp_financial_connections').select('id', { count: 'exact', head: true }),
     sb.from('crm_integrations').select('status,last_sync_at,last_error').eq('tenant_id', 'alfarooque').eq('integration_key', 'smartlife').maybeSingle(),
-    /* Isolated behind apps/accounting/lib/smartlifeTransactionAdapter.js —
-       when SmartERP eventually exposes the missing endpoint(s), only that
-       file changes; this route and the UI below stay as-is. */
-    getDailyMove(sb), getReceipts(sb), getCashReceipts(sb),
+    /* Cheap COUNT-only availability probes against the synchronized
+       SmartERP ledger — the hub must never load three full report datasets
+       just to decide whether a card is live. */
+    ledgerReportSummary(sb, null), ledgerReportSummary(sb, 'receipt'), ledgerReportSummary(sb, 'catch_receipt'),
   ]);
   if (payments.error) return json({ error: 'Could not build financial reports.' }, 500);
 
@@ -116,16 +116,14 @@ export async function GET(req) {
       { key: 'payables', name: 'Payables', description: 'Outstanding supplier balances', href: '/smartlife/purchases', available: hasPurchases },
       { key: 'vat-summary', name: 'VAT Summary & Report', description: 'Sales, Sales VAT, Purchases, Purchase VAT, and Net VAT by period', href: '/vat', available: hasSales || hasPurchases },
       { key: 'tax-rates', name: 'Tax Rates', description: 'Configured tax rates', href: '/smartlife/tax', available: true },
-      /* Daily Move / Receipts / Cash Receipts: business-critical reports
-         with no real data source yet — routed through
-         apps/accounting/lib/smartlifeTransactionAdapter.js rather than a
-         hardcoded `available:false` here, so that the moment SmartERP
-         exposes the missing endpoint(s), only that one file needs to
-         change (this route and the UI card below already read whatever
-         the adapter reports). */
-      { key: 'daily-move', name: 'Daily Move', description: dailyMove.reason, statusLabel: dailyMove.statusLabel, href: '/smartlife/daily-move', available: dailyMove.available },
-      { key: 'receipts', name: 'Receipts', description: receipts.reason, statusLabel: receipts.statusLabel, href: '/smartlife/receipts', available: receipts.available },
-      { key: 'cash-receipts', name: 'Cash Receipts', description: cashReceipts.reason, statusLabel: cashReceipts.statusLabel, href: '/smartlife/cash-receipts', available: cashReceipts.available },
+      /* Daily Move / Receipts / Cash Receipts — now REAL, sourced from the
+         synchronized SmartERP general ledger (accounting/get_entry, walked
+         by apps/shared/journalEntries.js). Availability reflects whether
+         that ledger actually holds rows of the relevant entry type; it is
+         never hardcoded true. */
+      { key: 'daily-move', name: 'Daily Move', description: dailyMove.description, statusLabel: dailyMove.statusLabel, href: '/smartlife/daily-move', available: dailyMove.available },
+      { key: 'receipts', name: 'Receipts', description: receipts.description, statusLabel: receipts.statusLabel, href: '/smartlife/receipts', available: receipts.available },
+      { key: 'cash-receipts', name: 'Cash Receipts', description: cashReceipts.description, statusLabel: cashReceipts.statusLabel, href: '/smartlife/cash-receipts', available: cashReceipts.available },
     ] },
     { key: 'inventory-cost', label: 'Inventory & Cost', reports: [
       { key: 'inventory-report', name: 'Inventory Report', description: 'Stock levels and low-stock alerts', href: '/inventory', available: true },
