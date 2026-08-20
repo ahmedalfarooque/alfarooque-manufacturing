@@ -164,17 +164,25 @@ async function upsertEntries(sb, entries) {
   return headers.length;
 }
 
+/* Highest entry id already stored, resolved IN THE DATABASE via the
+   generated numeric entry_seq column (migration
+   add_journal_entry_seq_column) — never by pulling ids into JS and taking a
+   max there. That earlier approach was a real bug: PostgREST caps a
+   response at 1000 rows, so once the ledger passed 1000 entries the "max"
+   froze (~1915) and every incremental sync restarted from the same place
+   forever, never reaching the newer entries. entry_id is text, so ordering
+   must use entry_seq — a text sort would put '999' above '10205'. */
 async function highestSyncedEntryId(sb) {
   const { data, error } = await sb.from('erp_smartlife_journal_entries')
-    .select('entry_id')
-    .eq('tenant_id', TENANT_ID).eq('source_system', SOURCE_SYSTEM);
+    .select('entry_seq')
+    .eq('tenant_id', TENANT_ID).eq('source_system', SOURCE_SYSTEM)
+    .not('entry_seq', 'is', null)
+    .order('entry_seq', { ascending: false })
+    .limit(1)
+    .maybeSingle();
   if (error) throw error;
-  let highest = 0;
-  for (const row of data || []) {
-    const value = Number(row.entry_id);
-    if (Number.isFinite(value) && value > highest) highest = value;
-  }
-  return highest;
+  const highest = Number(data?.entry_seq);
+  return Number.isFinite(highest) && highest > 0 ? highest : 0;
 }
 
 /* Walk a bounded window of ids concurrently, returning both the entries
@@ -210,7 +218,7 @@ async function fetchIdWindow(sb, ids, concurrency = 4) {
      - maxEntries bounds a single run so a sync can never run unbounded.
      - Returns counts only; never throws for a single missing id. */
 const MISS_STREAK = 60;
-async function syncJournalEntries(sb, { maxEntries = 400, recheckRecent = 40, concurrency = 4, fromId = null, maxId = null } = {}) {
+async function syncJournalEntries(sb, { maxEntries = 400, recheckRecent = 40, concurrency = 4, fromId = null, maxId = null, missStreak = MISS_STREAK } = {}) {
   const highest = fromId != null ? Number(fromId) : await highestSyncedEntryId(sb);
   const start = Math.max(1, highest - (fromId != null ? 0 : recheckRecent) + 1);
   let cursor = start;
@@ -218,7 +226,7 @@ async function syncJournalEntries(sb, { maxEntries = 400, recheckRecent = 40, co
   let written = 0;
   let totalGaps = 0;
   const batchSize = Math.max(concurrency, 20);
-  while (written < maxEntries && consecutiveGaps < MISS_STREAK) {
+  while (written < maxEntries && consecutiveGaps < missStreak) {
     if (maxId != null && cursor > Number(maxId)) break;
     const ids = [];
     for (let i = 0; i < batchSize; i += 1) {
