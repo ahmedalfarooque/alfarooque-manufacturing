@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, isValidElement } from 'react';
+import { useEffect, useMemo, useRef, useState, isValidElement } from 'react';
 import { useLiveData } from '@/lib/useLiveData';
 import { GlassBadge, GlassButton, GlassCard, GlassInput, GlassModal, GlassSelect, toast } from '@/components/glass';
 import { getAppUrl } from '@/lib/appLinks';
@@ -10,6 +10,7 @@ import DateFilter, { inDateFilter, dateFilterLabel } from '@/components/DateFilt
 import PageHeader from '@/components/PageHeader';
 import ListToolbar from '@/components/ListToolbar';
 import { useLanguage } from '@/lib/i18n';
+import { readPref, writePref } from '@/lib/prefs';
 
 /* `supported` reflects the SmartERP V3 OpenAPI specification (verified,
    authoritative — see apps/shared/integrationPlatform.js). Every resource in
@@ -99,6 +100,38 @@ function searchable(record, resource) {
 
 const DOCUMENT_RESOURCES = new Set(['sales-invoices', 'purchases']);
 
+/* Every field genuinely present on the synced record, in SmartLife's own
+   on-screen order as far as real fields allow (verified via a live
+   `jsonb_object_keys` scan across the COMPLETE sales_invoice/purchase_invoice
+   sets — not the screenshot). Fields the SmartLife UI shows but this synced
+   payload does not carry (City, Cost Center, a separate Cashier person vs.
+   biller string, Representative Name, Created At timestamp, Attachment) are
+   intentionally absent — adding them would be fabrication, not a display
+   choice. `id` is the REAL SmartLife/SmartERP record id (raw_payload.id),
+   never a generated row number. */
+const INVOICE_ALL_COLUMNS = {
+  'sales-invoices': ['id','date','invoice_number','biller','customer','customerId','vatNumber','phone','subtotal','discount','vat','deliveryFee','total','paid','balance','paymentStatus','saleStatus','notes','totalItems','totalItemsQty','createdBy','updatedAt','updatedBy'],
+  purchases: ['id','date','invoice_number','customer','accountNum','vatNumber','phone','subtotal','discount','vat','shippingFee','total','paid','balance','paymentStatus','saleStatus'],
+};
+/* Default visible set — the existing view, unchanged, with `id` added as
+   the one new always-visible column (the core requirement of this task).
+   Every other real field stays opt-in via the Columns selector rather than
+   forced onto the default screen. */
+const INVOICE_DEFAULT_COLUMNS = {
+  'sales-invoices': ['id','invoice_number','date','customer','total','paid','balance','paymentStatus'],
+  purchases: ['id','invoice_number','date','customer','total','paid','balance','paymentStatus','saleStatus'],
+};
+/* Value type per sortable/filterable field — governs both the sort
+   comparator (numeric vs. chronological vs. lexical) and which per-column
+   filter widget renders (dropdown for the two enum-like status fields,
+   text input for everything else, matched by substring against the exact
+   same formatted value the table cell already shows). */
+const INVOICE_FIELD_TYPE = {
+  id:'number', date:'date', invoice_number:'text', biller:'text', customer:'text', customerId:'number', vatNumber:'text', phone:'text',
+  subtotal:'number', discount:'number', vat:'number', deliveryFee:'number', shippingFee:'number', total:'number', paid:'number', balance:'number',
+  paymentStatus:'select', saleStatus:'select', notes:'text', totalItems:'number', totalItemsQty:'number', createdBy:'text', updatedAt:'date', updatedBy:'text', accountNum:'text',
+};
+
 /* Verified real SmartLife purchase-status source data — id is the internal
    filter/status value, title is the exact Arabic string SmartLife's own
    `status` field returns on a purchase record. Never invented: this is the
@@ -133,8 +166,19 @@ function invoiceView(record, resource = 'sales-invoices') {
   const rawSaleStatusTitle = first(record,['status','sale_status','purchase_status']);
   const saleStatusTitle = rawSaleStatusTitle == null ? null : String(rawSaleStatusTitle).trim();
   const saleStatusId = resource === 'purchases' && saleStatusTitle ? (PURCHASE_STATUS_TITLE_TO_ID[String(saleStatusTitle).trim()] || null) : null;
+  /* Additional real fields — verified present on every synced record via a
+     live `jsonb_object_keys` scan across the complete sales_invoice/
+     purchase_invoice sets (not guessed from the SmartLife UI screenshots).
+     Sales and Purchases have genuinely different schemas: fields absent for
+     a given resource stay `null` here rather than being invented (e.g.
+     Purchases has no notes/created_by/customer_id/total_items — confirmed
+     absent on every synced row, not merely unset on some). */
+  const id = Number(first(record,['id'])) || null;
+  const vatNumber = first(record,['vat_no']);
+  const phone = first(record,['phone']);
+  const discount = Number(first(record,['total_discount']) || 0);
   return {
-    external_id:externalId(record), invoice_number:first(record,['reference_no','invoice_number','number','reference','code']),
+    external_id:externalId(record), id, invoice_number:first(record,['reference_no','invoice_number','number','reference','code']),
     customer:party, date:first(record,['invoice_date','date','created_at']),
     due_date:first(record,['due_date','payment_due_date']), subtotal:Number(first(record,['total','subtotal','sub_total','net_amount']) || 0),
     vat:Number(first(record,['total_tax','vat_amount','tax_amount','vat','tax']) || 0), total, paid,
@@ -142,6 +186,18 @@ function invoiceView(record, resource = 'sales-invoices') {
     paymentStatus, saleStatus:saleStatusTitle, saleStatusId,
     status:paymentStatus,
     currency:String(first(record,['currency','currency_code']) || 'SAR'),
+    vatNumber, phone, discount,
+    accountNum: resource === 'purchases' ? first(record,['account_num']) : null,
+    shippingFee: resource === 'purchases' ? Number(first(record,['shipping']) || 0) : null,
+    customerId: resource !== 'purchases' ? first(record,['customer_id']) : null,
+    deliveryFee: resource !== 'purchases' ? Number(first(record,['total_shipping']) || 0) : null,
+    notes: resource !== 'purchases' ? first(record,['notes']) : null,
+    totalItems: resource !== 'purchases' ? first(record,['total_items']) : null,
+    totalItemsQty: resource !== 'purchases' ? first(record,['total_items_qty']) : null,
+    createdBy: resource !== 'purchases' ? first(record,['created_by']) : null,
+    updatedAt: resource !== 'purchases' ? first(record,['updated_at']) : null,
+    updatedBy: resource !== 'purchases' ? first(record,['updated_by']) : null,
+    biller: resource !== 'purchases' ? first(record,['biller']) : null,
   };
 }
 
@@ -158,6 +214,80 @@ export default function SmartLifeResourcePage({ params }) {
   const [search,setSearch] = useState(''); const [status,setStatus] = useState(''); const [selected,setSelected] = useState(null);
   const [dateFilter,setDateFilter] = useState({ preset:'all', from:null, to:null });
   const [customerFilter,setCustomerFilter] = useState(''); const [paymentStatusFilter,setPaymentStatusFilter] = useState(''); const [saleStatusFilter,setSaleStatusFilter] = useState('');
+  /* SmartLife-style per-resource column visibility + sort, persisted via the
+     existing cookie-based pref helper (lib/prefs.js) — no new persistence
+     mechanism. Sort defaults to ID / Z→A (highest SmartLife id first),
+     matching SmartLife's own default list ordering; column visibility
+     defaults to INVOICE_DEFAULT_COLUMNS (the existing view, unchanged) until
+     the user opts more fields in via the Columns menu. */
+  const [visibleColumns,setVisibleColumns] = useState(null);
+  const [sortBy,setSortBy] = useState('id'); const [sortDir,setSortDir] = useState('desc');
+  const [colFilters,setColFilters] = useState({});
+  const [columnsMenuOpen,setColumnsMenuOpen] = useState(false);
+  /* Columns menu is fixed-positioned and viewport-aware — the table sits
+     near the bottom of the page (pagination controls below it, potentially
+     near the viewport edge), so a plain "always open downward, absolute
+     under the button" popup gets clipped there. Measuring the button's
+     real position and flipping upward when there isn't enough room below
+     fixes it for every table (Sales and Purchases share this one page
+     component, so one fix covers both) regardless of scroll position or
+     window size — recomputed on open and on resize/scroll while open. */
+  const columnsBtnRef = useRef(null);
+  const [columnsMenuPos, setColumnsMenuPos] = useState(null);
+  function computeColumnsMenuPos() {
+    const btn = columnsBtnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const margin = 8;
+    const desiredHeight = 320;
+    const spaceBelow = window.innerHeight - rect.bottom - margin;
+    const spaceAbove = rect.top - margin;
+    const openUp = spaceBelow < desiredHeight && spaceAbove > spaceBelow;
+    const available = Math.max(160, (openUp ? spaceAbove : spaceBelow));
+    setColumnsMenuPos({
+      left: Math.max(margin, rect.left),
+      top: openUp ? undefined : rect.bottom + 4,
+      bottom: openUp ? (window.innerHeight - rect.top + 4) : undefined,
+      maxHeight: Math.min(320, available),
+    });
+  }
+  function toggleColumnsMenu() {
+    setColumnsMenuOpen(open => {
+      const next = !open;
+      if (next) computeColumnsMenuPos();
+      return next;
+    });
+  }
+  useEffect(() => {
+    if (!columnsMenuOpen) return undefined;
+    const onViewportChange = () => computeColumnsMenuPos();
+    window.addEventListener('resize', onViewportChange);
+    window.addEventListener('scroll', onViewportChange, true);
+    return () => { window.removeEventListener('resize', onViewportChange); window.removeEventListener('scroll', onViewportChange, true); };
+  }, [columnsMenuOpen]);
+  useEffect(() => {
+    if (!DOCUMENT_RESOURCES.has(resource)) return;
+    const savedCols = readPref(`af_cols_${resource}`);
+    if (savedCols) { try { const parsed = JSON.parse(savedCols); if (Array.isArray(parsed) && parsed.length) { setVisibleColumns(INVOICE_ALL_COLUMNS[resource].filter(c => parsed.includes(c))); return; } } catch (_) {} }
+    setVisibleColumns(INVOICE_DEFAULT_COLUMNS[resource]);
+  }, [resource]);
+  useEffect(() => {
+    if (!DOCUMENT_RESOURCES.has(resource)) return;
+    const savedSort = readPref(`af_sort_${resource}`);
+    if (savedSort) { const [field,dir] = savedSort.split(':'); if (field && INVOICE_ALL_COLUMNS[resource].includes(field)) { setSortBy(field); setSortDir(dir === 'asc' ? 'asc' : 'desc'); return; } }
+    setSortBy('id'); setSortDir('desc');
+  }, [resource]);
+  useEffect(() => { setColFilters({}); }, [resource]);
+  function toggleColumn(key) {
+    setVisibleColumns(prev => {
+      const current = prev || INVOICE_DEFAULT_COLUMNS[resource];
+      const next = current.includes(key) ? current.filter(c => c !== key) : [...current, key];
+      const ordered = INVOICE_ALL_COLUMNS[resource].filter(c => next.includes(c));
+      writePref(`af_cols_${resource}`, JSON.stringify(ordered));
+      return ordered;
+    });
+  }
+  function changeSort(field, dir) { setSortBy(field); setSortDir(dir); writePref(`af_sort_${resource}`, `${field}:${dir}`); }
   const [categoryFilter,setCategoryFilter] = useState(''); const [unitFilter,setUnitFilter] = useState(''); const [typeFilter,setTypeFilter] = useState('');
   /* Trial Balance column-group toggles, matching SmartLife's own report
      interaction model (one checkbox per group: Beginning of period /
@@ -312,8 +442,31 @@ export default function SmartLifeResourcePage({ params }) {
      page directly, so there is no flicker from a slower complete-dataset
      fetch reordering rows after the fact, and no redundant full-dataset
      fetch/sort on every unfiltered page load. */
-  const usingCompleteFilterSet = localFiltersActive && filterUniverse.length > 0;
+  /* Sales/Purchases now ALWAYS resolve against the complete background-
+     fetched dataset (filterUniverse), not just while a filter is active —
+     required for a correct GLOBAL sort (e.g. ID Z→A) plus pagination: sorting
+     only the current 25/50/100-row page would silently reorder within a page
+     instead of across the whole 488/1,989-row set. Other resources keep the
+     original behavior unchanged (localFiltersActive gate). */
+  const usingCompleteFilterSet = (isInvoiceWorkspace ? true : localFiltersActive) && filterUniverse.length > 0;
   const candidateRecords = usingCompleteFilterSet ? filterUniverse : records;
+  /* Per-column filters (SmartLife-style filter row) — substring match
+     against the exact same formatted value cell() already renders on
+     screen for text/numeric/date columns (so "what you typed" always
+     matches "what you see"); the two enum-like fields (Payment Status,
+     Sale/Purchase Status) use exact match against a real value picked from
+     a dropdown, same values already computed for the existing status
+     filters above. */
+  function colFiltersMatch(record, view) {
+    for (const [col, val] of Object.entries(colFilters)) {
+      if (!val) continue;
+      if (col === 'paymentStatus') { if (String(view.paymentStatus || '').trim() !== val) return false; continue; }
+      if (col === 'saleStatus') { const compareValue = resource === 'purchases' ? view.saleStatusId : view.saleStatus; if (String(compareValue || '').trim() !== val) return false; continue; }
+      const rendered = String(cell(record, col) ?? '').toLowerCase();
+      if (!rendered.includes(val.toLowerCase())) return false;
+    }
+    return true;
+  }
   const filteredRecords = useMemo(() => candidateRecords.filter(record => {
     if (isInvoiceWorkspace) {
       const view = invoiceView(record, resource);
@@ -325,6 +478,7 @@ export default function SmartLifeResourcePage({ params }) {
         if (String(compareValue || '').trim() !== saleStatusFilter.trim()) return false;
       }
       if (!inDateFilter(dateFilter, view.date)) return false;
+      if (!colFiltersMatch(record, view)) return false;
       return true;
     }
     if (resource === 'products') {
@@ -343,10 +497,25 @@ export default function SmartLifeResourcePage({ params }) {
       return true;
     }
     return (!search || searchable(record, resource).includes(search.toLowerCase())) && (!status || String(record?.status || record?.payment_status || '') === status);
-  }),[candidateRecords,search,status,resource,isInvoiceWorkspace,customerFilter,paymentStatusFilter,saleStatusFilter,dateFilter,categoryFilter,unitFilter,typeFilter,tbShowParents,tbShowCustomers,tbShowSuppliers,trialBalanceParentNumbers]);
+  }),[candidateRecords,search,status,resource,isInvoiceWorkspace,customerFilter,paymentStatusFilter,saleStatusFilter,dateFilter,categoryFilter,unitFilter,typeFilter,tbShowParents,tbShowCustomers,tbShowSuppliers,trialBalanceParentNumbers,colFilters]);
+  /* Global sort — applied AFTER filtering, BEFORE pagination slicing, over
+     the complete filtered set (never just the visible page). Field type
+     (INVOICE_FIELD_TYPE) picks a numeric/chronological/lexical comparator so
+     e.g. ID 500 sorts after ID 99, never before it as plain text would. */
+  const sortedRecords = useMemo(() => {
+    if (!isInvoiceWorkspace) return filteredRecords;
+    const type = INVOICE_FIELD_TYPE[sortBy] || 'text';
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...filteredRecords].sort((a, b) => {
+      const va = invoiceView(a, resource)[sortBy]; const vb = invoiceView(b, resource)[sortBy];
+      if (type === 'number') return ((Number(va) || 0) - (Number(vb) || 0)) * dir;
+      if (type === 'date') return ((va ? new Date(va).getTime() : 0) - (vb ? new Date(vb).getTime() : 0)) * dir;
+      return String(va || '').localeCompare(String(vb || '')) * dir;
+    });
+  }, [filteredRecords, isInvoiceWorkspace, resource, sortBy, sortDir]);
   const totalRecords = usingCompleteFilterSet ? filteredRecords.length : (Number(data?.total) || records.length);
   const totalPages = Math.max(1,Math.ceil(totalRecords/pageSize));
-  const filtered = usingCompleteFilterSet ? filteredRecords.slice(page * pageSize, (page + 1) * pageSize) : filteredRecords;
+  const filtered = usingCompleteFilterSet ? sortedRecords.slice(page * pageSize, (page + 1) * pageSize) : sortedRecords;
 
   function matchesActiveFilters(record) {
     if (isInvoiceWorkspace) {
@@ -358,7 +527,7 @@ export default function SmartLifeResourcePage({ params }) {
         const compareValue = resource === 'purchases' ? view.saleStatusId : view.saleStatus;
         if (String(compareValue || '').trim() !== saleStatusFilter.trim()) return false;
       }
-      return inDateFilter(dateFilter, view.date);
+      return inDateFilter(dateFilter, view.date) && colFiltersMatch(record, view);
     }
     if (resource === 'products') {
       return (!search || searchable(record, resource).includes(search.toLowerCase()))
@@ -419,9 +588,7 @@ export default function SmartLifeResourcePage({ params }) {
        Status only, per explicit repeated instruction not to add extra
        financial columns. Detail modal still shows subtotal/VAT/sale
        status/items for anyone who needs the full breakdown. */
-    if (isInvoiceWorkspace) return resource === 'purchases'
-      ? ['invoice_number','date','customer','total','paid','balance','paymentStatus','saleStatus']
-      : ['invoice_number','date','customer','total','paid','balance','paymentStatus'];
+    if (isInvoiceWorkspace) return visibleColumns || INVOICE_DEFAULT_COLUMNS[resource];
     /* Customers/Suppliers: real fields only, verified against actual
        SmartLife records — name/company, phone, email, vat_no,
        current_balance all genuinely exist; there is no status field on
@@ -464,22 +631,23 @@ export default function SmartLifeResourcePage({ params }) {
     const preferred = ['id','number','reference','code','name','english_name','company','customer_name','supplier_name','phone','email','city','date','status','quantity','price','total','amount','balance','currency'];
     const present = new Set(records.flatMap(r => r && typeof r === 'object' ? Object.keys(r) : []));
     return preferred.filter(k => present.has(k)).slice(0,8).length ? preferred.filter(k => present.has(k)).slice(0,8) : [...present].slice(0,8);
-  },[records,resource,isInvoiceWorkspace,tbShowBeginning,tbShowPeriod,tbShowCurrent,tbShowBalance]);
-  const COLUMN_LABELS = { invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate', debit:'Debit', credit:'Credit', beginning_debit:'Debit', beginning_credit:'Credit', period_debit:'Debit', period_credit:'Credit' };
+  },[records,resource,isInvoiceWorkspace,tbShowBeginning,tbShowPeriod,tbShowCurrent,tbShowBalance,visibleColumns]);
+  const COLUMN_LABELS = { id:'ID', invoice_number:'Reference', date:'Date', customer:'Customer', subtotal:'Subtotal', vat:'VAT', total:'Total', balance:'Balance', paid:'Paid', paymentStatus:'Payment Status', saleStatus: resource === 'purchases' ? 'Purchase Status' : 'Sale Status', contact_name: resource === 'suppliers' ? 'Supplier' : 'Customer', vat_no:'VAT Number', current_balance:'Balance', name: resource === 'warehouses' ? 'Warehouse' : 'Product', code:'Code', category:'Category', type:'Type', unit:'Unit', cost:'Cost', price:'Sale Price', quantity:'Stock', tax_rate:'Tax', latitude:'Latitude', longitude:'Longitude', account_number:'Account Number', account_name:'Account Name', rate:'Rate', debit:'Debit', credit:'Credit', beginning_debit:'Debit', beginning_credit:'Credit', period_debit:'Debit', period_credit:'Credit',
+    vatNumber:'VAT Number', phone:'Phone', discount:'Discount', accountNum:'Account Number', deliveryFee:'Delivery Fee', shippingFee:'Shipping', customerId:'Customer ID', notes:'Note', totalItems:'Total Items', totalItemsQty:'Total Qty', createdBy:'Created By (ID)', updatedAt:'Updated At', updatedBy:'Updated By (ID)', biller:'Biller' };
   /* Export (Print/PDF/Excel) is a flat table with no visual group headers,
      so "Debit"/"Credit" repeated three times would be ambiguous there —
      use distinct labels only for that flat context; the on-screen table
      keeps the generic sub-labels since the group header above them already
      supplies the context, matching SmartLife's own screen layout. */
   const TRIAL_BALANCE_EXPORT_LABELS = { beginning_debit:'Beginning Debit', beginning_credit:'Beginning Credit', period_debit:'Period Debit', period_credit:'Period Credit', debit:'Current Debit', credit:'Current Credit', balance:'Balance', account_number:'Account Number', account_name:'Account Name' };
-  function resetInvoiceFilters() { setSearch(''); setCustomerFilter(''); setPaymentStatusFilter(''); setSaleStatusFilter(''); setDateFilter({ preset:'all', from:null, to:null }); }
+  function resetInvoiceFilters() { setSearch(''); setCustomerFilter(''); setPaymentStatusFilter(''); setSaleStatusFilter(''); setDateFilter({ preset:'all', from:null, to:null }); setColFilters({}); }
 
   const relationshipRecordType = resource === 'purchases' ? 'purchase_invoice' : resource === 'sales-invoices' ? 'sales_invoice' : null;
   useEffect(() => {
     if (!selected || !relationshipRecordType) { setRelationship(null); return; }
     fetch(`/api/smartlife/relationships?record_type=${relationshipRecordType}&external_id=${encodeURIComponent(externalId(selected))}`,{credentials:'same-origin'}).then(r=>r.json()).then(setRelationship).catch(()=>setRelationship(null));
   },[selected,resource,relationshipRecordType]);
-  useEffect(() => { setPage(0); },[resource,search,status,customerFilter,paymentStatusFilter,saleStatusFilter,dateFilter,categoryFilter,unitFilter,typeFilter,pageSize]);
+  useEffect(() => { setPage(0); },[resource,search,status,customerFilter,paymentStatusFilter,saleStatusFilter,dateFilter,categoryFilter,unitFilter,typeFilter,pageSize,colFilters,sortBy,sortDir]);
   useEffect(() => { if(page>=totalPages)setPage(Math.max(0,totalPages-1)); },[page,totalPages]);
   const printBase = resource === 'purchases' ? '/smartlife/purchases' : '/smartlife/sales-invoices';
 
@@ -628,8 +796,8 @@ export default function SmartLifeResourcePage({ params }) {
     }
     if(!DOCUMENT_RESOURCES.has(resource)) return display(record?.[column]);
     const view=invoiceView(record, resource); const key = column === 'supplier' ? 'customer' : column; const value=view[key];
-    if (column === 'date' || column === 'due_date') return professionalDate(value);
-    return ['total','paid','balance','subtotal','vat'].includes(column) ? money(value,view.currency) : display(value);
+    if (column === 'date' || column === 'due_date' || column === 'updatedAt') return professionalDate(value);
+    return ['total','paid','balance','subtotal','vat','discount','deliveryFee','shippingFee'].includes(column) ? money(value,view.currency) : display(value);
   }
 
   const selectedInvoice = selected && DOCUMENT_RESOURCES.has(resource) ? invoiceView(selected, resource) : null;
@@ -798,12 +966,58 @@ export default function SmartLifeResourcePage({ params }) {
             <th className="print:hidden"/>
           </tr>;
         })()}
-        <tr className="border-b border-[color:var(--bd)]">{columns.map(c=><th key={c} className={`p-3 text-xs uppercase text-[color:var(--tx-3)] ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end':'text-start'}`}>{c==='customer'?partyLabel:(COLUMN_LABELS[c] || c.replaceAll('_',' '))}</th>)}<th className="print:hidden">Actions</th></tr></thead><tbody>{filtered.map((record,index)=>{
+        <tr className="border-b border-[color:var(--bd)]">{columns.map(c=><th key={c} className={`p-3 text-xs uppercase text-[color:var(--tx-3)] ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end':'text-start'}`}>{c==='customer'?partyLabel:(COLUMN_LABELS[c] || c.replaceAll('_',' '))}</th>)}<th className="print:hidden">Actions</th></tr>
+        {/* SmartLife-style per-column filter row — substring match against
+           the same formatted value cell() renders (see colFiltersMatch
+           above), or an exact dropdown for the two enum-like status
+           columns, reusing the real distinct values already computed for
+           the toolbar's status filters. */}
+        {isInvoiceWorkspace && <tr className="border-b border-[color:var(--bd)] print:hidden">{columns.map(c => {
+          const fieldType = INVOICE_FIELD_TYPE[c] || 'text';
+          if (fieldType === 'select') {
+            const options = c === 'paymentStatus' ? paymentStatusValues : saleStatusValues.map(s => resource === 'purchases' ? s.id : s.title);
+            const labelFor = c === 'saleStatus' && resource === 'purchases' ? (v => saleStatusValues.find(s => s.id === v)?.title || v) : (v => v);
+            return <th key={c} className="p-1.5"><GlassSelect value={colFilters[c] || ''} onChange={e => setColFilters(prev => ({ ...prev, [c]: e.target.value }))} className="w-full text-xs"><option value="">All</option>{options.map(v => <option key={v} value={v}>{labelFor(v)}</option>)}</GlassSelect></th>;
+          }
+          return <th key={c} className="p-1.5"><GlassInput value={colFilters[c] || ''} onChange={e => setColFilters(prev => ({ ...prev, [c]: e.target.value }))} placeholder={`Filter ${(COLUMN_LABELS[c] || c).toLowerCase()}…`} className="w-full text-xs"/></th>;
+        })}<th className="print:hidden"/></tr>}
+        </thead><tbody>{filtered.map((record,index)=>{
           const isParent=resource==='trial-balance'&&trialBalanceParentNumbers&&trialBalanceParentNumbers.has(String(record?.account_number||''));
           const depth=resource==='trial-balance'&&trialBalanceDepth?(trialBalanceDepth.get(String(record?.account_number||''))||0):0;
           const naColumns=new Set(['beginning_debit','beginning_credit','period_debit','period_credit']);
           return <tr key={externalId(record)||index} className={`border-b border-[color:var(--bd)] ${isParent?'bg-[color:var(--pr-soft)] font-semibold':''}`}>{columns.map(c=><td key={c} className={`max-w-64 truncate p-3 ${resource==='trial-balance'&&c!=='account_number'&&c!=='account_name'?'text-end tabular-nums':''} ${resource==='trial-balance'&&naColumns.has(c)?'italic text-[color:var(--tx-4)]':''}`} title={resource==='trial-balance'&&naColumns.has(c)?'Not available from SmartLife — no dated ledger/journal source is exposed by the accessible API':undefined} style={resource==='trial-balance'&&c==='account_name'?{paddingInlineStart:`${12+depth*20}px`}:undefined}>{cell(record,c)}</td>)}<td className="p-3 print:hidden"><div className="flex gap-1"><GlassButton variant="secondary" size="sm" onClick={()=>setSelected(record)}>View</GlassButton>{DOCUMENT_RESOURCES.has(resource)&&<a href={`${printBase}/${externalId(record)}/print`} target="_blank" rel="noreferrer"><GlassButton variant="secondary" size="sm">PDF</GlassButton></a>}{DOCUMENT_RESOURCES.has(resource)&&<GlassButton size="sm" onClick={()=>{setSelected(record);setProjectId('');setConnectOpen(true);}}>Connect Project</GlassButton>}</div></td></tr>;
         })}</tbody></table></div>}
+      {/* SmartLife-style bottom-left controls: Columns visibility selector +
+         sort field/direction. Reproduces the same two controls shown at the
+         bottom-left of the real SmartLife list (blue columns icon, sort
+         dropdown, A→Z / Z→A buttons) — genuinely functional, not decorative:
+         sortBy/sortDir drive the real global sort above (sortedRecords),
+         and toggleColumn() actually adds/removes the column from `columns`. */}
+      {isInvoiceWorkspace && !!filtered.length && <div className="mb-2 flex flex-wrap items-center gap-3 print:hidden relative">
+        <div className="relative inline-block" ref={columnsBtnRef}>
+          <GlassButton variant="secondary" size="sm" onClick={toggleColumnsMenu} title="Choose visible columns">☰ Columns</GlassButton>
+          {columnsMenuOpen && <>
+            <div className="fixed inset-0 z-40" onClick={()=>setColumnsMenuOpen(false)}/>
+            <div
+              className="fixed z-50 w-64 overflow-auto rounded-xl border border-[color:var(--bd)] bg-[color:var(--bg-2)] p-2 shadow-lg"
+              style={columnsMenuPos ? { left: columnsMenuPos.left, top: columnsMenuPos.top, bottom: columnsMenuPos.bottom, maxHeight: columnsMenuPos.maxHeight } : { display: 'none' }}
+            >
+              <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--tx-3)]">Columns</div>
+              {INVOICE_ALL_COLUMNS[resource].map(c => <label key={c} className="flex items-center gap-2 rounded-lg px-1.5 py-1 text-sm hover:bg-[color:var(--pr-soft)]">
+                <input type="checkbox" checked={(visibleColumns || INVOICE_DEFAULT_COLUMNS[resource]).includes(c)} onChange={()=>toggleColumn(c)}/>
+                {c === 'customer' ? partyLabel : (COLUMN_LABELS[c] || c)}
+              </label>)}
+            </div>
+          </>}
+        </div>
+        <span className="flex items-center gap-1.5 text-xs text-[color:var(--tx-3)]">Sort by
+          <GlassSelect value={sortBy} onChange={e=>changeSort(e.target.value, sortDir)} className="w-40">
+            {INVOICE_ALL_COLUMNS[resource].filter(c => INVOICE_FIELD_TYPE[c]).map(c => <option key={c} value={c}>{c === 'customer' ? partyLabel : (COLUMN_LABELS[c] || c)}</option>)}
+          </GlassSelect>
+          <GlassButton variant={sortDir==='asc'?'primary':'secondary'} size="sm" onClick={()=>changeSort(sortBy,'asc')} title="Sort ascending">A → Z</GlassButton>
+          <GlassButton variant={sortDir==='desc'?'primary':'secondary'} size="sm" onClick={()=>changeSort(sortBy,'desc')} title="Sort descending">Z → A</GlassButton>
+        </span>
+      </div>}
       {resource!=='financial-reports'&&resource!=='product-balances'&&totalRecords>0&&<div className="mt-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="text-xs text-[color:var(--tx-3)] flex items-center gap-3 flex-wrap">
           <span>Showing {Math.min(page*pageSize+1,totalRecords)}–{Math.min((page+1)*pageSize,totalRecords)} of {totalRecords} {usingCompleteFilterSet?'matched':'source'} records</span>
@@ -968,15 +1182,15 @@ function FinancialReportsView({ data, error, loading, lastSync, sync, busy, lang
               <GlassCard key={r.key} className={`p-4 ${r.available ? '' : 'opacity-60'}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="font-semibold text-[color:var(--tx)]">{r.name}</div>
-                  {!r.available && <span className="shrink-0 rounded-full bg-[color:var(--bd)] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[color:var(--tx-4)]">Unavailable</span>}
+                  {!r.available && <span className="shrink-0 rounded-full bg-[color:var(--bd)] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[color:var(--tx-4)]">{r.statusLabel || 'Unavailable'}</span>}
                 </div>
                 <div className="mt-1 text-xs text-[color:var(--tx-3)]">{r.description}</div>
                 <div className="mt-3 flex gap-2">
-                  {r.available && r.href
-                    ? <a href={r.href}><GlassButton size="sm">View</GlassButton></a>
+                  {r.href
+                    ? <a href={r.href}><GlassButton size="sm">{r.available ? 'View' : 'View report shell'}</GlassButton></a>
                     : r.available && r.crossApp
                     ? <a href={`${getAppUrl(r.crossApp)}${r.crossAppPath || ''}`} target="_blank" rel="noreferrer"><GlassButton size="sm">Open in {r.crossApp === 'projects' ? 'ProTrack' : r.crossApp}</GlassButton></a>
-                    : <GlassButton size="sm" disabled>{r.available ? 'Shown above' : 'Not available from SmartLife'}</GlassButton>}
+                    : <GlassButton size="sm" disabled>{r.available ? 'Shown above' : (r.statusLabel || 'Not available from SmartLife')}</GlassButton>}
                 </div>
               </GlassCard>
             ))}

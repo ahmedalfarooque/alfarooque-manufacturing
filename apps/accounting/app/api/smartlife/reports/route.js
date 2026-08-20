@@ -12,6 +12,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
 const { readLocalFinancialRecords } = require('@/lib/financialReportData');
+const { getDailyMove, getReceipts, getCashReceipts } = require('@/lib/smartlifeTransactionAdapter');
 
 function r2(value) { return Math.round((Number(value) || 0) * 100) / 100; }
 function first(record, keys) { for (const k of keys) if (record?.[k] != null && record[k] !== '') return record[k]; return null; }
@@ -27,12 +28,16 @@ export async function GET(req) {
      Purchases/Sales Invoices pages are also local-first, everything reads
      the one same table, so they agree by construction — the duplicate live
      fetch this comment used to justify is gone. */
-  const [salesResult, purchasesResult, payments, connections, integration] = await Promise.all([
+  const [salesResult, purchasesResult, payments, connections, integration, dailyMove, receipts, cashReceipts] = await Promise.all([
     readLocalFinancialRecords(sb, 'sales_invoice').catch(() => ({ records: [] })),
     readLocalFinancialRecords(sb, 'purchase_invoice').catch(() => ({ records: [] })),
     sb.from('erp_project_payments').select('direction,amount,origin'),
     sb.from('erp_financial_connections').select('id', { count: 'exact', head: true }),
     sb.from('crm_integrations').select('status,last_sync_at,last_error').eq('tenant_id', 'alfarooque').eq('integration_key', 'smartlife').maybeSingle(),
+    /* Isolated behind apps/accounting/lib/smartlifeTransactionAdapter.js —
+       when SmartERP eventually exposes the missing endpoint(s), only that
+       file changes; this route and the UI below stay as-is. */
+    getDailyMove(sb), getReceipts(sb), getCashReceipts(sb),
   ]);
   if (payments.error) return json({ error: 'Could not build financial reports.' }, 500);
 
@@ -98,9 +103,9 @@ export async function GET(req) {
     ] },
     { key: 'financial-statements', label: 'Financial Statements', reports: [
       { key: 'gross-profit', name: 'Gross Profit', description: 'Sales revenue minus actual purchase cost', href: null, available: hasSales || hasPurchases },
-      { key: 'income-statement', name: 'Income Statement', description: 'Not available from SmartLife.', href: null, available: false },
-      { key: 'financial-position', name: 'Financial Position', description: 'Not available from SmartLife.', href: null, available: false },
-      { key: 'cash-flow', name: 'Cash Flow Statement', description: 'Not available from SmartLife.', href: null, available: false },
+      { key: 'income-statement', name: 'Income Statement', description: 'Sales, cost of sales, expenses and income — built from real synced account balances', href: '/smartlife/income-statement', available: true },
+      { key: 'financial-position', name: 'Financial Position', description: 'Assets, liabilities and equity — built from real synced account balances', href: '/smartlife/financial-position', available: true },
+      { key: 'cash-flow', name: 'Cash Flow Statement', description: 'Net profit and ending cash from real data; period-over-period changes are N/A pending historical snapshots', href: '/smartlife/cash-flow', available: true },
     ] },
     { key: 'transactions', label: 'Transactions', reports: [
       { key: 'sales-report', name: 'Sales Report', description: 'Revenue and sales activity', href: '/smartlife/sales-invoices', available: hasSales },
@@ -111,19 +116,33 @@ export async function GET(req) {
       { key: 'payables', name: 'Payables', description: 'Outstanding supplier balances', href: '/smartlife/purchases', available: hasPurchases },
       { key: 'vat-summary', name: 'VAT Summary & Report', description: 'Sales, Sales VAT, Purchases, Purchase VAT, and Net VAT by period', href: '/vat', available: hasSales || hasPurchases },
       { key: 'tax-rates', name: 'Tax Rates', description: 'Configured tax rates', href: '/smartlife/tax', available: true },
-      { key: 'daily-move', name: 'Daily Move', description: 'Not available from SmartLife.', href: null, available: false },
-      { key: 'receipts', name: 'Receipts', description: 'Not available from SmartLife.', href: null, available: false },
-      { key: 'cash-receipts', name: 'Cash Receipts', description: 'Not available from SmartLife.', href: null, available: false },
+      /* Daily Move / Receipts / Cash Receipts: business-critical reports
+         with no real data source yet — routed through
+         apps/accounting/lib/smartlifeTransactionAdapter.js rather than a
+         hardcoded `available:false` here, so that the moment SmartERP
+         exposes the missing endpoint(s), only that one file needs to
+         change (this route and the UI card below already read whatever
+         the adapter reports). */
+      { key: 'daily-move', name: 'Daily Move', description: dailyMove.reason, statusLabel: dailyMove.statusLabel, href: '/smartlife/daily-move', available: dailyMove.available },
+      { key: 'receipts', name: 'Receipts', description: receipts.reason, statusLabel: receipts.statusLabel, href: '/smartlife/receipts', available: receipts.available },
+      { key: 'cash-receipts', name: 'Cash Receipts', description: cashReceipts.reason, statusLabel: cashReceipts.statusLabel, href: '/smartlife/cash-receipts', available: cashReceipts.available },
     ] },
     { key: 'inventory-cost', label: 'Inventory & Cost', reports: [
       { key: 'inventory-report', name: 'Inventory Report', description: 'Stock levels and low-stock alerts', href: '/inventory', available: true },
       { key: 'product-balances', name: 'Product Balances', description: 'Aggregate stock valuation, plus Inventory Movement — Monthly Cost', href: '/smartlife/product-balances', available: true },
       { key: 'cost-centers', name: 'Cost Centers', description: 'SmartLife cost center list', href: '/smartlife/cost-centers', available: true },
     ] },
+    /* Cost Center Details and Budgets were removed entirely (not shown
+       disabled) — neither has any real SmartERP data source: Cost Center
+       Details would need the same missing bulk journal/ledger endpoint as
+       Daily Move (to attribute transactions to a cost center); Budgets has
+       no endpoint anywhere in the documented SmartERP v3 API surface
+       (verified: apps/shared/integrationPlatform.js has zero
+       budget/journal/ledger path). A disabled card implies "exists,
+       pending access" — neither is true here, so the honest choice is to
+       not show the card at all rather than a permanently-disabled one. */
     { key: 'management-analysis', label: 'Management & Analysis', reports: [
       { key: 'project-financials', name: 'Project Financials', description: 'Connected sales, purchases and payments per project', href: null, crossApp: 'projects', crossAppPath: '/projects', available: (connections.count || 0) > 0 },
-      { key: 'cost-center-details', name: 'Cost Center Details', description: 'Not available from SmartLife.', href: null, available: false },
-      { key: 'budgets', name: 'Budgets', description: 'Not available from SmartLife.', href: null, available: false },
     ] },
   ];
 
