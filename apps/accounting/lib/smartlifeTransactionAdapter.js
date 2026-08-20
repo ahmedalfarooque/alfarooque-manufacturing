@@ -40,6 +40,7 @@ const ENTRY_TYPE_LABELS = {
   receipt: 'Receipt',
   catch_receipt: 'Cash Receipt',
   manual: 'Manual Journal',
+  open_dailymove: 'Opening Entry',
   stock_supply_orders: 'Stock Supply Order',
   stock_exchange_orders: 'Stock Exchange Order',
   transfers: 'Transfer',
