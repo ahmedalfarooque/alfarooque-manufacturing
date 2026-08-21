@@ -27,9 +27,17 @@ export async function POST(req) {
     ssoToken: cookies[SSO_COOKIE_NAME],
   });
   if (!cookieHeader) return json({ error: 'Authenticated ERP session is required.' }, 401);
+  /* `trigger` distinguishes an explicit user click (the existing "Refresh /
+     Sync" button — always runs, matching prior behavior exactly) from the
+     new automatic background trigger fired once per tab on login (see
+     components/Shell.js) — the central route below only applies its
+     recent-sync skip to the 'background' trigger, never to a manual click. */
+  const body = await req.json().catch(() => ({}));
+  const trigger = body?.trigger === 'background' ? 'background' : 'manual';
   const base = (process.env.SMARTERP_CENTRAL_API_URL || 'http://localhost:3060').trim();
   const upstream = await fetch(new URL('/api/integrations/smartlife/sync', base), {
-    method:'POST', headers:{ Accept:'application/json', Cookie: cookieHeader }, cache:'no-store',
+    method:'POST', headers:{ Accept:'application/json', 'Content-Type':'application/json', Cookie: cookieHeader }, cache:'no-store',
+    body: JSON.stringify({ trigger }),
   });
   const payload = await upstream.json().catch(() => ({}));
   return json(payload, upstream.status);

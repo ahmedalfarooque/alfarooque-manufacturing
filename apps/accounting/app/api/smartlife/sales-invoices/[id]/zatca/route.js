@@ -3,39 +3,32 @@
 const QRCode = require('qrcode');
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
-const { parseCookies, COOKIE_NAME } = require('@/lib/auth');
-const { SSO_COOKIE_NAME } = require('@/lib/sso');
-const { readSmartLife } = require('@/lib/smartlife');
+const { resolveSmartLifeDocument } = require('@/lib/smartlifeDocument');
 const { buildSalesInvoiceZatcaData, ZatcaDataError } = require('@/lib/zatca');
 const { resolveInvoiceSeller } = require('@/lib/invoiceCompany');
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function sameInvoice(record, id) {
-  return ['id', 'invoice_id', 'reference_no', 'invoice_number', 'number', 'reference']
-    .some(key => String(record?.[key] ?? '') === String(id));
-}
-
-async function loadInvoice(req, id) {
-  const cookies = parseCookies(req.headers.get('cookie'));
-  try {
-    const result = await readSmartLife('sales-invoices', {
-      appToken: cookies[COOKIE_NAME], ssoToken: cookies[SSO_COOKIE_NAME],
-    }, { search: String(id), limit: '100' });
-    return result.records.find(record => sameInvoice(record, id)) || null;
-  } catch (error) {
-    const records = Array.isArray(error?.centralPayload?.records) ? error.centralPayload.records : [];
-    return records.find(record => sameInvoice(record, id)) || null;
-  }
-}
-
 export async function GET(req, { params }) {
   const { response } = await requireAction(req, 'view');
   if (response) return response;
 
-  const invoice = await loadInvoice(req, params.id);
-  if (!invoice) return json({ error: 'Sales invoice not found in the live source or synchronized snapshot.' }, 404);
+  /* Was: a LIST-endpoint search only, which is why a real invoice reported
+     "not found" and the page showed "ZATCA QR unavailable". Now the shared
+     resolver is used (snapshot → SmartERP detail → list), the same order
+     every other document surface uses. The QR itself is unchanged: still a
+     genuine ZATCA TLV payload built from the invoice's own seller/VAT/
+     timestamp/total/VAT-total values — never a fabricated or
+     invoice-number-only code. */
+  const { record: invoice, liveFailed } = await resolveSmartLifeDocument(req, 'sales-invoices', params.id);
+  if (!invoice) {
+    return json({
+      error: liveFailed
+        ? 'The sales invoice could not be retrieved from SmartERP right now, so the ZATCA QR cannot be built yet.'
+        : 'This sales invoice does not exist in SmartERP.',
+    }, liveFailed ? 502 : 404);
+  }
 
   const { data: settings, error: settingsError } = await getDb()
     .from('acc_settings').select('company_name,vat_number').maybeSingle();

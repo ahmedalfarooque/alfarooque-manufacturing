@@ -77,6 +77,24 @@ export default function Shell({ children, active }) {
       const saved = readPref(THEME_PREF_COOKIE) || localStorage.getItem('af-accounting-theme');
       setDark(saved === 'dark');
     } catch (_) {}
+    /* Background SmartLife sync trigger — fire-and-forget, never awaited,
+       never blocks render (this whole block runs after the page is already
+       showing). Once per browser tab per session (sessionStorage guard) so
+       navigating between pages doesn't refire it on every mount. The actual
+       decision to skip (already synced recently / already running elsewhere)
+       is made server-side in the central sync route — this is just the
+       trigger, not the sync itself, so even if several tabs/apps all fire it
+       around the same time, only one real sync runs (see
+       apps/crm/app/api/integrations/[key]/sync/route.js). */
+    try {
+      if (!sessionStorage.getItem('af_smartlife_bg_sync_fired')) {
+        sessionStorage.setItem('af_smartlife_bg_sync_fired', '1');
+        fetch('/api/smartlife/sync', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin', body: JSON.stringify({ trigger: 'background' }),
+        }).catch(() => {});
+      }
+    } catch (_) {}
   }, []);
 
   function toggleTheme() {

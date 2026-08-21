@@ -184,6 +184,43 @@ function fmtDate(lang) {
   } catch (_) { return new Date().toISOString().slice(0, 10); }
 }
 
+/* Report headers used to be built by each caller as one long string —
+   "AL FAROOQUE ERP — Sales Invoices — Period: All dates" — baking the
+   company name and the active filter description directly into `title`.
+   The header now shows just the report name (bold, larger) with the real
+   period/date range underneath (smaller, plain) instead, so this strips
+   any such legacy prefix/suffix a caller still passes without requiring
+   every caller across every app to be rewritten at once. New callers
+   should simply pass the plain report name. */
+function cleanReportTitle(title) {
+  return String(title || '').replace(/^AL FAROOQUE ERP\s*[—-]\s*/, '').split(' — ')[0].trim();
+}
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function ddMmmYyyy(isoDate) {
+  const m = String(isoDate).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  const [, y, mo, d] = m;
+  const mi = Number(mo) - 1;
+  if (mi < 0 || mi > 11) return null;
+  return `${d}-${MONTHS_SHORT[mi]}-${y}`;
+}
+/* Reformats a real ISO date-range string ("2026-01-01 → 2026-05-31" or
+   "2026-01-01 to 2026-05-31") into "01-Jan-2026 to 31-May-2026". Anything
+   that isn't literally two parseable ISO dates (a preset label like "This
+   Year", "All dates", "Current synchronized snapshot") passes through
+   unchanged — never fabricated into a fake date range. */
+function formatPeriodForHeader(period) {
+  if (!period) return null;
+  const m = String(period).match(/^(\d{4}-\d{2}-\d{2})\s*(?:→|->|to)\s*(\d{4}-\d{2}-\d{2})$/i);
+  if (m) {
+    const from = ddMmmYyyy(m[1]); const to = ddMmmYyyy(m[2]);
+    if (from && to) return `${from} to ${to}`;
+  }
+  const single = String(period).match(/^(\d{4}-\d{2}-\d{2})$/);
+  if (single) { const d = ddMmmYyyy(single[1]); if (d) return d; }
+  return String(period);
+}
+
 /**
  * Render a standardized A4 portrait report PDF, then either download it
  * or open it in a new tab for viewing/printing — same document, same
@@ -200,22 +237,28 @@ function fmtDate(lang) {
  *   caller across QuotePro/Projects/Cars omits this and keeps downloading
  *   exactly as before; 'print' opens the same PDF in a new tab instead.
  */
-export async function exportReportPdf({ title, columns, rows, lang = 'en', generatedBy, fileName = 'report.pdf', action = 'save', period, source, summary = [], totals = [] }) {
+export async function exportReportPdf({ title, columns, rows, lang = 'en', generatedBy, fileName = 'report.pdf', action = 'save', period, source, summary = [], totals = [], orientation = 'portrait' }) {
   const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
   await import('jspdf-autotable');
 
   const ar = lang === 'ar';
   const S = L[ar ? 'ar' : 'en'];
+  /* generatedBy (opts param, kept for caller backward-compatibility) is no
+     longer rendered — the header no longer shows "Prepared By: <email>"
+     per the no-PII-in-report-header requirement. Only the Generated date
+     remains. */
 
-  if (!generatedBy) {
-    try {
-      const res = await fetch('/api/auth', { credentials: 'same-origin' });
-      const d = res.ok ? await res.json() : null;
-      generatedBy = (d && d.user && (d.user.full_name || d.user.email)) || S.admin;
-    } catch (_) { generatedBy = S.admin; }
-  }
-
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  /* Optional landscape support (default portrait — every existing caller
+     is unchanged). A wide accounting listing such as Daily Move has more
+     columns than A4 portrait can hold legibly; PAGE_W/PAGE_H are shadowed
+     locally here so every geometry calculation below (header, footer,
+     summary band, table margins) follows the real page size instead of a
+     hardcoded portrait assumption. */
+  const landscape = String(orientation).toLowerCase() === 'landscape';
+  const doc = new jsPDF({ orientation: landscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
+  const PAGE_W = landscape ? 297 : 210;
+  const PAGE_H = landscape ? 210 : 297;
+  const FOOTER_LINE_Y = PAGE_H - 22;
   /* Always embed the Arabic font: even an English report may contain an
      Arabic-only data value, and autotable needs the metrics to size that
      cell. Rendering itself is via canvas PNG (see drawText / didDrawCell). */
@@ -261,20 +304,30 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
     drawText(`${S.cr}: ${COMPANY.cr}    ${S.vat}: ${COMPANY.vat}`, cx, HEADER_TOP + 12.2, { align: 'center', size: 7.3, color: MUTED });
     drawText(`${S.phone}: ${COMPANY.phone}    ${S.email}: ${COMPANY.email}`, cx, HEADER_TOP + 16, { align: 'center', size: 7.3, color: MUTED });
     drawText(ar ? 'المحاسبة ونظام تخطيط موارد المؤسسة' : 'Accounting & ERP', cx, HEADER_TOP + 19.2, { align: 'center', size: 6.8, bold: true, color: BRAND });
-    /* right: report block */
+    /* right: report block — report name (bold, prominent), the real
+       period/date range underneath (smaller, plain), then Generated. No
+       "AL FAROOQUE ERP —" prefix, no filter-description suffix, no
+       "Period:" label, no Prepared By/email — see cleanReportTitle() and
+       formatPeriodForHeader() above for exactly what each does and why. */
     const rx = PAGE_W - M_RIGHT;
+    const reportName = cleanReportTitle(title);
     let afterTitle;
-    if (hasArabic(title)) {
-      drawText(String(title || ''), rx, HEADER_TOP + 4, { align: 'right', size: 10.5, bold: true, color: BRAND });
-      afterTitle = HEADER_TOP + 4;
+    if (hasArabic(reportName)) {
+      drawText(reportName, rx, HEADER_TOP + 4.5, { align: 'right', size: 12, bold: true, color: BRAND });
+      afterTitle = HEADER_TOP + 4.5;
     } else {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...BRAND);
-      const titleLines = doc.splitTextToSize(String(title || ''), 58);
-      doc.text(titleLines, rx, HEADER_TOP + 4, { align: 'right' });
-      afterTitle = HEADER_TOP + 4 + (titleLines.length - 1) * 4.6;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...BRAND);
+      const titleLines = doc.splitTextToSize(reportName, 58);
+      doc.text(titleLines, rx, HEADER_TOP + 4.5, { align: 'right' });
+      afterTitle = HEADER_TOP + 4.5 + (titleLines.length - 1) * 5;
     }
-    drawText(`${S.generated}: ${genDate}`, rx, afterTitle + 4.4, { align: 'right', size: 7.3, color: MUTED });
-    drawText(`${S.preparedBy}: ${generatedBy}`, rx, afterTitle + 8.2, { align: 'right', size: 7.3, color: MUTED });
+    const periodLabel = formatPeriodForHeader(period);
+    let afterPeriod = afterTitle;
+    if (periodLabel) {
+      drawText(periodLabel, rx, afterTitle + 4.6, { align: 'right', size: 7.8, color: TXT });
+      afterPeriod = afterTitle + 4.6;
+    }
+    drawText(`${S.generated}: ${genDate}`, rx, afterPeriod + 5, { align: 'right', size: 7.3, color: MUTED });
     /* divider */
     doc.setDrawColor(...BRAND); doc.setLineWidth(0.5);
     doc.line(M_LEFT, HEADER_TOP + 21.5, PAGE_W - M_RIGHT, HEADER_TOP + 21.5);
@@ -282,12 +335,14 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
 
   function drawReportMeta() {
     let y = TABLE_TOP;
-    if (period || source) {
+    /* Period now lives in the header, under the report name (see
+       drawHeader) — this box only shows Data source, so it collapses to a
+       shorter single line rather than an empty-looking banner. */
+    if (source) {
       doc.setFillColor(...STRIPE); doc.setDrawColor(...BORDER); doc.setLineWidth(0.15);
-      doc.roundedRect(M_LEFT, y, PAGE_W - M_LEFT - M_RIGHT, 11, 1.5, 1.5, 'FD');
-      if (period) drawText(`Period: ${period}`, M_LEFT + 3, y + 4.5, { size: 7.5, bold: true, color: TXT });
-      if (source) drawText(`Data source: ${source}`, M_LEFT + 3, y + 8.2, { size: 6.8, color: MUTED });
-      y += 14;
+      doc.roundedRect(M_LEFT, y, PAGE_W - M_LEFT - M_RIGHT, 7.5, 1.5, 1.5, 'FD');
+      drawText(`Data source: ${source}`, M_LEFT + 3, y + 5, { size: 6.8, color: MUTED });
+      y += 10.5;
     }
     if (summary.length) {
       drawText('SUMMARY', M_LEFT, y + 2.5, { size: 8.2, bold: true, color: BRAND });
@@ -336,6 +391,31 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
   const body = (rows || []).map(r => cols.map(c => fmtCell(r[c.key])));
 
   const PADX = 1.8;
+  /* Money/currency cells (e.g. "1,150.00 SAR", "32,300.80 SAR") were
+     wrapping onto a second line — verified live via the actual generated
+     PDF (Purchases report), NOT a browser/CSS issue: autotable's global
+     `overflow: 'linebreak'` wraps ANY cell whose column comes out narrower
+     than its content once column widths are auto-split across the whole
+     table (a wide Supplier/Customer column left too little room for
+     Total/Paid/Balance). Fix: detect which columns are money-shaped from
+     the ACTUAL data (every non-empty value matches "<number> <CCY>"), then
+     measure that column's real required width with the same font/size
+     autotable will render it in and force it via minCellWidth, with
+     overflow set to 'visible' as a hard backstop so a value can never be
+     cut into two lines even under an unexpected edge case. Non-money
+     columns (names, references, notes) are untouched and still wrap
+     normally when needed. */
+  const MONEY_CELL_RE = /^-?[\d,]+\.\d{2}\s+[A-Za-z]{2,4}$/;
+  const columnStyles = {};
+  cols.forEach((c, i) => {
+    const values = body.map(r => r[i]).filter(v => v && v !== '—');
+    if (!values.length || !values.every(v => MONEY_CELL_RE.test(String(v)))) return;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.2);
+    const headerW = doc.getTextWidth(String(head[0][i] || ''));
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+    const maxBodyW = values.reduce((max, v) => Math.max(max, doc.getTextWidth(String(v))), 0);
+    columnStyles[i] = { overflow: 'visible', minCellWidth: Math.max(headerW, maxBodyW) + PADX * 2 + 2, halign: ar ? 'left' : 'right' };
+  });
   const tableStartY = drawReportMeta();
   doc.autoTable({
     head, body,
@@ -349,6 +429,7 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
       halign: ar ? 'right' : 'left', valign: 'middle',
     },
     headStyles: { font: 'helvetica', fontStyle: 'bold', fontSize: 8.2, fillColor: BRAND, textColor: [255, 255, 255], halign: ar ? 'right' : 'left' },
+    columnStyles,
     alternateRowStyles: { fillColor: STRIPE },
     /* Any cell (head or body) containing Arabic switches to the embedded
        Noto font so autotable measures a real width/height for it; the

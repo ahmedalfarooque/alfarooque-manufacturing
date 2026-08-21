@@ -28,6 +28,10 @@ export default function PurchasePrintPage() {
   const { id } = useParams();
   const [purchase, setPurchase] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  /* A retrieval failure and a genuinely non-existent purchase are different
+     states and must read differently — an accounting user needs to know
+     whether to retry or whether the document truly is not there. */
+  const [loadError, setLoadError] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [lang, setLang] = useState('en');
@@ -44,15 +48,18 @@ export default function PurchasePrintPage() {
   }, []);
 
   useEffect(() => {
-    fetch(`/api/smartlife/purchases?id=${encodeURIComponent(id)}&limit=1`, { credentials: 'same-origin' })
-      .then(async r => { const body = await r.json().catch(() => null); return r.ok || body?.snapshot_available ? body : null; })
-      .then(d => {
-        const records = Array.isArray(d?.records) ? d.records : [];
-        const found = records.find(r => ['id','invoice_id','reference_no','invoice_number','number','reference'].some(key => String(r?.[key] || '') === String(id)));
-        if (!found) { setNotFound(true); return; }
-        setPurchase(found);
+    /* Resolved via the shared document endpoint (snapshot → SmartERP detail
+       → list) instead of a list-only lookup: the previous version reported
+       "This purchase was not found." for records SmartERP genuinely has,
+       because they were absent from the local snapshot and the list search
+       did not surface them. */
+    fetch(`/api/smartlife/purchases/${encodeURIComponent(id)}`, { credentials: 'same-origin', cache: 'no-store' })
+      .then(async r => {
+        const body = await r.json().catch(() => ({}));
+        if (!r.ok || !body?.record) { setLoadError(body?.error || null); setNotFound(true); return; }
+        setPurchase(body.record);
       })
-      .catch(() => setNotFound(true));
+      .catch(() => { setLoadError(null); setNotFound(true); });
   }, [id]);
 
   useEffect(() => {
@@ -113,7 +120,13 @@ export default function PurchasePrintPage() {
   if (notFound) {
     return (
       <div style={{ padding: 40, fontFamily: 'sans-serif', color: '#888', textAlign: 'center' }}>
-        <div>{lang === 'ar' ? 'لم يتم العثور على هذه الفاتورة.' : 'This purchase was not found.'}</div>
+        <div>{loadError || (lang === 'ar' ? 'لم يتم العثور على هذه الفاتورة.' : 'This purchase was not found.')}</div>
+        {loadError && (
+          <button type="button" onClick={() => window.location.reload()}
+            style={{ marginTop: 10, padding: '6px 14px', borderRadius: 8, border: '1px solid #0090A8', background: '#fff', color: '#0090A8', cursor: 'pointer' }}>
+            {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+          </button>
+        )}
         <a href="/smartlife/purchases" style={{ color: '#0090A8', display: 'inline-block', marginTop: 12 }}>
           {lang === 'ar' ? '→ العودة' : '← Back'}
         </a>

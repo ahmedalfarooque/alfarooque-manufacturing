@@ -179,6 +179,14 @@ function fmtDate(lang) {
   } catch (_) { return new Date().toISOString().slice(0, 10); }
 }
 
+/* Strips a legacy "AL FAROOQUE ERP — " prefix and any " — <filter text>"
+   suffix a caller might still bake into `title` — the header now shows
+   just the report name (bold, larger); callers passing a plain report
+   name are unaffected. */
+function cleanReportTitle(title) {
+  return String(title || '').replace(/^AL FAROOQUE ERP\s*[—-]\s*/, '').split(' — ')[0].trim();
+}
+
 /**
  * Render + download a standardized A4 portrait report PDF.
  * @param {object} opts
@@ -189,22 +197,27 @@ function fmtDate(lang) {
  * @param {string}   [opts.generatedBy]  defaults to the signed-in user (GET /api/auth)
  * @param {string}   [opts.fileName]
  */
-export async function exportReportPdf({ title, columns, rows, lang = 'en', generatedBy, fileName = 'report.pdf', action = 'save' }) {
+export async function exportReportPdf({ title, columns, rows, lang = 'en', generatedBy, fileName = 'report.pdf', action = 'save', orientation = 'portrait' }) {
   const [{ default: jsPDF }] = await Promise.all([import('jspdf')]);
   await import('jspdf-autotable');
 
   const ar = lang === 'ar';
   const S = L[ar ? 'ar' : 'en'];
 
-  if (!generatedBy) {
-    try {
-      const res = await fetch('/api/auth', { credentials: 'same-origin' });
-      const d = res.ok ? await res.json() : null;
-      generatedBy = (d && d.user && (d.user.full_name || d.user.email)) || S.admin;
-    } catch (_) { generatedBy = S.admin; }
-  }
+  /* generatedBy (opts param, kept for caller backward-compatibility) is no
+     longer rendered — the header no longer shows "Prepared By: <email>". */
 
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  /* Optional landscape support (default portrait — every existing caller
+     is unchanged). A wide accounting listing such as Daily Move has more
+     columns than A4 portrait can hold legibly; PAGE_W/PAGE_H are shadowed
+     locally here so every geometry calculation below (header, footer,
+     summary band, table margins) follows the real page size instead of a
+     hardcoded portrait assumption. */
+  const landscape = String(orientation).toLowerCase() === 'landscape';
+  const doc = new jsPDF({ orientation: landscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
+  const PAGE_W = landscape ? 297 : 210;
+  const PAGE_H = landscape ? 210 : 297;
+  const FOOTER_LINE_Y = PAGE_H - 22;
   /* Always embed the Arabic font: even an English report may contain an
      Arabic-only data value, and autotable needs the metrics to size that
      cell. Rendering itself is via canvas PNG (see drawText / didDrawCell). */
@@ -249,20 +262,21 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
     drawText(company.address, cx, HEADER_TOP + 8.4, { align: 'center', size: 7.3, color: MUTED });
     drawText(`${S.cr}: ${COMPANY.cr}    ${S.vat}: ${COMPANY.vat}`, cx, HEADER_TOP + 12.2, { align: 'center', size: 7.3, color: MUTED });
     drawText(`${S.phone}: ${COMPANY.phone}    ${S.email}: ${COMPANY.email}`, cx, HEADER_TOP + 16, { align: 'center', size: 7.3, color: MUTED });
-    /* right: report block */
+    /* right: report block — report name (bold, prominent), then Generated.
+       No "AL FAROOQUE ERP —" prefix, no Prepared By/email. */
     const rx = PAGE_W - M_RIGHT;
+    const reportName = cleanReportTitle(title);
     let afterTitle;
-    if (hasArabic(title)) {
-      drawText(String(title || ''), rx, HEADER_TOP + 4, { align: 'right', size: 10.5, bold: true, color: BRAND });
-      afterTitle = HEADER_TOP + 4;
+    if (hasArabic(reportName)) {
+      drawText(reportName, rx, HEADER_TOP + 4.5, { align: 'right', size: 12, bold: true, color: BRAND });
+      afterTitle = HEADER_TOP + 4.5;
     } else {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...BRAND);
-      const titleLines = doc.splitTextToSize(String(title || ''), 58);
-      doc.text(titleLines, rx, HEADER_TOP + 4, { align: 'right' });
-      afterTitle = HEADER_TOP + 4 + (titleLines.length - 1) * 4.6;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...BRAND);
+      const titleLines = doc.splitTextToSize(reportName, 58);
+      doc.text(titleLines, rx, HEADER_TOP + 4.5, { align: 'right' });
+      afterTitle = HEADER_TOP + 4.5 + (titleLines.length - 1) * 5;
     }
-    drawText(`${S.generated}: ${genDate}`, rx, afterTitle + 4.4, { align: 'right', size: 7.3, color: MUTED });
-    drawText(`${S.preparedBy}: ${generatedBy}`, rx, afterTitle + 8.2, { align: 'right', size: 7.3, color: MUTED });
+    drawText(`${S.generated}: ${genDate}`, rx, afterTitle + 5.5, { align: 'right', size: 7.3, color: MUTED });
     /* divider */
     doc.setDrawColor(...BRAND); doc.setLineWidth(0.5);
     doc.line(M_LEFT, HEADER_TOP + 21.5, PAGE_W - M_RIGHT, HEADER_TOP + 21.5);
@@ -297,6 +311,25 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
   const body = (rows || []).map(r => cols.map(c => fmtCell(r[c.key])));
 
   const PADX = 1.8;
+  /* Money/currency cells (e.g. "1,150.00 SAR") were wrapping onto a second
+     line — verified live via the actual generated PDF: autotable's global
+     `overflow: 'linebreak'` wraps any cell whose auto-split column comes
+     out narrower than its content. Fix: detect money-shaped columns from
+     the actual data, measure the real required width with the same
+     font/size autotable renders, and force it via minCellWidth, with
+     overflow set to 'visible' as a hard backstop. Non-money columns are
+     untouched and still wrap normally. */
+  const MONEY_CELL_RE = /^-?[\d,]+\.\d{2}\s+[A-Za-z]{2,4}$/;
+  const columnStyles = {};
+  cols.forEach((c, i) => {
+    const values = body.map(r => r[i]).filter(v => v && v !== '—');
+    if (!values.length || !values.every(v => MONEY_CELL_RE.test(String(v)))) return;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.2);
+    const headerW = doc.getTextWidth(String(head[0][i] || ''));
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+    const maxBodyW = values.reduce((max, v) => Math.max(max, doc.getTextWidth(String(v))), 0);
+    columnStyles[i] = { overflow: 'visible', minCellWidth: Math.max(headerW, maxBodyW) + PADX * 2 + 2, halign: ar ? 'left' : 'right' };
+  });
   doc.autoTable({
     head, body,
     startY: TABLE_TOP,
@@ -309,6 +342,7 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
       halign: ar ? 'right' : 'left', valign: 'middle',
     },
     headStyles: { font: 'helvetica', fontStyle: 'bold', fontSize: 8.2, fillColor: BRAND, textColor: [255, 255, 255], halign: ar ? 'right' : 'left' },
+    columnStyles,
     alternateRowStyles: { fillColor: STRIPE },
     /* Any cell (head or body) containing Arabic switches to the embedded
        Noto font so autotable measures a real width/height for it; the
