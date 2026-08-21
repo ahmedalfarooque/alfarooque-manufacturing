@@ -90,7 +90,8 @@ export default function InvoiceDocument({ invoice, lang, docType = 'sales' }) {
   const subtotal = Number(first(inv, ['total', 'subtotal', 'sub_total', 'net_amount']) || 0);
   const totalDiscount = Number(first(inv, ['total_discount']) || 0);
   const vatAmount = Number(first(inv, ['total_tax', 'vat_amount', 'tax_amount', 'vat', 'tax']) || 0);
-  const shipping = Number(first(inv, ['total_shipping']) || 0);
+  /* Sales headers use total_shipping; purchase headers use `shipping`. */
+  const shipping = Number(first(inv, ['total_shipping', 'shipping']) || 0);
   const grandTotal = Number(first(inv, ['grand_total', 'total_amount', 'amount']) || 0);
   const paid = Number(first(inv, ['paid_amount', 'amount_paid', 'paid', 'payment_total']) || 0);
   const balanceValue = first(inv, ['balance_amount', 'remaining_balance', 'balance', 'due_amount']);
@@ -255,7 +256,12 @@ export default function InvoiceDocument({ invoice, lang, docType = 'sales' }) {
                   {p.product_code && <div style={{ color: '#55534c', fontSize: 11.5 }}>{p.product_code}</div>}
                 </td>
                 <td style={{ padding: '8px', textAlign: 'center' }} dir="ltr">{Number(p.unit_quantity ?? p.quantity ?? 0)}</td>
-                <td style={{ padding: '8px', textAlign: 'end' }} dir="ltr">{money(p.unit_price)}</td>
+                {/* Sales items report unit_price; PURCHASE items report
+                    unit_cost / net_unit_cost and carry no unit_price at all
+                    (verified against the real purchase/get_purchase payload
+                    and the synchronized snapshot). Reading unit_price alone
+                    left every purchase line's Unit Price blank. */}
+                <td style={{ padding: '8px', textAlign: 'end' }} dir="ltr">{money(first(p, ['unit_price', 'unit_cost', 'net_unit_price', 'net_unit_cost']))}</td>
                 <td style={{ padding: '8px', textAlign: 'end' }} dir="ltr">{money(p.discount)}</td>
                 <td style={{ padding: '8px', textAlign: 'center' }}>{p.tax != null ? `${p.tax}%` : '—'}</td>
                 <td style={{ padding: '8px', textAlign: 'end', fontWeight: 600 }} dir="ltr">{money(p.total)}</td>
