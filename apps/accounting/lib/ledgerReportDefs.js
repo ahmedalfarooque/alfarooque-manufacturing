@@ -131,7 +131,12 @@ const LEDGER_REPORTS = {
    way on screen and another way in the export. */
 function formatMoney(value) {
   if (value == null || value === '') return '';
-  return Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const number = Number(value);
+  /* Normalize negative zero. A balanced period leaves Debit − Credit at
+     -0 (a tiny negative float rounded down), which formats as "-0.00" — an
+     accounting export must show a balanced total as 0.00, not a negative.
+     Caught in the real Daily Move Excel export for August 2026. */
+  return (number === 0 ? 0 : number).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatCell(row, column, { blank = '—' } = {}) {

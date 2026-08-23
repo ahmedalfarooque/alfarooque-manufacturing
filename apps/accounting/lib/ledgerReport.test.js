@@ -3,7 +3,18 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { amountInWords } = require('./amountInWords');
-const { LEDGER_REPORTS, formatCell, totalsFor, periodLabel } = require('./ledgerReportDefs');
+const { LEDGER_REPORTS, formatMoney, formatCell, totalsFor, periodLabel } = require('./ledgerReportDefs');
+
+test('negative zero displays as 0.00, real negatives stay negative', () => {
+  /* A balanced period leaves Debit - Credit at -0 (tiny negative float
+     rounded to a whole cent), which must never render as "-0.00" in an
+     accounting export. Caught in the real Daily Move Excel export. */
+  assert.equal(formatMoney(-0), '0.00');
+  assert.equal(formatMoney(0), '0.00');
+  /* A genuine negative total must be unaffected by the -0 normalization. */
+  assert.equal(formatMoney(-10.25), '-10.25');
+  assert.equal(formatMoney(-0.01), '-0.01');
+});
 
 test('amount in words matches the SmartLife voucher convention', () => {
   /* The reference voucher prints 85.0000 as "eighty-five saudi riyals zero
