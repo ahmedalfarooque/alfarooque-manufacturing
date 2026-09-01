@@ -24,10 +24,17 @@ const NAV_GROUPS = [
   { group: null, items: [
     { href: '/dashboard', label: 'Dashboard', labelAr: 'الرئيسية', icon: 'grid' },
   ] },
-  { group: 'Accounting', groupAr: 'المحاسبة', items: [
+  { group: 'Accounting System', groupAr: 'النظام المحاسبي', items: [
     { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'chart' },
     { href: '/smartlife/accounts', label: 'Chart of Accounts', labelAr: 'دليل الحسابات', icon: 'ledger' },
     { href: '/smartlife/account-balances', label: 'Account Balances', labelAr: 'أرصدة الحسابات', icon: 'balance' },
+    { href: '/smartlife/daily-move', label: 'Daily Move', labelAr: 'اليومية العامة', icon: 'ledger' },
+    { href: '/smartlife/receipts', label: 'Receipts', labelAr: 'سندات القبض', icon: 'invoice' },
+    { href: '/smartlife/cash-receipts', label: 'Cash Receipts', labelAr: 'سندات القبض النقدي', icon: 'invoice' },
+    { href: '/smartlife/trial-balance', label: 'Trial Balance', labelAr: 'ميزان المراجعة', icon: 'balance' },
+    { href: '/smartlife/income-statement', label: 'Income Statement', labelAr: 'قائمة الدخل', icon: 'chart' },
+    { href: '/smartlife/financial-position', label: 'Financial Position', labelAr: 'المركز المالي', icon: 'chart' },
+    { href: '/smartlife/cash-flow', label: 'Cash Flow Statement', labelAr: 'قائمة التدفقات النقدية', icon: 'chart' },
     { href: '/smartlife/cost-centers', label: 'Cost Centers', labelAr: 'مراكز التكلفة', icon: 'target' },
     { href: '/vat', label: 'VAT Report', labelAr: 'تقرير ضريبة القيمة المضافة', icon: 'percent-doc' },
   ] },
