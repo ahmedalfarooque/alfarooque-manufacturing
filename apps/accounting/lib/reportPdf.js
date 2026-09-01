@@ -102,9 +102,31 @@ function rgbToHex(c) {
 
 /* Renders one line of text to a transparent PNG sized in mm to match a
    jsPDF setFontSize(pt) call. direction:'rtl' gives correct Arabic
-   joining and bidi ordering (mixed digits included). */
+   joining and bidi ordering (mixed digits included).
+
+   Memoized by (text, size, weight, color): a report table repeats the same
+   short strings (account names, "SAR", branch names) across hundreds of
+   rows, and this is a pure function of its inputs, so re-rendering the
+   canvas for a repeat is wasted work — the `key` returned here is also
+   passed as jsPDF's `addImage` alias, though that turned out NOT to be
+   the fix for the real bug found below (jsPDF already auto-dedupes
+   identical image bytes by a content-hash alias when none is given).
+
+   The actual bug, found by generating and inspecting a real PDF binary: a
+   real "This Year" Cash Receipts export (51 pages) came out at 52MB.
+   Forensic breakdown of the PDF's own objects (not just eyeballing size)
+   showed 858 image stream objects totalling 50.1MB of the 52MB — i.e. the
+   text-stamp PNGs themselves, not duplication. Root cause: none of this
+   file's `doc.addImage()` calls passed a `compression` argument, so jsPDF
+   defaults to `image_compression.NONE` and stores every embedded PNG
+   fully uncompressed. Fixed by passing `'FAST'` (jsPDF's own deflate
+   compression levels — FAST/MEDIUM/SLOW) at every addImage call site. */
+const textImageCache = new Map();
 function renderTextImage(text, { fontPt = 8, bold = false, color = '#1a1a18' } = {}) {
   const str = String(text == null ? '' : text);
+  const key = `${bold ? 1 : 0}|${fontPt}|${color}|${str}`;
+  const cached = textImageCache.get(key);
+  if (cached) return cached;
   const font = `${bold ? '700' : '400'} ${fontPx(fontPt)}px ${AR_STACK}`;
   const m0 = document.createElement('canvas').getContext('2d');
   m0.font = font;
@@ -122,7 +144,9 @@ function renderTextImage(text, { fontPt = 8, bold = false, color = '#1a1a18' } =
   ctx.font = font; ctx.direction = 'rtl'; ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic'; ctx.fillStyle = color;
   ctx.fillText(str, w - pad, baseline);
-  return { dataUrl: canvas.toDataURL('image/png'), wMm: w / PX_PER_MM, hMm: h / PX_PER_MM, ascentMm: baseline / PX_PER_MM };
+  const result = { dataUrl: canvas.toDataURL('image/png'), wMm: w / PX_PER_MM, hMm: h / PX_PER_MM, ascentMm: baseline / PX_PER_MM, key };
+  textImageCache.set(key, result);
+  return result;
 }
 
 async function fetchB64(url) {
@@ -288,14 +312,14 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
     let left = x;
     if (align === 'center') left = x - img.wMm / 2;
     else if (align === 'right') left = x - img.wMm;
-    try { doc.addImage(img.dataUrl, 'PNG', left, y - img.ascentMm, img.wMm, img.hMm); } catch (_) {}
+    try { doc.addImage(img.dataUrl, 'PNG', left, y - img.ascentMm, img.wMm, img.hMm, img.key, 'FAST'); } catch (_) {}
   }
 
   function drawHeader() {
     /* left: logo */
     if (logo) {
       const h = 17, w = Math.min(30, h * (logo.w / logo.h || 1));
-      try { doc.addImage(logo.data, 'PNG', M_LEFT, HEADER_TOP, w, h); } catch (_) {}
+      try { doc.addImage(logo.data, 'PNG', M_LEFT, HEADER_TOP, w, h, undefined, 'FAST'); } catch (_) {}
     }
     /* centre: company block */
     const cx = PAGE_W / 2;
@@ -374,7 +398,7 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
       const maxW = PAGE_W - M_LEFT - M_RIGHT;
       let w = img.wMm, h = img.hMm;
       if (w > maxW) { const s = maxW / w; w *= s; h *= s; }
-      try { doc.addImage(img.dataUrl, 'PNG', PAGE_W / 2 - w / 2, FOOTER_LINE_Y + 1.8, w, h); } catch (_) {}
+      try { doc.addImage(img.dataUrl, 'PNG', PAGE_W / 2 - w / 2, FOOTER_LINE_Y + 1.8, w, h, img.key, 'FAST'); } catch (_) {}
     } else {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...MUTED);
       const wrapped = doc.splitTextToSize(line, PAGE_W - M_LEFT - M_RIGHT);
@@ -459,7 +483,7 @@ export async function exportReportPdf({ title, columns, rows, lang = 'en', gener
       else if (st.halign === 'center') x = data.cell.x + (data.cell.width - w) / 2;
       else x = data.cell.x + PADX;
       const y = data.cell.y + (data.cell.height - h) / 2;
-      try { doc.addImage(img.dataUrl, 'PNG', x, y, w, h); } catch (_) {}
+      try { doc.addImage(img.dataUrl, 'PNG', x, y, w, h, img.key, 'FAST'); } catch (_) {}
     },
     didDrawPage: () => { drawHeader(); drawFooter(); },
   });
