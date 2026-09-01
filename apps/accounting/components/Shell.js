@@ -36,24 +36,59 @@ const NAV_GROUPS = [
     { href: '/smartlife/cash-flow', label: 'Cash Flow Statement', labelAr: 'قائمة التدفقات النقدية', icon: 'chart' },
     { href: '/smartlife/cost-centers', label: 'Cost Centers', labelAr: 'مراكز التكلفة', icon: 'target' },
     { href: '/vat', label: 'VAT Report', labelAr: 'تقرير ضريبة القيمة المضافة', icon: 'percent-doc' },
+    /* journal-entries/invoices/bills/payments/banking/expenses/assets all
+       HAVE page.js source files with real-looking forms, but every one is
+       explicitly retired: middleware.js LEGACY_FINANCIAL_PAGES 301s every
+       one of them straight to /smartlife/sales-invoices (or /purchase-
+       invoices, /payments) before the page ever renders, and their /api/*
+       routes return HTTP 410 ("This local financial API is retired.
+       SmartLife is the financial source of truth."). Confirmed live: both
+       /journal-entries and /assets redirect away instead of rendering.
+       So "Recurring Journal Entries" / "Depreciation Of Assets" / "Payment
+       Methods" / Cheque Books / etc still have no real, reachable
+       implementation — do not link to these paths. */
   ] },
-  /* Financial Reports — one entry, the existing hub at /smartlife/financial-
-     reports (apps/accounting/app/(protected)/smartlife/[resource]/page.js,
-     FinancialReportsView + /api/smartlife/reports). That hub already IS the
-     organized, categorized report menu: it renders real report cards
-     grouped into Core Accounting / Financial Statements / Transactions /
-     Inventory & Cost / Management & Analysis, each honestly marked
-     available/unavailable from the live SmartERP snapshot — see
-     api/smartlife/reports/route.js for the authoritative catalog. Every
-     report in that catalog with a real href (Chart of Accounts, Account
-     Balances, Trial Balance, Income Statement, Financial Position, Cash
-     Flow, Daily Move, Receipts, Cash Receipts, Cost Centers, Tax Rates,
-     Product Balances, Inventory Report, Sales/Purchase workspaces, VAT) is
-     ALREADY a direct sidebar link elsewhere in this NAV_GROUPS list, so
-     re-listing them again here would just be the same route under two
-     labels — not a second "Financial Reports" flat menu. */
+  /* Financial Reports — the existing hub (apps/accounting/app/(protected)/
+     smartlife/[resource]/page.js FinancialReportsView + /api/smartlife/
+     reports) stays as the landing/overview item. Below it are real,
+     independently-working report pages that were never linked from the
+     sidebar at all:
+       - /reports: a local report GENERATOR (income statement, balance
+         sheet, cash flow, VAT, inventory valuation, project costing,
+         summary — apps/accounting/app/(protected)/reports/page.js,
+         REPORT_TITLES) built from AL FAROOQUE's own local records, not the
+         SmartERP mirror. Unlike journal-entries/expenses/payments/etc, this
+         page and its /api/reports backend are explicitly NOT in
+         middleware.js's retired-pages list (re-activated 2026-08-13 per
+         that file's own comment) — confirmed live, /reports renders its
+         real report-type picker with no redirect. Real match for "Optional
+         Reports" (the user picks which report to run).
+       NOTE: /expenses, /payments, /journal-entries, /assets, /banking,
+       /invoices, /bills all have page.js source but are explicitly retired
+       by middleware.js (redirect before render, API returns 410) — verified
+       live, so "Expense Report" and "Payments Report" are NOT linked here.
+     Account Balances / Cost Centers / Cash Flow Statement are intentionally
+     repeated here (same href as their Accounting System entry) because
+     Financial Reports is the reporting/analysis grouping and those three
+     are genuinely reports, not just operational lookups — see commit
+     message for the full per-item investigation. Every other requested
+     SmartLife report name (Sales Costs Report, Customer And Supplier
+     Report, both debt-aging reports, Tax Return, Overview Chart, Best
+     Purchasing/Selling Products, Warehouse Stock Chart, Stock Exchange
+     Orders, Register Report, Stagnant Products, Excise Tax Report, Sales
+     Raw Products, Transfers Products, Adjustments Report, Categories
+     Report, Brands Report, Payments By Method, Inactive Customers, Staff
+     Report, Stock Count Reports, Raw Materials Linked to Assembly, Group
+     Product Prices Report, Stock Receipt, Stock Supply Orders Report,
+     Quotes Report, Statistical Total Profits as a standalone page) has no
+     real implementation anywhere in this app and was left out rather than
+     given a fake href. */
   { group: 'Financial Reports', groupAr: 'التقارير المالية', items: [
     { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'chart' },
+    { href: '/reports', label: 'Optional Reports', labelAr: 'تقارير اختيارية', icon: 'chart' },
+    { href: '/smartlife/account-balances', label: 'Accounts Balances Report', labelAr: 'تقرير أرصدة الحسابات', icon: 'balance' },
+    { href: '/smartlife/cost-centers', label: 'Cost Centers Report', labelAr: 'تقرير مراكز التكلفة', icon: 'target' },
+    { href: '/smartlife/cash-flow', label: 'Cash Flow Report', labelAr: 'تقرير التدفقات النقدية', icon: 'chart' },
   ] },
   { group: 'Sales', groupAr: 'المبيعات', items: [
     { href: '/smartlife/sales-invoices', label: 'Sales Invoices', labelAr: 'فواتير المبيعات', icon: 'invoice' },
