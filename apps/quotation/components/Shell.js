@@ -44,6 +44,18 @@ export default function Shell({ children, active }) {
       const saved = readPref(THEME_PREF_COOKIE) || localStorage.getItem('af-quotation-theme');
       setDark(saved === 'dark');
     } catch (_) {}
+    /* Background SmartLife sync trigger — fire-and-forget, never awaited,
+       never blocks render. Same pattern as apps/accounting/components/
+       Shell.js: the central sync route decides whether to actually run. */
+    try {
+      if (!sessionStorage.getItem('af_smartlife_bg_sync_fired')) {
+        sessionStorage.setItem('af_smartlife_bg_sync_fired', '1');
+        fetch('/api/smartlife/sync', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin', body: JSON.stringify({ trigger: 'background' }),
+        }).catch(() => {});
+      }
+    } catch (_) {}
   }, []);
 
   useEffect(() => {

@@ -54,15 +54,39 @@ function normalizeSmartErpFinancialRecord(resource, record) {
   };
 }
 
+/* SmartERP's own `updated_at`/`modified_at` is unreliable as a change signal
+   — verified live on real synced sales/purchase invoices, it is `null` on
+   every record, so it cannot drive incremental sync (this is a genuine API
+   data limitation, not something to fabricate around). What IS reliable:
+   the exact same raw_payload JSON this function already stores per row.
+   Comparing the incoming payload against what's already on disk (one SELECT
+   over the resource's existing rows, then a plain string compare) lets an
+   unchanged record skip the UPDATE entirely — the documented list endpoint
+   still has to be walked in full every sync (no bulk incremental endpoint
+   exists), but the database write, which is the actual cost this matters
+   for, only happens for records that are genuinely new or changed. */
 async function upsertSmartErpFinancialRecords(sb, resource, records) {
+  const recordType = RESOURCE_TYPES[resource];
   const rows = (records || []).map(record => normalizeSmartErpFinancialRecord(resource, record)).filter(Boolean);
-  for (let offset = 0; offset < rows.length; offset += 500) {
-    const { error } = await sb.from('erp_financial_source_records').upsert(rows.slice(offset, offset + 500), {
+  if (!rows.length) return { total: 0, written: 0, unchanged: 0 };
+
+  const existingByExternalId = new Map();
+  if (recordType) {
+    const { data: existing, error: readError } = await sb.from('erp_financial_source_records')
+      .select('external_id, raw_payload')
+      .eq('tenant_id', 'alfarooque').eq('source_system', 'smartlife').eq('record_type', recordType);
+    if (readError) throw readError;
+    for (const row of existing || []) existingByExternalId.set(row.external_id, JSON.stringify(row.raw_payload));
+  }
+  const toWrite = rows.filter(row => JSON.stringify(row.raw_payload) !== existingByExternalId.get(row.external_id));
+
+  for (let offset = 0; offset < toWrite.length; offset += 500) {
+    const { error } = await sb.from('erp_financial_source_records').upsert(toWrite.slice(offset, offset + 500), {
       onConflict: 'tenant_id,source_system,record_type,external_id', ignoreDuplicates: false,
     });
     if (error) throw error;
   }
-  return rows.length;
+  return { total: rows.length, written: toWrite.length, unchanged: rows.length - toWrite.length };
 }
 
 module.exports = { RESOURCE_TYPES, normalizeSmartErpFinancialRecord, upsertSmartErpFinancialRecords };

@@ -128,9 +128,13 @@ export function Th({ children, className = '', ...rest }) {
   );
 }
 
+/* whitespace-nowrap: table cells (esp. money+currency like "1,150.00 SAR")
+   must never wrap onto a second line — matches Th's existing convention.
+   Long content grows the column instead of breaking; the table can scroll
+   horizontally on narrow screens rather than splitting a value. */
 export function Td({ children, className = '', ...rest }) {
   return (
-    <td {...rest} className={'px-3.5 py-3 text-[13px] text-[color:var(--tx)] border-t border-[color:var(--bd)] ' + className}>
+    <td {...rest} className={'px-3.5 py-3 text-[13px] text-[color:var(--tx)] border-t border-[color:var(--bd)] whitespace-nowrap ' + className}>
       {children}
     </td>
   );

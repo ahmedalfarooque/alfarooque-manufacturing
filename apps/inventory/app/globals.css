@@ -688,3 +688,14 @@ html.dark .gtoast { background: linear-gradient(155deg, rgba(17,28,46,0.92), rgb
    it to solid white via filter is the reliable way to match the active
    item's already-white text without touching the shared icon defs. */
 .nav-active svg.gicon { filter: brightness(0) invert(1); }
+
+/* Numeric/currency table cells (money, qty, %) must never wrap onto a
+   second line — matches Th's existing unconditional whitespace-nowrap.
+   Convention already used consistently across every hand-built report
+   table in this app: numeric cells are right-aligned (text-end/text-right)
+   or marked dir="ltr" for LTR digits inside an RTL row; free-text cells
+   (names, notes, descriptions) use neither and keep their normal wrapping.
+   Centralized here instead of patching each report table individually —
+   real bug, verified live: a bare `<td className="p-3 text-end">` with no
+   nowrap wrapped "160.01 SAR" onto two lines at ~88px column width. */
+td.text-end, td.text-right, td[dir="ltr"] { white-space: nowrap; }
