@@ -25,7 +25,6 @@ const NAV_GROUPS = [
     { href: '/dashboard', label: 'Dashboard', labelAr: 'الرئيسية', icon: 'grid' },
   ] },
   { group: 'Accounting System', groupAr: 'النظام المحاسبي', items: [
-    { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'chart' },
     { href: '/smartlife/accounts', label: 'Chart of Accounts', labelAr: 'دليل الحسابات', icon: 'ledger' },
     { href: '/smartlife/account-balances', label: 'Account Balances', labelAr: 'أرصدة الحسابات', icon: 'balance' },
     { href: '/smartlife/daily-move', label: 'Daily Move', labelAr: 'اليومية العامة', icon: 'ledger' },
@@ -37,6 +36,24 @@ const NAV_GROUPS = [
     { href: '/smartlife/cash-flow', label: 'Cash Flow Statement', labelAr: 'قائمة التدفقات النقدية', icon: 'chart' },
     { href: '/smartlife/cost-centers', label: 'Cost Centers', labelAr: 'مراكز التكلفة', icon: 'target' },
     { href: '/vat', label: 'VAT Report', labelAr: 'تقرير ضريبة القيمة المضافة', icon: 'percent-doc' },
+  ] },
+  /* Financial Reports — one entry, the existing hub at /smartlife/financial-
+     reports (apps/accounting/app/(protected)/smartlife/[resource]/page.js,
+     FinancialReportsView + /api/smartlife/reports). That hub already IS the
+     organized, categorized report menu: it renders real report cards
+     grouped into Core Accounting / Financial Statements / Transactions /
+     Inventory & Cost / Management & Analysis, each honestly marked
+     available/unavailable from the live SmartERP snapshot — see
+     api/smartlife/reports/route.js for the authoritative catalog. Every
+     report in that catalog with a real href (Chart of Accounts, Account
+     Balances, Trial Balance, Income Statement, Financial Position, Cash
+     Flow, Daily Move, Receipts, Cash Receipts, Cost Centers, Tax Rates,
+     Product Balances, Inventory Report, Sales/Purchase workspaces, VAT) is
+     ALREADY a direct sidebar link elsewhere in this NAV_GROUPS list, so
+     re-listing them again here would just be the same route under two
+     labels — not a second "Financial Reports" flat menu. */
+  { group: 'Financial Reports', groupAr: 'التقارير المالية', items: [
+    { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'chart' },
   ] },
   { group: 'Sales', groupAr: 'المبيعات', items: [
     { href: '/smartlife/sales-invoices', label: 'Sales Invoices', labelAr: 'فواتير المبيعات', icon: 'invoice' },
