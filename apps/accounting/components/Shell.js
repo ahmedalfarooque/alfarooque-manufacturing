@@ -219,17 +219,19 @@ export default function Shell({ children, active }) {
           {NAV_GROUPS.map((section, sectionIndex) => {
             const expanded = isGroupExpanded(section);
             const groupActive = section.collapsible && isGroupActive(section);
+            const groupPanelId = section.group ? `nav-group-${section.group.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : undefined;
             return (
               <div key={section.group || `ungrouped-${sectionIndex}`}>
                 {section.group && (
                   section.collapsible ? (
                     <button type="button" onClick={() => toggleGroup(section)}
+                      aria-expanded={expanded} aria-controls={groupPanelId}
                       className={
                         'w-full flex items-center justify-between px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide ' +
                         (groupActive ? 'text-[color:var(--sidebar-active-text)]' : 'text-[color:var(--sidebar-text-muted)]')
                       }>
                       <span>{lang === 'ar' ? section.groupAr : section.group}</span>
-                      <span className={'transition-transform ' + (expanded ? 'rotate-90' : '')}>›</span>
+                      <span aria-hidden="true" className={'transition-transform ' + (expanded ? 'rotate-90' : '')}>›</span>
                     </button>
                   ) : (
                     <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-text-muted)]">
@@ -237,21 +239,25 @@ export default function Shell({ children, active }) {
                     </div>
                   )
                 )}
-                {expanded && section.items.filter(item => !item.adminOnly || user?.role === 'admin').map(item => {
-                  const isActive = active === item.href || currentPath.startsWith(item.href);
-                  return (
-                    <a key={item.href} href={item.href}
-                      className={
-                        'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
-                        (isActive
-                          ? 'nav-active bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
-                          : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
-                      }>
-                      <GlassIcon name={item.icon} size={21} bare />
-                      <span>{lang === 'ar' ? item.labelAr : item.label}</span>
-                    </a>
-                  );
-                })}
+                {expanded && (
+                  <div id={groupPanelId}>
+                    {section.items.filter(item => !item.adminOnly || user?.role === 'admin').map(item => {
+                      const isActive = active === item.href || currentPath.startsWith(item.href);
+                      return (
+                        <a key={item.href} href={item.href}
+                          className={
+                            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
+                            (isActive
+                              ? 'nav-active bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
+                              : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
+                          }>
+                          <GlassIcon name={item.icon} size={21} bare />
+                          <span>{lang === 'ar' ? item.labelAr : item.label}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
