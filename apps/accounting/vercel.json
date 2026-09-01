@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "installCommand": "cd ../.. && npm install"
+  "installCommand": "cd ../.. && npm install && npm install --prefix apps/accounting"
 }
