@@ -60,16 +60,21 @@ export default function InvoicePrintPage() {
   }, []);
 
   useEffect(() => {
-    /* Exact source-ID lookup. A broad text search for a short numeric ID
-       (for example "62") can match hundreds of unrelated totals/codes and
-       omit the intended snapshot from the first page. */
-    fetch(`/api/smartlife/sales-invoices?id=${encodeURIComponent(id)}&limit=1`, { credentials: 'same-origin' })
-      .then(async r => { const body = await r.json().catch(() => null); return r.ok || body?.snapshot_available ? body : null; })
-      .then(d => {
-        const records = Array.isArray(d?.records) ? d.records : [];
-        const found = records.find(r => ['id','invoice_id','reference_no','invoice_number','number','reference'].some(key => String(r?.[key] || '') === String(id)));
-        if (!found) { setNotFound(true); return; }
-        setInvoice(found);
+    /* Resolved via the shared document endpoint (snapshot -> SmartERP
+       detail -> list — see lib/smartlifeDocument.js), the same resolver
+       apps/smartlife/purchases/[id]/print and the ZATCA endpoint already
+       use. This page previously called the LIST endpoint directly with a
+       ?id= search filter — that reported "This invoice was not found" for
+       an invoice the resolver (and the ZATCA endpoint on this very page)
+       could load without trouble, reproduced live: /sales-invoices/490
+       resolves via the API but this page 404'd, and its own PDF route
+       failed waiting for `.idoc` because the page never rendered past the
+       not-found state. */
+    fetch(`/api/smartlife/sales-invoices/${encodeURIComponent(id)}`, { credentials: 'same-origin', cache: 'no-store' })
+      .then(async r => {
+        const body = await r.json().catch(() => ({}));
+        if (!r.ok || !body?.record) { setNotFound(true); return; }
+        setInvoice(body.record);
       })
       .catch(() => setNotFound(true));
   }, [id]);
