@@ -24,7 +24,8 @@ const NAV_GROUPS = [
   { group: null, items: [
     { href: '/dashboard', label: 'Dashboard', labelAr: 'الرئيسية', icon: 'grid' },
   ] },
-  { group: 'Accounting System', groupAr: 'النظام المحاسبي', items: [
+  { group: 'Accounting System', groupAr: 'النظام المحاسبي', collapsible: true, items: [
+    { href: '/smartlife/accounting-system', label: 'Accounting System', labelAr: 'النظام المحاسبي', icon: 'chart' },
     { href: '/smartlife/accounts', label: 'Chart of Accounts', labelAr: 'دليل الحسابات', icon: 'ledger' },
     { href: '/smartlife/account-balances', label: 'Account Balances', labelAr: 'أرصدة الحسابات', icon: 'balance' },
     { href: '/smartlife/daily-move', label: 'Daily Move', labelAr: 'اليومية العامة', icon: 'ledger' },
@@ -83,7 +84,7 @@ const NAV_GROUPS = [
      Quotes Report, Statistical Total Profits as a standalone page) has no
      real implementation anywhere in this app and was left out rather than
      given a fake href. */
-  { group: 'Financial Reports', groupAr: 'التقارير المالية', items: [
+  { group: 'Financial Reports', groupAr: 'التقارير المالية', collapsible: true, items: [
     { href: '/smartlife/financial-reports', label: 'Financial Reports', labelAr: 'التقارير المالية', icon: 'chart' },
     { href: '/reports', label: 'Optional Reports', labelAr: 'تقارير اختيارية', icon: 'chart' },
     { href: '/smartlife/account-balances', label: 'Accounts Balances Report', labelAr: 'تقرير أرصدة الحسابات', icon: 'balance' },
@@ -175,6 +176,27 @@ export default function Shell({ children, active }) {
   const [currentPath, setCurrentPath] = useState('');
   useEffect(() => { setCurrentPath(window.location.pathname); }, []);
 
+  /* Collapsible groups (Accounting System / Financial Reports) — plain
+     component state, same pattern as every other piece of UI state in this
+     file (theme/lang/sidebarOpen), no new persistence layer. `openGroups`
+     only overrides the default once a group has been explicitly toggled;
+     until then a collapsible group auto-opens when the current route
+     belongs to it, so navigating straight to e.g. /smartlife/trial-balance
+     shows it expanded and highlighted without a click. */
+  const [openGroups, setOpenGroups] = useState({});
+  function isGroupActive(section) {
+    return section.items.some(item => currentPath.startsWith(item.href));
+  }
+  function isGroupExpanded(section) {
+    if (!section.collapsible) return true;
+    const key = section.group;
+    return openGroups[key] !== undefined ? openGroups[key] : isGroupActive(section);
+  }
+  function toggleGroup(section) {
+    const key = section.group;
+    setOpenGroups(o => ({ ...o, [key]: !isGroupExpanded(section) }));
+  }
+
   return (
     <div className="min-h-screen flex text-[color:var(--tx)]">
       <ModuleActionVisibility />
@@ -194,30 +216,45 @@ export default function Shell({ children, active }) {
         </div>
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          {NAV_GROUPS.map((section, sectionIndex) => (
-            <div key={section.group || `ungrouped-${sectionIndex}`}>
-              {section.group && (
-                <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-text-muted)]">
-                  {lang === 'ar' ? section.groupAr : section.group}
-                </div>
-              )}
-              {section.items.filter(item => !item.adminOnly || user?.role === 'admin').map(item => {
-                const isActive = active === item.href || currentPath.startsWith(item.href);
-                return (
-                  <a key={item.href} href={item.href}
-                    className={
-                      'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
-                      (isActive
-                        ? 'nav-active bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
-                        : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
-                    }>
-                    <GlassIcon name={item.icon} size={21} bare />
-                    <span>{lang === 'ar' ? item.labelAr : item.label}</span>
-                  </a>
-                );
-              })}
-            </div>
-          ))}
+          {NAV_GROUPS.map((section, sectionIndex) => {
+            const expanded = isGroupExpanded(section);
+            const groupActive = section.collapsible && isGroupActive(section);
+            return (
+              <div key={section.group || `ungrouped-${sectionIndex}`}>
+                {section.group && (
+                  section.collapsible ? (
+                    <button type="button" onClick={() => toggleGroup(section)}
+                      className={
+                        'w-full flex items-center justify-between px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide ' +
+                        (groupActive ? 'text-[color:var(--sidebar-active-text)]' : 'text-[color:var(--sidebar-text-muted)]')
+                      }>
+                      <span>{lang === 'ar' ? section.groupAr : section.group}</span>
+                      <span className={'transition-transform ' + (expanded ? 'rotate-90' : '')}>›</span>
+                    </button>
+                  ) : (
+                    <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--sidebar-text-muted)]">
+                      {lang === 'ar' ? section.groupAr : section.group}
+                    </div>
+                  )
+                )}
+                {expanded && section.items.filter(item => !item.adminOnly || user?.role === 'admin').map(item => {
+                  const isActive = active === item.href || currentPath.startsWith(item.href);
+                  return (
+                    <a key={item.href} href={item.href}
+                      className={
+                        'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ' +
+                        (isActive
+                          ? 'nav-active bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
+                          : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
+                      }>
+                      <GlassIcon name={item.icon} size={21} bare />
+                      <span>{lang === 'ar' ? item.labelAr : item.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
         {/* User */}
         {user && (
