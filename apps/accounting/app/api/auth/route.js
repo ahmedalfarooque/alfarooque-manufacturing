@@ -35,7 +35,8 @@ export async function POST(req) {
 
   if (action === 'email-login') {
     const email = String(body.email || '').toLowerCase().trim();
-    const { data: user } = await sb.from('platform_users').select('id, email, is_active, otp_login_enabled').eq('email', email).maybeSingle();
+    const { data: user, error: lookupError } = await sb.from('platform_users').select('id, email, is_active, otp_login_enabled').eq('email', email).maybeSingle();
+    if (lookupError) console.error('[accounting/auth] platform_users lookup failed:', lookupError.message, lookupError.code || '');
     if (!user || !user.is_active || user.otp_login_enabled === false) return json({ error: 'Invalid username.' }, 400);
     const otp = generateOtp();
     const { error } = await sb.from('platform_otp_codes').insert({
