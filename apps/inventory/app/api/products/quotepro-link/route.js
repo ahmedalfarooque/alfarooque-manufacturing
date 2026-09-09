@@ -18,7 +18,13 @@ const { json, requireAction } = require('@/lib/http');
 const { parseCookies } = require('@/lib/auth');
 const { SSO_COOKIE_NAME } = require('@/lib/sso');
 
-function quotationBase() { return (process.env.QUOTATION_API_URL || 'http://localhost:3030').replace(/\/$/, ''); }
+// The localhost fallback is for local dev only; a Vercel deployment must fail loudly instead.
+function quotationBase() {
+  const configured = (process.env.QUOTATION_API_URL || '').trim().replace(/\/$/, '');
+  if (configured) return configured;
+  if (process.env.VERCEL) throw new Error('QUOTATION_API_URL is not configured for this deployment.');
+  return 'http://localhost:3030';
+}
 
 /* Search existing QuotePro materials by name/code — read-only proxy,
    reuses QuotePro's own /api/materials list endpoint so this never

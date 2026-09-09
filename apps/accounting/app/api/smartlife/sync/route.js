@@ -34,11 +34,26 @@ export async function POST(req) {
      recent-sync skip to the 'background' trigger, never to a manual click. */
   const body = await req.json().catch(() => ({}));
   const trigger = body?.trigger === 'background' ? 'background' : 'manual';
-  const base = (process.env.SMARTERP_CENTRAL_API_URL || 'http://localhost:3060').trim();
-  const upstream = await fetch(new URL('/api/integrations/smartlife/sync', base), {
-    method:'POST', headers:{ Accept:'application/json', 'Content-Type':'application/json', Cookie: cookieHeader }, cache:'no-store',
-    body: JSON.stringify({ trigger }),
-  });
+  const base = centralBase();
+  if (!base) return json({ error: 'SMARTERP_CENTRAL_API_URL is not configured for this deployment.' }, 503);
+  let upstream;
+  try {
+    upstream = await fetch(new URL('/api/integrations/smartlife/sync', base), {
+      method:'POST', headers:{ Accept:'application/json', 'Content-Type':'application/json', Cookie: cookieHeader }, cache:'no-store',
+      body: JSON.stringify({ trigger }),
+    });
+  } catch (error) {
+    console.error('[smartlife/sync] central service unreachable:', error && error.message);
+    return json({ error: 'Could not reach the central SmartERP service.' }, 502);
+  }
   const payload = await upstream.json().catch(() => ({}));
+  if (!upstream.ok && !payload.error) payload.error = `Central SmartERP service returned HTTP ${upstream.status}.`;
   return json(payload, upstream.status);
+}
+
+// The localhost fallback is for local dev only; a Vercel deployment must fail loudly instead.
+function centralBase() {
+  const configured = (process.env.SMARTERP_CENTRAL_API_URL || '').trim();
+  if (configured) return configured;
+  return process.env.VERCEL ? null : 'http://localhost:3060';
 }

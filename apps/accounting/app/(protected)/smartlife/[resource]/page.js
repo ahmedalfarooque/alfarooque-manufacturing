@@ -653,14 +653,14 @@ export default function SmartLifeResourcePage({ params }) {
 
   async function sync() {
     setBusy(true);
-    try { const r=await fetch('/api/smartlife/sync',{method:'POST',credentials:'same-origin'}); const p=await r.json(); if(!r.ok) throw new Error(p.error||'Sync failed.'); toast(`SmartERP synchronized: ${p.records} records`,'emerald'); refresh?.(); refreshSync?.(); }
+    try { const r=await fetch('/api/smartlife/sync',{method:'POST',credentials:'same-origin'}); const p=await r.json().catch(()=>({})); if(!r.ok) throw new Error(p.error||`Sync failed (HTTP ${r.status}).`); toast(`SmartERP synchronized: ${p.records} records`,'emerald'); refresh?.(); refreshSync?.(); }
     catch(e){ toast(e.message,'red'); } finally { setBusy(false); }
   }
 
   async function connectProject() {
     if(!selected || !projectId) return;
     setBusy(true);
-    try { const r=await fetch('/api/smartlife/relationships',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({action:'connect-project',resource,source_record:selected,project_id:projectId})}); const p=await r.json(); if(!r.ok) throw new Error(p.error); toast(`Connected to ${p.project.project_name}`,'emerald'); setConnectOpen(false); setRelationship(x=>({...x,connection:p.connection})); }
+    try { const r=await fetch('/api/smartlife/relationships',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({action:'connect-project',resource,source_record:selected,project_id:projectId})}); const p=await r.json().catch(()=>({})); if(!r.ok) throw new Error(p.error||`Could not connect project (HTTP ${r.status}).`); toast(`Connected to ${p.project.project_name}`,'emerald'); setConnectOpen(false); setRelationship(x=>({...x,connection:p.connection})); }
     catch(e){ toast(e.message||'Could not connect project.','red'); } finally { setBusy(false); }
   }
 

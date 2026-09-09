@@ -13,7 +13,9 @@ const SmartLifeConfigurationError = IntegrationConfigurationError;
 
 function endpointFor(resource, query = {}) {
   if (!RESOURCES[resource]) throw new SmartLifeConfigurationError('Unsupported SmartERP read-only resource.');
-  const base = (process.env.SMARTERP_CENTRAL_API_URL || 'http://localhost:3060').trim();
+  // The localhost fallback is for local dev only; a Vercel deployment must fail loudly instead.
+  const base = (process.env.SMARTERP_CENTRAL_API_URL || '').trim() || (process.env.VERCEL ? '' : 'http://localhost:3060');
+  if (!base) throw new SmartLifeConfigurationError('SMARTERP_CENTRAL_API_URL is not configured for this deployment.');
   let url;
   try { url = new URL(`/api/integrations/smartlife/data/${resource}`, base); }
   catch (_) { throw new SmartLifeConfigurationError('Central SmartERP integration URL is invalid.'); }

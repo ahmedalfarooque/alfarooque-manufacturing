@@ -6,8 +6,15 @@ const { json, requireSession , requireAction } = require('@/lib/http');
 export async function GET(req) {
   const { response } = await requireAction(req, 'view');
   if (response) return response;
-  const sb = getDb();
+  try {
+    return await buildStats(getDb());
+  } catch (error) {
+    console.error('[stats] failed:', error && error.message);
+    return json({ error: 'Could not load dashboard statistics.' }, 500);
+  }
+}
 
+async function buildStats(sb) {
   const [
     { count: totalProducts },
     { count: totalMaterials },

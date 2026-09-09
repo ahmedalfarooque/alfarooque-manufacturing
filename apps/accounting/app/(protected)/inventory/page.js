@@ -40,7 +40,10 @@ function Kpi({ label, value, sub }) {
 
 export default function InventoryPage() {
   const { lang } = useLanguage();
-  const { data: summary, loading: summaryLoading } = useLiveData('/api/inventory/summary', 60000);
+  const { data: summaryData, error: summaryError } = useLiveData('/api/inventory/summary', 60000);
+  // useLiveData surfaces error bodies as `data` too; only treat it as a summary when the real fields are present.
+  const summary = summaryData && summaryData.totalProducts != null ? summaryData : null;
+  const summaryLoading = !summaryData && !summaryError;
   const [page, setPage] = useState(0);
   const pageSize = 25;
   const [search, setSearch] = useState('');
@@ -147,7 +150,7 @@ export default function InventoryPage() {
         <GlassButton variant="secondary" onClick={() => runReport('save')} disabled={!filtered.length || !!reportBusy}>{reportBusy === 'save' ? 'Generating…' : '⤓ Download PDF'}</GlassButton>
       </ListToolbar>
 
-      {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">Could not load inventory data.</div>}
+      {(error || summaryError) && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">Could not load inventory data{(error || summaryError) ? `: ${error || summaryError}` : '.'}</div>}
       {loading && <div className="py-8 text-center text-[color:var(--tx-3)]">Loading…</div>}
       {!loading && !filtered.length && <div className="py-8 text-center text-[color:var(--tx-3)]">No products matched this view.</div>}
       {!!filtered.length && <div className="overflow-auto">

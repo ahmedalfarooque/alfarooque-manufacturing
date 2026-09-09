@@ -16,7 +16,11 @@ export function useLiveData(url, intervalMs) {
   const refresh = useCallback(async () => {
     try {
       const res = await fetch(url, { credentials: 'same-origin' });
-      const body = await res.json();
+      // An empty or non-JSON body (e.g. a crashed route) must become a readable error, not a parse exception.
+      const text = await res.text();
+      let body = null;
+      if (text.trim()) { try { body = JSON.parse(text); } catch (_) { body = null; } }
+      if (body === null) { setError(res.ok ? 'Server returned an unreadable response.' : `Request failed (HTTP ${res.status}).`); return; }
       /* A non-2xx response still carries a real body (e.g. `connected:false,
          permission_required:true`) that callers need to render a specific
          state — discarding it and keeping only a string in `error` (the
