@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
+  "installCommand": "cd ../.. && npm install && npm install --prefix apps/quotation",
   "crons": [
     { "path": "/api/cron/expire", "schedule": "0 3 * * *" }
   ],
