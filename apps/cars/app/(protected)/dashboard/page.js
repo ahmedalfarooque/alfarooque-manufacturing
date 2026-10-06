@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import Shell from '@/components/Shell';
 import { GlassIcon } from '@/components/GlassIcons';
 import { chartTheme } from '@/components/glass';
-import { EmptyState } from '@/components/ui';
+import { EmptyState, Button } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage, trEnum, trExpiryDays } from '@/lib/i18n';
 import { SeverityPill, DaysText, SEVERITY_HEX } from '@/components/ExpiryUi';
@@ -108,7 +109,7 @@ export default function DashboardPage() {
             </div>
             <span className="px-3 py-1 rounded-full text-sm font-semibold tabular-nums bg-red-500/10 text-red-700 dark:text-red-300">{fe.expired.length}</span>
           </div>
-          <AlertTable rows={fe.expired} empty={t('dx.expired.empty')} isAdmin={isAdmin} />
+          <AlertTable rows={fe.expired} empty={t('dx.expired.empty')} isAdmin={isAdmin} pageKey="dashboard-expired" title={t('dx.expired.title')} fileName="expired-documents-report.pdf" />
         </section>
       )}
 
@@ -350,39 +351,62 @@ function Expiring30Body({ rows, isAdmin }) {
           ))}
         </div>
       </div>
-      <AlertTable rows={shown} empty={t('dx.expiring30.empty')} isAdmin={isAdmin} />
+      <AlertTable rows={shown} empty={t('dx.expiring30.empty')} isAdmin={isAdmin} pageKey="dashboard-expiring30" title={t('dx.expiring30.title')} fileName="expiring-30-days-report.pdf" />
     </>
   );
 }
 
 /* Table on ≥ md, stacked cards on phones. Sorted most urgent first by the
    server; a vehicle with both documents expiring appears once per alert. */
-function AlertTable({ rows, empty, isAdmin }) {
-  const { t, formatDateOnly } = useLanguage();
+function AlertTable({ rows, empty, isAdmin, pageKey, title, fileName }) {
+  const { t, lang, formatDateOnly } = useLanguage();
+  const [reportBusy, setReportBusy] = useState('');
+  /* Page-view column model: one source of truth for the table, Print and
+     PDF. Each dashboard table has its own pageKey so preferences never mix. */
+  const cols = [
+    { key: 'vehicle', label: t('dx.col.vehicle'), render: a => <><a href={'/vehicles/' + a.carId} className="font-medium hover:underline">{a.vehicleNumber}</a><div className="text-xs text-[color:var(--tx-3)]">{a.vehicleName || '—'}</div></>, pdf: a => a.vehicleNumber + (a.vehicleName ? ' — ' + a.vehicleName : '') },
+    { key: 'alertType', label: t('dx.col.alertType'), className: 'whitespace-nowrap', render: a => <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-sm" style={{ background: TYPE_COLOR[a.alertType] }} aria-hidden="true" />{t('alertType.' + a.alertType)}</span>, pdf: a => t('alertType.' + a.alertType) },
+    { key: 'expiry', label: t('dx.col.expiry'), className: 'whitespace-nowrap', render: a => formatDateOnly(a.expiryDate), pdf: a => formatDateOnly(a.expiryDate) },
+    { key: 'days', label: t('dx.col.days'), className: 'whitespace-nowrap', render: a => <DaysText days={a.daysRemaining} />, pdf: a => trExpiryDays(t, a.daysRemaining) },
+    { key: 'status', label: t('dx.col.status'), render: a => <SeverityPill severity={a.severity} />, pdf: a => t('severity.' + a.severity) },
+    { key: 'action', label: t('dx.col.action'), required: true, noPdf: true, className: 'text-end whitespace-nowrap', render: a => (
+      <>
+        <a href={'/vehicles/' + a.carId} className="text-xs font-medium text-brand-500 hover:underline">{t('fleet.view')}</a>
+        {isAdmin && <a href={'/vehicles/' + a.carId + '?edit=1'} className="text-xs font-medium text-brand-500 hover:underline ms-3">{t('fleet.edit')}</a>}
+      </>
+    ) },
+  ];
+  const prefs = useColumnPrefs(pageKey, cols);
+  const { visibleCols } = prefs;
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({ title, columns: pdfColumns(visibleCols), rows: pdfRows(visibleCols, rows), lang, fileName, action });
+    } catch (e) { /* report failures must not break the page */ }
+    finally { setReportBusy(''); }
+  }
   if (rows.length === 0) return <div className="px-5 pb-5 pt-2"><EmptyState text={empty} /></div>;
   return (
     <>
-      <div className="overflow-auto max-h-[420px] hidden md:block mt-3">
+      <div className="hidden md:flex flex-wrap items-center justify-end gap-2 px-4 mt-3">
+        <ColumnPicker columns={cols} prefs={prefs} />
+        <Button variant="ghost" size="sm" onClick={() => runReport('print')} disabled={!!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+        <Button variant="ghost" size="sm" onClick={() => runReport('save')} disabled={!!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
+      </div>
+      <div className="overflow-auto max-h-[420px] hidden md:block mt-2">
         <table className="w-full text-sm min-w-[760px]">
           <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr className="text-start">
-              {['vehicle', 'alertType', 'expiry', 'days', 'status', 'action'].map((k, i) => (
-                <th key={k} className={'px-4 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-semibold whitespace-nowrap ' + (i === 5 ? 'text-end' : 'text-start')}>{t('dx.col.' + k)}</th>
+              {visibleCols.map(c => (
+                <th key={c.key} className={'px-4 py-2.5 text-[11px] uppercase tracking-wider text-[color:var(--tx-3)] font-semibold whitespace-nowrap ' + (c.key === 'action' ? 'text-end' : 'text-start')}>{c.label}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map(a => (
               <tr key={a.key} className="border-t border-[color:var(--bd)] hover:bg-[color:var(--pr-soft)] transition-colors">
-                <td className="px-4 py-2.5"><a href={'/vehicles/' + a.carId} className="font-medium hover:underline">{a.vehicleNumber}</a><div className="text-xs text-[color:var(--tx-3)]">{a.vehicleName || '—'}</div></td>
-                <td className="px-4 py-2.5 whitespace-nowrap"><span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-sm" style={{ background: TYPE_COLOR[a.alertType] }} aria-hidden="true" />{t('alertType.' + a.alertType)}</span></td>
-                <td className="px-4 py-2.5 whitespace-nowrap">{formatDateOnly(a.expiryDate)}</td>
-                <td className="px-4 py-2.5 whitespace-nowrap"><DaysText days={a.daysRemaining} /></td>
-                <td className="px-4 py-2.5"><SeverityPill severity={a.severity} /></td>
-                <td className="px-4 py-2.5 text-end whitespace-nowrap">
-                  <a href={'/vehicles/' + a.carId} className="text-xs font-medium text-brand-500 hover:underline">{t('fleet.view')}</a>
-                  {isAdmin && <a href={'/vehicles/' + a.carId + '?edit=1'} className="text-xs font-medium text-brand-500 hover:underline ms-3">{t('fleet.edit')}</a>}
-                </td>
+                {visibleCols.map(c => <td key={c.key} className={'px-4 py-2.5 ' + (c.className || '')}>{c.render(a)}</td>)}
               </tr>
             ))}
           </tbody>
