@@ -1,4 +1,10 @@
 {
   "framework": "nextjs",
-  "installCommand": "cd ../.. && npm install && npm install --prefix apps/cars"
+  "installCommand": "cd ../.. && npm install && npm install --prefix apps/cars",
+  "crons": [
+    {
+      "path": "/api/cron/expiry-alerts",
+      "schedule": "0 4 * * *"
+    }
+  ]
 }

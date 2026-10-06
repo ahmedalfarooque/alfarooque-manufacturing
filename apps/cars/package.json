@@ -2,12 +2,13 @@
   "name": "af-cars-tracking",
   "version": "1.0.0",
   "private": true,
-  "description": "AL FAROOQUE — Cars Tracking System (deployed independently at cars.alfarooque.com)",
+  "description": "AL FAROOQUE \u2014 Cars Tracking System (deployed independently at cars.alfarooque.com)",
   "scripts": {
     "dev": "next dev -p 3010",
     "build": "next build",
     "start": "next start -p 3010",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --test \"lib/*.test.js\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

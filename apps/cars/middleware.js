@@ -76,5 +76,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/drivers/:path*', '/maintenance/:path*', '/maintenance-schedule/:path*', '/maintenance-shops/:path*', '/alerts/:path*', '/reports/:path*', '/view/:path*', '/users/:path*'],
+  matcher: ['/dashboard/:path*', '/vehicles/:path*', '/drivers/:path*', '/maintenance/:path*', '/maintenance-schedule/:path*', '/maintenance-shops/:path*', '/insurance/:path*', '/inspection/:path*', '/alerts/:path*', '/reports/:path*', '/view/:path*', '/users/:path*'],
 };

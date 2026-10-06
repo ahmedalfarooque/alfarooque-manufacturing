@@ -12,11 +12,13 @@ const NAV = [
   { href: '/dashboard', key: 'nav.dashboard', icon: 'dashboard' },
   { href: '/vehicles', key: 'nav.vehicles', icon: 'truck' },
   { href: '/drivers', key: 'nav.drivers', icon: 'users' },
+  { href: '/insurance', key: 'nav.insurance', icon: 'shield' },
+  { href: '/inspection', key: 'nav.inspection', icon: 'target' },
   { href: '/maintenance-schedule', key: 'nav.maintenanceSchedule', icon: 'wrench' },
   { href: '/maintenance', key: 'nav.maintenance', icon: 'wrench' },
   { href: '/maintenance-shops', key: 'nav.maintenanceShops', icon: 'wrench' },
   { href: '/alerts', key: 'nav.alerts', icon: 'bell' },
-  { href: '/users', key: 'Users', icon: 'users', adminOnly: true },
+  { href: '/users', key: 'nav.users', icon: 'users', adminOnly: true },
 ];
 
 export default function Shell({ children, active }) {
@@ -107,7 +109,7 @@ export default function Shell({ children, active }) {
                   ? 'nav-active bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)]'
                   : 'text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)] hover:text-[color:var(--sidebar-active-text)]')
               }>
-              <GlassIcon name={item.icon} size={21} className="shrink-0" bare />{item.key === 'Users' ? 'Users' : t(item.key)}
+              <GlassIcon name={item.icon} size={21} className="shrink-0" bare />{t(item.key)}
             </a>
           ))}
         </nav>
@@ -159,7 +161,7 @@ export default function Shell({ children, active }) {
           </div>
           <div className="flex items-center gap-2">
             <AppSwitcherButtons user={user} />
-            <button onClick={toggleLanguage} className="glass-ctrl" aria-label={t('shell.toggleLanguage')}>
+            <button onClick={toggleLanguage} className="glass-ctrl lang-toggle-btn" aria-label={t('shell.toggleLanguage')}>
               <span className="ctrl-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
             </button>
             <button onClick={toggleTheme} className="glass-ctrl" aria-label={t('shell.toggleTheme')} aria-pressed={dark}>

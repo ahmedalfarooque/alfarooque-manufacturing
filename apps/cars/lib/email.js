@@ -47,7 +47,7 @@ async function sendViaResend(p) {
     res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + env('RESEND_API_KEY'), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: p.from, to: [p.to], subject: p.subject, html: p.html }),
+      body: JSON.stringify({ from: p.from, to: [p.to], subject: p.subject, html: p.html, ...(p.text ? { text: p.text } : {}) }),
       signal: controller.signal,
     });
     data = await res.json().catch(() => ({}));
@@ -81,4 +81,19 @@ async function sendOtpEmail({ to, subject, html, mockLabel, code }) {
   return { mocked: false };
 }
 
-module.exports = { isConfigured, sendOtpEmail };
+/* General-purpose send used by the expiry-alert job (same Resend client,
+   same retries as OTP mail). `forceMock` is the safety valve: when set,
+   nothing leaves this machine — only the subject and a masked recipient
+   are logged (never the body, never any credential). */
+async function sendEmail({ to, subject, html, text, forceMock }) {
+  if (forceMock || !isConfigured()) {
+    const [u, d] = String(to).split('@');
+    console.warn('[email:MOCK] "' + subject + '" -> ' + (u ? u.slice(0, 1) : '') + '***@' + (d || '') + '  (not sent; ALERT_EMAIL_MODE=live + RESEND_API_KEY required)');
+    return { mocked: true };
+  }
+  const from = env('EMAIL_FROM') || 'noreply@alfarooque.com';
+  const out = await withRetries(() => sendViaResend({ to, from, subject, html, text }));
+  return { mocked: false, id: out.id };
+}
+
+module.exports = { isConfigured, sendOtpEmail, sendEmail };

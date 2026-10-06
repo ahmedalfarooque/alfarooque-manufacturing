@@ -24,7 +24,8 @@ const MODULES = {
   ],
   cars: [
     ['general', 'dashboard', 'Dashboard'], ['fleet', 'vehicles', 'Vehicles'],
-    ['fleet', 'drivers', 'Drivers'], ['maintenance', 'maintenance-schedule', 'Maintenance Schedule'],
+    ['fleet', 'drivers', 'Drivers'], ['fleet', 'insurance', 'Insurance'],
+    ['fleet', 'inspection', 'Periodic Vehicle Inspection'], ['maintenance', 'maintenance-schedule', 'Maintenance Schedule'],
     ['maintenance', 'maintenance', 'Maintenance'], ['maintenance', 'maintenance-shops', 'Maintenance Shops'],
     ['general', 'alerts', 'Alerts'], ['administration', 'users', 'Users & Roles'],
   ],
@@ -94,7 +95,7 @@ function defaultPermission(role, appId, moduleId) {
 function moduleFromPath(appId, pathname) {
   const clean = String(pathname || '').replace(/^\/api\//, '/').split('?')[0];
   const aliases = {
-    cars: { cars: 'vehicles', shops: 'maintenance-shops', categories: 'vehicles', import: 'vehicles', 'maintenance-records': 'maintenance', stats: 'dashboard', search: 'dashboard', 'inventory-search': 'maintenance' },
+    cars: { cars: 'vehicles', shops: 'maintenance-shops', categories: 'vehicles', import: 'vehicles', 'maintenance-records': 'maintenance', stats: 'dashboard', search: 'dashboard', 'inventory-search': 'maintenance', 'expiry-alerts': 'alerts', 'alert-settings': 'alerts' },
     quotation: { 'material-categories': 'materials', 'bank-accounts': 'settings', contracts: 'quotations', translate: 'quotations' },
     projects: { 'daily-updates': 'projects', stats: 'dashboard', 'my-stats': 'dashboard', 'inventory-search': 'projects', warehouses: 'projects' },
     inventory: { brands: 'categories', subcategories: 'categories', units: 'categories', roles: 'users' },

@@ -8,6 +8,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { ListPagination } from '@/components/ListPagination';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import { validateVehicleDates } from '@/lib/fleetExpiry';
 
 const STATUS_BADGE = {
   Running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -20,7 +21,8 @@ const SORT_TH = 'text-start px-3 py-2.5 text-[11px] uppercase tracking-wider tex
 
 const EMPTY_FORM = {
   vehicle_number: '', name: '', type: 'Truck', fuel_type: 'Diesel', driver: '', status: 'Idle', location: '', current_km: '',
-  insurance_company: '', insurance_number: '', insurance_expiry: '', registration_expiry: '',
+  insurance_company: '', insurance_number: '', insurance_start_date: '', insurance_expiry: '', registration_expiry: '',
+  periodic_inspection_last_date: '', periodic_inspection_expiry: '',
   vin_number: '', engine_number: '', last_service_date: '', next_service_date: '',
   assigned_driver_id: '', purchase_date: '', purchase_cost: '',
 };
@@ -82,7 +84,7 @@ export default function VehiclesPage() {
       body: JSON.stringify(form),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+    if (!res.ok) throw Object.assign(new Error(data.error), { field: data.field, code: data.code });
     setModal(null);
     load();
   }
@@ -223,24 +225,54 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
   const [form, setForm] = useState(modal.data);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  /* Same validator the server runs (lib/fleetExpiry.js), so the browser
+     and the API can never disagree about what a valid date pair is. */
+  function validate(values) {
+    const bad = validateVehicleDates(values);
+    return bad ? { [bad.field]: 'vf.err.' + bad.code } : {};
+  }
 
   async function submit(e) {
     e.preventDefault();
+    const errors = validate(form);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) { setErr(t('vf.fixErrors')); return; }
     setBusy(true); setErr(null);
     try { await onSave(form, modal.mode, modal.data.id); }
-    catch (e2) { setErr(e2.message); }
+    catch (e2) {
+      /* Server-side date rejection comes back with { field, code }. */
+      if (e2.field && e2.code) { setFieldErrors({ [e2.field]: 'vf.err.' + e2.code }); setErr(t('vf.fixErrors')); }
+      else setErr(e2.message);
+    }
     finally { setBusy(false); }
   }
 
-  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+  const set = k => e => {
+    const value = e.target.value;
+    setForm(f => ({ ...f, [k]: value }));
+    /* Re-validate live only once an error has been shown, so a half-typed
+       date never flashes a message. */
+    if (Object.keys(fieldErrors).length) setFieldErrors(validate({ ...form, [k]: value }));
+  };
+
+  const dateField = (key, label, extra = {}) => (
+    <Field label={label}>
+      <Input value={form[key] || ''} onChange={set(key)} type="date" aria-invalid={fieldErrors[key] ? 'true' : undefined} {...extra} />
+      {fieldErrors[key] && <span role="alert" className="block text-xs text-red-600 dark:text-red-400 mt-1">{t(fieldErrors[key])}</span>}
+    </Field>
+  );
+  const section = (label, first) => <div className={'text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide ' + (first ? '' : 'pt-2')}>{label}</div>;
+  const grid = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
 
   return (
     <Modal title={modal.mode === 'add' ? t('vehicles.addModalTitle') : t('vehicles.editModalTitle')} onClose={onClose} wide>
-      <form onSubmit={submit} className="space-y-4">
-        {err && <div className="text-[#ef4444] text-sm">{err}</div>}
+      <form onSubmit={submit} className="space-y-4" noValidate>
+        {err && <div role="alert" className="text-red-600 dark:text-red-400 text-sm">{err}</div>}
 
-        <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide">{t('vehicles.sectionBasic')}</div>
-        <div className="grid grid-cols-2 gap-3">
+        {section(t('vehicles.sectionBasic'), true)}
+        <div className={grid}>
           <Field label={t('fields.vehicleNumber')} required><Input value={form.vehicle_number} onChange={set('vehicle_number')} required /></Field>
           <Field label={t('fields.name')}><Input value={form.name || ''} onChange={set('name')} /></Field>
           <Field label={t('fields.type')}><Input value={form.type || ''} onChange={set('type')} /></Field>
@@ -257,22 +289,33 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
           </Field>
         </div>
 
-        <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide pt-2">{t('vehicles.sectionInsurance')}</div>
-        <div className="grid grid-cols-2 gap-3">
+        {section(t('vehicles.sectionInsurance'))}
+        <div className={grid}>
           <Field label={t('fields.insuranceCompany')}><Input value={form.insurance_company || ''} onChange={set('insurance_company')} /></Field>
           <Field label={t('fields.insuranceNumber')}><Input value={form.insurance_number || ''} onChange={set('insurance_number')} /></Field>
-          <Field label={t('fields.insuranceExpiry')}><Input value={form.insurance_expiry || ''} onChange={set('insurance_expiry')} type="date" /></Field>
-          <Field label={t('fields.registrationExpiry')}><Input value={form.registration_expiry || ''} onChange={set('registration_expiry')} type="date" /></Field>
+          {dateField('insurance_start_date', t('fields.insuranceStartDate'))}
+          {dateField('insurance_expiry', t('fields.insuranceExpiry'), { min: form.insurance_start_date || undefined })}
+          {dateField('registration_expiry', t('fields.registrationExpiry'))}
           <Field label={t('fields.vinNumber')}><Input value={form.vin_number || ''} onChange={set('vin_number')} /></Field>
           <Field label={t('fields.engineNumber')}><Input value={form.engine_number || ''} onChange={set('engine_number')} /></Field>
         </div>
 
-        <div className="text-xs font-semibold text-[color:var(--tx-3)] uppercase tracking-wide pt-2">{t('vehicles.sectionService')}</div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('fields.lastServiceDate')}><Input value={form.last_service_date || ''} onChange={set('last_service_date')} type="date" /></Field>
-          <Field label={t('fields.nextServiceDate')}><Input value={form.next_service_date || ''} onChange={set('next_service_date')} type="date" /></Field>
-          <Field label={t('fields.purchaseDate')}><Input value={form.purchase_date || ''} onChange={set('purchase_date')} type="date" /></Field>
-          <Field label={t('fields.purchaseCost')}><Input value={form.purchase_cost ?? ''} onChange={set('purchase_cost')} type="number" /></Field>
+        {section(t('vf.sectionInspection'))}
+        <div className={grid}>
+          {dateField('periodic_inspection_last_date', t('fields.inspectionLast'))}
+          {dateField('periodic_inspection_expiry', t('fields.inspectionExpiry'), { min: form.periodic_inspection_last_date || undefined })}
+        </div>
+
+        {section(t('vf.sectionService'))}
+        <div className={grid}>
+          {dateField('last_service_date', t('fields.lastServiceDate'))}
+          {dateField('next_service_date', t('fields.nextServiceDate'))}
+        </div>
+
+        {section(t('vf.sectionPurchase'))}
+        <div className={grid}>
+          {dateField('purchase_date', t('fields.purchaseDate'))}
+          <Field label={t('fields.purchaseCost')}><Input value={form.purchase_cost ?? ''} onChange={set('purchase_cost')} type="number" min="0" step="any" /></Field>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">

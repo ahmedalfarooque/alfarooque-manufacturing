@@ -3,6 +3,7 @@
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
 const { expiryInfo } = require('@/lib/expiry');
+const { summarizeFleet, collectAlerts, todayInZone } = require('@/lib/fleetExpiry');
 
 const EXPIRY_CATEGORIES = [
   { key: 'license', label: 'License', table: 'driver', field: 'license_expiry_date' },
@@ -75,6 +76,16 @@ export async function GET(req) {
       maintenanceDue.push({ id: m.id, car_id: m.car_id, maintenance_type: m.maintenance_type, next_due_km: nextDue, remaining_km: remaining });
     }
   }
+
+  /* Vehicle insurance + periodic-inspection expiry: one shared calculation
+     (lib/fleetExpiry.js) — the same one behind the Insurance, Inspection,
+     Alerts and vehicle pages, so these numbers always match them. */
+  const fleetToday = todayInZone();
+  const fleetSummary = summarizeFleet(cars, { today: fleetToday });
+  const expiryAlerts = collectAlerts(cars, { today: fleetToday });
+  const expiringWithin30 = expiryAlerts.filter(a => a.isWithin30Days);
+  const expiredAlerts = expiryAlerts.filter(a => a.isExpired);
+  const maintenanceDueVehicleCount = new Set(maintenanceDue.map(m => m.car_id)).size;
 
   const { count: alertCount } = await sb.from('car_alerts').select('id', { count: 'exact', head: true }).eq('is_read', false);
   const { data: recentAlerts } = await sb.from('car_alerts').select('*').order('created_at', { ascending: false }).limit(5);
@@ -180,8 +191,14 @@ export async function GET(req) {
     avgSpeed,
     fuelConsumed,
     maintenanceDueCount: dueCount,
+    maintenanceDueVehicleCount,
     maintenanceDue: maintenanceDue.slice(0, 6),
-    activeAlerts: alertCount || 0,
+    /* Active alerts = open insurance/inspection expiry alerts + unread
+       system alerts; both parts are returned so the UI can show the split. */
+    activeAlerts: fleetSummary.activeAlertCount + (alertCount || 0),
+    expiryAlertCount: fleetSummary.activeAlertCount,
+    unreadSystemAlerts: alertCount || 0,
+    fleetExpiry: { today: fleetToday, summary: fleetSummary, expiringWithin30, expired: expiredAlerts },
     recentAlerts: recentAlerts || [],
     recentTrips: recentTrips || [],
     maintenanceCost,

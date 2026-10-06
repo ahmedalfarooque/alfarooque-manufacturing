@@ -2,6 +2,8 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireSession , requireAction } = require('@/lib/http');
+const { prepareVehicleValues, checkDates, DATE_ERRORS } = require('@/lib/vehicleInput');
+const { isSchemaMissing } = require('@/lib/alertStore');
 
 const SORTS = {
   latest: { column: 'last_update', ascending: false },
@@ -86,7 +88,25 @@ export async function POST(req) {
     purchase_date: body.purchase_date || null,
     purchase_cost: body.purchase_cost ? Number(body.purchase_cost) : null,
   };
+  /* Insurance start / periodic inspection fields (migration v13). Blank
+     values are simply not written, so adding a vehicle keeps working on a
+     database that has not had v13 applied yet. */
+  const { values: extra, touchesV13 } = prepareVehicleValues({
+    insurance_start_date: body.insurance_start_date,
+    periodic_inspection_last_date: body.periodic_inspection_last_date,
+    periodic_inspection_expiry: body.periodic_inspection_expiry,
+  }, null);
+  Object.assign(row, extra);
+  const bad = checkDates(row, null);
+  if (bad) return json({ error: DATE_ERRORS[bad.code], code: bad.code, field: bad.field }, 400);
+
   const { data, error } = await sb.from('cars').insert(row).select().single();
-  if (error) { console.error('[cars] create failed:', error.message); return json({ error: 'Could not add vehicle.' }, 500); }
+  if (error) {
+    if (touchesV13 && isSchemaMissing(error)) {
+      return json({ error: 'Insurance start / periodic inspection fields need the database migration (apps-schema-v13) to be applied first.', code: 'SCHEMA_MISSING' }, 409);
+    }
+    console.error('[cars] create failed:', error.message);
+    return json({ error: 'Could not add vehicle.' }, 500);
+  }
   return json({ vehicle: data }, 201);
 }

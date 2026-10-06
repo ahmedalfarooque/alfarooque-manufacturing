@@ -26,6 +26,10 @@ test('keeps Users administration denied to non-admin roles', () => {
 test('module registry follows active application paths and aliases', () => {
   assert.equal(moduleFromPath('inventory', '/api/products/123'), 'products');
   assert.equal(moduleFromPath('cars', '/api/cars/123'), 'vehicles');
+  assert.equal(moduleFromPath('cars', '/api/insurance'), 'insurance');
+  assert.equal(moduleFromPath('cars', '/api/inspection'), 'inspection');
+  assert.equal(moduleFromPath('cars', '/api/expiry-alerts'), 'alerts');
+  assert.equal(moduleFromPath('cars', '/api/alert-settings/recipients'), 'alerts');
   assert.equal(moduleFromPath('quotation', '/api/material-categories'), 'materials');
   assert.equal(moduleFromPath('accounting', '/api/invoices/123'), 'sales-invoices');
   assert.equal(modulesFor('crm').some(module => module.id === 'restaurants'), false);

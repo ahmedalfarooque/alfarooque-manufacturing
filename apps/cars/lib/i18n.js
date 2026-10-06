@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { readPref, writePref, LANG_PREF_COOKIE } from './prefs';
+import { fleetTranslations } from './i18nFleet';
 
 export const LANG_KEY = 'af-cars-lang';
 
@@ -1046,6 +1047,11 @@ export const translations = {
   },
 };
 
+/* Fleet-expiry feature strings live in ./i18nFleet.js and are merged into
+   the same table, so t()/trEnum() resolve them like every other key. */
+Object.assign(translations.en, fleetTranslations.en);
+Object.assign(translations.ar, fleetTranslations.ar);
+
 function applyDomLang(lang) {
   if (typeof document === 'undefined') return;
   document.documentElement.lang = lang;
@@ -1059,6 +1065,17 @@ function formatDateFor(lang, value, opts) {
   const d = value instanceof Date ? value : new Date(value);
   if (isNaN(d.getTime())) return '';
   return d.toLocaleDateString(LOCALE[lang] || LOCALE.en, opts);
+}
+
+/* Calendar dates stored as YYYY-MM-DD (expiry dates) must be formatted in
+   UTC: new Date('2026-10-30') is UTC midnight, and rendering it in a
+   negative-offset local timezone would show the previous day. */
+function formatDateOnlyFor(lang, value) {
+  if (!value) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  if (!m) return formatDateFor(lang, value);
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return d.toLocaleDateString(LOCALE[lang] || LOCALE.en, { timeZone: 'UTC', year: 'numeric', month: 'short', day: '2-digit' });
 }
 
 function formatDateTimeFor(lang, value, opts) {
@@ -1134,9 +1151,10 @@ export function LanguageProvider({ children }) {
 
   const formatDate = useCallback((value, opts) => formatDateFor(lang, value, opts), [lang]);
   const formatDateTime = useCallback((value, opts) => formatDateTimeFor(lang, value, opts), [lang]);
+  const formatDateOnly = useCallback(value => formatDateOnlyFor(lang, value), [lang]);
   const formatNumber = useCallback((value, opts) => formatNumberFor(lang, value, opts), [lang]);
 
-  const value = useMemo(() => ({ lang, setLang, t, formatDate, formatDateTime, formatNumber }), [lang, setLang, t, formatDate, formatDateTime, formatNumber]);
+  const value = useMemo(() => ({ lang, setLang, t, formatDate, formatDateTime, formatDateOnly, formatNumber }), [lang, setLang, t, formatDate, formatDateTime, formatDateOnly, formatNumber]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
@@ -1154,6 +1172,7 @@ export function useLanguage() {
       },
       formatDate: (v, opts) => formatDateFor('en', v, opts),
       formatDateTime: (v, opts) => formatDateTimeFor('en', v, opts),
+      formatDateOnly: v => formatDateOnlyFor('en', v),
       formatNumber: (v, opts) => formatNumberFor('en', v, opts),
     };
   }
