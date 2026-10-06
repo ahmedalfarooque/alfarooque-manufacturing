@@ -192,8 +192,8 @@ const LANGS = ['en', 'ar', 'both'];
 
 function AlertSettings() {
   const { t, formatDateTime } = useLanguage();
-  const [state, setState] = useState(null);     // { types, lastRun, schedule, emailMode, canManage }
-  const [pending, setPending] = useState(null); // { schedule, emailMode } when migration is missing
+  const [state, setState] = useState(null);     // { types, lastRun, schedule, email, canManage }
+  const [pending, setPending] = useState(null); // { schedule, email } when migration is missing
   const [error, setError] = useState(null);
 
   const load = useCallback(() => {
@@ -201,7 +201,7 @@ function AlertSettings() {
       .then(r => r.json().then(b => ({ ok: r.ok, b })))
       .then(({ ok, b }) => {
         if (ok) { setState(b); setPending(null); setError(null); }
-        else if (b.code === 'SCHEMA_MISSING') setPending({ schedule: b.schedule, emailMode: b.emailMode });
+        else if (b.code === 'SCHEMA_MISSING') setPending({ schedule: b.schedule, email: b.email });
         else setError(b.error);
       }).catch(e => setError(e.message));
   }, []);
@@ -217,12 +217,12 @@ function AlertSettings() {
           {['as.pend.recipients', 'as.pend.settings', 'as.pend.test', 'as.pend.history'].map(k => <li key={k}>{t(k)}</li>)}
         </ul>
       </Notice>
-      <ScheduleCard schedule={pending.schedule} emailMode={pending.emailMode} lastRun={null} t={t} formatDateTime={formatDateTime} migrationPending />
+      <ScheduleCard schedule={pending.schedule} email={pending.email} lastRun={null} t={t} formatDateTime={formatDateTime} migrationPending />
     </div>
   );
   if (!state) return <div className="text-sm text-[color:var(--tx-3)]">{t('common.loading')}</div>;
 
-  const { types, lastRun, schedule, emailMode, canManage } = state;
+  const { types, lastRun, schedule, email, canManage } = state;
   const anyActive = ALERT_TYPES.some(k => types[k].settings.enabled && types[k].settings.auto_notify_enabled && types[k].recipients.some(r => r.enabled));
 
   return (
@@ -235,17 +235,28 @@ function AlertSettings() {
         </div>
         <div className="flex items-center gap-3 flex-wrap text-xs">
           <StatePill on={anyActive} onLabel={t('as.active')} offLabel={t('as.inactive')} />
-          <span className={'px-2.5 py-0.5 rounded-full font-medium ' + (emailMode === 'live' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/10 text-amber-700 dark:text-amber-300')}>{emailMode === 'live' ? t('as.modeLive') : t('as.modeMock')}</span>
+          <EmailStatusPill email={email} t={t} />
           {!canManage && <span className="text-[color:var(--tx-4)]">{t('al.adminOnly')}</span>}
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        {ALERT_TYPES.map(k => <TypeCard key={k} type={k} data={types[k]} canManage={canManage} emailMode={emailMode} onChanged={load} onError={setError} />)}
+        {ALERT_TYPES.map(k => <TypeCard key={k} type={k} data={types[k]} canManage={canManage} email={email} onChanged={load} onError={setError} />)}
       </div>
 
-      <ScheduleCard schedule={schedule} emailMode={emailMode} lastRun={lastRun} t={t} formatDateTime={formatDateTime} canManage={canManage} />
+      <ScheduleCard schedule={schedule} email={email} lastRun={lastRun} t={t} formatDateTime={formatDateTime} canManage={canManage} />
     </div>
+  );
+}
+
+/* Honest provider status: Resend live, or exactly which variables are missing. */
+function EmailStatusPill({ email, t }) {
+  const ok = !!(email && email.configured);
+  return (
+    <span className={'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ' + (ok ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-red-500/10 text-red-700 dark:text-red-300')} role={ok ? undefined : 'alert'}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: ok ? '#059669' : '#dc2626' }} aria-hidden="true" />
+      {ok ? t('as.modeLive') : t('as.modeNotConfigured', { vars: (email && email.missing || []).join(', ') })}
+    </span>
   );
 }
 
@@ -265,18 +276,21 @@ async function api(url, method, body, t) {
 }
 
 /* One alert type: status, settings form (explicit Save), recipients, test send. */
-function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
+function TypeCard({ type, data, canManage, email, onChanged, onError }) {
   const { t, formatDateTime } = useLanguage();
   const saved = data.settings;
   const [form, setForm] = useState({ enabled: saved.enabled, auto_notify_enabled: saved.auto_notify_enabled, email_language: saved.email_language });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);     // { tone, text }
-  const [email, setEmail] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [formErr, setFormErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmTest, setConfirmTest] = useState(false);
   const [removing, setRemoving] = useState(null);   // recipient awaiting removal confirmation
+  const [editing, setEditing] = useState(null);     // recipient being edited
+  const [recipMsg, setRecipMsg] = useState(null);
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState(null);
 
@@ -295,33 +309,48 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
   }
   async function addRecipient(e) {
     e.preventDefault();
-    const value = normalizeEmail(email);
+    const value = normalizeEmail(newEmail);
     if (!isValidEmail(value)) { setFormErr(t('al.errInvalidEmail')); return; }
     if (data.recipients.some(r => r.email === value)) { setFormErr(t('al.errDuplicate')); return; }
     setBusy(true); setFormErr('');
-    try { await api('/api/alert-settings/recipients', 'POST', { email: value, alert_type: type }, t); setEmail(''); setAdding(false); onChanged(); }
+    try { await api('/api/alert-settings/recipients', 'POST', { email: value, name: newName, alert_type: type }, t); setNewEmail(''); setNewName(''); setAdding(false); setRecipMsg({ tone: 'ok', text: t('as.recipientAdded') }); onChanged(); }
     catch (err) { setFormErr(err.code === 'DUPLICATE' ? t('al.errDuplicate') : err.code === 'INVALID_EMAIL' ? t('al.errInvalidEmail') : err.message); }
     finally { setBusy(false); }
   }
-  async function toggleRecipient(r) { try { await api('/api/alert-settings/recipients', 'PATCH', { id: r.id, enabled: !r.enabled }, t); onChanged(); } catch (err) { onError(err.message); } }
+  async function toggleRecipient(r) {
+    try { await api('/api/alert-settings/recipients', 'PATCH', { id: r.id, enabled: !r.enabled }, t); setRecipMsg({ tone: 'ok', text: t(r.enabled ? 'as.recipientDisabled' : 'as.recipientEnabled') }); onChanged(); }
+    catch (err) { setRecipMsg({ tone: 'err', text: err.message }); }
+  }
   async function removeRecipient(r) {
     setRemoving(null);
-    try { await api('/api/alert-settings/recipients?id=' + encodeURIComponent(r.id), 'DELETE', null, t); onChanged(); } catch (err) { onError(err.message); }
+    try { await api('/api/alert-settings/recipients?id=' + encodeURIComponent(r.id), 'DELETE', null, t); setRecipMsg({ tone: 'ok', text: t('as.recipientRemoved') }); onChanged(); }
+    catch (err) { setRecipMsg({ tone: 'err', text: err.message }); }
+  }
+  /* Edit = PATCH email / name / enabled; alert type never changes. */
+  async function saveRecipient(r, form) {
+    const value = normalizeEmail(form.email);
+    if (!isValidEmail(value)) throw Object.assign(new Error(t('al.errInvalidEmail')), { code: 'INVALID_EMAIL' });
+    if (data.recipients.some(x => x.id !== r.id && x.email === value)) throw Object.assign(new Error(t('al.errDuplicate')), { code: 'DUPLICATE' });
+    try { await api('/api/alert-settings/recipients', 'PATCH', { id: r.id, email: value, name: form.name, enabled: form.enabled }, t); }
+    catch (err) { throw Object.assign(new Error(err.code === 'DUPLICATE' ? t('al.errDuplicate') : err.code === 'INVALID_EMAIL' ? t('al.errInvalidEmail') : err.message), { code: err.code }); }
+    setEditing(null); setRecipMsg({ tone: 'ok', text: t('as.recipientSaved') }); onChanged();
   }
   async function sendTest() {
     setConfirmTest(false); setTesting(true); setTestMsg(null);
     try {
       const b = await api('/api/alert-settings/test', 'POST', { alert_type: type }, t);
       const r = b.report;
-      const text = (r.failed ? t('as.testPartial', { sent: r.sent, failed: r.failed }) : t('as.testSent', { n: r.sent })) + (r.mode !== 'live' ? ' ' + t('as.testMockNote') : '') + (r.usedSample ? ' ' + t('as.testSampleNote') : '');
+      const failures = (r.results || []).filter(x => x.status === 'failed').map(x => x.error).filter(Boolean);
+      const text = (r.failed ? t('as.testPartial', { sent: r.sent, failed: r.failed }) + (failures.length ? ' — ' + failures[0] : '') : t('as.testSent', { n: r.sent })) + (r.usedSample ? ' ' + t('as.testSampleNote') : '');
       setTestMsg({ tone: r.failed ? 'err' : 'ok', text });
       onChanged();
     } catch (e) {
-      setTestMsg({ tone: 'err', text: e.code === 'COOLDOWN' ? t('as.testCooldown') : e.code === 'NO_RECIPIENTS' ? t('as.testNoRecipients') : e.message });
+      setTestMsg({ tone: 'err', text: e.code === 'COOLDOWN' ? t('as.testCooldown') : e.code === 'NO_RECIPIENTS' ? t('as.testNoRecipients') : e.code === 'NO_EMAIL_CONFIG' ? t('as.modeNotConfigured', { vars: (e.missing || []).join(', ') }) : e.message });
     } finally { setTesting(false); }
   }
 
   const Msg = ({ m }) => m ? <div role="status" className={'text-xs mt-2 ' + (m.tone === 'ok' ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400')}>{m.text}</div> : null;
+  const emailOk = !!(email && email.configured);
 
   return (
     <section className="glass-card glass-card--pad space-y-5" aria-labelledby={ids.base + '-title'} data-testid={'type-' + type}>
@@ -371,10 +400,14 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
             {data.recipients.map(r => (
               <li key={r.id} className="py-2 flex items-center gap-3 flex-wrap">
                 <span className="h-2 w-2 rounded-full shrink-0" style={{ background: r.enabled ? '#059669' : '#94a3b8' }} aria-hidden="true" />
-                <span className={'min-w-0 flex-1 text-sm font-medium break-all ' + (r.enabled ? '' : 'text-[color:var(--tx-3)] line-through')} dir="ltr">{r.email}</span>
+                <span className="min-w-0 flex-1">
+                  <span className={'block text-sm font-medium break-all ' + (r.enabled ? '' : 'text-[color:var(--tx-3)] line-through')} dir="ltr">{r.email}</span>
+                  {r.name && <span className="block text-[11px] text-[color:var(--tx-4)] truncate">{r.name}</span>}
+                </span>
                 <span className={'text-[11px] px-2 py-0.5 rounded-full font-medium ' + (r.enabled ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-slate-500/10 text-[color:var(--tx-3)]')}>{r.enabled ? t('al.enabled') : t('al.disabled')}</span>
                 {canManage && (
                   <span className="flex gap-1.5">
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(r)} aria-label={t('as.editRecipient') + ' ' + r.email}>{t('fleet.edit')}</Button>
                     <Button variant="ghost" size="sm" onClick={() => toggleRecipient(r)} aria-label={(r.enabled ? t('al.disable') : t('al.enable')) + ' ' + r.email}>{r.enabled ? t('al.disable') : t('al.enable')}</Button>
                     <Button variant="danger" size="sm" onClick={() => setRemoving(r)} aria-label={t('al.remove') + ' ' + r.email}>{t('al.remove')}</Button>
                   </span>
@@ -386,14 +419,17 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
         {canManage && (adding ? (
           <form onSubmit={addRecipient} className="space-y-2 mt-3" noValidate>
             <div className="flex gap-2 flex-wrap">
-              <Input type="email" dir="ltr" autoFocus value={email} placeholder={t('al.emailPlaceholder')} aria-label={t('al.settings.recipients') + ' — ' + title} aria-invalid={formErr ? 'true' : undefined}
-                onChange={e => { setEmail(e.target.value); setFormErr(''); }} className="flex-1 min-w-[200px]" />
+              <Input type="email" dir="ltr" autoFocus value={newEmail} placeholder={t('al.emailPlaceholder')} aria-label={t('al.settings.recipients') + ' — ' + title} aria-invalid={formErr ? 'true' : undefined}
+                onChange={e => { setNewEmail(e.target.value); setFormErr(''); }} className="flex-1 min-w-[200px]" />
+              <Input value={newName} placeholder={t('as.namePlaceholder')} aria-label={t('as.recipientName')} onChange={e => setNewName(e.target.value)} className="flex-1 min-w-[160px]" />
               <Button type="submit" disabled={busy} loading={busy}>{t('al.add')}</Button>
-              <Button type="button" variant="ghost" onClick={() => { setAdding(false); setEmail(''); setFormErr(''); }}>{t('al.cancel')}</Button>
+              <Button type="button" variant="ghost" onClick={() => { setAdding(false); setNewEmail(''); setNewName(''); setFormErr(''); }}>{t('al.cancel')}</Button>
             </div>
             {formErr && <div role="alert" className="text-xs text-red-600 dark:text-red-400">{formErr}</div>}
           </form>
         ) : <div className="mt-3"><Button variant="secondary" size="sm" onClick={() => setAdding(true)}>{t('al.addEmail')}</Button></div>)}
+        <Msg m={recipMsg} />
+        {editing && <EditRecipientModal recipient={editing} title={title} onClose={() => setEditing(null)} onSave={form => saveRecipient(editing, form)} />}
         {removing && (
           <Modal title={t('al.remove') + ' — ' + title} onClose={() => setRemoving(null)}
             footer={<><Button variant="ghost" onClick={() => setRemoving(null)}>{t('al.cancel')}</Button><Button variant="danger" onClick={() => removeRecipient(removing)}>{t('al.remove')}</Button></>}>
@@ -406,8 +442,8 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
       {canManage && (
         <div className="border-t border-[color:var(--bd)] pt-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <Button variant="secondary" onClick={() => setConfirmTest(true)} disabled={testing || enabledRecipients.length === 0} loading={testing}>{t('as.sendTest')}</Button>
-            <span className="text-xs text-[color:var(--tx-4)]">{enabledRecipients.length === 0 ? t('as.testNoRecipients') : t('as.testHelp', { n: enabledRecipients.length })}</span>
+            <Button variant="secondary" onClick={() => setConfirmTest(true)} disabled={testing || enabledRecipients.length === 0 || !emailOk} loading={testing}>{t('as.sendTest')}</Button>
+            <span className="text-xs text-[color:var(--tx-4)]">{!emailOk ? t('as.modeNotConfigured', { vars: (email && email.missing || []).join(', ') }) : enabledRecipients.length === 0 ? t('as.testNoRecipients') : t('as.testHelp', { n: enabledRecipients.length })}</span>
           </div>
           <Msg m={testMsg} />
           {data.lastTest && <div className="text-[11px] text-[color:var(--tx-4)] mt-2">{t('as.lastTest')}: {formatDateTime(data.lastTest.created_at)} · {t('as.testStatus.' + data.lastTest.status)}</div>}
@@ -416,8 +452,7 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
               footer={<><Button variant="ghost" onClick={() => setConfirmTest(false)}>{t('al.cancel')}</Button><Button onClick={sendTest}>{t('as.confirmSend')}</Button></>}>
               <p className="text-sm">{t('as.testConfirmBody', { n: enabledRecipients.length })}</p>
               <ul className="mt-3 text-sm space-y-1" dir="ltr">{enabledRecipients.map(r => <li key={r.id} className="font-medium">{r.email}</li>)}</ul>
-              <p className="text-xs text-[color:var(--tx-3)] mt-3">{t('as.testNoStateNote')}</p>
-              {emailMode !== 'live' && <p className="text-xs text-amber-700 dark:text-amber-300 mt-3">{t('as.testMockNote')}</p>}
+              <p className="text-xs text-[color:var(--tx-3)] mt-3">{t('as.testRealNote')} {t('as.testNoStateNote')}</p>
             </Modal>
           )}
         </div>
@@ -426,7 +461,7 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
   );
 }
 
-function ScheduleCard({ schedule, emailMode, lastRun, t, formatDateTime, migrationPending, canManage }) {
+function ScheduleCard({ schedule, email, lastRun, t, formatDateTime, migrationPending, canManage }) {
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState(false);
   async function runPreview() {
@@ -445,9 +480,10 @@ function ScheduleCard({ schedule, emailMode, lastRun, t, formatDateTime, migrati
     <section className="glass-card glass-card--pad" aria-labelledby="as-run-title" data-testid="daily-run">
       <h3 id="as-run-title" className="font-semibold text-[15px]">{t('as.runTitle')}</h3>
       <p className="text-xs text-[color:var(--tx-3)] mt-0.5 mb-4">{t('as.runSub', { time: schedule.localTime, tz: schedule.timezone })}</p>
-      <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+      <dl className="grid grid-cols-2 md:grid-cols-5 gap-x-4 gap-y-3">
         {row(t('as.nextRun'), formatDateTime(schedule.nextRunAt))}
-        {row(t('as.mode'), emailMode === 'live' ? t('as.modeLive') : t('as.modeMock'), emailMode === 'live' ? null : 'amber')}
+        {row(t('as.provider'), 'Resend')}
+        {row(t('as.mode'), email && email.configured ? t('as.deliveryLive') : t('as.modeNotConfigured', { vars: (email && email.missing || []).join(', ') }), email && email.configured ? null : 'red')}
         {row(t('as.cronSecret'), schedule.cronSecretConfigured ? t('as.configured') : t('as.notConfigured'), schedule.cronSecretConfigured ? null : 'amber')}
         {row(t('as.lastRun'), migrationPending ? t('fleet.emailUnavailable') : lastRun ? formatDateTime(lastRun.started_at) : t('as.noRunYet'))}
       </dl>
@@ -477,6 +513,36 @@ function ScheduleCard({ schedule, emailMode, lastRun, t, formatDateTime, migrati
         </div>
       )}
     </section>
+  );
+}
+
+/* Edit one recipient: email, optional name, enabled. Validation mirrors the
+   add form; duplicates are checked client-side and enforced server-side. */
+function EditRecipientModal({ recipient, title, onClose, onSave }) {
+  const { t } = useLanguage();
+  const [form, setForm] = useState({ email: recipient.email, name: recipient.name || '', enabled: !!recipient.enabled });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  async function submit(e) {
+    e.preventDefault(); setBusy(true); setErr('');
+    try { await onSave(form); } catch (e2) { setErr(e2.message); } finally { setBusy(false); }
+  }
+  return (
+    <Modal title={t('as.editRecipient') + ' — ' + title} onClose={onClose}
+      footer={<><Button variant="ghost" onClick={onClose} disabled={busy}>{t('al.cancel')}</Button><Button type="submit" form="edit-recipient-form" disabled={busy} loading={busy}>{t('as.save')}</Button></>}>
+      <form id="edit-recipient-form" onSubmit={submit} className="space-y-3" noValidate>
+        {err && <div role="alert" className="text-xs text-red-600 dark:text-red-400">{err}</div>}
+        <label className="block text-sm">
+          <span className="block text-[11px] font-medium text-[color:var(--tx-3)] mb-1.5">{t('al.settings.recipients')}</span>
+          <Input type="email" dir="ltr" autoFocus value={form.email} aria-invalid={err ? 'true' : undefined} onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setErr(''); }} />
+        </label>
+        <label className="block text-sm">
+          <span className="block text-[11px] font-medium text-[color:var(--tx-3)] mb-1.5">{t('as.recipientName')}</span>
+          <Input value={form.name} placeholder={t('as.namePlaceholder')} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+        </label>
+        <Switch label={t('al.enabled')} on={form.enabled} disabled={busy} onChange={v => setForm(f => ({ ...f, enabled: v }))} />
+      </form>
+    </Modal>
   );
 }
 

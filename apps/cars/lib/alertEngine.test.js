@@ -33,16 +33,16 @@ function memoryStore({ settings = {}, recipients = [] } = {}) {
       return a;
     },
     async resolveAlert(id, today, reason) { Object.assign(s.alerts.find(a => a.id === id), { state: 'resolved', resolved_on: today, resolved_reason: reason }); },
-    async claimDelivery({ alertId, recipient, day, mode }) {
+    async claimDelivery({ alertId, recipient, day }) {
       const row = del(alertId, recipient, day);
       if (!row) { s.deliveries.push({ alert_id: alertId, recipient, sent_on: day, status: 'pending' }); return true; }
-      if (row.status === 'failed' || (row.status === 'mocked' && mode === 'live')) { row.status = 'pending'; return true; }
+      if (row.status === 'failed') { row.status = 'pending'; return true; }
       return false;
     },
     async finishDelivery({ alertId, recipient, day, status, error }) { Object.assign(del(alertId, recipient, day), { status, error: error || null }); },
-    async isDelivered(alertId, recipient, day, mode) { const r = del(alertId, recipient, day); return !!r && (r.status === 'sent' || (r.status === 'mocked' && mode !== 'live')); },
+    async isDelivered(alertId, recipient, day) { const r = del(alertId, recipient, day); return !!r && r.status === 'sent'; },
     async markSent(id, day) { s.alerts.find(a => a.id === id).last_sent_on = day; },
-    async startRun({ trigger, mode, today }) { s.runs.push({ id: 'r' + s.runs.length, trigger, mode, today, status: 'running' }); return 'r' + (s.runs.length - 1); },
+    async startRun({ trigger, today }) { s.runs.push({ id: 'r' + s.runs.length, trigger, today, status: 'running' }); return 'r' + (s.runs.length - 1); },
     async finishRun(id, report, err) { Object.assign(s.runs.find(r => r.id === id), { status: err ? 'failed' : report.emailsFailed ? 'partial' : 'ok', sent: report.emailsSent }); },
     async lastRun() { return s.runs[s.runs.length - 1] || null; },
     async recordTestSend(row) { s.testSends.push(row); },
@@ -59,7 +59,7 @@ function harness(vehicles, storeOpts) {
   const sent = [];
   let failFor = new Set();
   const send = async m => { if (failFor.has(m.to)) throw new Error('provider down'); sent.push(m); return { id: 'm' + sent.length }; };
-  const run = (n, extra = {}) => runExpiryAlertJob({ store, vehicles, send, now: day(n), mode: 'live', ...extra });
+  const run = (n, extra = {}) => runExpiryAlertJob({ store, vehicles, send, now: day(n), ...extra });
   return { store, sent, run, vehicles, fail: (...r) => { failFor = new Set(r); } };
 }
 
@@ -218,16 +218,17 @@ test('dry run computes the plan but writes and sends nothing', async () => {
   assert.deepEqual(r.plan, [{ to: 'a***@x.com', items: 1 }]);
 });
 
-test('mock-mode deliveries never block a later live send', async () => {
+test('provider not configured: nothing is ever reported as sent; retry works once configured', async () => {
   const h = harness([car()], { recipients: ['a@x.com'] });
-  const mockSend = async () => ({ mocked: true });
-  const store = h.store;
-  let r = await runExpiryAlertJob({ store, vehicles: h.vehicles, send: mockSend, now: day(0), mode: 'mock' });
-  assert.equal(r.emailsSent, 1);
-  r = await runExpiryAlertJob({ store, vehicles: h.vehicles, send: mockSend, now: day(0), mode: 'mock' });
-  assert.equal(r.emailsSent, 0);                                  // mock re-run is idempotent too
-  r = await runExpiryAlertJob({ store, vehicles: h.vehicles, send: async () => ({ id: 'real' }), now: day(0), mode: 'live' });
-  assert.equal(r.emailsSent, 1);                                  // live not blocked by mocked row
+  const notConfigured = async () => { const e = new Error('Email is not configured (missing RESEND_API_KEY).'); e.code = 'NO_EMAIL_CONFIG'; throw e; };
+  let r = await runExpiryAlertJob({ store: h.store, vehicles: h.vehicles, send: notConfigured, now: day(0) });
+  assert.deepEqual([r.emailsSent, r.emailsFailed], [0, 1]);
+  assert.match(r.errors[0].message, /not configured/);
+  assert.equal(h.store.deliveries[0].status, 'failed');
+  assert.equal(h.store.alerts[0].last_sent_on, null);          // never marked as notified
+  r = await runExpiryAlertJob({ store: h.store, vehicles: h.vehicles, send: async () => ({ id: 'real' }), now: day(0) });
+  assert.equal(r.emailsSent, 1);                                // same day, failed row re-claimed
+  assert.equal(h.store.deliveries[0].status, 'sent');
 });
 
 test('email template: Arabic is RTL, bilingual has both, HTML is escaped', () => {
@@ -263,15 +264,16 @@ test('per-type language: Arabic inspection + English insurance → bilingual com
 test('test notification: real template marked TEST, type recipients only, logged separately, no delivery rows', async () => {
   const h = harness([car({ insurance_expiry: iso(10) })], { recipients: [{ email: 'ins@x.com', types: ['insurance'] }, { email: 'insp@x.com', types: ['inspection'] }], settings: { insurance: { email_language: 'ar' } } });
   const send = async m => { h.sent.push(m); return { id: 't1' }; };
-  let r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), mode: 'live', sentBy: 'admin@x.com' });
+  let r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), sentBy: 'admin@x.com' });
   assert.deepEqual([r.sent, r.failed, r.usedSample, r.recipients], [1, 0, false, 1]);
   assert.equal(h.sent[0].to, 'ins@x.com');
   assert.match(h.sent[0].subject, /^\[اختبار\]/);
   assert.match(h.sent[0].html, /اختبار/); assert.match(h.sent[0].text, /\[اختبار\]/);
   assert.equal(h.store.deliveries.length, 0); assert.equal(h.store.alerts.length, 0);
-  assert.equal(h.store.testSends.length, 1); assert.equal(h.store.testSends[0].status, 'sent');
+  assert.equal(h.store.testSends.length, 1); assert.equal(h.store.testSends[0].status, 'sent'); assert.equal(h.store.testSends[0].providerId, 't1');
+  assert.equal(r.results[0].providerId, 't1');
   // inspection has no real alert → clearly-marked sample, still no writes to real state
-  r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'inspection', now: day(0), mode: 'mock' });
+  r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'inspection', now: day(0) });
   assert.equal(r.usedSample, true); assert.match(h.sent[1].html, /TEST-0000/); assert.match(h.sent[1].html, /sample for layout only/);
   assert.doesNotMatch(h.sent[1].html, /\/vehicles\/null/);
   // a real run afterwards is unaffected by the test sends

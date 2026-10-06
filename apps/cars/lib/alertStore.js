@@ -45,7 +45,7 @@ function createSupabaseStore(sb = getDb()) {
       return data;
     },
     async listRecipients() {
-      const { data, error } = await sb.from('car_alert_recipients').select('id, alert_type, email, enabled, created_at').order('created_at', { ascending: true });
+      const { data, error } = await sb.from('car_alert_recipients').select('id, alert_type, email, name, enabled, created_at').order('created_at', { ascending: true });
       if (error) throw fail(error, 'load alert recipients');
       return data || [];
     },
@@ -85,7 +85,7 @@ function createSupabaseStore(sb = getDb()) {
     },
     /* Claim = the idempotency gate. Returns true only for the single
        caller allowed to send this (alert, recipient, day). */
-    async claimDelivery({ alertId, recipient, day, mode }) {
+    async claimDelivery({ alertId, recipient, day }) {
       const base = { alert_id: alertId, recipient, sent_on: day };
       const { data: existing, error: selErr } = await sb.from('car_expiry_alert_deliveries').select('id, status, updated_at').match(base).maybeSingle();
       if (selErr) throw fail(selErr, 'check delivery log');
@@ -96,7 +96,7 @@ function createSupabaseStore(sb = getDb()) {
         throw fail(error, 'claim delivery');
       }
       const stale = existing.status === 'pending' && Date.now() - new Date(existing.updated_at).getTime() > STALE_PENDING_MS;
-      const retryable = existing.status === 'failed' || stale || (existing.status === 'mocked' && mode === 'live');
+      const retryable = existing.status === 'failed' || stale;
       if (!retryable) return false;
       const { data: taken, error } = await sb.from('car_expiry_alert_deliveries')
         .update({ status: 'pending', error: null, updated_at: new Date().toISOString() })
@@ -110,19 +110,19 @@ function createSupabaseStore(sb = getDb()) {
         .match({ alert_id: alertId, recipient, sent_on: day });
       if (e) throw fail(e, 'update delivery log');
     },
-    async isDelivered(alertId, recipient, day, mode) {
+    async isDelivered(alertId, recipient, day) {
       const { data, error } = await sb.from('car_expiry_alert_deliveries').select('status').match({ alert_id: alertId, recipient, sent_on: day }).maybeSingle();
       if (error) throw fail(error, 'check delivery log');
       if (!data) return false;
-      return data.status === 'sent' || (data.status === 'mocked' && mode !== 'live');
+      return data.status === 'sent';
     },
     async markSent(alertId, day) {
       const { error } = await sb.from('car_expiry_alerts').update({ last_sent_on: day, updated_at: new Date().toISOString() }).eq('id', alertId);
       if (error) throw fail(error, 'update alert');
     },
     /* Run log — only real (non-dry) runs. */
-    async startRun({ trigger, mode, today }) {
-      const { data, error } = await sb.from('car_alert_job_runs').insert({ trigger, email_mode: mode, run_date: today }).select('id').single();
+    async startRun({ trigger, today }) {
+      const { data, error } = await sb.from('car_alert_job_runs').insert({ trigger, run_date: today }).select('id').single();
       if (error) throw fail(error, 'record job run');
       return data.id;
     },
@@ -142,12 +142,12 @@ function createSupabaseStore(sb = getDb()) {
       return data || null;
     },
     /* Test sends — separate from real deliveries. */
-    async recordTestSend({ alertType, recipient, sentBy, mode, status, providerId, error }) {
-      const { error: e } = await sb.from('car_alert_test_sends').insert({ alert_type: alertType, recipient, sent_by: sentBy || null, email_mode: mode, status, provider_id: providerId || null, error: error || null });
+    async recordTestSend({ alertType, recipient, sentBy, status, providerId, error }) {
+      const { error: e } = await sb.from('car_alert_test_sends').insert({ alert_type: alertType, recipient, sent_by: sentBy || null, status, provider_id: providerId || null, error: error || null });
       if (e) throw fail(e, 'record test send');
     },
     async lastTestSend(alertType) {
-      const { data, error } = await sb.from('car_alert_test_sends').select('created_at, status, email_mode, sent_by').eq('alert_type', alertType).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      const { data, error } = await sb.from('car_alert_test_sends').select('created_at, status, sent_by, provider_id, error').eq('alert_type', alertType).order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (error) throw fail(error, 'load test sends');
       return data || null;
     },

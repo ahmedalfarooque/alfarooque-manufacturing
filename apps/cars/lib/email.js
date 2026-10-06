@@ -1,12 +1,16 @@
 'use strict';
 
-/* Email delivery for OTP codes — same Resend-over-HTTP pattern as the
-   main site's api/_email.js, including the retry-on-transient-failure
-   hardening (a single network hiccup must never block a login). If no
-   RESEND_API_KEY is configured, falls back to logging the code to the
-   server console — a "mock OTP" mode so this app is testable before
-   email is wired up, per the brief's "mock OTP system if email not
-   configured" requirement. */
+/* Email delivery via Resend over HTTP — same pattern as the main site's
+   api/_email.js, including the retry-on-transient-failure hardening.
+
+   Two callers, two policies:
+   - sendOtpEmail: login OTPs. Without RESEND_API_KEY the code is logged to
+     the server console ("mock OTP") so the app is testable before email
+     is wired up — unchanged, per the original brief.
+   - sendEmail: fleet expiry alerts and test notifications. ALWAYS real.
+     There is no mock path: if Resend is not configured it throws a
+     NO_EMAIL_CONFIG error that callers surface as a configuration error,
+     and nothing is ever reported as sent unless Resend accepted it. */
 
 function env(key) {
   const v = process.env[key];
@@ -15,6 +19,14 @@ function env(key) {
 
 function isConfigured() {
   return !!env('RESEND_API_KEY');
+}
+
+/* What the alert feature needs; `missing` names variables, never values. */
+function emailConfig() {
+  const missing = [];
+  if (!env('RESEND_API_KEY')) missing.push('RESEND_API_KEY');
+  if (!env('EMAIL_FROM')) missing.push('EMAIL_FROM');
+  return { provider: 'resend', configured: missing.length === 0, missing };
 }
 
 const RETRY_ATTEMPTS = 3;
@@ -81,19 +93,19 @@ async function sendOtpEmail({ to, subject, html, mockLabel, code }) {
   return { mocked: false };
 }
 
-/* General-purpose send used by the expiry-alert job (same Resend client,
-   same retries as OTP mail). `forceMock` is the safety valve: when set,
-   nothing leaves this machine — only the subject and a masked recipient
-   are logged (never the body, never any credential). */
-async function sendEmail({ to, subject, html, text, forceMock }) {
-  if (forceMock || !isConfigured()) {
-    const [u, d] = String(to).split('@');
-    console.warn('[email:MOCK] "' + subject + '" -> ' + (u ? u.slice(0, 1) : '') + '***@' + (d || '') + '  (not sent; ALERT_EMAIL_MODE=live + RESEND_API_KEY required)');
-    return { mocked: true };
+/* Real send for the alert feature. Resolves { id } only when Resend
+   accepted the message; throws otherwise (NO_EMAIL_CONFIG / NETWORK /
+   SEND_FAILED). Never logs credentials or message bodies. */
+async function sendEmail({ to, subject, html, text }) {
+  const cfg = emailConfig();
+  if (!cfg.configured) {
+    const err = new Error('Email is not configured (missing ' + cfg.missing.join(', ') + ').');
+    err.code = 'NO_EMAIL_CONFIG';
+    err.missing = cfg.missing;
+    throw err;
   }
-  const from = env('EMAIL_FROM') || 'noreply@alfarooque.com';
-  const out = await withRetries(() => sendViaResend({ to, from, subject, html, text }));
-  return { mocked: false, id: out.id };
+  const out = await withRetries(() => sendViaResend({ to, from: env('EMAIL_FROM'), subject, html, text }));
+  return { id: out.id };
 }
 
-module.exports = { isConfigured, sendOtpEmail, sendEmail };
+module.exports = { isConfigured, emailConfig, sendOtpEmail, sendEmail };

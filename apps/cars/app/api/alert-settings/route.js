@@ -3,17 +3,12 @@
 const { json, requireAction } = require('@/lib/http');
 const { createSupabaseStore, isSchemaMissing, TYPES } = require('@/lib/alertStore');
 const { describe } = require('@/lib/alertSchedule');
+const { emailConfig } = require('@/lib/email');
 
 const SCHEMA_MSG = 'Alert settings are not available yet: the database migration (apps-schema-v13) has not been applied.';
 
-function emailMode() {
-  const v = String(process.env.ALERT_EMAIL_MODE || '').toLowerCase();
-  if (v === 'live' || v === 'mock') return v;
-  return process.env.VERCEL_ENV === 'production' ? 'live' : 'mock';
-}
-
 function schemaOr500(e, what) {
-  if (e.code === 'SCHEMA_MISSING' || isSchemaMissing(e.cause || e)) return json({ error: SCHEMA_MSG, code: 'SCHEMA_MISSING', schedule: describe(), emailMode: emailMode() }, 503);
+  if (e.code === 'SCHEMA_MISSING' || isSchemaMissing(e.cause || e)) return json({ error: SCHEMA_MSG, code: 'SCHEMA_MISSING', schedule: describe(), email: emailConfig() }, 503);
   console.error('[alert-settings] ' + what + ' failed:', e.cause?.message || e.message);
   return json({ error: 'Could not ' + what + '.' }, 500);
 }
@@ -30,7 +25,7 @@ export async function GET(req) {
     for (const t of TYPES) {
       types[t] = { settings: settings[t], recipients: recipients.filter(r => r.alert_type === t), lastTest: await store.lastTestSend(t) };
     }
-    return json({ types, lastRun, schedule: describe(), emailMode: emailMode(), canManage: session.role === 'admin' });
+    return json({ types, lastRun, schedule: describe(), email: emailConfig(), canManage: session.role === 'admin' });
   } catch (e) { return schemaOr500(e, 'load alert settings'); }
 }
 

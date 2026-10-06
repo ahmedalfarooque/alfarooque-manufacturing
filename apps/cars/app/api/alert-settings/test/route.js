@@ -2,25 +2,19 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireAction } = require('@/lib/http');
-const { sendEmail } = require('@/lib/email');
+const { sendEmail, emailConfig } = require('@/lib/email');
 const { createSupabaseStore, isSchemaMissing, TYPES } = require('@/lib/alertStore');
 const { runTestNotification } = require('@/lib/alertEngine');
 const { loadActiveVehicles } = require('@/lib/fleetData');
 
 /* POST { alert_type } — manual "Send test notification" for one alert
    type. Admin only. Sends the real template (marked TEST) to that type's
-   enabled recipients through the existing Resend helper, honouring the
-   same mock/live rule as the daily job. Logged to car_alert_test_sends,
-   never to the real delivery log. A 30-second per-type cooldown guards
-   against accidental double sends. */
+   enabled recipients through the existing Resend helper — a REAL email,
+   reported as sent only when Resend accepted it. Logged to
+   car_alert_test_sends, never to the real delivery log. A 30-second
+   per-type cooldown guards against accidental double sends. */
 
 const COOLDOWN_MS = 30 * 1000;
-
-function emailMode() {
-  const v = String(process.env.ALERT_EMAIL_MODE || '').toLowerCase();
-  if (v === 'live' || v === 'mock') return v;
-  return process.env.VERCEL_ENV === 'production' ? 'live' : 'mock';
-}
 
 export async function POST(req) {
   const { response, session } = await requireAction(req, 'edit');
@@ -28,7 +22,8 @@ export async function POST(req) {
   if (session.role !== 'admin') return json({ error: 'Only administrators can send test notifications.' }, 403);
   const body = await req.json().catch(() => ({}));
   if (!TYPES.includes(body.alert_type)) return json({ error: 'Unknown alert type.' }, 400);
-  const mode = emailMode();
+  const cfg = emailConfig();
+  if (!cfg.configured) return json({ error: 'Email is not configured on the server (missing ' + cfg.missing.join(', ') + ').', code: 'NO_EMAIL_CONFIG', missing: cfg.missing }, 503);
   try {
     const sb = getDb();
     const store = createSupabaseStore(sb);
@@ -37,13 +32,13 @@ export async function POST(req) {
       return json({ error: 'A test was sent moments ago. Please wait 30 seconds before sending another.', code: 'COOLDOWN' }, 429);
     }
     const report = await runTestNotification({
-      store, vehicles: await loadActiveVehicles(sb), alertType: body.alert_type, mode,
-      send: m => sendEmail({ ...m, forceMock: mode !== 'live' }),
+      store, vehicles: await loadActiveVehicles(sb), alertType: body.alert_type,
+      send: sendEmail,
       sentBy: session.email || null,
       baseUrl: process.env.NEXT_PUBLIC_CARS_APP_URL || '',
       company: process.env.NEXT_PUBLIC_COMPANY_NAME_EN || 'AL FAROOQUE',
     });
-    console.log('[alert-test] ' + JSON.stringify({ type: report.alertType, mode, recipients: report.recipients, sent: report.sent, failed: report.failed, sample: report.usedSample }));
+    console.log('[alert-test] ' + JSON.stringify({ type: report.alertType, recipients: report.recipients, sent: report.sent, failed: report.failed, sample: report.usedSample }));
     if (report.reason === 'no_enabled_recipients') return json({ error: 'No enabled recipients for this alert type.', code: 'NO_RECIPIENTS', report }, 400);
     return json({ ok: report.failed === 0, report }, report.failed ? 207 : 200);
   } catch (e) {

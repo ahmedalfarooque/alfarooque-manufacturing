@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { getDb } = require('@/lib/db');
 const { json } = require('@/lib/http');
 const { readSession } = require('@/lib/auth');
-const { sendEmail } = require('@/lib/email');
+const { sendEmail, emailConfig } = require('@/lib/email');
 const { createSupabaseStore, isSchemaMissing } = require('@/lib/alertStore');
 const { runExpiryAlertJob } = require('@/lib/alertEngine');
 const { loadActiveVehicles } = require('@/lib/fleetData');
@@ -19,17 +19,9 @@ const { todayInZone } = require('@/lib/fleetExpiry');
             (computes the plan, writes nothing, sends nothing); pass
             { "dryRun": false } to really run.
 
-   Email mode (ALERT_EMAIL_MODE):
-   - 'live' → really sends through Resend
-   - 'mock' → nothing leaves the machine (logged with a masked recipient)
-   - unset  → 'live' ONLY on Vercel production (VERCEL_ENV=production);
-              everywhere else (local dev, `next start`, previews) 'mock'. */
-
-function emailMode() {
-  const v = String(process.env.ALERT_EMAIL_MODE || '').toLowerCase();
-  if (v === 'live' || v === 'mock') return v;
-  return process.env.VERCEL_ENV === 'production' ? 'live' : 'mock';
-}
+   Email: always the real Resend helper (lib/email.js). If RESEND_API_KEY
+   or EMAIL_FROM is missing, a real run is recorded as failed with an
+   actionable message and nothing is reported as sent. */
 
 function secretMatches(header) {
   const secret = process.env.CRON_SECRET;
@@ -39,7 +31,6 @@ function secretMatches(header) {
 }
 
 async function run({ dryRun, trigger }) {
-  const mode = emailMode();
   const startedAt = Date.now();
   let store = null, runId = null;
   try {
@@ -48,13 +39,20 @@ async function run({ dryRun, trigger }) {
     const vehicles = await loadActiveVehicles(sb);
     /* Real runs are logged (car_alert_job_runs) so the settings page can
        show the last run honestly; dry runs are not. */
-    if (!dryRun) runId = await store.startRun({ trigger, mode, today: todayInZone() });
+    if (!dryRun) runId = await store.startRun({ trigger, today: todayInZone() });
+    const cfg = emailConfig();
+    if (!cfg.configured && !dryRun) {
+      const msg = 'Email is not configured (missing ' + cfg.missing.join(', ') + '); no alert emails can be sent.';
+      console.error('[expiry-alerts] ' + trigger + ' ' + msg);
+      if (runId) await store.finishRun(runId, {}, msg).catch(() => {});
+      return json({ ok: false, error: msg, code: 'NO_EMAIL_CONFIG', missing: cfg.missing }, 503);
+    }
     let report;
     try {
       report = await runExpiryAlertJob({
         store, vehicles,
-        send: m => sendEmail({ ...m, forceMock: mode !== 'live' }),
-        mode, dryRun,
+        send: sendEmail,
+        dryRun,
         baseUrl: process.env.NEXT_PUBLIC_CARS_APP_URL || '',
         company: process.env.NEXT_PUBLIC_COMPANY_NAME_EN || 'AL FAROOQUE',
       });
@@ -65,7 +63,7 @@ async function run({ dryRun, trigger }) {
     if (runId) await store.finishRun(runId, report, null);
     /* Counts only — no recipient addresses, no credentials. */
     console.log('[expiry-alerts] ' + trigger + ' ' + JSON.stringify({
-      mode, dryRun, today: report.today, active: report.activeAlerts, recipients: report.recipients,
+      dryRun, today: report.today, emailConfigured: cfg.configured, active: report.activeAlerts, recipients: report.recipients,
       sent: report.emailsSent, failed: report.emailsFailed, duplicates: report.duplicatesSkipped,
       resolved: report.resolved.length, ms: Date.now() - startedAt,
     }));

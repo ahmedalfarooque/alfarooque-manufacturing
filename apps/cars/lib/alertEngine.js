@@ -6,7 +6,7 @@
    Pure orchestration over two injected dependencies, so the exact same
    logic runs against Supabase in the app and an in-memory store in tests:
      store  — persistence (see lib/alertStore.js for the Supabase one)
-     send   — async ({ to, subject, html, text }) => { id?, mocked? }
+     send   — async ({ to, subject, html, text }) => { id } (rejects on failure)
 
    Configuration is PER ALERT TYPE (insurance / inspection): each type has
    its own enabled / auto-notify / language settings and its own recipient
@@ -29,7 +29,9 @@
    - dryRun computes the plan and touches nothing (no writes, no emails).
    - Test sends go through runTestNotification(): same template, same
      recipients, clearly marked TEST, logged separately, never touching
-     the real delivery log. */
+     the real delivery log.
+   - There is no mock mode: `send` must be the real provider call and must
+     reject when the provider did not accept the message. */
 
 const { collectAlerts, todayInZone, normalizeDate, ALERT_TYPES, WITHIN_DAYS } = require('./fleetExpiry');
 const { buildExpiryDigest } = require('./expiryEmail');
@@ -71,10 +73,10 @@ function languageFor(settings, types) {
   return 'both';
 }
 
-async function runExpiryAlertJob({ store, vehicles, send, now, mode = 'mock', dryRun = false, baseUrl = '', company = 'AL FAROOQUE' }) {
+async function runExpiryAlertJob({ store, vehicles, send, now, dryRun = false, baseUrl = '', company = 'AL FAROOQUE' }) {
   const today = todayInZone(now);
   const report = {
-    today, mode, dryRun, activeAlerts: 0, recipients: 0, emailsSent: 0, emailsFailed: 0,
+    today, dryRun, activeAlerts: 0, recipients: 0, emailsSent: 0, emailsFailed: 0,
     duplicatesSkipped: 0, resolved: [], reasonsNotSent: [], errors: [], plan: [], byType: {},
   };
 
@@ -139,11 +141,11 @@ async function runExpiryAlertJob({ store, vehicles, send, now, mode = 'mock', dr
     const claimed = [];
     for (const a of mine) {
       if (dryRun) {
-        const done = a.alertId ? await store.isDelivered(a.alertId, to, today, mode) : false;
+        const done = a.alertId ? await store.isDelivered(a.alertId, to, today) : false;
         if (done) report.duplicatesSkipped++; else claimed.push(a);
         continue;
       }
-      const ok = await store.claimDelivery({ alertId: a.alertId, recipient: to, day: today, mode });
+      const ok = await store.claimDelivery({ alertId: a.alertId, recipient: to, day: today });
       if (ok) claimed.push(a); else report.duplicatesSkipped++;
     }
     if (claimed.length === 0) continue;
@@ -153,10 +155,10 @@ async function runExpiryAlertJob({ store, vehicles, send, now, mode = 'mock', dr
     const language = languageFor(settings, new Set(claimed.map(a => a.alertType)));
     const digest = buildExpiryDigest(claimed, { language, company, baseUrl, withinDays: WITHIN_DAYS });
     try {
+      /* `send` resolves only when the provider accepted the message. */
       const res = await send({ to, subject: digest.subject, html: digest.html, text: digest.text });
-      const status = res && res.mocked ? 'mocked' : 'sent';
       for (const a of claimed) {
-        await store.finishDelivery({ alertId: a.alertId, recipient: to, day: today, status, providerId: res && res.id ? res.id : null });
+        await store.finishDelivery({ alertId: a.alertId, recipient: to, day: today, status: 'sent', providerId: res && res.id ? res.id : null });
         sentAlertIds.add(a.alertId);
       }
       report.emailsSent++;
@@ -185,12 +187,12 @@ function sampleItem(alertType, today) {
 /* Manual test notification for ONE alert type: real template, real
    recipients of that type, marked TEST, logged to the test-send log.
    Never touches alert state or the real delivery log. */
-async function runTestNotification({ store, vehicles, send, alertType, now, mode = 'mock', sentBy = null, baseUrl = '', company = 'AL FAROOQUE' }) {
+async function runTestNotification({ store, vehicles, send, alertType, now, sentBy = null, baseUrl = '', company = 'AL FAROOQUE' }) {
   if (!TYPES.includes(alertType)) throw Object.assign(new Error('Unknown alert type.'), { code: 'BAD_TYPE' });
   const today = todayInZone(now);
   const settings = normalizeSettings(await store.getSettings());
   const recipients = [...recipientMap(await store.listRecipients(), new Set([alertType])).keys()];
-  const report = { alertType, today, mode, recipients: recipients.length, sent: 0, failed: 0, usedSample: false, items: 0, results: [] };
+  const report = { alertType, today, recipients: recipients.length, sent: 0, failed: 0, usedSample: false, items: 0, results: [] };
   if (recipients.length === 0) { report.reason = 'no_enabled_recipients'; return report; }
 
   let items = collectAlerts(vehicles || [], { today }).filter(a => a.alertType === alertType);
@@ -201,13 +203,12 @@ async function runTestNotification({ store, vehicles, send, alertType, now, mode
   for (const to of recipients) {
     try {
       const res = await send({ to, subject: digest.subject, html: digest.html, text: digest.text });
-      const status = res && res.mocked ? 'mocked' : 'sent';
-      await store.recordTestSend({ alertType, recipient: to, sentBy, mode, status, providerId: res && res.id ? res.id : null });
+      await store.recordTestSend({ alertType, recipient: to, sentBy, status: 'sent', providerId: res && res.id ? res.id : null });
       report.sent++;
-      report.results.push({ to: maskEmail(to), status });
+      report.results.push({ to: maskEmail(to), status: 'sent', providerId: res && res.id ? res.id : null });
     } catch (err) {
       const msg = String(err && err.message ? err.message : err).slice(0, 200);
-      await store.recordTestSend({ alertType, recipient: to, sentBy, mode, status: 'failed', error: msg });
+      await store.recordTestSend({ alertType, recipient: to, sentBy, status: 'failed', error: msg });
       report.failed++;
       report.results.push({ to: maskEmail(to), status: 'failed', error: msg });
     }
