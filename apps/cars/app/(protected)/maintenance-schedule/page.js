@@ -8,6 +8,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { ListPagination } from '@/components/ListPagination';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 
 const STATUS_BADGE = {
   Healthy: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -67,6 +68,24 @@ export default function MaintenanceSchedulePage() {
     if (res.ok) load();
   }
 
+  const cols = [
+    { key: 'vehicle', label: t('maintSchedule.colVehicle'), sort: 'vehicle_number', className: 'font-medium', render: m => m.vehicle_number, pdf: m => m.vehicle_number || '—' },
+    { key: 'type', label: t('maintSchedule.colType'), sort: 'maintenance_type', render: m => m.maintenance_type, pdf: m => m.maintenance_type || '—' },
+    { key: 'lastService', label: t('maintSchedule.colLastService'), sort: 'last_service_km', render: m => fmt(m.last_service_km), pdf: m => fmt(m.last_service_km) },
+    { key: 'interval', label: t('maintSchedule.colInterval'), sort: 'interval_km', render: m => fmt(m.interval_km), pdf: m => fmt(m.interval_km) },
+    { key: 'nextDue', label: t('maintSchedule.colNextDue'), sort: 'next_due_km', render: m => fmt(m.next_due_km), pdf: m => fmt(m.next_due_km) },
+    { key: 'remaining', label: t('maintSchedule.colRemaining'), sort: 'remaining_km', render: m => <span className={m.remaining_km < 0 ? 'text-[#ef4444]' : ''}>{fmt(m.remaining_km)} {t('common.km')}</span>, pdf: m => fmt(m.remaining_km) },
+    { key: 'status', label: t('maintSchedule.colStatus'), sort: 'status', render: m => <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{trEnum(t, 'status', m.status)}</span>, pdf: m => trEnum(t, 'status', m.status) },
+    ...(isAdmin ? [{ key: 'actions', label: t('maintSchedule.colActions'), required: true, noPdf: true, stop: true, className: 'text-end whitespace-nowrap', render: m => (
+      <div className="flex items-center justify-end gap-3">
+        <button onClick={() => setModal(m)} title={t('maintSchedule.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎ {t('maintSchedule.edit')}</button>
+        <button onClick={() => deleteItem(m.id)} title={t('maintSchedule.delete')} className="text-[#ef4444] hover:underline">🗑 {t('maintSchedule.delete')}</button>
+      </div>
+    ) }] : []),
+  ];
+  const prefs = useColumnPrefs('maintenance-schedule', cols);
+  const { visibleCols } = prefs;
+
   async function runReport(action) {
     setReportBusy(action);
     try {
@@ -74,19 +93,8 @@ export default function MaintenanceSchedulePage() {
       const ar = lang === 'ar';
       await exportReportPdf({
         title: ar ? 'تقرير جدول الصيانة' : 'Maintenance Schedule Report',
-        columns: [
-          { key: 'vehicle', header: t('maintSchedule.colVehicle') },
-          { key: 'type', header: t('maintSchedule.colType') },
-          { key: 'lastService', header: t('maintSchedule.colLastService') },
-          { key: 'interval', header: t('maintSchedule.colInterval') },
-          { key: 'nextDue', header: t('maintSchedule.colNextDue') },
-          { key: 'remaining', header: t('maintSchedule.colRemaining') },
-          { key: 'status', header: t('maintSchedule.colStatus') },
-        ],
-        rows: sorted.map(m => ({
-          vehicle: m.vehicle_number || '—', type: m.maintenance_type || '—', lastService: fmt(m.last_service_km),
-          interval: fmt(m.interval_km), nextDue: fmt(m.next_due_km), remaining: fmt(m.remaining_km), status: trEnum(t, 'status', m.status),
-        })),
+        columns: pdfColumns(visibleCols),
+        rows: pdfRows(visibleCols, sorted),
         lang, fileName: 'maintenance-schedule-report.pdf', action,
       });
     } catch (e) { /* no-op — report generation failures shouldn't disrupt the page */ }
@@ -97,7 +105,8 @@ export default function MaintenanceSchedulePage() {
     <Shell active="/maintenance-schedule">
       <div className="flex items-center justify-between mb-1 flex-wrap gap-3">
         <h2 className="text-lg font-semibold">{t('maintSchedule.title')}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ColumnPicker columns={cols} prefs={prefs} />
           <Button variant="ghost" onClick={() => runReport('print')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
           <Button variant="ghost" onClick={() => runReport('save')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
         </div>
@@ -107,40 +116,21 @@ export default function MaintenanceSchedulePage() {
       {error && <div className="text-[#ef4444] text-sm">{error}</div>}
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
-              <Th><span onClick={() => toggleSort('vehicle_number')} className={sortHeaderCls}>{t('maintSchedule.colVehicle')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('maintenance_type')} className={sortHeaderCls}>{t('maintSchedule.colType')}<SortIndicator column="maintenance_type" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('last_service_km')} className={sortHeaderCls}>{t('maintSchedule.colLastService')}<SortIndicator column="last_service_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('interval_km')} className={sortHeaderCls}>{t('maintSchedule.colInterval')}<SortIndicator column="interval_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('next_due_km')} className={sortHeaderCls}>{t('maintSchedule.colNextDue')}<SortIndicator column="next_due_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('remaining_km')} className={sortHeaderCls}>{t('maintSchedule.colRemaining')}<SortIndicator column="remaining_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('status')} className={sortHeaderCls}>{t('maintSchedule.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              {isAdmin && <Th className="text-end">{t('maintSchedule.colActions')}</Th>}
+              {visibleCols.map(c => c.sort
+                ? <Th key={c.key} className={c.className || ''}><span onClick={() => toggleSort(c.sort)} className={sortHeaderCls}>{c.label}<SortIndicator column={c.sort} sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                : <Th key={c.key} className={c.className || ''}>{c.label}</Th>)}
             </tr>
           </thead>
           <tbody>
             {!items ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('maintSchedule.loading')}</td></tr>
+              <tr><td colSpan={visibleCols.length} className="py-8 text-center text-[color:var(--tx-3)]">{t('maintSchedule.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={8}><EmptyState text={t('maintSchedule.noMatch')} /></td></tr>
-            ) : pageRows.map(m => (
-              <tr key={m.id} className="hover:bg-[color:var(--pr-soft)]">
-                <Td className="font-medium">{m.vehicle_number}</Td>
-                <Td>{m.maintenance_type}</Td>
-                <Td>{fmt(m.last_service_km)}</Td>
-                <Td>{fmt(m.interval_km)}</Td>
-                <Td>{fmt(m.next_due_km)}</Td>
-                <Td className={m.remaining_km < 0 ? 'text-[#ef4444]' : ''}>{fmt(m.remaining_km)} {t('common.km')}</Td>
-                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[m.status] || '')}>{trEnum(t, 'status', m.status)}</span></Td>
-                {isAdmin && (
-                  <Td className="text-end">
-                    <div className="flex items-center justify-end gap-3">
-                      <button onClick={() => setModal(m)} title={t('maintSchedule.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎ {t('maintSchedule.edit')}</button>
-                      <button onClick={() => deleteItem(m.id)} title={t('maintSchedule.delete')} className="text-[#ef4444] hover:underline">🗑 {t('maintSchedule.delete')}</button>
-                    </div>
-                  </Td>
-                )}
+              <tr><td colSpan={visibleCols.length}><EmptyState text={t('maintSchedule.noMatch')} /></td></tr>
+            ) : pageRows.map((r, i) => (
+              <tr key={r.id} className="hover:bg-[color:var(--pr-soft)]">
+                {visibleCols.map(c => <Td key={c.key} className={c.className || ''} onClick={c.stop ? e => e.stopPropagation() : undefined}>{c.render(r, i)}</Td>)}
               </tr>
             ))}
           </tbody>

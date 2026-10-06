@@ -11,8 +11,9 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { GlassIcon } from '@/components/GlassIcons';
 import { EmptyState, Input, IconButton, Button, Th, Td } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 import { useLiveData } from '@/lib/useLiveData';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trExpiryDays, trEnum } from '@/lib/i18n';
 import { StatusPill, SeverityPill, DaysText, VehicleStatusPill, NotifyLine, Notice, sortRows, matchesFilter, matchesSearch } from '@/components/ExpiryUi';
 
 const CONFIG = {
@@ -28,7 +29,7 @@ const CONFIG = {
 
 export default function ExpiryListPage({ kind }) {
   const cfg = CONFIG[kind];
-  const { t, formatDateOnly } = useLanguage();
+  const { t, lang, formatDateOnly } = useLanguage();
   const { data, error } = useLiveData(cfg.api, 30000);
   const [me, setMe] = useState(null);
   const [filter, setFilter] = useState(() => {
@@ -39,6 +40,7 @@ export default function ExpiryListPage({ kind }) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('urgent');
   const [dir, setDir] = useState('asc');
+  const [reportBusy, setReportBusy] = useState('');
   const isAdmin = me?.role === 'admin';
 
   useEffect(() => {
@@ -64,6 +66,48 @@ export default function ExpiryListPage({ kind }) {
 
   const goVehicle = id => { window.location.href = '/vehicles/' + id; };
   const isInsurance = kind === 'insurance';
+  const notSetCell = <span className="text-[color:var(--tx-4)]">{t('expiry.notSet')}</span>;
+  const dateCell = v => (v ? formatDateOnly(v) : notSetCell);
+  const datePdf = v => (v ? formatDateOnly(v) : t('expiry.notSet'));
+  /* Page-view column model: the table, Print and Download PDF all read it. */
+  const cols = [
+    { key: 'vehicleNumber', label: t('fleet.col.vehicle'), className: 'font-medium', render: r => r.vehicleNumber, pdf: r => r.vehicleNumber || '' },
+    { key: 'vehicleName', label: t('fleet.col.name'), render: r => r.vehicleName || '—', pdf: r => r.vehicleName || '' },
+    ...(isInsurance ? [
+      { key: 'company', label: t('fleet.col.company'), render: r => r.company || notSetCell, pdf: r => r.company || t('expiry.notSet') },
+      { key: 'policyNumber', label: t('fleet.col.policy'), render: r => r.policyNumber || notSetCell, pdf: r => r.policyNumber || t('expiry.notSet') },
+      { key: 'startDate', label: t('fleet.col.start'), render: r => dateCell(r.startDate), pdf: r => datePdf(r.startDate) },
+    ] : [
+      { key: 'lastTakenDate', label: t('fleet.col.lastTaken'), render: r => dateCell(r.lastTakenDate), pdf: r => datePdf(r.lastTakenDate) },
+    ]),
+    { key: 'expiryDate', label: isInsurance ? t('fleet.col.expiry') : t('fleet.col.nextExpiry'), render: r => (r.hasDate ? formatDateOnly(r.expiryDate) : notSetCell), pdf: r => (r.hasDate ? formatDateOnly(r.expiryDate) : t('expiry.notSet')) },
+    { key: 'daysRemaining', label: t('fleet.col.days'), render: r => <DaysText days={r.daysRemaining} />, pdf: r => trExpiryDays(t, r.daysRemaining) },
+    { key: 'status', label: t('fleet.col.status'), render: r => <StatusPill status={r.displayStatus} />, pdf: r => t('expStatus.' + r.displayStatus) },
+    { key: 'alert', label: t('fleet.col.alert'), render: r => (r.isActive ? <div className="flex flex-col gap-1.5">{r.status !== 'expired' && <SeverityPill severity={r.severity} />}<NotifyLine rec={r} schemaReady={data?.schemaReady} /></div> : <NotifyLine rec={r} />),
+      pdf: r => (r.isActive ? t('severity.' + r.severity) : t('fleet.noAlert')) },
+    { key: 'vehicleStatus', label: t('fleet.col.vehicleStatus'), render: r => <VehicleStatusPill status={r.vehicleStatus} />, pdf: r => (r.vehicleStatus ? trEnum(t, 'status', r.vehicleStatus) : '') },
+    { key: 'actions', label: t('fleet.col.actions'), required: true, noPdf: true, stop: true, className: 'text-end whitespace-nowrap', render: r => (
+      <div className="flex items-center justify-end">
+        <a href={'/vehicles/' + r.id} className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-[color:var(--pr-soft)]" title={t('fleet.view')} aria-label={t('fleet.view') + ' ' + r.vehicleNumber}><GlassIcon name="eye" size={18} bare /></a>
+        {isAdmin && <a href={'/vehicles/' + r.id + '?edit=1'} className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-[color:var(--pr-soft)]" title={t('fleet.edit')} aria-label={t('fleet.edit') + ' ' + r.vehicleNumber}><GlassIcon name="edit" size={18} bare /></a>}
+      </div>
+    ) },
+  ];
+  const prefs = useColumnPrefs('expiry-' + kind, cols);
+  const { visibleCols } = prefs;
+
+  /* Print / PDF use exactly the visible columns and the filtered, sorted rows. */
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: t(cfg.titleKey), columns: pdfColumns(visibleCols), rows: pdfRows(visibleCols, visible),
+        lang, fileName: (isInsurance ? 'insurance' : 'inspection') + '-report.pdf', action, orientation: 'landscape',
+      });
+    } catch (e) { /* report failures must not break the page */ }
+    finally { setReportBusy(''); }
+  }
 
   return (
     <Shell active={cfg.active}>
@@ -72,9 +116,11 @@ export default function ExpiryListPage({ kind }) {
           <h2 className="text-lg font-semibold">{t(cfg.titleKey)}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t(cfg.subKey)}</p>
         </div>
-        <div className="flex items-center gap-3 print:hidden">
+        <div className="flex flex-wrap items-center gap-3 print:hidden">
           {data?.today && <div className="text-xs text-[color:var(--tx-3)]">{t('dx.today')}: <span className="font-medium text-[color:var(--tx-2)]">{formatDateOnly(data.today)}</span></div>}
-          <Button variant="ghost" size="sm" onClick={() => window.print()}>{t('common.print')}</Button>
+          <ColumnPicker columns={cols} prefs={prefs} />
+          <Button variant="ghost" size="sm" onClick={() => runReport('print')} disabled={!visible.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" size="sm" onClick={() => runReport('save')} disabled={!visible.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
         </div>
       </div>
 
@@ -111,40 +157,15 @@ export default function ExpiryListPage({ kind }) {
               <div className="glass-card overflow-auto max-h-[68vh] hidden md:block">
                 <table className="w-full text-sm min-w-[980px]">
                   <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
-                    <tr>
-                      <Th>{t('fleet.col.vehicle')}</Th>
-                      <Th>{t('fleet.col.name')}</Th>
-                      {isInsurance && <Th>{t('fleet.col.company')}</Th>}
-                      {isInsurance && <Th>{t('fleet.col.policy')}</Th>}
-                      {isInsurance ? <Th>{t('fleet.col.start')}</Th> : <Th>{t('fleet.col.lastTaken')}</Th>}
-                      <Th>{isInsurance ? t('fleet.col.expiry') : t('fleet.col.nextExpiry')}</Th>
-                      <Th>{t('fleet.col.days')}</Th>
-                      <Th>{t('fleet.col.status')}</Th>
-                      <Th>{t('fleet.col.alert')}</Th>
-                      <Th>{t('fleet.col.vehicleStatus')}</Th>
-                      <Th className="text-end">{t('fleet.col.actions')}</Th>
+                  <tr>{visibleCols.map(c => <Th key={c.key} className={c.className || ''}>{c.label}</Th>)}</tr>
+                </thead>
+                <tbody>
+                  {visible.map(r => (
+                    <tr key={r.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors" onClick={() => goVehicle(r.id)}>
+                      {visibleCols.map(c => <Td key={c.key} className={c.className || ''} onClick={c.stop ? e => e.stopPropagation() : undefined}>{c.render(r)}</Td>)}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {visible.map(r => (
-                      <tr key={r.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors" onClick={() => goVehicle(r.id)}>
-                        <Td className="font-medium">{r.vehicleNumber}</Td>
-                        <Td>{r.vehicleName || '—'}</Td>
-                        {isInsurance && <Td>{r.company || <span className="text-[color:var(--tx-4)]">{t('expiry.notSet')}</span>}</Td>}
-                        {isInsurance && <Td>{r.policyNumber || <span className="text-[color:var(--tx-4)]">{t('expiry.notSet')}</span>}</Td>}
-                        <Td>{(isInsurance ? r.startDate : r.lastTakenDate) ? formatDateOnly(isInsurance ? r.startDate : r.lastTakenDate) : <span className="text-[color:var(--tx-4)]">{t('expiry.notSet')}</span>}</Td>
-                        <Td>{r.hasDate ? formatDateOnly(r.expiryDate) : <span className="text-[color:var(--tx-4)]">{t('expiry.notSet')}</span>}</Td>
-                        <Td><DaysText days={r.daysRemaining} /></Td>
-                        <Td><StatusPill status={r.displayStatus} /></Td>
-                        <Td>{r.isActive ? <div className="flex flex-col gap-1.5">{r.status !== 'expired' && <SeverityPill severity={r.severity} />}<NotifyLine rec={r} schemaReady={data.schemaReady} /></div> : <NotifyLine rec={r} />}</Td>
-                        <Td><VehicleStatusPill status={r.vehicleStatus} /></Td>
-                        <td className="px-3.5 py-3 border-t border-[color:var(--bd)] text-end whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                          <a href={'/vehicles/' + r.id} className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-[color:var(--pr-soft)]" title={t('fleet.view')} aria-label={t('fleet.view') + ' ' + r.vehicleNumber}><GlassIcon name="eye" size={18} bare /></a>
-                          {isAdmin && <a href={'/vehicles/' + r.id + '?edit=1'} className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-[color:var(--pr-soft)]" title={t('fleet.edit')} aria-label={t('fleet.edit') + ' ' + r.vehicleNumber}><GlassIcon name="edit" size={18} bare /></a>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  ))}
+                </tbody>
                 </table>
               </div>
 

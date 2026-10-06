@@ -10,6 +10,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { ListPagination } from '@/components/ListPagination';
 import { useLanguage, trEnum, trExpiry } from '@/lib/i18n';
 import { Button, Input, Textarea, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 
 const STATUS_BADGE = {
   Active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -90,23 +91,38 @@ export default function DriversPage() {
     const { exportReportPdf } = await import('@/lib/reportPdf');
     await exportReportPdf({
       title: ar ? 'تقرير السائقين' : 'Drivers Report',
-      columns: [
-        { key: 'full_name', header: ar ? 'الاسم الكامل' : 'Full Name' },
-        { key: 'employee_id', header: ar ? 'الرقم الوظيفي' : 'Employee ID' },
-        { key: 'phone', header: ar ? 'الهاتف' : 'Phone' },
-        { key: 'vehicle', header: ar ? 'المركبة' : 'Vehicle' },
-        { key: 'nationality', header: ar ? 'الجنسية' : 'Nationality' },
-        { key: 'license_number', header: ar ? 'رقم الرخصة' : 'License Number' },
-        { key: 'license_expiry_date', header: ar ? 'انتهاء الرخصة' : 'License Expiry' },
-        { key: 'iqama_number', header: ar ? 'رقم الإقامة' : 'Iqama Number' },
-        { key: 'iqama_expiry_date', header: ar ? 'انتهاء الإقامة' : 'Iqama Expiry' },
-        { key: 'status', header: ar ? 'الحالة' : 'Status' },
-      ],
-      rows: sorted.map(d => ({ ...d, vehicle: d.cars?.vehicle_number || '' })),
+      columns: pdfColumns(visibleCols),
+        rows: pdfRows(visibleCols, sorted),
       lang,
       fileName: 'drivers-report.pdf',
     });
   }
+
+  const badge = info => <span className={'px-2 py-1 rounded-full text-xs font-medium ' + info.className}>{info.dot} {trExpiry(t, info)}</span>;
+  const cols = [
+    { key: 'photo', label: t('drivers.colPhoto'), noPdf: true, render: d => (d.profile_photo_url
+      ? <img src={d.profile_photo_url} alt="" className="h-9 w-9 rounded-full object-cover" />
+      : <div className="h-9 w-9 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-medium">{(d.full_name || '?').slice(0, 1).toUpperCase()}</div>) },
+    { key: 'full_name', label: t('drivers.colName'), sort: 'full_name', className: 'font-medium', render: d => d.full_name, pdf: d => d.full_name || '' },
+    { key: 'employee_id', label: lang === 'ar' ? 'الرقم الوظيفي' : 'Employee ID', hidden: true, render: d => d.employee_id || '—', pdf: d => d.employee_id || '' },
+    { key: 'phone', label: t('drivers.colPhone'), sort: 'phone', render: d => d.phone || '—', pdf: d => d.phone || '' },
+    { key: 'vehicle', label: t('drivers.colVehicle'), sort: 'cars', render: d => d.cars?.vehicle_number || '—', pdf: d => d.cars?.vehicle_number || '' },
+    { key: 'nationality', label: lang === 'ar' ? 'الجنسية' : 'Nationality', hidden: true, render: d => d.nationality || '—', pdf: d => d.nationality || '' },
+    { key: 'license_number', label: lang === 'ar' ? 'رقم الرخصة' : 'License Number', hidden: true, render: d => d.license_number || '—', pdf: d => d.license_number || '' },
+    { key: 'license_expiry_date', label: t('drivers.colLicenseExpiry'), sort: 'license_expiry_date', render: d => badge(expiryInfo(d.license_expiry_date)), pdf: d => d.license_expiry_date || '' },
+    { key: 'iqama_number', label: lang === 'ar' ? 'رقم الإقامة' : 'Iqama Number', hidden: true, render: d => d.iqama_number || '—', pdf: d => d.iqama_number || '' },
+    { key: 'iqama_expiry_date', label: t('drivers.colIqamaExpiry'), sort: 'iqama_expiry_date', render: d => badge(expiryInfo(d.iqama_expiry_date)), pdf: d => d.iqama_expiry_date || '' },
+    { key: 'status', label: t('drivers.colStatus'), sort: 'status', render: d => <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span>, pdf: d => trEnum(t, 'status', d.status) || '' },
+    { key: 'actions', label: t('drivers.colActions'), required: true, noPdf: true, stop: true, className: 'text-end whitespace-nowrap', render: d => (
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} aria-label={t('drivers.view') + ' ' + d.full_name} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
+        {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} aria-label={t('drivers.edit') + ' ' + d.full_name} className="text-brand-500 hover:text-brand-600">✎</button>}
+        {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} aria-label={t('drivers.delete') + ' ' + d.full_name} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
+      </div>
+    ) },
+  ];
+  const prefs = useColumnPrefs('drivers', cols);
+  const { visibleCols } = prefs;
 
   return (
     <Shell active="/drivers">
@@ -115,7 +131,8 @@ export default function DriversPage() {
           <h2 className="text-lg font-semibold">{t('drivers.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('drivers.breadcrumb')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ColumnPicker columns={cols} prefs={prefs} />
           <Button variant="ghost" onClick={exportExcel}>⤓ {t('drivers.exportExcel')}</Button>
           <Button variant="ghost" onClick={exportPdf}>⤓ {t('drivers.exportPdf')}</Button>
           {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('drivers.addDriver')}</Button>}
@@ -133,48 +150,21 @@ export default function DriversPage() {
         <table className="w-full text-sm min-w-[900px]">
           <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
-              <Th>{t('drivers.colPhoto')}</Th>
-              <th onClick={() => toggleSort('full_name')} className={SORT_TH}>{t('drivers.colName')}<SortIndicator column="full_name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('phone')} className={SORT_TH}>{t('drivers.colPhone')}<SortIndicator column="phone" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('cars')} className={SORT_TH}>{t('drivers.colVehicle')}<SortIndicator column="cars" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('license_expiry_date')} className={SORT_TH}>{t('drivers.colLicenseExpiry')}<SortIndicator column="license_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('iqama_expiry_date')} className={SORT_TH}>{t('drivers.colIqamaExpiry')}<SortIndicator column="iqama_expiry_date" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className={SORT_TH}>{t('drivers.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <Th className="text-end">{t('drivers.colActions')}</Th>
+              {visibleCols.map(c => c.sort
+                ? <th key={c.key} onClick={() => toggleSort(c.sort)} className={SORT_TH + (c.className ? ' ' + c.className : '')}>{c.label}<SortIndicator column={c.sort} sortKey={sortKey} sortDir={sortDir} /></th>
+                : <Th key={c.key} className={c.className || ''}>{c.label}</Th>)}
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr><td colSpan={8} className="py-8 text-center text-[color:var(--tx-3)]">{t('drivers.loading')}</td></tr>
+              <tr><td colSpan={visibleCols.length} className="py-8 text-center text-[color:var(--tx-3)]">{t('drivers.loading')}</td></tr>
             ) : drivers.length === 0 ? (
-              <tr><td colSpan={8}><EmptyState text={t('drivers.noneYet')} /></td></tr>
-            ) : drivers.map(d => {
-              const lic = expiryInfo(d.license_expiry_date);
-              const iqama = expiryInfo(d.iqama_expiry_date);
-              return (
-                <tr key={d.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors"
-                  onClick={() => { window.location.href = '/drivers/' + d.id; }}>
-                  <Td>
-                    {d.profile_photo_url ? (
-                      <img src={d.profile_photo_url} alt="" className="h-9 w-9 rounded-full object-cover" />
-                    ) : (
-                      <div className="h-9 w-9 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-medium">{d.full_name.slice(0, 1).toUpperCase()}</div>
-                    )}
-                  </Td>
-                  <Td className="font-medium">{d.full_name}</Td>
-                  <Td>{d.phone || '—'}</Td>
-                  <Td>{d.cars?.vehicle_number || '—'}</Td>
-                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + lic.className}>{lic.dot} {trExpiry(t, lic)}</span></Td>
-                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + iqama.className}>{iqama.dot} {trExpiry(t, iqama)}</span></Td>
-                  <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[d.status] || '')}>{trEnum(t, 'status', d.status)}</span></Td>
-                  <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/drivers/' + d.id; }} title={t('drivers.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
-                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: { ...d, assigned_car_id: d.assigned_car_id || '' } })} title={t('drivers.edit')} className="text-brand-500 hover:text-brand-600">✎</button>}
-                    {isAdmin && <button onClick={() => deleteDriver(d.id)} title={t('drivers.delete')} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
-                  </td>
-                </tr>
-              );
-            })}
+              <tr><td colSpan={visibleCols.length}><EmptyState text={t('drivers.noneYet')} /></td></tr>
+            ) : drivers.map((r, i) => (
+              <tr key={r.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors" onClick={() => { window.location.href = '/drivers/' + r.id; }}>
+                {visibleCols.map(c => <Td key={c.key} className={c.className || ''} onClick={c.stop ? e => e.stopPropagation() : undefined}>{c.render(r, i)}</Td>)}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

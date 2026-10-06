@@ -10,6 +10,7 @@ import { ListPagination } from '@/components/ListPagination';
 import DateFilter, { presetRange } from '@/components/DateFilter';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 
 const PAYMENT_BADGE = {
   Paid: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -102,6 +103,28 @@ export default function MaintenanceRecordsPage() {
      Vehicles. Fetches ALL records matching the current filters through the
      existing list API (pages of 100 — its max) so the report carries the
      complete filtered dataset, not just the current on-screen page. */
+  const cols = [
+    { key: 'date', label: t('maint.colDate'), sort: 'maintenance_date', render: r => r.maintenance_date, pdf: r => r.maintenance_date || '—' },
+    { key: 'vehicle', label: t('maint.colVehicle'), sort: 'vehicle', className: 'font-medium', render: r => r.cars?.vehicle_number || '—', pdf: r => r.cars?.vehicle_number || '—' },
+    { key: 'driver', label: t('maint.colDriver'), sort: 'driver', render: r => r.drivers?.full_name || '—', pdf: r => r.drivers?.full_name || '—' },
+    { key: 'category', label: t('maint.colCategory'), sort: 'category', render: r => r.category, pdf: r => r.category || '—' },
+    { key: 'shop', label: t('maint.colShop'), sort: 'shop', render: r => r.maintenance_shops?.name || '—', pdf: r => r.maintenance_shops?.name || '—' },
+    { key: 'amount', label: t('maint.colAmount'), sort: 'amount', render: r => <>{r.currency} {fmt(r.amount)}</>, pdf: r => `${r.currency || ''} ${fmt(r.amount)}`.trim() },
+    { key: 'km', label: t('maint.colKm'), sort: 'odometer_km', render: r => (r.odometer_km ? fmt(r.odometer_km) : '—'), pdf: r => (r.odometer_km ? fmt(r.odometer_km) : '—') },
+    { key: 'invoice', label: t('maint.colInvoice'), sort: 'invoice_number', render: r => r.invoice_number || '—', pdf: r => r.invoice_number || '—' },
+    { key: 'status', label: t('maint.colStatus'), sort: 'payment_status', render: r => <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{trEnum(t, 'payment', r.payment_status)}</span>, pdf: r => trEnum(t, 'payment', r.payment_status) },
+    { key: 'created_by', label: t('maint.colCreatedBy'), sort: 'created_by', hidden: true, render: r => r.platform_users?.full_name || r.platform_users?.email || '—', pdf: r => r.platform_users?.full_name || r.platform_users?.email || '—' },
+    { key: 'actions', label: t('maint.colActions'), required: true, noPdf: true, stop: true, className: 'text-end whitespace-nowrap', render: r => (
+      <div className="flex items-center justify-end gap-3">
+        <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title={t('maint.view')} aria-label={t('maint.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)] transition-colors">{'\u{1F441}'}</button>
+        {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: r })} title={t('maint.edit')} aria-label={t('maint.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎</button>}
+        {isAdmin && <button onClick={() => deleteRecord(r.id)} title={t('maint.delete')} aria-label={t('maint.delete')} className="text-[#ef4444] hover:underline">🗑</button>}
+      </div>
+    ) },
+  ];
+  const prefs = useColumnPrefs('maintenance', cols);
+  const { visibleCols } = prefs;
+
   async function runReport(action) {
     setReportBusy(action);
     try {
@@ -118,22 +141,8 @@ export default function MaintenanceRecordsPage() {
       const { exportReportPdf } = await import('@/lib/reportPdf');
       await exportReportPdf({
         title: ar ? 'تقرير سجلات الصيانة' : 'Maintenance Records Report',
-        columns: [
-          { key: 'date', header: t('maint.colDate') },
-          { key: 'vehicle', header: t('maint.colVehicle') },
-          { key: 'driver', header: t('maint.colDriver') },
-          { key: 'category', header: t('maint.colCategory') },
-          { key: 'shop', header: t('maint.colShop') },
-          { key: 'amount', header: t('maint.colAmount') },
-          { key: 'km', header: t('maint.colKm') },
-          { key: 'invoice', header: t('maint.colInvoice') },
-          { key: 'status', header: t('maint.colStatus') },
-        ],
-        rows: all.map(r => ({
-          date: r.maintenance_date || '—', vehicle: r.cars?.vehicle_number || '—', driver: r.drivers?.full_name || '—',
-          category: r.category || '—', shop: r.maintenance_shops?.name || '—', amount: `${r.currency || ''} ${fmt(r.amount)}`.trim(),
-          km: r.odometer_km ? fmt(r.odometer_km) : '—', invoice: r.invoice_number || '—', status: trEnum(t, 'payment', r.payment_status),
-        })),
+        columns: pdfColumns(visibleCols),
+        rows: pdfRows(visibleCols, all),
         lang, fileName: 'maintenance-records-report.pdf', action,
       });
     } catch (e) { /* no-op — report generation failures shouldn't disrupt the page */ }
@@ -147,7 +156,8 @@ export default function MaintenanceRecordsPage() {
           <h2 className="text-lg font-semibold">{t('maint.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('maint.breadcrumb')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ColumnPicker columns={cols} prefs={prefs} />
           <Button variant="ghost" onClick={() => runReport('print')} disabled={!total || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
           <Button variant="ghost" onClick={() => runReport('save')} disabled={!total || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('maint.addRecord')}</Button>}
@@ -173,46 +183,21 @@ export default function MaintenanceRecordsPage() {
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
-              <Th><span onClick={() => toggleSort('maintenance_date')} className={sortHeaderCls}>{t('maint.colDate')}<SortIndicator column="maintenance_date" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('vehicle')} className={sortHeaderCls}>{t('maint.colVehicle')}<SortIndicator column="vehicle" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('driver')} className={sortHeaderCls}>{t('maint.colDriver')}<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('category')} className={sortHeaderCls}>{t('maint.colCategory')}<SortIndicator column="category" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('shop')} className={sortHeaderCls}>{t('maint.colShop')}<SortIndicator column="shop" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('amount')} className={sortHeaderCls}>{t('maint.colAmount')}<SortIndicator column="amount" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('odometer_km')} className={sortHeaderCls}>{t('maint.colKm')}<SortIndicator column="odometer_km" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('invoice_number')} className={sortHeaderCls}>{t('maint.colInvoice')}<SortIndicator column="invoice_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('payment_status')} className={sortHeaderCls}>{t('maint.colStatus')}<SortIndicator column="payment_status" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('created_by')} className={sortHeaderCls}>{t('maint.colCreatedBy')}<SortIndicator column="created_by" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th className="text-end">{t('maint.colActions')}</Th>
+              {visibleCols.map(c => c.sort
+                ? <Th key={c.key} className={c.className || ''}><span onClick={() => toggleSort(c.sort)} className={sortHeaderCls}>{c.label}<SortIndicator column={c.sort} sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                : <Th key={c.key} className={c.className || ''}>{c.label}</Th>)}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={11} className="py-8 text-center text-[color:var(--tx-3)]">{t('maint.loading')}</td></tr>
+              <tr><td colSpan={visibleCols.length} className="py-8 text-center text-[color:var(--tx-3)]">{t('maint.loading')}</td></tr>
             ) : sorted.length === 0 ? (
-              <tr><td colSpan={11}><EmptyState text={t('maint.noMatch')} /></td></tr>
-            ) : sorted.map(r => (
-              <tr key={r.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)]"
-                onClick={() => { window.location.href = '/maintenance/' + r.id; }}>
-                <Td>{r.maintenance_date}</Td>
-                <Td className="font-medium">{r.cars?.vehicle_number || '—'}</Td>
-                <Td>{r.drivers?.full_name || '—'}</Td>
-                <Td>{r.category}</Td>
-                <Td>{r.maintenance_shops?.name || '—'}</Td>
-                <Td>{r.currency} {fmt(r.amount)}</Td>
-                <Td>{r.odometer_km ? fmt(r.odometer_km) : '—'}</Td>
-                <Td>{r.invoice_number || '—'}</Td>
-                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (PAYMENT_BADGE[r.payment_status] || '')}>{trEnum(t, 'payment', r.payment_status)}</span></Td>
-                <Td>{r.platform_users?.full_name || r.platform_users?.email || '—'}</Td>
-                <Td className="text-end">
-                  <div className="flex items-center justify-end gap-3" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { window.location.href = '/maintenance/' + r.id; }} title={t('maint.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)] transition-colors">{'\u{1F441}'}</button>
-                    {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: r })} title={t('maint.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎</button>}
-                    {isAdmin && <button onClick={() => deleteRecord(r.id)} title={t('maint.delete')} className="text-[#ef4444] hover:underline">🗑</button>}
-                  </div>
-                </Td>
+              <tr><td colSpan={visibleCols.length}><EmptyState text={t('maint.noMatch')} /></td></tr>
+            ) : sorted.map((r, i) => (
+              <tr key={r.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)]" onClick={() => { window.location.href = '/maintenance/' + r.id; }}>
+                {visibleCols.map(c => <Td key={c.key} className={c.className || ''} onClick={c.stop ? e => e.stopPropagation() : undefined}>{c.render(r, i)}</Td>)}
               </tr>
             ))}
           </tbody>

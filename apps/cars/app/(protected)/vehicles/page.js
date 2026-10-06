@@ -8,6 +8,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { ListPagination } from '@/components/ListPagination';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 import { validateVehicleDates } from '@/lib/fleetExpiry';
 
 const STATUS_BADGE = {
@@ -28,7 +29,7 @@ const EMPTY_FORM = {
 };
 
 export default function VehiclesPage() {
-  const { t, lang } = useLanguage();
+  const { t, lang, formatDateOnly, formatDateTime } = useLanguage();
   const [me, setMe] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -111,35 +112,63 @@ export default function VehiclesPage() {
      current filters through the existing list API (pages of 100 — its
      max) so the PDF carries the complete filtered dataset, not just the
      current on-screen page. */
-  async function exportPdf() {
-    const all = [];
-    for (let p = 1; p <= 200; p++) {
-      const res = await fetch('/api/cars?' + new URLSearchParams({ ...currentFilters, page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
-      const d = res && res.ok ? await res.json() : null;
-      if (!d || !Array.isArray(d.vehicles) || d.vehicles.length === 0) break;
-      all.push(...d.vehicles);
-      if (all.length >= (d.total || 0)) break;
-    }
-    const ar = lang === 'ar';
-    const { exportReportPdf } = await import('@/lib/reportPdf');
-    await exportReportPdf({
-      title: ar ? 'تقرير المركبات' : 'Vehicles Report',
-      columns: [
-        { key: 'vehicle_number', header: ar ? 'رقم المركبة' : 'Vehicle Number' },
-        { key: 'name', header: ar ? 'اسم المركبة' : 'Vehicle Name' },
-        { key: 'type', header: ar ? 'النوع' : 'Type' },
-        { key: 'fuel_type', header: ar ? 'الوقود' : 'Fuel Type' },
-        { key: 'driver', header: ar ? 'السائق' : 'Driver' },
-        { key: 'status', header: ar ? 'الحالة' : 'Status' },
-        { key: 'current_km', header: ar ? 'العداد (كم)' : 'Current KM' },
-        { key: 'location', header: ar ? 'الموقع' : 'Location' },
-        { key: 'last_update', header: ar ? 'آخر تحديث' : 'Last Update' },
-      ],
-      rows: all,
-      lang,
-      fileName: 'vehicles-report.pdf',
-    });
+  const [reportBusy, setReportBusy] = useState('');
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const all = [];
+      for (let p = 1; p <= 200; p++) {
+        const res = await fetch('/api/cars?' + new URLSearchParams({ ...currentFilters, page: String(p), pageSize: '100' }), { credentials: 'same-origin' }).catch(() => null);
+        const d = res && res.ok ? await res.json() : null;
+        if (!d || !Array.isArray(d.vehicles) || d.vehicles.length === 0) break;
+        all.push(...d.vehicles);
+        if (all.length >= (d.total || 0)) break;
+      }
+      const ar = lang === 'ar';
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({
+        title: ar ? 'تقرير المركبات' : 'Vehicles Report',
+        columns: pdfColumns(visibleCols),
+          rows: pdfRows(visibleCols, all),
+        lang,
+        fileName: 'vehicles-report.pdf', action,
+      });
+    } catch (e) { /* report failures must not break the page */ }
+    finally { setReportBusy(''); }
   }
+
+  /* Page-view column model — drives the table, Print and PDF alike. The
+     default order is the required fleet view; the rest are optional. */
+  const notSet = <span className="text-[color:var(--tx-4)]">{t('expiry.notSet')}</span>;
+  const dateCell = v => (v ? formatDateOnly(v) : notSet);
+  const datePdf = v => (v ? formatDateOnly(v) : t('expiry.notSet'));
+  const cols = [
+    { key: 'idx', label: t('vehicles.colNumber'), render: (v, i) => (page - 1) * pageSize + i + 1, pdf: (v, i) => i + 1 },
+    { key: 'vehicle_number', label: t('vehicles.colVehicleNumber'), sort: 'vehicle_number', className: 'font-medium', render: v => v.vehicle_number, pdf: v => v.vehicle_number || '' },
+    { key: 'name', label: t('vehicles.colName'), sort: 'name', render: v => v.name || '—', pdf: v => v.name || '' },
+    { key: 'type', label: t('vehicles.colType'), sort: 'type', render: v => trEnum(t, 'vtype', v.type), pdf: v => trEnum(t, 'vtype', v.type) || '' },
+    { key: 'driver', label: t('vehicles.colDriver'), sort: 'driver', render: v => v.driver || '—', pdf: v => v.driver || '' },
+    { key: 'location', label: t('vehicles.colLocation'), sort: 'location', render: v => v.location || '—', pdf: v => v.location || '' },
+    { key: 'insurance_expiry', label: t('vehicles.colInsuranceExpiry'), sort: 'insurance_expiry', render: v => dateCell(v.insurance_expiry), pdf: v => datePdf(v.insurance_expiry) },
+    { key: 'periodic_inspection_expiry', label: t('vehicles.colInspectionExpiry'), sort: 'periodic_inspection_expiry', render: v => dateCell(v.periodic_inspection_expiry), pdf: v => datePdf(v.periodic_inspection_expiry) },
+    { key: 'fuel_type', label: t('vehicles.colFuel'), sort: 'fuel_type', hidden: true, render: v => trEnum(t, 'fuel', v.fuel_type), pdf: v => trEnum(t, 'fuel', v.fuel_type) || '' },
+    { key: 'status', label: t('vehicles.colStatus'), sort: 'status', hidden: true, render: v => <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span>, pdf: v => trEnum(t, 'status', v.status) || '' },
+    { key: 'make', label: t('fields.make'), sort: 'make', hidden: true, render: v => v.make || '—', pdf: v => v.make || '' },
+    { key: 'model', label: t('fields.model'), sort: 'model', hidden: true, render: v => v.model || '—', pdf: v => v.model || '' },
+    { key: 'year', label: t('fields.year'), sort: 'year', hidden: true, render: v => v.year || '—', pdf: v => v.year || '' },
+    { key: 'current_km', label: t('fields.currentKm'), sort: 'current_km', hidden: true, render: v => v.current_km ?? '—', pdf: v => v.current_km ?? '' },
+    { key: 'registration_expiry', label: t('fields.registrationExpiry'), sort: 'registration_expiry', hidden: true, render: v => dateCell(v.registration_expiry), pdf: v => datePdf(v.registration_expiry) },
+    { key: 'last_update', label: t('vehicles.colLastUpdate'), sort: 'last_update', hidden: true, render: v => (v.last_update ? formatDateTime(v.last_update) : '—'), pdf: v => (v.last_update ? formatDateTime(v.last_update) : '') },
+    { key: 'actions', label: t('vehicles.colActions'), required: true, noPdf: true, stop: true, className: 'text-end whitespace-nowrap', render: v => (
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} aria-label={t('vehicles.view') + ' ' + v.vehicle_number} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
+        {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title={t('vehicles.edit')} aria-label={t('vehicles.edit') + ' ' + v.vehicle_number} className="text-brand-500 hover:text-brand-600">✎</button>}
+        {isAdmin && <button onClick={() => deleteVehicle(v.id)} title={t('vehicles.delete')} aria-label={t('vehicles.delete') + ' ' + v.vehicle_number} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
+      </div>
+    ) },
+  ];
+  const prefs = useColumnPrefs('vehicles', cols);
+  const { visibleCols } = prefs;
 
   return (
     <Shell active="/vehicles">
@@ -148,10 +177,12 @@ export default function VehiclesPage() {
           <h2 className="text-lg font-semibold">{t('vehicles.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('vehicles.breadcrumb')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ColumnPicker columns={cols} prefs={prefs} />
           {isAdmin && <Button variant="ghost" onClick={() => setImportOpen(true)}>⇪ {t('vehicles.importExcel')}</Button>}
           <Button variant="ghost" onClick={exportExcel}>⤓ {t('vehicles.exportExcel')}</Button>
-          <Button variant="ghost" onClick={exportPdf}>⤓ {t('vehicles.exportPdf')}</Button>
+          <Button variant="ghost" onClick={() => runReport('print')} disabled={!!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" onClick={() => runReport('save')} disabled={!!reportBusy}>⤓ {reportBusy === 'save' ? '…' : t('vehicles.exportPdf')}</Button>
           {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('vehicles.addVehicle')}</Button>}
         </div>
       </div>
@@ -169,38 +200,19 @@ export default function VehiclesPage() {
         <table className="w-full text-sm min-w-[900px]">
           <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
-              <Th>{t('vehicles.colNumber')}</Th>
-              <th onClick={() => toggleSort('vehicle_number')} className={SORT_TH}>{t('vehicles.colVehicleNumber')}<SortIndicator column="vehicle_number" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('name')} className={SORT_TH}>{t('vehicles.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('type')} className={SORT_TH}>{t('vehicles.colType')}<SortIndicator column="type" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('fuel_type')} className={SORT_TH}>{t('vehicles.colFuel')}<SortIndicator column="fuel_type" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('driver')} className={SORT_TH}>{t('vehicles.colDriver')}<SortIndicator column="driver" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('status')} className={SORT_TH}>{t('vehicles.colStatus')}<SortIndicator column="status" sortKey={sortKey} sortDir={sortDir} /></th>
-              <th onClick={() => toggleSort('location')} className={SORT_TH}>{t('vehicles.colLocation')}<SortIndicator column="location" sortKey={sortKey} sortDir={sortDir} /></th>
-              {isAdmin && <Th className="text-end">{t('vehicles.colActions')}</Th>}
+              {visibleCols.map(c => c.sort
+                ? <th key={c.key} onClick={() => toggleSort(c.sort)} className={SORT_TH + (c.className ? ' ' + c.className : '')}>{c.label}<SortIndicator column={c.sort} sortKey={sortKey} sortDir={sortDir} /></th>
+                : <Th key={c.key} className={c.className || ''}>{c.label}</Th>)}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} className="py-8 text-center text-[color:var(--tx-3)]">{t('vehicles.loading')}</td></tr>
+              <tr><td colSpan={visibleCols.length} className="py-8 text-center text-[color:var(--tx-3)]">{t('vehicles.loading')}</td></tr>
             ) : sorted.length === 0 ? (
-              <tr><td colSpan={9}><EmptyState text={t('vehicles.noMatch')} /></td></tr>
-            ) : sorted.map((v, i) => (
-              <tr key={v.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors"
-                onClick={() => { window.location.href = '/vehicles/' + v.id; }}>
-                <Td>{(page - 1) * pageSize + i + 1}</Td>
-                <Td className="font-medium">{v.vehicle_number}</Td>
-                <Td>{v.name || '—'}</Td>
-                <Td>{trEnum(t, 'vtype', v.type)}</Td>
-                <Td>{trEnum(t, 'fuel', v.fuel_type)}</Td>
-                <Td>{v.driver || '—'}</Td>
-                <Td><span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span></Td>
-                <Td>{v.location || '—'}</Td>
-                <td className="px-3 py-2.5 text-sm border-t border-[color:var(--bd)] text-end whitespace-nowrap space-x-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
-                  {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title={t('vehicles.edit')} className="text-brand-500 hover:text-brand-600">✎</button>}
-                  {isAdmin && <button onClick={() => deleteVehicle(v.id)} title={t('vehicles.delete')} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
-                </td>
+              <tr><td colSpan={visibleCols.length}><EmptyState text={t('vehicles.noMatch')} /></td></tr>
+            ) : sorted.map((r, i) => (
+              <tr key={r.id} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors" onClick={() => { window.location.href = '/vehicles/' + r.id; }}>
+                {visibleCols.map(c => <Td key={c.key} className={c.className || ''} onClick={c.stop ? e => e.stopPropagation() : undefined}>{c.render(r, i)}</Td>)}
               </tr>
             ))}
           </tbody>

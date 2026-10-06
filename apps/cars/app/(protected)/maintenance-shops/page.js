@@ -8,6 +8,7 @@ import { useSortableData, SortIndicator } from '@/lib/useSortableData';
 import { ListPagination } from '@/components/ListPagination';
 import { useLanguage } from '@/lib/i18n';
 import { Button, Input, Field, Textarea, Modal, EmptyState, Th, Td } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 
 const sortHeaderCls = 'cursor-pointer select-none inline-flex items-center gap-1 hover:text-[color:var(--tx)] transition-colors';
 
@@ -55,6 +56,22 @@ export default function MaintenanceShopsPage() {
     load();
   }
 
+  const cols = [
+    { key: 'name', label: t('shops.colName'), sort: 'name', className: 'font-medium', render: x => x.name, pdf: x => x.name || '—' },
+    { key: 'contact', label: t('shops.colContact'), sort: 'contact_person', render: x => x.contact_person || '—', pdf: x => x.contact_person || '—' },
+    { key: 'mobile', label: t('shops.colMobile'), sort: 'mobile', render: x => x.mobile || '—', pdf: x => x.mobile || '—' },
+    { key: 'city', label: t('shops.colCity'), sort: 'city', render: x => x.city || '—', pdf: x => x.city || '—' },
+    { key: 'vat', label: t('shops.colVat'), sort: 'vat_number', render: x => x.vat_number || '—', pdf: x => x.vat_number || '—' },
+    ...(isAdmin ? [{ key: 'actions', label: t('shops.colActions'), required: true, noPdf: true, stop: true, className: 'text-end whitespace-nowrap', render: x => (
+      <div className="flex items-center justify-end gap-3">
+        <button onClick={() => setModal({ mode: 'edit', data: x })} title={t('shops.edit')} aria-label={t('shops.edit') + ' ' + x.name} className="text-brand-600 dark:text-brand-400 hover:underline">✎</button>
+        <button onClick={() => deleteShop(x.id)} title={t('shops.delete')} aria-label={t('shops.delete') + ' ' + x.name} className="text-[#ef4444] hover:underline">🗑</button>
+      </div>
+    ) }] : []),
+  ];
+  const prefs = useColumnPrefs('maintenance-shops', cols);
+  const { visibleCols } = prefs;
+
   async function runReport(action) {
     setReportBusy(action);
     try {
@@ -62,16 +79,8 @@ export default function MaintenanceShopsPage() {
       const ar = lang === 'ar';
       await exportReportPdf({
         title: ar ? 'تقرير ورش الصيانة' : 'Maintenance Shops Report',
-        columns: [
-          { key: 'name', header: t('shops.colName') },
-          { key: 'contact', header: t('shops.colContact') },
-          { key: 'mobile', header: t('shops.colMobile') },
-          { key: 'city', header: t('shops.colCity') },
-          { key: 'vat', header: t('shops.colVat') },
-        ],
-        rows: sorted.map(s => ({
-          name: s.name || '—', contact: s.contact_person || '—', mobile: s.mobile || '—', city: s.city || '—', vat: s.vat_number || '—',
-        })),
+        columns: pdfColumns(visibleCols),
+        rows: pdfRows(visibleCols, sorted),
         lang, fileName: 'maintenance-shops-report.pdf', action,
       });
     } catch (e) { /* no-op — report generation failures shouldn't disrupt the page */ }
@@ -85,7 +94,8 @@ export default function MaintenanceShopsPage() {
           <h2 className="text-lg font-semibold">{t('shops.title')}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t('shops.breadcrumb')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ColumnPicker columns={cols} prefs={prefs} />
           <Button variant="ghost" onClick={() => runReport('print')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
           <Button variant="ghost" onClick={() => runReport('save')} disabled={!sorted.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
           {isAdmin && <Button onClick={() => setModal({ mode: 'add', data: EMPTY_FORM })}>+ {t('shops.addShop')}</Button>}
@@ -98,36 +108,21 @@ export default function MaintenanceShopsPage() {
 
       <div className="glass-card overflow-auto max-h-[70vh]">
         <table className="w-full text-sm min-w-[800px]">
-          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl border-b border-[color:var(--bd)]">
+          <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
             <tr>
-              <Th><span onClick={() => toggleSort('name')} className={sortHeaderCls}>{t('shops.colName')}<SortIndicator column="name" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('contact_person')} className={sortHeaderCls}>{t('shops.colContact')}<SortIndicator column="contact_person" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('mobile')} className={sortHeaderCls}>{t('shops.colMobile')}<SortIndicator column="mobile" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('city')} className={sortHeaderCls}>{t('shops.colCity')}<SortIndicator column="city" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              <Th><span onClick={() => toggleSort('vat_number')} className={sortHeaderCls}>{t('shops.colVat')}<SortIndicator column="vat_number" sortKey={sortKey} sortDir={sortDir} /></span></Th>
-              {isAdmin && <Th className="text-end">{t('shops.colActions')}</Th>}
+              {visibleCols.map(c => c.sort
+                ? <Th key={c.key} className={c.className || ''}><span onClick={() => toggleSort(c.sort)} className={sortHeaderCls}>{c.label}<SortIndicator column={c.sort} sortKey={sortKey} sortDir={sortDir} /></span></Th>
+                : <Th key={c.key} className={c.className || ''}>{c.label}</Th>)}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="py-8 text-center text-[color:var(--tx-3)]">{t('shops.loading')}</td></tr>
+              <tr><td colSpan={visibleCols.length} className="py-8 text-center text-[color:var(--tx-3)]">{t('shops.loading')}</td></tr>
             ) : pageRows.length === 0 ? (
-              <tr><td colSpan={6}><EmptyState text={t('shops.noneYet')} /></td></tr>
-            ) : pageRows.map(s => (
-              <tr key={s.id} className="hover:bg-[color:var(--pr-soft)]">
-                <Td className="font-medium">{s.name}</Td>
-                <Td>{s.contact_person || '—'}</Td>
-                <Td>{s.mobile || '—'}</Td>
-                <Td>{s.city || '—'}</Td>
-                <Td>{s.vat_number || '—'}</Td>
-                {isAdmin && (
-                  <Td className="text-end">
-                    <div className="flex items-center justify-end gap-3">
-                      <button onClick={() => setModal({ mode: 'edit', data: s })} title={t('shops.edit')} className="text-brand-600 dark:text-brand-400 hover:underline">✎</button>
-                      <button onClick={() => deleteShop(s.id)} title={t('shops.delete')} className="text-[#ef4444] hover:underline">🗑</button>
-                    </div>
-                  </Td>
-                )}
+              <tr><td colSpan={visibleCols.length}><EmptyState text={t('shops.noneYet')} /></td></tr>
+            ) : pageRows.map((r, i) => (
+              <tr key={r.id} className="hover:bg-[color:var(--pr-soft)]">
+                {visibleCols.map(c => <Td key={c.key} className={c.className || ''} onClick={c.stop ? e => e.stopPropagation() : undefined}>{c.render(r, i)}</Td>)}
               </tr>
             ))}
           </tbody>

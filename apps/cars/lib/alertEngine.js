@@ -187,11 +187,15 @@ function sampleItem(alertType, today) {
 /* Manual test notification for ONE alert type: real template, real
    recipients of that type, marked TEST, logged to the test-send log.
    Never touches alert state or the real delivery log. */
-async function runTestNotification({ store, vehicles, send, alertType, now, sentBy = null, baseUrl = '', company = 'AL FAROOQUE' }) {
+async function runTestNotification({ store, vehicles, send, alertType, now, sentBy = null, baseUrl = '', company = 'AL FAROOQUE', recipientIds = null }) {
   if (!TYPES.includes(alertType)) throw Object.assign(new Error('Unknown alert type.'), { code: 'BAD_TYPE' });
   const today = todayInZone(now);
   const settings = normalizeSettings(await store.getSettings());
-  const recipients = [...recipientMap(await store.listRecipients(), new Set([alertType])).keys()];
+  /* recipientIds (optional) restricts the send to a chosen subset; a
+     disabled recipient is never emailed even if its id is supplied. */
+  let rows = await store.listRecipients();
+  if (Array.isArray(recipientIds)) { const want = new Set(recipientIds.map(String)); rows = rows.filter(r => want.has(String(r.id))); }
+  const recipients = [...recipientMap(rows, new Set([alertType])).keys()];
   const report = { alertType, today, recipients: recipients.length, sent: 0, failed: 0, usedSample: false, items: 0, results: [] };
   if (recipients.length === 0) { report.reason = 'no_enabled_recipients'; return report; }
 

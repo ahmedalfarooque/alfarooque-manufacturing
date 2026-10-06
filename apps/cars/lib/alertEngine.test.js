@@ -288,3 +288,14 @@ test('test notification: provider failure is reported honestly, no recipients â†
   const none = await runTestNotification({ store: memoryStore(), vehicles: [], send: async () => ({}), alertType: 'insurance', now: day(0) });
   assert.equal(none.reason, 'no_enabled_recipients');
 });
+
+test('test notification: recipientIds restricts the send; disabled ids are still skipped', async () => {
+  const h = harness([car({ insurance_expiry: iso(10) })], { recipients: [{ email: 'a@x.com', types: ['insurance'] }, { email: 'b@x.com', types: ['insurance'] }, { email: 'c@x.com', types: ['insurance'], enabled: false }] });
+  const send = async m => { h.sent.push(m); return { id: 'x' }; };
+  let r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), recipientIds: ['b@x.com:insurance'] });
+  assert.deepEqual([r.sent, r.recipients, h.sent.map(m => m.to)], [1, 1, ['b@x.com']]);
+  r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), recipientIds: ['c@x.com:insurance'] });
+  assert.equal(r.reason, 'no_enabled_recipients'); assert.equal(h.sent.length, 1);
+  r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0) });
+  assert.equal(r.sent, 2);                                     // no subset â†’ all enabled
+});

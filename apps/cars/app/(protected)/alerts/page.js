@@ -5,8 +5,9 @@ import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { ListPagination } from '@/components/ListPagination';
 import DateFilter, { presetRange } from '@/components/DateFilter';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, trExpiryDays } from '@/lib/i18n';
 import { EmptyState, Button, Input, Modal, Th, Td } from '@/components/ui';
+import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
 import { StatusPill, SeverityPill, DaysText, NotifyLine, Notice } from '@/components/ExpiryUi';
 import { normalizeEmail, isValidEmail } from '@/lib/alertSettings';
 
@@ -52,9 +53,10 @@ export default function AlertsPage() {
 /* ───────────────────────── Expiry alerts ───────────────────────── */
 
 function ExpiryAlerts() {
-  const { t, formatDateOnly } = useLanguage();
+  const { t, lang, formatDateOnly } = useLanguage();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
   const [f, setF] = useState({ type: 'all', status: 'all', vehicle: 'all', severity: 'all', from: '', to: '' });
 
   useEffect(() => {
@@ -73,6 +75,26 @@ function ExpiryAlerts() {
     (!f.from || a.expiryDate >= f.from) && (!f.to || a.expiryDate <= f.to));
   const filtered = f.type !== 'all' || f.status !== 'all' || f.vehicle !== 'all' || f.severity !== 'all' || f.from || f.to;
   const set = k => v => setF(s => ({ ...s, [k]: v }));
+  const cols = [
+    { key: 'vehicle', label: t('fleet.col.vehicle'), render: a => <><div className="font-medium">{a.vehicleNumber}</div><div className="text-xs text-[color:var(--tx-3)]">{a.vehicleName || '—'}</div></>, pdf: a => a.vehicleNumber + (a.vehicleName ? ' — ' + a.vehicleName : '') },
+    { key: 'alertType', label: t('fleet.col.alertType'), render: a => t('alertType.' + a.alertType), pdf: a => t('alertType.' + a.alertType) },
+    { key: 'expiryDate', label: t('fleet.col.expiry'), render: a => formatDateOnly(a.expiryDate), pdf: a => formatDateOnly(a.expiryDate) },
+    { key: 'days', label: t('fleet.col.days'), render: a => <DaysText days={a.daysRemaining} />, pdf: a => trExpiryDays(t, a.daysRemaining) },
+    { key: 'status', label: t('fleet.col.status'), render: a => <StatusPill status={a.status} />, pdf: a => t('expStatus.' + a.status) },
+    { key: 'severity', label: t('fleet.col.severity'), render: a => <SeverityPill severity={a.severity} />, pdf: a => t('severity.' + a.severity) },
+    { key: 'notification', label: t('vd.emailNotification'), render: a => <NotifyLine rec={{ isActive: true, notification: a.notification }} schemaReady={data?.schemaReady} />,
+      pdf: a => (a.notification?.deliveryState ? t('ns.' + a.notification.deliveryState) : t('fleet.neverNotified')) + (a.notification?.lastNotifiedOn ? ' · ' + formatDateOnly(a.notification.lastNotifiedOn) : '') },
+  ];
+  const prefs = useColumnPrefs('expiry-alerts', cols);
+  const { visibleCols } = prefs;
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({ title: t('al.tabExpiry'), columns: pdfColumns(visibleCols), rows: pdfRows(visibleCols, rows), lang, fileName: 'expiry-alerts-report.pdf', action, orientation: 'landscape' });
+    } catch (e) { /* report failures must not break the page */ }
+    finally { setReportBusy(''); }
+  }
 
   if (error) return <Notice tone="red">{error}</Notice>;
   if (!data) return <div className="text-sm text-[color:var(--tx-3)]">{t('common.loading')}</div>;
@@ -82,6 +104,11 @@ function ExpiryAlerts() {
       {data.schemaReady === false && <div className="mb-4"><Notice>{t('fleet.schemaPending')}</Notice></div>}
       <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
         <span className="px-3 py-1 rounded-full bg-[color:var(--pr-soft)] font-semibold text-[color:var(--tx)]">{t('al.activeCount', { n: data.activeAlertCount })}</span>
+        <span className="ms-auto flex flex-wrap items-center gap-2">
+          <ColumnPicker columns={cols} prefs={prefs} />
+          <Button variant="ghost" size="sm" onClick={() => runReport('print')} disabled={!rows.length || !!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+          <Button variant="ghost" size="sm" onClick={() => runReport('save')} disabled={!rows.length || !!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
+        </span>
         {['expired', 'critical', 'urgent', 'warning'].map(k => data.severity[k] > 0 && <span key={k} className="inline-flex items-center gap-1.5"><SeverityPill severity={k} /><span className="tabular-nums font-medium">{data.severity[k]}</span></span>)}
       </div>
 
@@ -102,21 +129,12 @@ function ExpiryAlerts() {
           <div className="glass-card overflow-auto max-h-[68vh] hidden md:block">
             <table className="w-full text-sm min-w-[900px]">
               <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
-                <tr>
-                  <Th>{t('fleet.col.vehicle')}</Th><Th>{t('fleet.col.alertType')}</Th><Th>{t('fleet.col.expiry')}</Th>
-                  <Th>{t('fleet.col.days')}</Th><Th>{t('fleet.col.status')}</Th><Th>{t('fleet.col.severity')}</Th><Th>{t('vd.emailNotification')}</Th>
-                </tr>
+                <tr>{visibleCols.map(c => <Th key={c.key}>{c.label}</Th>)}</tr>
               </thead>
               <tbody>
                 {rows.map(a => (
                   <tr key={a.key} className="cursor-pointer hover:bg-[color:var(--pr-soft)] transition-colors" onClick={() => { window.location.href = '/vehicles/' + a.carId; }}>
-                    <Td><div className="font-medium">{a.vehicleNumber}</div><div className="text-xs text-[color:var(--tx-3)]">{a.vehicleName || '—'}</div></Td>
-                    <Td>{t('alertType.' + a.alertType)}</Td>
-                    <Td>{formatDateOnly(a.expiryDate)}</Td>
-                    <Td><DaysText days={a.daysRemaining} /></Td>
-                    <Td><StatusPill status={a.status} /></Td>
-                    <Td><SeverityPill severity={a.severity} /></Td>
-                    <Td><NotifyLine rec={{ isActive: true, notification: a.notification }} schemaReady={data.schemaReady} /></Td>
+                    {visibleCols.map(c => <Td key={c.key}>{c.render(a)}</Td>)}
                   </tr>
                 ))}
               </tbody>
@@ -151,9 +169,28 @@ function Labeled({ label, children }) {
 /* ───────────────────────── Resolved history ───────────────────────── */
 
 function ResolvedAlerts() {
-  const { t, formatDateOnly } = useLanguage();
+  const { t, lang, formatDateOnly } = useLanguage();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [reportBusy, setReportBusy] = useState('');
+  const cols = [
+    { key: 'vehicle', label: t('fleet.col.vehicle'), className: 'font-medium', render: r => <a href={'/vehicles/' + r.carId} className="hover:underline">{r.vehicleNumber || '—'}</a>, pdf: r => r.vehicleNumber || '' },
+    { key: 'alertType', label: t('fleet.col.alertType'), render: r => t('alertType.' + r.alertType), pdf: r => t('alertType.' + r.alertType) },
+    { key: 'expiryDate', label: t('fleet.col.expiry'), render: r => formatDateOnly(r.expiryDate), pdf: r => formatDateOnly(r.expiryDate) },
+    { key: 'firstDetected', label: t('al.firstDetected'), render: r => (r.firstDetectedOn ? formatDateOnly(r.firstDetectedOn) : '—'), pdf: r => (r.firstDetectedOn ? formatDateOnly(r.firstDetectedOn) : '') },
+    { key: 'notified', label: t('fleet.col.notified'), render: r => (r.lastSentOn ? formatDateOnly(r.lastSentOn) : t('fleet.neverNotified')), pdf: r => (r.lastSentOn ? formatDateOnly(r.lastSentOn) : t('fleet.neverNotified')) },
+    { key: 'resolved', label: t('al.resolvedOn'), render: r => <>{formatDateOnly(r.resolvedOn)} <span className="text-xs text-[color:var(--tx-3)]">· {t('al.reason.' + r.resolvedReason)}</span></>, pdf: r => formatDateOnly(r.resolvedOn) + ' · ' + t('al.reason.' + r.resolvedReason) },
+  ];
+  const prefs = useColumnPrefs('resolved-alerts', cols);
+  const { visibleCols } = prefs;
+  async function runReport(action) {
+    setReportBusy(action);
+    try {
+      const { exportReportPdf } = await import('@/lib/reportPdf');
+      await exportReportPdf({ title: t('al.tabResolved'), columns: pdfColumns(visibleCols), rows: pdfRows(visibleCols, data?.resolved || []), lang, fileName: 'resolved-alerts-report.pdf', action });
+    } catch (e) { /* report failures must not break the page */ }
+    finally { setReportBusy(''); }
+  }
   useEffect(() => {
     fetch('/api/expiry-alerts', { credentials: 'same-origin' })
       .then(r => r.json().then(b => r.ok ? b : Promise.reject(new Error(b.error)))).then(setData).catch(e => setError(e.message));
@@ -163,25 +200,27 @@ function ResolvedAlerts() {
   if (data.schemaReady === false) return <Notice>{t('fleet.schemaPending')}</Notice>;
   if (data.resolved.length === 0) return <div className="glass-card glass-card--pad"><EmptyState text={t('al.noResolved')} /></div>;
   return (
+    <>
+    <div className="flex flex-wrap items-center justify-end gap-2 mb-3">
+      <ColumnPicker columns={cols} prefs={prefs} />
+      <Button variant="ghost" size="sm" onClick={() => runReport('print')} disabled={!!reportBusy}>{reportBusy === 'print' ? '…' : t('common.print')}</Button>
+      <Button variant="ghost" size="sm" onClick={() => runReport('save')} disabled={!!reportBusy}>{reportBusy === 'save' ? '…' : t('common.downloadPdf')}</Button>
+    </div>
     <div className="glass-card overflow-auto max-h-[68vh]">
       <table className="w-full text-sm min-w-[760px]">
         <thead className="sticky top-0 z-10 bg-[color:var(--nav-bg)] backdrop-blur-xl">
-          <tr><Th>{t('fleet.col.vehicle')}</Th><Th>{t('fleet.col.alertType')}</Th><Th>{t('fleet.col.expiry')}</Th><Th>{t('al.firstDetected')}</Th><Th>{t('fleet.col.notified')}</Th><Th>{t('al.resolvedOn')}</Th></tr>
+          <tr>{visibleCols.map(c => <Th key={c.key}>{c.label}</Th>)}</tr>
         </thead>
         <tbody>
           {data.resolved.map(r => (
             <tr key={r.id} className="hover:bg-[color:var(--pr-soft)] transition-colors">
-              <Td><a href={'/vehicles/' + r.carId} className="font-medium hover:underline">{r.vehicleNumber || '—'}</a></Td>
-              <Td>{t('alertType.' + r.alertType)}</Td>
-              <Td>{formatDateOnly(r.expiryDate)}</Td>
-              <Td>{r.firstDetectedOn ? formatDateOnly(r.firstDetectedOn) : '—'}</Td>
-              <Td>{r.lastSentOn ? formatDateOnly(r.lastSentOn) : t('fleet.neverNotified')}</Td>
-              <Td>{formatDateOnly(r.resolvedOn)} <span className="text-xs text-[color:var(--tx-3)]">· {t('al.reason.' + r.resolvedReason)}</span></Td>
+              {visibleCols.map(c => <Td key={c.key} className={c.className || ''}>{c.render(r)}</Td>)}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+    </>
   );
 }
 
@@ -290,6 +329,7 @@ function TypeCard({ type, data, canManage, email, onChanged, onError }) {
   const [confirmTest, setConfirmTest] = useState(false);
   const [removing, setRemoving] = useState(null);   // recipient awaiting removal confirmation
   const [editing, setEditing] = useState(null);     // recipient being edited
+  const [selected, setSelected] = useState(null);   // test-send recipient ids; null = all enabled
   const [recipMsg, setRecipMsg] = useState(null);
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState(null);
@@ -297,6 +337,11 @@ function TypeCard({ type, data, canManage, email, onChanged, onError }) {
   useEffect(() => { setForm({ enabled: saved.enabled, auto_notify_enabled: saved.auto_notify_enabled, email_language: saved.email_language }); }, [saved.enabled, saved.auto_notify_enabled, saved.email_language]);
   const dirty = form.enabled !== saved.enabled || form.auto_notify_enabled !== saved.auto_notify_enabled || form.email_language !== saved.email_language;
   const enabledRecipients = data.recipients.filter(r => r.enabled);
+  /* Test-send selection: defaults to every enabled recipient; ids that are
+     no longer enabled drop out automatically. */
+  const selectedIds = (selected || enabledRecipients.map(r => r.id)).filter(id => enabledRecipients.some(r => r.id === id));
+  const selectedRecipients = enabledRecipients.filter(r => selectedIds.includes(r.id));
+  const toggleSelected = id => setSelected(selectedIds.includes(id) ? selectedIds.filter(x => x !== id) : [...selectedIds, id]);
   const live = saved.enabled && saved.auto_notify_enabled && enabledRecipients.length > 0;
   const title = t('alertType.' + type);
   const ids = { base: 'as-' + type };
@@ -338,7 +383,7 @@ function TypeCard({ type, data, canManage, email, onChanged, onError }) {
   async function sendTest() {
     setConfirmTest(false); setTesting(true); setTestMsg(null);
     try {
-      const b = await api('/api/alert-settings/test', 'POST', { alert_type: type }, t);
+      const b = await api('/api/alert-settings/test', 'POST', { alert_type: type, recipient_ids: selectedIds }, t);
       const r = b.report;
       const failures = (r.results || []).filter(x => x.status === 'failed').map(x => x.error).filter(Boolean);
       const text = (r.failed ? t('as.testPartial', { sent: r.sent, failed: r.failed }) + (failures.length ? ' — ' + failures[0] : '') : t('as.testSent', { n: r.sent })) + (r.usedSample ? ' ' + t('as.testSampleNote') : '');
@@ -441,17 +486,40 @@ function TypeCard({ type, data, canManage, email, onChanged, onError }) {
       {/* test send */}
       {canManage && (
         <div className="border-t border-[color:var(--bd)] pt-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+            <div className="text-sm font-semibold">{t('as.selectRecipients')} <span className="text-xs font-normal text-[color:var(--tx-3)]">({t('as.selectedCount', { n: selectedRecipients.length, total: enabledRecipients.length })})</span></div>
+            {enabledRecipients.length > 0 && (
+              <span className="flex gap-3 text-xs">
+                <button type="button" className="text-brand-500 hover:underline" onClick={() => setSelected(enabledRecipients.map(r => r.id))}>{t('as.selectAll')}</button>
+                <button type="button" className="text-brand-500 hover:underline" onClick={() => setSelected([])}>{t('as.clearAll')}</button>
+              </span>
+            )}
+          </div>
+          {enabledRecipients.length > 0 && (
+            <ul className="flex flex-wrap gap-2 mb-3" aria-label={t('as.selectRecipients')}>
+              {enabledRecipients.map(r => (
+                <li key={r.id}>
+                  <label className={'inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-sm cursor-pointer ' + (selectedIds.includes(r.id) ? 'border-[color:var(--pr)] bg-[color:var(--pr-soft)]' : 'border-[color:var(--bd)]')}>
+                    <input type="checkbox" className="accent-[color:var(--pr)] h-4 w-4" checked={selectedIds.includes(r.id)} onChange={() => toggleSelected(r.id)} />
+                    <span dir="ltr" className="break-all">{r.email}</span>{r.name && <span className="text-[11px] text-[color:var(--tx-4)]">· {r.name}</span>}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="flex items-center gap-3 flex-wrap">
-            <Button variant="secondary" onClick={() => setConfirmTest(true)} disabled={testing || enabledRecipients.length === 0 || !emailOk} loading={testing}>{t('as.sendTest')}</Button>
-            <span className="text-xs text-[color:var(--tx-4)]">{!emailOk ? t('as.modeNotConfigured', { vars: (email && email.missing || []).join(', ') }) : enabledRecipients.length === 0 ? t('as.testNoRecipients') : t('as.testHelp', { n: enabledRecipients.length })}</span>
+            <Button variant="secondary" onClick={() => setConfirmTest(true)} disabled={testing || selectedRecipients.length === 0 || !emailOk} loading={testing}>{t('as.sendTest')}</Button>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />{t('as.realResend')}</span>
+            <span className="text-xs text-[color:var(--tx-4)]">{!emailOk ? t('as.modeNotConfigured', { vars: (email && email.missing || []).join(', ') }) : enabledRecipients.length === 0 ? t('as.testNoRecipients') : selectedRecipients.length === 0 ? t('as.noneSelected') : t('as.testHelp', { n: selectedRecipients.length })}</span>
           </div>
           <Msg m={testMsg} />
           {data.lastTest && <div className="text-[11px] text-[color:var(--tx-4)] mt-2">{t('as.lastTest')}: {formatDateTime(data.lastTest.created_at)} · {t('as.testStatus.' + data.lastTest.status)}</div>}
           {confirmTest && (
             <Modal title={t('as.sendTest') + ' — ' + title} onClose={() => setConfirmTest(false)}
               footer={<><Button variant="ghost" onClick={() => setConfirmTest(false)}>{t('al.cancel')}</Button><Button onClick={sendTest}>{t('as.confirmSend')}</Button></>}>
-              <p className="text-sm">{t('as.testConfirmBody', { n: enabledRecipients.length })}</p>
-              <ul className="mt-3 text-sm space-y-1" dir="ltr">{enabledRecipients.map(r => <li key={r.id} className="font-medium">{r.email}</li>)}</ul>
+              <p className="text-sm">{t('as.testConfirmBody', { n: selectedRecipients.length })}</p>
+              <ul className="mt-3 text-sm space-y-1" dir="ltr">{selectedRecipients.map(r => <li key={r.id} className="font-medium">{r.email}{r.name ? <span className="text-xs text-[color:var(--tx-3)]"> · {r.name}</span> : null}</li>)}</ul>
+              <p className="text-xs mt-3 font-semibold text-emerald-700 dark:text-emerald-300">{t('as.realResend')}</p>
               <p className="text-xs text-[color:var(--tx-3)] mt-3">{t('as.testRealNote')} {t('as.testNoStateNote')}</p>
             </Modal>
           )}
