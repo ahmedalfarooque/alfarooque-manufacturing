@@ -2,18 +2,22 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { runExpiryAlertJob } = require('./alertEngine');
+const { runExpiryAlertJob, runTestNotification } = require('./alertEngine');
 const { buildExpiryDigest } = require('./expiryEmail');
 
 /* In-memory twin of lib/alertStore.js with the same claim semantics:
    a (alert, recipient, day) row can be claimed once; failed rows (and
    mocked rows when going live) can be re-claimed. */
+/* `recipients`: plain emails subscribe to BOTH types; { email, types } for
+   one type. `settings`: per-type overrides, e.g. { insurance: { enabled: false } }. */
 function memoryStore({ settings = {}, recipients = [] } = {}) {
   let seq = 0;
+  const base = { enabled: true, auto_notify_enabled: true, email_language: 'en' };
   const s = {
-    settings: { insurance_alerts_enabled: true, inspection_alerts_enabled: true, daily_notification_enabled: true, email_language: 'en', ...settings },
-    recipients: recipients.map(e => ({ email: e, enabled: true })),
-    alerts: [], deliveries: [],
+    settings: { insurance: { ...base, ...(settings.insurance || {}) }, inspection: { ...base, ...(settings.inspection || {}) } },
+    recipients: recipients.flatMap(r => (typeof r === 'string' ? [{ email: r, types: ['insurance', 'inspection'] }] : [r])
+      .flatMap(r => r.types.map(t => ({ id: r.email + ':' + t, email: r.email, alert_type: t, enabled: r.enabled !== false })))),
+    alerts: [], deliveries: [], runs: [], testSends: [],
   };
   const find = (c, t, d) => s.alerts.find(a => a.car_id === c && a.alert_type === t && a.expiry_date === d);
   const del = (id, r, day) => s.deliveries.find(x => x.alert_id === id && x.recipient === r && x.sent_on === day);
@@ -38,6 +42,11 @@ function memoryStore({ settings = {}, recipients = [] } = {}) {
     async finishDelivery({ alertId, recipient, day, status, error }) { Object.assign(del(alertId, recipient, day), { status, error: error || null }); },
     async isDelivered(alertId, recipient, day, mode) { const r = del(alertId, recipient, day); return !!r && (r.status === 'sent' || (r.status === 'mocked' && mode !== 'live')); },
     async markSent(id, day) { s.alerts.find(a => a.id === id).last_sent_on = day; },
+    async startRun({ trigger, mode, today }) { s.runs.push({ id: 'r' + s.runs.length, trigger, mode, today, status: 'running' }); return 'r' + (s.runs.length - 1); },
+    async finishRun(id, report, err) { Object.assign(s.runs.find(r => r.id === id), { status: err ? 'failed' : report.emailsFailed ? 'partial' : 'ok', sent: report.emailsSent }); },
+    async lastRun() { return s.runs[s.runs.length - 1] || null; },
+    async recordTestSend(row) { s.testSends.push(row); },
+    async lastTestSend(t) { return s.testSends.filter(x => x.alertType === t).pop() || null; },
   });
 }
 
@@ -155,17 +164,18 @@ test('11 both documents expiring → ONE digest per recipient listing both', asy
 
 test('14 multiple recipients: disabled ones are skipped, each gets their own message', async () => {
   const h = harness([car()], { recipients: ['a@x.com', 'b@x.com', 'c@x.com'] });
-  h.store.recipients[1].enabled = false;
+  for (const r of h.store.recipients) if (r.email === 'b@x.com') r.enabled = false;
   await h.run(0);
   assert.deepEqual(h.sent.map(m => m.to).sort(), ['a@x.com', 'c@x.com']);
   assert.ok(h.sent.every(m => !m.html.includes('b@x.com') && !m.text.includes('c@x.com')), 'recipients never see each other');
 });
 
-test('settings: daily off sends nothing; per-type switches filter alerts', async () => {
-  let h = harness([car({ periodic_inspection_expiry: iso(5) })], { recipients: ['a@x.com'], settings: { daily_notification_enabled: false } });
+test('settings: auto-notify off sends nothing; disabling a type drops it from the digest', async () => {
+  let h = harness([car({ periodic_inspection_expiry: iso(5) })], { recipients: ['a@x.com'], settings: { insurance: { auto_notify_enabled: false }, inspection: { auto_notify_enabled: false } } });
   let r = await h.run(0);
-  assert.equal(r.emailsSent, 0); assert.ok(r.reasonsNotSent.includes('daily_notification_disabled'));
-  h = harness([car({ periodic_inspection_expiry: iso(5) })], { recipients: ['a@x.com'], settings: { insurance_alerts_enabled: false } });
+  assert.equal(r.emailsSent, 0); assert.ok(r.reasonsNotSent.includes('auto_notify_disabled'));
+  assert.equal(h.store.alerts.filter(a => a.state === 'active').length, 2, 'still tracked when only auto-notify is off');
+  h = harness([car({ periodic_inspection_expiry: iso(5) })], { recipients: ['a@x.com'], settings: { insurance: { enabled: false } } });
   await h.run(0);
   assert.doesNotMatch(h.sent[0].html, /Vehicle Insurance</);
   assert.match(h.sent[0].subject, /Periodic Vehicle Inspection Expiry Alert/);
@@ -231,4 +241,48 @@ test('email template: Arabic is RTL, bilingual has both, HTML is escaped', () =>
   const both = buildExpiryDigest([item], { language: 'both' });
   assert.match(both.html, /dir="ltr"/); assert.match(both.html, /dir="rtl"/);
   assert.doesNotMatch(buildExpiryDigest([item]).html, /RESEND|SMTP|secret/i);
+});
+
+test('per-type recipients: an inspection-only recipient never receives insurance alerts', async () => {
+  const h = harness([car({ insurance_expiry: iso(10), periodic_inspection_expiry: iso(5) })], { recipients: [{ email: 'ins@x.com', types: ['insurance'] }, { email: 'insp@x.com', types: ['inspection'] }, 'both@x.com'] });
+  const r = await h.run(0);
+  assert.equal(r.emailsSent, 3);
+  const by = Object.fromEntries(h.sent.map(m => [m.to, m.html]));
+  assert.match(by['ins@x.com'], /Vehicle Insurance/); assert.doesNotMatch(by['ins@x.com'], /Periodic Vehicle Inspection/);
+  assert.match(by['insp@x.com'], /Periodic Vehicle Inspection/); assert.doesNotMatch(by['insp@x.com'], /Vehicle Insurance</);
+  assert.match(by['both@x.com'], /Vehicle Insurance/); assert.match(by['both@x.com'], /Periodic Vehicle Inspection/);
+  assert.equal(r.byType.insurance.recipients, 2); assert.equal(r.byType.inspection.recipients, 2);
+});
+
+test('per-type language: Arabic inspection + English insurance → bilingual combined digest', async () => {
+  const h = harness([car({ insurance_expiry: iso(10), periodic_inspection_expiry: iso(5) })], { recipients: ['a@x.com'], settings: { inspection: { email_language: 'ar' } } });
+  await h.run(0);
+  assert.match(h.sent[0].html, /dir="rtl"/); assert.match(h.sent[0].html, /dir="ltr"/);
+});
+
+test('test notification: real template marked TEST, type recipients only, logged separately, no delivery rows', async () => {
+  const h = harness([car({ insurance_expiry: iso(10) })], { recipients: [{ email: 'ins@x.com', types: ['insurance'] }, { email: 'insp@x.com', types: ['inspection'] }], settings: { insurance: { email_language: 'ar' } } });
+  const send = async m => { h.sent.push(m); return { id: 't1' }; };
+  let r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), mode: 'live', sentBy: 'admin@x.com' });
+  assert.deepEqual([r.sent, r.failed, r.usedSample, r.recipients], [1, 0, false, 1]);
+  assert.equal(h.sent[0].to, 'ins@x.com');
+  assert.match(h.sent[0].subject, /^\[اختبار\]/);
+  assert.match(h.sent[0].html, /اختبار/); assert.match(h.sent[0].text, /\[اختبار\]/);
+  assert.equal(h.store.deliveries.length, 0); assert.equal(h.store.alerts.length, 0);
+  assert.equal(h.store.testSends.length, 1); assert.equal(h.store.testSends[0].status, 'sent');
+  // inspection has no real alert → clearly-marked sample, still no writes to real state
+  r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'inspection', now: day(0), mode: 'mock' });
+  assert.equal(r.usedSample, true); assert.match(h.sent[1].html, /TEST-0000/); assert.match(h.sent[1].html, /sample for layout only/);
+  assert.doesNotMatch(h.sent[1].html, /\/vehicles\/null/);
+  // a real run afterwards is unaffected by the test sends
+  const real = await h.run(0);
+  assert.equal(real.emailsSent, 1);
+});
+
+test('test notification: provider failure is reported honestly, no recipients → reason', async () => {
+  const h = harness([car()], { recipients: ['a@x.com'] });
+  const r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send: async () => { throw new Error('boom'); }, alertType: 'insurance', now: day(0) });
+  assert.deepEqual([r.sent, r.failed], [0, 1]); assert.equal(r.results[0].to, 'a***@x.com');
+  const none = await runTestNotification({ store: memoryStore(), vehicles: [], send: async () => ({}), alertType: 'insurance', now: day(0) });
+  assert.equal(none.reason, 'no_enabled_recipients');
 });

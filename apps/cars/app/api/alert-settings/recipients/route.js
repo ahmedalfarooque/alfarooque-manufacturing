@@ -2,7 +2,7 @@
 
 const { getDb } = require('@/lib/db');
 const { json, requireAction } = require('@/lib/http');
-const { isSchemaMissing } = require('@/lib/alertStore');
+const { isSchemaMissing, TYPES } = require('@/lib/alertStore');
 const { normalizeEmail, isValidEmail, MAX_RECIPIENTS } = require('@/lib/alertSettings');
 
 const SCHEMA_MSG = 'Alert recipients are not available yet: the database migration (apps-schema-v13) has not been applied.';
@@ -23,19 +23,21 @@ function fail(error, what) {
   return json({ error: 'Could not ' + what + '.' }, 500);
 }
 
+/* POST { email, alert_type } — one recipient row per alert type. */
 export async function POST(req) {
   const { response, session } = await guard(req);
   if (response) return response;
   const body = await req.json().catch(() => ({}));
   const email = normalizeEmail(body.email);
+  if (!TYPES.includes(body.alert_type)) return json({ error: 'Unknown alert type.', code: 'BAD_TYPE' }, 400);
   if (!isValidEmail(email)) return json({ error: 'Enter a valid email address.', code: 'INVALID_EMAIL' }, 400);
   const sb = getDb();
-  const { count, error: cErr } = await sb.from('car_alert_recipients').select('id', { count: 'exact', head: true });
+  const { count, error: cErr } = await sb.from('car_alert_recipients').select('id', { count: 'exact', head: true }).eq('alert_type', body.alert_type);
   if (cErr) return fail(cErr, 'add recipient');
   if ((count || 0) >= MAX_RECIPIENTS) return json({ error: 'Recipient limit reached (' + MAX_RECIPIENTS + ').', code: 'LIMIT' }, 400);
-  const { data, error } = await sb.from('car_alert_recipients').insert({ email, created_by: session.email || null }).select().single();
+  const { data, error } = await sb.from('car_alert_recipients').insert({ email, alert_type: body.alert_type, created_by: session.email || null }).select().single();
   if (error) {
-    if (error.code === '23505') return json({ error: 'This email address is already on the list.', code: 'DUPLICATE' }, 409);
+    if (error.code === '23505') return json({ error: 'This email address is already on the list for this alert type.', code: 'DUPLICATE' }, 409);
     return fail(error, 'add recipient');
   }
   return json({ recipient: data }, 201);

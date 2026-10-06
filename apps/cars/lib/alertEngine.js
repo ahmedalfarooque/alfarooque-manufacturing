@@ -1,17 +1,23 @@
 'use strict';
 
-/* Daily expiry-alert job (Insurance + Periodic Vehicle Inspection).
+/* Daily expiry-alert job (Insurance + Periodic Vehicle Inspection) and
+   the manual "Send test notification" action.
 
    Pure orchestration over two injected dependencies, so the exact same
    logic runs against Supabase in the app and an in-memory store in tests:
      store  — persistence (see lib/alertStore.js for the Supabase one)
-     send   — async ({ to, subject, html, text }) => { id? , mocked? }
+     send   — async ({ to, subject, html, text }) => { id?, mocked? }
+
+   Configuration is PER ALERT TYPE (insurance / inspection): each type has
+   its own enabled / auto-notify / language settings and its own recipient
+   list. A recipient subscribed to both types still gets ONE digest per
+   day containing both.
 
    Behaviour:
    - An alert is ACTIVE while the vehicle has an expiry date that is 30
-     days away or closer, including already-expired. Each active alert is
-     emailed to every enabled recipient once per calendar day (company
-     timezone), as a single digest per recipient.
+     days away or closer, including already-expired. Each active alert of
+     an enabled type is emailed once per calendar day (company timezone)
+     to every enabled recipient of that type.
    - Idempotent: before sending, the job claims a (alert, recipient, day)
      delivery row; a second run on the same day claims nothing and sends
      nothing. A failed delivery stays claimable, so a retry the same day
@@ -20,11 +26,15 @@
      renewed/changed (a new expiry date is a new alert key, so the
      notification state starts fresh), removed, or the vehicle is
      deactivated. A removed date is never emailed as a "missing date".
-   - dryRun computes the plan and touches nothing (no writes, no emails). */
+   - dryRun computes the plan and touches nothing (no writes, no emails).
+   - Test sends go through runTestNotification(): same template, same
+     recipients, clearly marked TEST, logged separately, never touching
+     the real delivery log. */
 
 const { collectAlerts, todayInZone, normalizeDate, ALERT_TYPES, WITHIN_DAYS } = require('./fleetExpiry');
 const { buildExpiryDigest } = require('./expiryEmail');
 
+const TYPES = [ALERT_TYPES.INSURANCE, ALERT_TYPES.INSPECTION];
 const alertKey = (carId, type, date) => `${carId}:${type}:${date}`;
 
 function maskEmail(e) {
@@ -32,17 +42,45 @@ function maskEmail(e) {
   return (u ? u.slice(0, 1) : '') + '***@' + (d || '');
 }
 
+/* { insurance: {enabled, auto_notify_enabled, email_language}, inspection: {...} } */
+function normalizeSettings(settings) {
+  const out = {};
+  for (const t of TYPES) {
+    const s = (settings && settings[t]) || {};
+    out[t] = { enabled: s.enabled !== false, auto_notify_enabled: s.auto_notify_enabled !== false, email_language: s.email_language || 'en' };
+  }
+  return out;
+}
+
+/* Map email -> Set(alert types) for enabled recipients of the given types. */
+function recipientMap(recipients, types) {
+  const map = new Map();
+  for (const r of recipients || []) {
+    if (!r.enabled || !types.has(r.alert_type)) continue;
+    const email = String(r.email).toLowerCase();
+    if (!map.has(email)) map.set(email, new Set());
+    map.get(email).add(r.alert_type);
+  }
+  return map;
+}
+
+/* One digest may mix types with different languages → bilingual. */
+function languageFor(settings, types) {
+  const langs = new Set([...types].map(t => settings[t].email_language));
+  if (langs.size === 1) return [...langs][0];
+  return 'both';
+}
+
 async function runExpiryAlertJob({ store, vehicles, send, now, mode = 'mock', dryRun = false, baseUrl = '', company = 'AL FAROOQUE' }) {
   const today = todayInZone(now);
   const report = {
     today, mode, dryRun, activeAlerts: 0, recipients: 0, emailsSent: 0, emailsFailed: 0,
-    duplicatesSkipped: 0, resolved: [], reasonsNotSent: [], errors: [], plan: [],
+    duplicatesSkipped: 0, resolved: [], reasonsNotSent: [], errors: [], plan: [], byType: {},
   };
 
-  const settings = await store.getSettings();
-  const enabledTypes = new Set();
-  if (settings.insurance_alerts_enabled) enabledTypes.add(ALERT_TYPES.INSURANCE);
-  if (settings.inspection_alerts_enabled) enabledTypes.add(ALERT_TYPES.INSPECTION);
+  const settings = normalizeSettings(await store.getSettings());
+  const trackedTypes = new Set(TYPES.filter(t => settings[t].enabled));
+  const mailTypes = new Set(TYPES.filter(t => settings[t].enabled && settings[t].auto_notify_enabled));
 
   /* ── 1. Reconcile stored alert state against the vehicle records ── */
   const activeVehicles = vehicles || [];
@@ -65,36 +103,41 @@ async function runExpiryAlertJob({ store, vehicles, send, now, mode = 'mock', dr
     if (!dryRun) await store.resolveAlert(row.id, today, reason);
   }
 
-  /* ── 2. Which alerts are eligible to send ── */
-  const eligible = computed.filter(a => enabledTypes.has(a.alertType));
-  report.activeAlerts = eligible.length;
+  /* ── 2. Which alerts are eligible ── */
+  const tracked = computed.filter(a => trackedTypes.has(a.alertType));
+  const eligible = tracked.filter(a => mailTypes.has(a.alertType));
+  report.activeAlerts = tracked.length;
+  for (const t of TYPES) report.byType[t] = { active: computed.filter(a => a.alertType === t).length, enabled: settings[t].enabled, autoNotify: settings[t].auto_notify_enabled, recipients: 0 };
 
-  if (!settings.daily_notification_enabled) report.reasonsNotSent.push('daily_notification_disabled');
-  if (enabledTypes.size === 0) report.reasonsNotSent.push('all_alert_types_disabled');
+  const recipients = recipientMap(await store.listRecipients(), mailTypes);
+  for (const [, types] of recipients) for (const t of types) report.byType[t].recipients++;
+  report.recipients = recipients.size;
+
+  if (trackedTypes.size === 0) report.reasonsNotSent.push('all_alert_types_disabled');
+  else if (mailTypes.size === 0) report.reasonsNotSent.push('auto_notify_disabled');
   if (eligible.length === 0) report.reasonsNotSent.push('no_active_alerts');
-  const recipients = (await store.listRecipients()).filter(r => r.enabled).map(r => String(r.email).toLowerCase());
-  report.recipients = recipients.length;
-  if (recipients.length === 0) report.reasonsNotSent.push('no_enabled_recipients');
+  if (recipients.size === 0) report.reasonsNotSent.push('no_enabled_recipients');
 
   if (report.reasonsNotSent.length) {
     /* Still persist state for visibility (vehicle-level "alert active"),
        but only when we are really running. */
-    if (!dryRun) for (const a of eligible) await store.upsertActiveAlert({ car_id: a.carId, alert_type: a.alertType, expiry_date: a.expiryDate, today });
+    if (!dryRun) for (const a of tracked) await store.upsertActiveAlert({ car_id: a.carId, alert_type: a.alertType, expiry_date: a.expiryDate, today });
     return report;
   }
 
-  /* ── 3. Ensure a state row per eligible alert ── */
+  /* ── 3. Ensure a state row per tracked alert ── */
   const withIds = [];
-  for (const a of eligible) {
+  for (const a of tracked) {
     const row = dryRun ? await store.findAlert(a.carId, a.alertType, a.expiryDate) : await store.upsertActiveAlert({ car_id: a.carId, alert_type: a.alertType, expiry_date: a.expiryDate, today });
     withIds.push({ ...a, alertId: row ? row.id : null });
   }
 
   /* ── 4. One digest per recipient, claiming each delivery first ── */
   const sentAlertIds = new Set();
-  for (const to of recipients) {
+  for (const [to, types] of recipients) {
+    const mine = withIds.filter(a => types.has(a.alertType) && mailTypes.has(a.alertType));
     const claimed = [];
-    for (const a of withIds) {
+    for (const a of mine) {
       if (dryRun) {
         const done = a.alertId ? await store.isDelivered(a.alertId, to, today, mode) : false;
         if (done) report.duplicatesSkipped++; else claimed.push(a);
@@ -107,7 +150,8 @@ async function runExpiryAlertJob({ store, vehicles, send, now, mode = 'mock', dr
 
     if (dryRun) { report.plan.push({ to: maskEmail(to), items: claimed.length }); continue; }
 
-    const digest = buildExpiryDigest(claimed, { language: settings.email_language || 'en', company, baseUrl, withinDays: WITHIN_DAYS });
+    const language = languageFor(settings, new Set(claimed.map(a => a.alertType)));
+    const digest = buildExpiryDigest(claimed, { language, company, baseUrl, withinDays: WITHIN_DAYS });
     try {
       const res = await send({ to, subject: digest.subject, html: digest.html, text: digest.text });
       const status = res && res.mocked ? 'mocked' : 'sent';
@@ -128,4 +172,47 @@ async function runExpiryAlertJob({ store, vehicles, send, now, mode = 'mock', dr
   return report;
 }
 
-module.exports = { runExpiryAlertJob, alertKey, maskEmail };
+/* Sample item used ONLY when the fleet has no real active alert of the
+   requested type. Clearly synthetic — never written anywhere. */
+function sampleItem(alertType, today) {
+  const d = new Date(today + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 12);
+  return {
+    carId: null, vehicleNumber: 'TEST-0000', vehicleName: 'Sample vehicle (test only)',
+    alertType, expiryDate: d.toISOString().slice(0, 10), daysRemaining: 12, status: 'expiring_soon', severity: 'urgent', isSample: true,
+  };
+}
+
+/* Manual test notification for ONE alert type: real template, real
+   recipients of that type, marked TEST, logged to the test-send log.
+   Never touches alert state or the real delivery log. */
+async function runTestNotification({ store, vehicles, send, alertType, now, mode = 'mock', sentBy = null, baseUrl = '', company = 'AL FAROOQUE' }) {
+  if (!TYPES.includes(alertType)) throw Object.assign(new Error('Unknown alert type.'), { code: 'BAD_TYPE' });
+  const today = todayInZone(now);
+  const settings = normalizeSettings(await store.getSettings());
+  const recipients = [...recipientMap(await store.listRecipients(), new Set([alertType])).keys()];
+  const report = { alertType, today, mode, recipients: recipients.length, sent: 0, failed: 0, usedSample: false, items: 0, results: [] };
+  if (recipients.length === 0) { report.reason = 'no_enabled_recipients'; return report; }
+
+  let items = collectAlerts(vehicles || [], { today }).filter(a => a.alertType === alertType);
+  if (items.length === 0) { items = [sampleItem(alertType, today)]; report.usedSample = true; }
+  report.items = items.length;
+  const digest = buildExpiryDigest(items, { language: settings[alertType].email_language, company, baseUrl, withinDays: WITHIN_DAYS, isTest: true });
+
+  for (const to of recipients) {
+    try {
+      const res = await send({ to, subject: digest.subject, html: digest.html, text: digest.text });
+      const status = res && res.mocked ? 'mocked' : 'sent';
+      await store.recordTestSend({ alertType, recipient: to, sentBy, mode, status, providerId: res && res.id ? res.id : null });
+      report.sent++;
+      report.results.push({ to: maskEmail(to), status });
+    } catch (err) {
+      const msg = String(err && err.message ? err.message : err).slice(0, 200);
+      await store.recordTestSend({ alertType, recipient: to, sentBy, mode, status: 'failed', error: msg });
+      report.failed++;
+      report.results.push({ to: maskEmail(to), status: 'failed', error: msg });
+    }
+  }
+  return report;
+}
+
+module.exports = { runExpiryAlertJob, runTestNotification, normalizeSettings, alertKey, maskEmail, TYPES };

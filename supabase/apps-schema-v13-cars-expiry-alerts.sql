@@ -1,8 +1,8 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- AL FAROOQUE — Cars app, schema v13 (additive, idempotent)
 -- Periodic Vehicle Inspection + insurance start date + daily expiry-alert
--- email system. Run AFTER apps-schema-v4.sql (insurance_* columns) and
--- apps-schema.sql (cars / car_alerts).
+-- email system with PER-ALERT-TYPE configuration. Run AFTER
+-- apps-schema-v4.sql (insurance_* columns) and apps-schema.sql (cars).
 --
 -- Additive only: no existing column/table is altered or dropped, and no
 -- existing row is changed. All new vehicle columns are nullable, so every
@@ -19,30 +19,35 @@ alter table public.cars add column if not exists periodic_inspection_expiry     
 create index if not exists idx_cars_insurance_expiry on public.cars(insurance_expiry) where insurance_expiry is not null;
 create index if not exists idx_cars_inspection_expiry on public.cars(periodic_inspection_expiry) where periodic_inspection_expiry is not null;
 
--- ── Alert settings (exactly one row) ───────────────────────────────
-create table if not exists public.car_alert_settings (
-  id                          boolean primary key default true check (id),
-  insurance_alerts_enabled    boolean not null default true,
-  inspection_alerts_enabled   boolean not null default true,
-  daily_notification_enabled  boolean not null default true,
-  email_language              text    not null default 'en' check (email_language in ('en', 'ar', 'both')),
-  updated_by                  text,
-  updated_at                  timestamptz not null default now()
+-- ── Per-alert-type settings (exactly one row per type) ─────────────
+-- enabled             : the alert type is tracked by the daily job at all
+-- auto_notify_enabled : the daily job emails this type's recipients
+-- email_language      : template language for this type's emails
+create table if not exists public.car_alert_type_settings (
+  alert_type           text primary key check (alert_type in ('insurance', 'inspection')),
+  enabled              boolean not null default true,
+  auto_notify_enabled  boolean not null default true,
+  email_language       text    not null default 'en' check (email_language in ('en', 'ar', 'both')),
+  updated_by           text,
+  updated_at           timestamptz not null default now()
 );
-insert into public.car_alert_settings (id) values (true) on conflict (id) do nothing;
-alter table public.car_alert_settings enable row level security;
+insert into public.car_alert_type_settings (alert_type) values ('insurance'), ('inspection') on conflict (alert_type) do nothing;
+alter table public.car_alert_type_settings enable row level security;
 
--- ── Alert recipients ───────────────────────────────────────────────
--- Stored lower-cased; the unique index makes duplicates impossible even
--- if two admins add the same address at the same moment.
+-- ── Alert recipients, per alert type ───────────────────────────────
+-- One row per (email, alert type). The same address may subscribe to
+-- both types; it then receives ONE combined digest per day. Stored
+-- lower-cased; the unique index makes duplicates impossible even if two
+-- admins add the same address at the same moment.
 create table if not exists public.car_alert_recipients (
   id          uuid primary key default gen_random_uuid(),
+  alert_type  text not null check (alert_type in ('insurance', 'inspection')),
   email       text not null check (email = lower(email) and position('@' in email) > 1),
   enabled     boolean not null default true,
   created_by  text,
   created_at  timestamptz not null default now()
 );
-create unique index if not exists uq_car_alert_recipients_email on public.car_alert_recipients(email);
+create unique index if not exists uq_car_alert_recipients_type_email on public.car_alert_recipients(alert_type, email);
 alter table public.car_alert_recipients enable row level security;
 
 -- ── Alert state: one row per (vehicle, alert type, expiry date) ────
@@ -66,11 +71,12 @@ create table if not exists public.car_expiry_alerts (
 create index if not exists idx_car_expiry_alerts_state on public.car_expiry_alerts(state, alert_type);
 alter table public.car_expiry_alerts enable row level security;
 
--- ── Delivery log: one row per (alert, recipient, calendar day) ─────
+-- ── Automatic delivery log: one row per (alert, recipient, day) ────
 -- The unique constraint is the idempotency guarantee: the job claims a
 -- row BEFORE sending, so two overlapping runs (cron retry, manual
 -- trigger) can never both send the same alert to the same recipient on
--- the same day.
+-- the same day. Manual TEST sends are NOT recorded here (see
+-- car_alert_test_sends) so they never block or count as real deliveries.
 create table if not exists public.car_expiry_alert_deliveries (
   id            uuid primary key default gen_random_uuid(),
   alert_id      uuid not null references public.car_expiry_alerts(id) on delete cascade,
@@ -85,3 +91,38 @@ create table if not exists public.car_expiry_alert_deliveries (
 );
 create index if not exists idx_car_expiry_deliveries_day on public.car_expiry_alert_deliveries(sent_on desc);
 alter table public.car_expiry_alert_deliveries enable row level security;
+
+-- ── Daily job run log (one row per real run; dry runs are not logged) ─
+create table if not exists public.car_alert_job_runs (
+  id                  uuid primary key default gen_random_uuid(),
+  started_at          timestamptz not null default now(),
+  finished_at         timestamptz,
+  run_date            date not null,
+  trigger             text not null check (trigger in ('cron', 'manual')),
+  email_mode          text not null check (email_mode in ('live', 'mock')),
+  status              text not null default 'running' check (status in ('running', 'ok', 'partial', 'failed')),
+  active_alerts       int not null default 0,
+  recipients          int not null default 0,
+  emails_sent         int not null default 0,
+  emails_failed       int not null default 0,
+  duplicates_skipped  int not null default 0,
+  resolved            int not null default 0,
+  error               text
+);
+create index if not exists idx_car_alert_job_runs_started on public.car_alert_job_runs(started_at desc);
+alter table public.car_alert_job_runs enable row level security;
+
+-- ── Manual test-notification log (separate from real deliveries) ──
+create table if not exists public.car_alert_test_sends (
+  id            uuid primary key default gen_random_uuid(),
+  alert_type    text not null check (alert_type in ('insurance', 'inspection')),
+  recipient     text not null,
+  sent_by       text,
+  email_mode    text not null check (email_mode in ('live', 'mock')),
+  status        text not null check (status in ('sent', 'failed', 'mocked')),
+  provider_id   text,
+  error         text,
+  created_at    timestamptz not null default now()
+);
+create index if not exists idx_car_alert_test_sends_created on public.car_alert_test_sends(created_at desc);
+alter table public.car_alert_test_sends enable row level security;

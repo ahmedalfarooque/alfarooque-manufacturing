@@ -5,7 +5,7 @@
    the same notification state. */
 
 const { getDb } = require('./db');
-const { isSchemaMissing } = require('./alertStore');
+const { isSchemaMissing, DEFAULT_TYPE_SETTINGS, TYPES } = require('./alertStore');
 const { buildVehicleExpiry, collectAlerts, summarizeFleet, todayInZone } = require('./fleetExpiry');
 
 async function loadActiveVehicles(sb = getDb()) {
@@ -14,39 +14,64 @@ async function loadActiveVehicles(sb = getDb()) {
   return data || [];
 }
 
+const NOT_READY = () => ({ ready: false, settings: null, recipientCount: {}, byKey: new Map(), todayDeliveries: new Map(), today: null });
+
 /* Notification state for the vehicle-level "email active / last notified"
    columns. Returns { ready:false } (not an error) when migration v13 has
    not been applied, so every page still works and says so honestly. */
 async function loadNotificationState(sb = getDb()) {
-  const out = { ready: true, settings: null, recipientCount: 0, byKey: new Map() };
-  const [{ data: settings, error: e1 }, { data: recipients, error: e2 }, { data: alerts, error: e3 }] = await Promise.all([
-    sb.from('car_alert_settings').select('*').eq('id', true).maybeSingle(),
-    sb.from('car_alert_recipients').select('id, enabled'),
-    sb.from('car_expiry_alerts').select('car_id, alert_type, expiry_date, state, last_sent_on, resolved_on, resolved_reason, first_detected_on'),
+  const today = todayInZone();
+  const out = { ready: true, settings: {}, recipientCount: {}, byKey: new Map(), todayDeliveries: new Map(), today };
+  const [{ data: settings, error: e1 }, { data: recipients, error: e2 }, { data: alerts, error: e3 }, { data: deliveries, error: e4 }] = await Promise.all([
+    sb.from('car_alert_type_settings').select('*'),
+    sb.from('car_alert_recipients').select('id, alert_type, enabled'),
+    sb.from('car_expiry_alerts').select('id, car_id, alert_type, expiry_date, state, last_sent_on, resolved_on, resolved_reason, first_detected_on'),
+    sb.from('car_expiry_alert_deliveries').select('alert_id, status').eq('sent_on', today),
   ]);
-  for (const err of [e1, e2, e3]) {
+  for (const err of [e1, e2, e3, e4]) {
     if (err) {
-      if (isSchemaMissing(err)) return { ready: false, settings: null, recipientCount: 0, byKey: new Map() };
+      if (isSchemaMissing(err)) return NOT_READY();
       const e = new Error('Could not load alert state.'); e.cause = err; throw e;
     }
   }
-  out.settings = settings || { insurance_alerts_enabled: true, inspection_alerts_enabled: true, daily_notification_enabled: true, email_language: 'en' };
-  out.recipientCount = (recipients || []).filter(r => r.enabled).length;
+  for (const t of TYPES) {
+    out.settings[t] = { ...DEFAULT_TYPE_SETTINGS, ...((settings || []).find(r => r.alert_type === t) || {}) };
+    out.recipientCount[t] = (recipients || []).filter(r => r.enabled && r.alert_type === t).length;
+  }
   for (const a of alerts || []) out.byKey.set(`${a.car_id}:${a.alert_type}:${String(a.expiry_date).slice(0, 10)}`, a);
+  for (const d of deliveries || []) {
+    /* Worst status wins for the day: failed > pending > sent/mocked. */
+    const prev = out.todayDeliveries.get(d.alert_id);
+    const rank = { failed: 3, pending: 2, sent: 1, mocked: 1 };
+    if (!prev || (rank[d.status] || 0) > (rank[prev] || 0)) out.todayDeliveries.set(d.alert_id, d.status);
+  }
   return out;
 }
 
 /* Is an email actually going to go out for this alert type, right now? */
 function emailActive(state, alertType) {
-  if (!state.ready || !state.settings) return false;
-  const typeOn = alertType === 'insurance' ? state.settings.insurance_alerts_enabled : state.settings.inspection_alerts_enabled;
-  return !!(state.settings.daily_notification_enabled && typeOn && state.recipientCount > 0);
+  if (!state.ready || !state.settings || !state.settings[alertType]) return false;
+  const s = state.settings[alertType];
+  return !!(s.enabled && s.auto_notify_enabled && (state.recipientCount[alertType] || 0) > 0);
 }
 
+/* deliveryState: 'disabled' | 'not_sent' | 'sent_today' | 'sent_previously' | 'failed' | null (unknown) */
 function notificationFor(state, carId, rec) {
-  if (!rec.hasDate) return { emailActive: false, lastNotifiedOn: null };
+  if (!rec.hasDate) return { emailActive: false, lastNotifiedOn: null, deliveryState: null };
+  if (!state.ready) return { emailActive: false, lastNotifiedOn: null, deliveryState: null };
   const row = state.byKey.get(`${carId}:${rec.alertType}:${rec.expiryDate}`);
-  return { emailActive: rec.isActive && emailActive(state, rec.alertType), lastNotifiedOn: row && row.last_sent_on ? String(row.last_sent_on).slice(0, 10) : null };
+  const active = rec.isActive && emailActive(state, rec.alertType);
+  const lastNotifiedOn = row && row.last_sent_on ? String(row.last_sent_on).slice(0, 10) : null;
+  let deliveryState = null;
+  if (rec.isActive) {
+    const todayStatus = row ? state.todayDeliveries.get(row.id) : null;
+    if (!active) deliveryState = 'disabled';
+    else if (todayStatus === 'failed') deliveryState = 'failed';
+    else if (lastNotifiedOn === state.today) deliveryState = 'sent_today';
+    else if (lastNotifiedOn) deliveryState = 'sent_previously';
+    else deliveryState = 'not_sent';
+  }
+  return { emailActive: active, lastNotifiedOn, deliveryState };
 }
 
 /* One list row per vehicle for the Insurance / Inspection pages. */

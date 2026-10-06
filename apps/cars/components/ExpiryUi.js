@@ -74,11 +74,10 @@ export function NotifyLine({ rec, schemaReady }) {
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.emailActive ? DOT.green : DOT.slate }} aria-hidden="true" />
         <span className={n.emailActive ? 'text-[color:var(--tx-2)]' : 'text-[color:var(--tx-4)]'}>{n.emailActive ? t('fleet.emailOn') : t('fleet.emailOff')}</span>
       </div>
-      {schemaReady !== false && (
-        <div className="text-[11px] text-[color:var(--tx-4)] mt-0.5">
-          {n.lastNotifiedOn ? t('vd.lastNotified') + ': ' + formatDateOnly(n.lastNotifiedOn) : t('fleet.neverNotified')}
-        </div>
-      )}
+      <div className="text-[11px] text-[color:var(--tx-4)] mt-0.5">
+        {n.deliveryState ? <span className={n.deliveryState === 'failed' ? 'text-red-600 dark:text-red-400 font-medium' : ''}>{t('ns.' + n.deliveryState)}</span> : null}
+        {n.lastNotifiedOn ? (n.deliveryState ? ' · ' : '') + t('vd.lastNotified') + ': ' + formatDateOnly(n.lastNotifiedOn) : (!n.deliveryState ? t('fleet.neverNotified') : '')}
+      </div>
     </div>
   );
 }

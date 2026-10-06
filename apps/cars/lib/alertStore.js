@@ -7,6 +7,7 @@
 const { getDb } = require('./db');
 
 const STALE_PENDING_MS = 15 * 60 * 1000;
+const TYPES = ['insurance', 'inspection'];
 
 /* PostgREST / Postgres signals for "migration v13 has not been applied". */
 function isSchemaMissing(err) {
@@ -24,17 +25,27 @@ function fail(error, what) {
   return e;
 }
 
-const DEFAULT_SETTINGS = { insurance_alerts_enabled: true, inspection_alerts_enabled: true, daily_notification_enabled: true, email_language: 'en' };
+const DEFAULT_TYPE_SETTINGS = { enabled: true, auto_notify_enabled: true, email_language: 'en' };
 
 function createSupabaseStore(sb = getDb()) {
   return {
+    /* { insurance: {...}, inspection: {...} } — defaults for a missing row. */
     async getSettings() {
-      const { data, error } = await sb.from('car_alert_settings').select('*').eq('id', true).maybeSingle();
+      const { data, error } = await sb.from('car_alert_type_settings').select('*');
       if (error) throw fail(error, 'load alert settings');
-      return { ...DEFAULT_SETTINGS, ...(data || {}) };
+      const out = {};
+      for (const t of TYPES) out[t] = { alert_type: t, ...DEFAULT_TYPE_SETTINGS, ...((data || []).find(r => r.alert_type === t) || {}) };
+      return out;
+    },
+    async saveSettings(alertType, patch, updatedBy) {
+      const { data, error } = await sb.from('car_alert_type_settings')
+        .upsert({ alert_type: alertType, ...patch, updated_by: updatedBy || null, updated_at: new Date().toISOString() }, { onConflict: 'alert_type' })
+        .select().single();
+      if (error) throw fail(error, 'save alert settings');
+      return data;
     },
     async listRecipients() {
-      const { data, error } = await sb.from('car_alert_recipients').select('id, email, enabled, created_at').order('created_at', { ascending: true });
+      const { data, error } = await sb.from('car_alert_recipients').select('id, alert_type, email, enabled, created_at').order('created_at', { ascending: true });
       if (error) throw fail(error, 'load alert recipients');
       return data || [];
     },
@@ -109,7 +120,38 @@ function createSupabaseStore(sb = getDb()) {
       const { error } = await sb.from('car_expiry_alerts').update({ last_sent_on: day, updated_at: new Date().toISOString() }).eq('id', alertId);
       if (error) throw fail(error, 'update alert');
     },
+    /* Run log — only real (non-dry) runs. */
+    async startRun({ trigger, mode, today }) {
+      const { data, error } = await sb.from('car_alert_job_runs').insert({ trigger, email_mode: mode, run_date: today }).select('id').single();
+      if (error) throw fail(error, 'record job run');
+      return data.id;
+    },
+    async finishRun(id, report, errorMessage) {
+      const status = errorMessage ? 'failed' : report.emailsFailed > 0 ? 'partial' : 'ok';
+      const { error } = await sb.from('car_alert_job_runs').update({
+        finished_at: new Date().toISOString(), status,
+        active_alerts: report.activeAlerts || 0, recipients: report.recipients || 0, emails_sent: report.emailsSent || 0,
+        emails_failed: report.emailsFailed || 0, duplicates_skipped: report.duplicatesSkipped || 0,
+        resolved: (report.resolved || []).length, error: errorMessage ? String(errorMessage).slice(0, 300) : null,
+      }).eq('id', id);
+      if (error) throw fail(error, 'record job run');
+    },
+    async lastRun() {
+      const { data, error } = await sb.from('car_alert_job_runs').select('*').order('started_at', { ascending: false }).limit(1).maybeSingle();
+      if (error) throw fail(error, 'load job runs');
+      return data || null;
+    },
+    /* Test sends — separate from real deliveries. */
+    async recordTestSend({ alertType, recipient, sentBy, mode, status, providerId, error }) {
+      const { error: e } = await sb.from('car_alert_test_sends').insert({ alert_type: alertType, recipient, sent_by: sentBy || null, email_mode: mode, status, provider_id: providerId || null, error: error || null });
+      if (e) throw fail(e, 'record test send');
+    },
+    async lastTestSend(alertType) {
+      const { data, error } = await sb.from('car_alert_test_sends').select('created_at, status, email_mode, sent_by').eq('alert_type', alertType).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (error) throw fail(error, 'load test sends');
+      return data || null;
+    },
   };
 }
 
-module.exports = { createSupabaseStore, isSchemaMissing, DEFAULT_SETTINGS };
+module.exports = { createSupabaseStore, isSchemaMissing, DEFAULT_TYPE_SETTINGS, TYPES };

@@ -58,6 +58,10 @@ function createAdminUsersHandlers({ getDb, readSession, appId }) {
           platform_admin: user.role === 'admin',
           app_access: access,
           app_role: user.role === 'admin' ? 'admin' : (current?.app_role || 'readonly'),
+          /* false = no app_permissions row for this app: the user cannot
+             use it at all until an admin assigns a role (which creates
+             the grant). Platform admins always have access. */
+          has_app_access: user.role === 'admin' || !!current,
           module_access: current?.module_access || {},
           can_delete: user.role === 'admin' || !!current?.can_delete,
         };

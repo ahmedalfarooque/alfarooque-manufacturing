@@ -8,6 +8,7 @@ const { sendEmail } = require('@/lib/email');
 const { createSupabaseStore, isSchemaMissing } = require('@/lib/alertStore');
 const { runExpiryAlertJob } = require('@/lib/alertEngine');
 const { loadActiveVehicles } = require('@/lib/fleetData');
+const { todayInZone } = require('@/lib/fleetExpiry');
 
 /* Daily expiry-alert job.
    - GET  : Vercel Cron (vercel.json "crons"). Vercel sends
@@ -40,16 +41,28 @@ function secretMatches(header) {
 async function run({ dryRun, trigger }) {
   const mode = emailMode();
   const startedAt = Date.now();
+  let store = null, runId = null;
   try {
     const sb = getDb();
-    const report = await runExpiryAlertJob({
-      store: createSupabaseStore(sb),
-      vehicles: await loadActiveVehicles(sb),
-      send: m => sendEmail({ ...m, forceMock: mode !== 'live' }),
-      mode, dryRun,
-      baseUrl: process.env.NEXT_PUBLIC_CARS_APP_URL || '',
-      company: process.env.NEXT_PUBLIC_COMPANY_NAME_EN || 'AL FAROOQUE',
-    });
+    store = createSupabaseStore(sb);
+    const vehicles = await loadActiveVehicles(sb);
+    /* Real runs are logged (car_alert_job_runs) so the settings page can
+       show the last run honestly; dry runs are not. */
+    if (!dryRun) runId = await store.startRun({ trigger, mode, today: todayInZone() });
+    let report;
+    try {
+      report = await runExpiryAlertJob({
+        store, vehicles,
+        send: m => sendEmail({ ...m, forceMock: mode !== 'live' }),
+        mode, dryRun,
+        baseUrl: process.env.NEXT_PUBLIC_CARS_APP_URL || '',
+        company: process.env.NEXT_PUBLIC_COMPANY_NAME_EN || 'AL FAROOQUE',
+      });
+    } catch (jobErr) {
+      if (runId) await store.finishRun(runId, {}, jobErr.message).catch(() => {});
+      throw jobErr;
+    }
+    if (runId) await store.finishRun(runId, report, null);
     /* Counts only — no recipient addresses, no credentials. */
     console.log('[expiry-alerts] ' + trigger + ' ' + JSON.stringify({
       mode, dryRun, today: report.today, active: report.activeAlerts, recipients: report.recipients,

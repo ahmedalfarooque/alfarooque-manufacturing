@@ -6,7 +6,7 @@ import Dropdown from '@/components/Dropdown';
 import { ListPagination } from '@/components/ListPagination';
 import DateFilter, { presetRange } from '@/components/DateFilter';
 import { useLanguage } from '@/lib/i18n';
-import { EmptyState, Button, Input, Th, Td } from '@/components/ui';
+import { EmptyState, Button, Input, Modal, Th, Td } from '@/components/ui';
 import { StatusPill, SeverityPill, DaysText, NotifyLine, Notice } from '@/components/ExpiryUi';
 import { normalizeEmail, isValidEmail } from '@/lib/alertSettings';
 
@@ -185,148 +185,300 @@ function ResolvedAlerts() {
   );
 }
 
-/* ───────────────────── Settings: recipients + switches ───────────────────── */
+/* ───────────────────── Settings: per alert type ───────────────────── */
+
+const ALERT_TYPES = ['insurance', 'inspection'];
+const LANGS = ['en', 'ar', 'both'];
 
 function AlertSettings() {
-  const { t } = useLanguage();
-  const [state, setState] = useState(null);   // { settings, recipients, canManage }
+  const { t, formatDateTime } = useLanguage();
+  const [state, setState] = useState(null);     // { types, lastRun, schedule, emailMode, canManage }
+  const [pending, setPending] = useState(null); // { schedule, emailMode } when migration is missing
   const [error, setError] = useState(null);
-  const [schemaMissing, setSchemaMissing] = useState(false);
-  const [email, setEmail] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [formErr, setFormErr] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [preview, setPreview] = useState(null);
 
   const load = useCallback(() => {
     fetch('/api/alert-settings', { credentials: 'same-origin' })
       .then(r => r.json().then(b => ({ ok: r.ok, b })))
       .then(({ ok, b }) => {
-        if (ok) { setState(b); setError(null); setSchemaMissing(false); }
-        else if (b.code === 'SCHEMA_MISSING') setSchemaMissing(true);
+        if (ok) { setState(b); setPending(null); setError(null); }
+        else if (b.code === 'SCHEMA_MISSING') setPending({ schedule: b.schedule, emailMode: b.emailMode });
         else setError(b.error);
       }).catch(e => setError(e.message));
   }, []);
   useEffect(load, [load]);
 
-  async function call(url, method, body) {
-    const res = await fetch(url, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
-    const b = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(b.error || t('al.errGeneric')), { code: b.code });
-    return b;
-  }
+  if (error && !state) return <Notice tone="red">{error}</Notice>;
+  if (pending) return (
+    <div className="space-y-4">
+      <Notice>
+        <div className="font-semibold mb-1">{t('as.pendingTitle')}</div>
+        <div className="text-[13px] leading-relaxed">{t('as.pendingBody')}</div>
+        <ul className="list-disc ms-5 mt-2 text-[13px] space-y-0.5">
+          {['as.pend.recipients', 'as.pend.settings', 'as.pend.test', 'as.pend.history'].map(k => <li key={k}>{t(k)}</li>)}
+        </ul>
+      </Notice>
+      <ScheduleCard schedule={pending.schedule} emailMode={pending.emailMode} lastRun={null} t={t} formatDateTime={formatDateTime} migrationPending />
+    </div>
+  );
+  if (!state) return <div className="text-sm text-[color:var(--tx-3)]">{t('common.loading')}</div>;
 
+  const { types, lastRun, schedule, emailMode, canManage } = state;
+  const anyActive = ALERT_TYPES.some(k => types[k].settings.enabled && types[k].settings.auto_notify_enabled && types[k].recipients.some(r => r.enabled));
+
+  return (
+    <div className="space-y-4">
+      {error && <Notice tone="red">{error}</Notice>}
+      <div className="glass-card glass-card--pad flex items-center justify-between gap-3 flex-wrap" data-testid="global-status">
+        <div>
+          <div className="text-sm font-semibold">{t('as.globalTitle')}</div>
+          <div className="text-xs text-[color:var(--tx-3)] mt-0.5">{anyActive ? t('as.globalOn') : t('as.globalOff')}</div>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap text-xs">
+          <StatePill on={anyActive} onLabel={t('as.active')} offLabel={t('as.inactive')} />
+          <span className={'px-2.5 py-0.5 rounded-full font-medium ' + (emailMode === 'live' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/10 text-amber-700 dark:text-amber-300')}>{emailMode === 'live' ? t('as.modeLive') : t('as.modeMock')}</span>
+          {!canManage && <span className="text-[color:var(--tx-4)]">{t('al.adminOnly')}</span>}
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        {ALERT_TYPES.map(k => <TypeCard key={k} type={k} data={types[k]} canManage={canManage} emailMode={emailMode} onChanged={load} onError={setError} />)}
+      </div>
+
+      <ScheduleCard schedule={schedule} emailMode={emailMode} lastRun={lastRun} t={t} formatDateTime={formatDateTime} canManage={canManage} />
+    </div>
+  );
+}
+
+function StatePill({ on, onLabel, offLabel }) {
+  return (
+    <span className={'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ' + (on ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-slate-500/10 text-[color:var(--tx-3)]')}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: on ? '#059669' : '#94a3b8' }} aria-hidden="true" />{on ? onLabel : offLabel}
+    </span>
+  );
+}
+
+async function api(url, method, body, t) {
+  const res = await fetch(url, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const b = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(b.error || t('al.errGeneric')), { code: b.code, report: b.report });
+  return b;
+}
+
+/* One alert type: status, settings form (explicit Save), recipients, test send. */
+function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
+  const { t, formatDateTime } = useLanguage();
+  const saved = data.settings;
+  const [form, setForm] = useState({ enabled: saved.enabled, auto_notify_enabled: saved.auto_notify_enabled, email_language: saved.email_language });
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);     // { tone, text }
+  const [email, setEmail] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [formErr, setFormErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [confirmTest, setConfirmTest] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState(null);
+
+  useEffect(() => { setForm({ enabled: saved.enabled, auto_notify_enabled: saved.auto_notify_enabled, email_language: saved.email_language }); }, [saved.enabled, saved.auto_notify_enabled, saved.email_language]);
+  const dirty = form.enabled !== saved.enabled || form.auto_notify_enabled !== saved.auto_notify_enabled || form.email_language !== saved.email_language;
+  const enabledRecipients = data.recipients.filter(r => r.enabled);
+  const live = saved.enabled && saved.auto_notify_enabled && enabledRecipients.length > 0;
+  const title = t('alertType.' + type);
+  const ids = { base: 'as-' + type };
+
+  async function save() {
+    setSaving(true); setSaveMsg(null);
+    try { await api('/api/alert-settings', 'PUT', { alert_type: type, ...form }, t); setSaveMsg({ tone: 'ok', text: t('as.saved') }); onChanged(); }
+    catch (e) { setSaveMsg({ tone: 'err', text: e.message }); }
+    finally { setSaving(false); }
+  }
   async function addRecipient(e) {
     e.preventDefault();
     const value = normalizeEmail(email);
     if (!isValidEmail(value)) { setFormErr(t('al.errInvalidEmail')); return; }
-    if (state.recipients.some(r => r.email === value)) { setFormErr(t('al.errDuplicate')); return; }
+    if (data.recipients.some(r => r.email === value)) { setFormErr(t('al.errDuplicate')); return; }
     setBusy(true); setFormErr('');
-    try { await call('/api/alert-settings/recipients', 'POST', { email: value }); setEmail(''); setAdding(false); load(); }
+    try { await api('/api/alert-settings/recipients', 'POST', { email: value, alert_type: type }, t); setEmail(''); setAdding(false); onChanged(); }
     catch (err) { setFormErr(err.code === 'DUPLICATE' ? t('al.errDuplicate') : err.code === 'INVALID_EMAIL' ? t('al.errInvalidEmail') : err.message); }
     finally { setBusy(false); }
   }
-  async function toggleRecipient(r) { try { await call('/api/alert-settings/recipients', 'PATCH', { id: r.id, enabled: !r.enabled }); load(); } catch (err) { setError(err.message); } }
+  async function toggleRecipient(r) { try { await api('/api/alert-settings/recipients', 'PATCH', { id: r.id, enabled: !r.enabled }, t); onChanged(); } catch (err) { onError(err.message); } }
   async function removeRecipient(r) {
     if (!confirm(t('al.confirmRemove', { email: r.email }))) return;
-    try { await call('/api/alert-settings/recipients?id=' + encodeURIComponent(r.id), 'DELETE'); load(); } catch (err) { setError(err.message); }
+    try { await api('/api/alert-settings/recipients?id=' + encodeURIComponent(r.id), 'DELETE', null, t); onChanged(); } catch (err) { onError(err.message); }
   }
-  async function saveSetting(patch) {
-    const prev = state;
-    setState(s => ({ ...s, settings: { ...s.settings, ...patch } }));      // optimistic
-    try { await call('/api/alert-settings', 'PUT', patch); }
-    catch (err) { setState(prev); setError(err.message); }
-  }
-  async function runPreview() {
-    setBusy(true); setPreview(null);
-    try { const b = await call('/api/cron/expiry-alerts', 'POST', { dryRun: true }); setPreview(b.report); }
-    catch (err) { setPreview({ error: err.message }); }
-    finally { setBusy(false); }
+  async function sendTest() {
+    setConfirmTest(false); setTesting(true); setTestMsg(null);
+    try {
+      const b = await api('/api/alert-settings/test', 'POST', { alert_type: type }, t);
+      const r = b.report;
+      const text = (r.failed ? t('as.testPartial', { sent: r.sent, failed: r.failed }) : t('as.testSent', { n: r.sent })) + (r.mode !== 'live' ? ' ' + t('as.testMockNote') : '') + (r.usedSample ? ' ' + t('as.testSampleNote') : '');
+      setTestMsg({ tone: r.failed ? 'err' : 'ok', text });
+      onChanged();
+    } catch (e) {
+      setTestMsg({ tone: 'err', text: e.code === 'COOLDOWN' ? t('as.testCooldown') : e.code === 'NO_RECIPIENTS' ? t('as.testNoRecipients') : e.message });
+    } finally { setTesting(false); }
   }
 
-  if (schemaMissing) return <Notice>{t('fleet.schemaPending')}</Notice>;
-  if (error && !state) return <Notice tone="red">{error}</Notice>;
-  if (!state) return <div className="text-sm text-[color:var(--tx-3)]">{t('common.loading')}</div>;
-  const { settings, recipients, canManage } = state;
+  const Msg = ({ m }) => m ? <div role="status" className={'text-xs mt-2 ' + (m.tone === 'ok' ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400')}>{m.text}</div> : null;
 
   return (
-    <div className="grid lg:grid-cols-2 gap-4">
-      <div className="glass-card glass-card--pad" data-testid="recipients">
-        <h3 className="font-semibold text-sm">{t('al.settings.recipients')}</h3>
-        <p className="text-xs text-[color:var(--tx-3)] mt-0.5 mb-4">{t('al.settings.recipientsHelp')}</p>
-        {error && <div className="mb-3"><Notice tone="red">{error}</Notice></div>}
+    <section className="glass-card glass-card--pad space-y-5" aria-labelledby={ids.base + '-title'} data-testid={'type-' + type}>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h3 id={ids.base + '-title'} className="font-semibold text-[15px]">{title}</h3>
+          <p className="text-xs text-[color:var(--tx-3)] mt-0.5">{t('as.typeSub.' + type)}</p>
+        </div>
+        <StatePill on={live} onLabel={t('as.notifying')} offLabel={t('as.notNotifying')} />
+      </div>
+      {!live && saved.enabled && saved.auto_notify_enabled && enabledRecipients.length === 0 && <div className="text-xs text-amber-700 dark:text-amber-300">{t('as.whyNoRecipients')}</div>}
 
-        {recipients.length === 0 ? (
-          <div className="text-sm text-[color:var(--tx-3)] py-3">{t('al.noRecipients')}</div>
+      {/* settings */}
+      <div className="space-y-3">
+        <Switch label={t('as.enabledLabel')} hint={t('as.enabledHint')} on={form.enabled} disabled={!canManage || saving} onChange={v => setForm(f => ({ ...f, enabled: v }))} />
+        <Switch label={t('as.autoLabel')} hint={t('as.autoHint')} on={form.auto_notify_enabled} disabled={!canManage || saving || !form.enabled} onChange={v => setForm(f => ({ ...f, auto_notify_enabled: v }))} />
+        <fieldset>
+          <legend className="text-[11px] font-medium text-[color:var(--tx-3)] mb-1.5">{t('al.emailLanguage')}</legend>
+          <div className="flex gap-2 flex-wrap">
+            {LANGS.map(l => (
+              <label key={l} className={'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[color:var(--pr)] ' + (form.email_language === l ? 'border-[color:var(--pr)] bg-[color:var(--pr-soft)]' : 'border-[color:var(--bd)]') + (!canManage ? ' opacity-60 cursor-not-allowed' : '')}>
+                <input type="radio" name={ids.base + '-lang'} value={l} checked={form.email_language === l} disabled={!canManage || saving} onChange={() => setForm(f => ({ ...f, email_language: l }))} className="sr-only" />
+                <span className={'h-3 w-3 rounded-full border-2 shrink-0 ' + (form.email_language === l ? 'border-[color:var(--pr)] bg-[color:var(--pr)]' : 'border-[color:var(--bd-2)]')} aria-hidden="true" />
+                {t('al.lang.' + l)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        {canManage && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button onClick={save} disabled={!dirty || saving} loading={saving}>{t('as.save')}</Button>
+            {dirty && !saving && <span className="text-xs text-[color:var(--tx-4)]">{t('as.unsaved')}</span>}
+            <Msg m={saveMsg} />
+          </div>
+        )}
+      </div>
+
+      {/* recipients */}
+      <div className="border-t border-[color:var(--bd)] pt-4" data-testid={'recipients-' + type}>
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="text-sm font-semibold">{t('al.settings.recipients')} <span className="text-xs font-normal text-[color:var(--tx-3)]">({enabledRecipients.length}/{data.recipients.length} {t('al.enabled').toLowerCase()})</span></div>
+        </div>
+        {data.recipients.length === 0 ? (
+          <div className="text-sm text-[color:var(--tx-3)] py-2">{t('al.noRecipients')}</div>
         ) : (
-          <ul className="divide-y divide-[color:var(--bd)] mb-4">
-            {recipients.map(r => (
-              <li key={r.id} className="py-2.5 flex items-center gap-3 flex-wrap">
-                <span className="min-w-0 flex-1 text-sm font-medium break-all" dir="ltr">{r.email}</span>
+          <ul className="divide-y divide-[color:var(--bd)]">
+            {data.recipients.map(r => (
+              <li key={r.id} className="py-2 flex items-center gap-3 flex-wrap">
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: r.enabled ? '#059669' : '#94a3b8' }} aria-hidden="true" />
+                <span className={'min-w-0 flex-1 text-sm font-medium break-all ' + (r.enabled ? '' : 'text-[color:var(--tx-3)] line-through')} dir="ltr">{r.email}</span>
                 <span className={'text-[11px] px-2 py-0.5 rounded-full font-medium ' + (r.enabled ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-slate-500/10 text-[color:var(--tx-3)]')}>{r.enabled ? t('al.enabled') : t('al.disabled')}</span>
                 {canManage && (
                   <span className="flex gap-1.5">
-                    <Button variant="ghost" size="sm" onClick={() => toggleRecipient(r)}>{r.enabled ? t('al.disable') : t('al.enable')}</Button>
-                    <Button variant="danger" size="sm" onClick={() => removeRecipient(r)}>{t('al.remove')}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleRecipient(r)} aria-label={(r.enabled ? t('al.disable') : t('al.enable')) + ' ' + r.email}>{r.enabled ? t('al.disable') : t('al.enable')}</Button>
+                    <Button variant="danger" size="sm" onClick={() => removeRecipient(r)} aria-label={t('al.remove') + ' ' + r.email}>{t('al.remove')}</Button>
                   </span>
                 )}
               </li>
             ))}
           </ul>
         )}
-
-        {canManage ? (adding ? (
-          <form onSubmit={addRecipient} className="space-y-2" noValidate>
+        {canManage && (adding ? (
+          <form onSubmit={addRecipient} className="space-y-2 mt-3" noValidate>
             <div className="flex gap-2 flex-wrap">
-              <Input type="email" dir="ltr" autoFocus value={email} placeholder={t('al.emailPlaceholder')} aria-label={t('al.settings.recipients')} aria-invalid={formErr ? 'true' : undefined}
+              <Input type="email" dir="ltr" autoFocus value={email} placeholder={t('al.emailPlaceholder')} aria-label={t('al.settings.recipients') + ' — ' + title} aria-invalid={formErr ? 'true' : undefined}
                 onChange={e => { setEmail(e.target.value); setFormErr(''); }} className="flex-1 min-w-[200px]" />
-              <Button type="submit" disabled={busy}>{t('al.add')}</Button>
+              <Button type="submit" disabled={busy} loading={busy}>{t('al.add')}</Button>
               <Button type="button" variant="ghost" onClick={() => { setAdding(false); setEmail(''); setFormErr(''); }}>{t('al.cancel')}</Button>
             </div>
             {formErr && <div role="alert" className="text-xs text-red-600 dark:text-red-400">{formErr}</div>}
           </form>
-        ) : <Button variant="secondary" onClick={() => setAdding(true)}>{t('al.addEmail')}</Button>
-        ) : <div className="text-xs text-[color:var(--tx-4)]">{t('al.adminOnly')}</div>}
+        ) : <div className="mt-3"><Button variant="secondary" size="sm" onClick={() => setAdding(true)}>{t('al.addEmail')}</Button></div>)}
       </div>
 
-      <div className="space-y-4">
-        <div className="glass-card glass-card--pad">
-          <h3 className="font-semibold text-sm mb-3">{t('al.settings.title')}</h3>
-          <div className="space-y-3">
-            <Switch label={t('al.toggle.insurance')} on={settings.insurance_alerts_enabled} disabled={!canManage} onChange={v => saveSetting({ insurance_alerts_enabled: v })} />
-            <Switch label={t('al.toggle.inspection')} on={settings.inspection_alerts_enabled} disabled={!canManage} onChange={v => saveSetting({ inspection_alerts_enabled: v })} />
-            <Switch label={t('al.toggle.daily')} on={settings.daily_notification_enabled} disabled={!canManage} onChange={v => saveSetting({ daily_notification_enabled: v })} />
-            <div>
-              <div className="text-[11px] font-medium text-[color:var(--tx-3)] mb-1.5">{t('al.emailLanguage')}</div>
-              <Dropdown value={settings.email_language} disabled={!canManage} onChange={v => saveSetting({ email_language: v })} options={['en', 'ar', 'both'].map(l => [l, t('al.lang.' + l)])} />
-            </div>
+      {/* test send */}
+      {canManage && (
+        <div className="border-t border-[color:var(--bd)] pt-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button variant="secondary" onClick={() => setConfirmTest(true)} disabled={testing || enabledRecipients.length === 0} loading={testing}>{t('as.sendTest')}</Button>
+            <span className="text-xs text-[color:var(--tx-4)]">{enabledRecipients.length === 0 ? t('as.testNoRecipients') : t('as.testHelp', { n: enabledRecipients.length })}</span>
           </div>
-          <p className="text-xs text-[color:var(--tx-3)] mt-4 leading-relaxed">{t('al.scheduleNote')}</p>
+          <Msg m={testMsg} />
+          {data.lastTest && <div className="text-[11px] text-[color:var(--tx-4)] mt-2">{t('as.lastTest')}: {formatDateTime(data.lastTest.created_at)} · {t('as.testStatus.' + data.lastTest.status)}</div>}
+          {confirmTest && (
+            <Modal title={t('as.sendTest') + ' — ' + title} onClose={() => setConfirmTest(false)}
+              footer={<><Button variant="ghost" onClick={() => setConfirmTest(false)}>{t('al.cancel')}</Button><Button onClick={sendTest}>{t('as.confirmSend')}</Button></>}>
+              <p className="text-sm">{t('as.testConfirmBody', { n: enabledRecipients.length })}</p>
+              <ul className="mt-3 text-sm space-y-1" dir="ltr">{enabledRecipients.map(r => <li key={r.id} className="font-medium">{r.email}</li>)}</ul>
+              {emailMode !== 'live' && <p className="text-xs text-amber-700 dark:text-amber-300 mt-3">{t('as.testMockNote')}</p>}
+            </Modal>
+          )}
         </div>
-
-        {canManage && (
-          <div className="glass-card glass-card--pad">
-            <h3 className="font-semibold text-sm">{t('al.dryRun')}</h3>
-            <p className="text-xs text-[color:var(--tx-3)] mt-0.5 mb-3">{t('al.dryRunHelp')}</p>
-            <Button variant="secondary" onClick={runPreview} disabled={busy}>{t('al.dryRun')}</Button>
-            {preview && (
-              <div className="mt-3 text-sm" role="status">
-                {preview.error ? <span className="text-red-600 dark:text-red-400">{preview.error}</span>
-                  : preview.reasonsNotSent?.length ? t('al.dryRunNothing', { reason: preview.reasonsNotSent.map(r => t('al.reasonText.' + r)).join(', ') })
-                  : t('al.dryRunResult', { alerts: preview.activeAlerts, recipients: preview.recipients, emails: preview.plan.length })}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </section>
   );
 }
 
-function Switch({ label, on, onChange, disabled }) {
+function ScheduleCard({ schedule, emailMode, lastRun, t, formatDateTime, migrationPending, canManage }) {
+  const [preview, setPreview] = useState(null);
+  const [busy, setBusy] = useState(false);
+  async function runPreview() {
+    setBusy(true); setPreview(null);
+    try { const b = await api('/api/cron/expiry-alerts', 'POST', { dryRun: true }, t); setPreview(b.report); }
+    catch (err) { setPreview({ error: err.message }); }
+    finally { setBusy(false); }
+  }
+  const row = (label, value, tone) => (
+    <div className="min-w-0">
+      <dt className="text-[11px] text-[color:var(--tx-4)]">{label}</dt>
+      <dd className={'text-sm font-medium ' + (tone === 'red' ? 'text-red-600 dark:text-red-400' : tone === 'amber' ? 'text-amber-600 dark:text-amber-400' : '')}>{value}</dd>
+    </div>
+  );
+  return (
+    <section className="glass-card glass-card--pad" aria-labelledby="as-run-title" data-testid="daily-run">
+      <h3 id="as-run-title" className="font-semibold text-[15px]">{t('as.runTitle')}</h3>
+      <p className="text-xs text-[color:var(--tx-3)] mt-0.5 mb-4">{t('as.runSub', { time: schedule.localTime, tz: schedule.timezone })}</p>
+      <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+        {row(t('as.nextRun'), formatDateTime(schedule.nextRunAt))}
+        {row(t('as.mode'), emailMode === 'live' ? t('as.modeLive') : t('as.modeMock'), emailMode === 'live' ? null : 'amber')}
+        {row(t('as.cronSecret'), schedule.cronSecretConfigured ? t('as.configured') : t('as.notConfigured'), schedule.cronSecretConfigured ? null : 'amber')}
+        {row(t('as.lastRun'), migrationPending ? t('fleet.emailUnavailable') : lastRun ? formatDateTime(lastRun.started_at) : t('as.noRunYet'))}
+      </dl>
+      {lastRun && (
+        <dl className="grid grid-cols-2 md:grid-cols-5 gap-x-4 gap-y-3 mt-4 pt-4 border-t border-[color:var(--bd)]">
+          {row(t('as.runStatus'), t('as.runStatusVal.' + lastRun.status) + ' · ' + t('as.trigger.' + lastRun.trigger), lastRun.status === 'failed' ? 'red' : lastRun.status === 'partial' ? 'amber' : null)}
+          {row(t('as.recipientsProcessed'), lastRun.recipients)}
+          {row(t('as.notificationsSent'), lastRun.emails_sent)}
+          {row(t('as.failures'), lastRun.emails_failed, lastRun.emails_failed ? 'red' : null)}
+          {row(t('as.activeAlertsAtRun'), lastRun.active_alerts)}
+        </dl>
+      )}
+      {lastRun?.error && <div className="text-xs text-red-600 dark:text-red-400 mt-2">{lastRun.error}</div>}
+      {canManage && !migrationPending && (
+        <div className="mt-4 pt-4 border-t border-[color:var(--bd)]">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button variant="secondary" size="sm" onClick={runPreview} disabled={busy} loading={busy}>{t('al.dryRun')}</Button>
+            <span className="text-xs text-[color:var(--tx-4)]">{t('al.dryRunHelp')}</span>
+          </div>
+          {preview && (
+            <div className="mt-2 text-sm" role="status">
+              {preview.error ? <span className="text-red-600 dark:text-red-400">{preview.error}</span>
+                : preview.reasonsNotSent?.length ? t('al.dryRunNothing', { reason: preview.reasonsNotSent.map(r => t('al.reasonText.' + r)).join(', ') })
+                : t('al.dryRunResult', { alerts: preview.activeAlerts, recipients: preview.recipients, emails: preview.plan.length })}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Switch({ label, hint, on, onChange, disabled }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-sm">{label}</span>
+      <span className="text-sm">
+        {label}
+        {hint && <span className="block text-[11px] text-[color:var(--tx-4)]">{hint}</span>}
+      </span>
       <button type="button" role="switch" aria-checked={!!on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)}
         className={'relative h-6 w-11 rounded-full transition-colors shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--pr)] disabled:opacity-50 disabled:cursor-not-allowed ' + (on ? 'bg-[color:var(--pr)]' : 'bg-slate-400/50')}>
         <span className={'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ' + (on ? 'start-[22px]' : 'start-0.5')} />
