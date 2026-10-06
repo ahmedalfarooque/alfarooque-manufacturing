@@ -9,6 +9,7 @@ import { ListPagination } from '@/components/ListPagination';
 import { useLanguage, trEnum } from '@/lib/i18n';
 import { Button, Input, Field, Modal, EmptyState, Th, Td } from '@/components/ui';
 import ColumnPicker, { useColumnPrefs, pdfColumns, pdfRows } from '@/components/ColumnPicker';
+import { VEHICLE_COLUMNS } from '@/lib/vehicleColumns';
 import { validateVehicleDates } from '@/lib/fleetExpiry';
 
 const STATUS_BADGE = {
@@ -104,7 +105,7 @@ export default function VehiclesPage() {
   const currentFilters = { search: debouncedSearch, status, type, fuelType, assignment };
 
   function exportExcel() {
-    window.location.href = '/api/cars/export?' + new URLSearchParams(currentFilters).toString();
+    window.location.href = '/api/cars/export?' + new URLSearchParams({ ...currentFilters, cols: visibleCols.map(c => c.key).join(',') }).toString();
   }
 
   /* Standardized A4 report PDF — shared engine (lib/reportPdf.js), same
@@ -142,31 +143,34 @@ export default function VehiclesPage() {
   const notSet = <span className="text-[color:var(--tx-4)]">{t('expiry.notSet')}</span>;
   const dateCell = v => (v ? formatDateOnly(v) : notSet);
   const datePdf = v => (v ? formatDateOnly(v) : t('expiry.notSet'));
-  const cols = [
-    { key: 'idx', label: t('vehicles.colNumber'), render: (v, i) => (page - 1) * pageSize + i + 1, pdf: (v, i) => i + 1 },
-    { key: 'vehicle_number', label: t('vehicles.colVehicleNumber'), sort: 'vehicle_number', className: 'font-medium', render: v => v.vehicle_number, pdf: v => v.vehicle_number || '' },
-    { key: 'name', label: t('vehicles.colName'), sort: 'name', render: v => v.name || '—', pdf: v => v.name || '' },
-    { key: 'type', label: t('vehicles.colType'), sort: 'type', render: v => trEnum(t, 'vtype', v.type), pdf: v => trEnum(t, 'vtype', v.type) || '' },
-    { key: 'driver', label: t('vehicles.colDriver'), sort: 'driver', render: v => v.driver || '—', pdf: v => v.driver || '' },
-    { key: 'location', label: t('vehicles.colLocation'), sort: 'location', render: v => v.location || '—', pdf: v => v.location || '' },
-    { key: 'insurance_expiry', label: t('vehicles.colInsuranceExpiry'), sort: 'insurance_expiry', render: v => dateCell(v.insurance_expiry), pdf: v => datePdf(v.insurance_expiry) },
-    { key: 'periodic_inspection_expiry', label: t('vehicles.colInspectionExpiry'), sort: 'periodic_inspection_expiry', render: v => dateCell(v.periodic_inspection_expiry), pdf: v => datePdf(v.periodic_inspection_expiry) },
-    { key: 'fuel_type', label: t('vehicles.colFuel'), sort: 'fuel_type', hidden: true, render: v => trEnum(t, 'fuel', v.fuel_type), pdf: v => trEnum(t, 'fuel', v.fuel_type) || '' },
-    { key: 'status', label: t('vehicles.colStatus'), sort: 'status', hidden: true, render: v => <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span>, pdf: v => trEnum(t, 'status', v.status) || '' },
-    { key: 'make', label: t('fields.make'), sort: 'make', hidden: true, render: v => v.make || '—', pdf: v => v.make || '' },
-    { key: 'model', label: t('fields.model'), sort: 'model', hidden: true, render: v => v.model || '—', pdf: v => v.model || '' },
-    { key: 'year', label: t('fields.year'), sort: 'year', hidden: true, render: v => v.year || '—', pdf: v => v.year || '' },
-    { key: 'current_km', label: t('fields.currentKm'), sort: 'current_km', hidden: true, render: v => v.current_km ?? '—', pdf: v => v.current_km ?? '' },
-    { key: 'registration_expiry', label: t('fields.registrationExpiry'), sort: 'registration_expiry', hidden: true, render: v => dateCell(v.registration_expiry), pdf: v => datePdf(v.registration_expiry) },
-    { key: 'last_update', label: t('vehicles.colLastUpdate'), sort: 'last_update', hidden: true, render: v => (v.last_update ? formatDateTime(v.last_update) : '—'), pdf: v => (v.last_update ? formatDateTime(v.last_update) : '') },
-    { key: 'actions', label: t('vehicles.colActions'), required: true, noPdf: true, stop: true, className: 'text-end whitespace-nowrap', render: v => (
+  /* Cell renderers keyed by the shared Vehicles column catalogue
+     (lib/vehicleColumns.js) — the catalogue owns order/defaults/flags. */
+  const CELLS = {
+    idx: { render: (v, i) => (page - 1) * pageSize + i + 1, pdf: (v, i) => i + 1 },
+    vehicle_number: { className: 'font-medium', render: v => v.vehicle_number, pdf: v => v.vehicle_number || '' },
+    name: { render: v => v.name || '—', pdf: v => v.name || '' },
+    type: { render: v => trEnum(t, 'vtype', v.type), pdf: v => trEnum(t, 'vtype', v.type) || '' },
+    driver: { render: v => v.driver || '—', pdf: v => v.driver || '' },
+    location: { render: v => v.location || '—', pdf: v => v.location || '' },
+    insurance_expiry: { render: v => dateCell(v.insurance_expiry), pdf: v => datePdf(v.insurance_expiry) },
+    periodic_inspection_expiry: { render: v => dateCell(v.periodic_inspection_expiry), pdf: v => datePdf(v.periodic_inspection_expiry) },
+    fuel_type: { render: v => trEnum(t, 'fuel', v.fuel_type), pdf: v => trEnum(t, 'fuel', v.fuel_type) || '' },
+    status: { render: v => <span className={'px-2 py-1 rounded-full text-xs font-medium ' + (STATUS_BADGE[v.status] || '')}>{trEnum(t, 'status', v.status)}</span>, pdf: v => trEnum(t, 'status', v.status) || '' },
+    make: { render: v => v.make || '—', pdf: v => v.make || '' },
+    model: { render: v => v.model || '—', pdf: v => v.model || '' },
+    year: { render: v => v.year || '—', pdf: v => v.year || '' },
+    current_km: { render: v => v.current_km ?? '—', pdf: v => v.current_km ?? '' },
+    registration_expiry: { render: v => dateCell(v.registration_expiry), pdf: v => datePdf(v.registration_expiry) },
+    last_update: { render: v => (v.last_update ? formatDateTime(v.last_update) : '—'), pdf: v => (v.last_update ? formatDateTime(v.last_update) : '') },
+    actions: { stop: true, className: 'text-end whitespace-nowrap', render: v => (
       <div className="flex items-center justify-end gap-2">
         <button onClick={() => { window.location.href = '/vehicles/' + v.id; }} title={t('vehicles.view')} aria-label={t('vehicles.view') + ' ' + v.vehicle_number} className="text-[color:var(--tx-3)] hover:text-[color:var(--tx)]">{'\u{1F441}'}</button>
         {isAdmin && <button onClick={() => setModal({ mode: 'edit', data: v })} title={t('vehicles.edit')} aria-label={t('vehicles.edit') + ' ' + v.vehicle_number} className="text-brand-500 hover:text-brand-600">✎</button>}
         {isAdmin && <button onClick={() => deleteVehicle(v.id)} title={t('vehicles.delete')} aria-label={t('vehicles.delete') + ' ' + v.vehicle_number} className="text-[#ef4444] hover:text-[#dc2626]">🗑</button>}
       </div>
     ) },
-  ];
+  };
+  const cols = VEHICLE_COLUMNS.map(c => ({ ...c, label: t(c.labelKey), ...CELLS[c.key] }));
   const prefs = useColumnPrefs('vehicles', cols);
   const { visibleCols } = prefs;
 

@@ -6,6 +6,7 @@ const { sendEmail, emailConfig } = require('@/lib/email');
 const { createSupabaseStore, isSchemaMissing, TYPES } = require('@/lib/alertStore');
 const { runTestNotification } = require('@/lib/alertEngine');
 const { loadActiveVehicles } = require('@/lib/fleetData');
+const { parseRecipientIds } = require('@/lib/alertSettings');
 
 /* POST { alert_type, recipient_ids? } — manual "Send test notification" for one alert
    type. Admin only. Sends the real template (marked TEST) to that type's

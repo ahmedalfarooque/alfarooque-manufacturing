@@ -3,18 +3,9 @@
 const ExcelJS = require('exceljs');
 const { getDb } = require('@/lib/db');
 const { requireSession , requireAction } = require('@/lib/http');
+const { excelColumnsFor } = require('@/lib/vehicleColumns');
 
-const COLUMNS = [
-  { header: 'Vehicle Number', key: 'vehicle_number', width: 16 },
-  { header: 'Vehicle Name', key: 'name', width: 20 },
-  { header: 'Type', key: 'type', width: 12 },
-  { header: 'Fuel Type', key: 'fuel_type', width: 12 },
-  { header: 'Driver', key: 'driver', width: 16 },
-  { header: 'Status', key: 'status', width: 12 },
-  { header: 'Current KM', key: 'current_km', width: 14 },
-  { header: 'Location', key: 'location', width: 18 },
-  { header: 'Last Update', key: 'last_update', width: 20 },
-];
+/* Column catalogue + default/selected view live in lib/vehicleColumns.js. */
 
 export async function GET(req) {
   const { response } = await requireAction(req, 'view');
@@ -47,10 +38,10 @@ export async function GET(req) {
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Vehicles');
-  ws.columns = COLUMNS;
+  ws.columns = excelColumnsFor(q.get('cols'));
   ws.getRow(1).font = { bold: true };
   for (const car of data) {
-    ws.addRow({ ...car, last_update: new Date(car.last_update).toLocaleString() });
+    ws.addRow({ ...car, last_update: car.last_update ? new Date(car.last_update).toLocaleString() : '' });
   }
 
   const buffer = await wb.xlsx.writeBuffer();

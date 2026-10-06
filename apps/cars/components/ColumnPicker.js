@@ -15,12 +15,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
+import { STORAGE_PREFIX, allKeys, defaultKeys, mergeSaved, toggleKey, visibleColumns, pdfColumns, pdfRows } from '@/lib/columnPrefs';
 
-const STORAGE_PREFIX = 'af-cars-cols:';
-
-function defaultKeys(columns) {
-  return columns.filter(c => !c.hidden || c.required).map(c => c.key);
-}
+export { pdfColumns, pdfRows };
 
 export function useColumnPrefs(pageKey, columns) {
   const [visibleKeys, setVisibleKeys] = useState(() => defaultKeys(columns));
@@ -34,12 +31,7 @@ export function useColumnPrefs(pageKey, columns) {
     let next = null;
     try {
       const raw = localStorage.getItem(STORAGE_PREFIX + pageKey);
-      const saved = raw ? JSON.parse(raw) : null;
-      if (Array.isArray(saved)) {
-        const known = new Set(columns.map(c => c.key));
-        next = saved.filter(k => known.has(k));
-        for (const c of columns) if (c.required && !next.includes(c.key)) next.push(c.key);
-      }
+      next = mergeSaved(columns, raw ? JSON.parse(raw) : null);
     } catch (_) {}
     setVisibleKeys(next || defaultKeys(columns));
     setLoaded(true);
@@ -52,28 +44,15 @@ export function useColumnPrefs(pageKey, columns) {
   }, [pageKey]);
 
   const set = new Set(visibleKeys);
-  const visibleCols = columns.filter(c => set.has(c.key));
+  const visibleCols = visibleColumns(columns, visibleKeys);
   return {
     loaded,
     visibleCols,
     isVisible: key => set.has(key),
-    toggle: key => {
-      const col = columns.find(c => c.key === key);
-      if (!col || col.required) return;
-      persist(set.has(key) ? visibleKeys.filter(k => k !== key) : columns.map(c => c.key).filter(k => k === key || set.has(k)));
-    },
-    selectAll: () => persist(columns.map(c => c.key)),
+    toggle: key => { const next = toggleKey(columns, visibleKeys, key); if (next !== visibleKeys) persist(next); },
+    selectAll: () => persist(allKeys(columns)),
     reset: () => { persist(defaultKeys(columns)); },
   };
-}
-
-/* Export helpers: only visible, exportable columns, in page order. */
-export function pdfColumns(visibleCols) {
-  return visibleCols.filter(c => !c.noPdf).map(c => ({ key: c.key, header: c.label }));
-}
-export function pdfRows(visibleCols, rows) {
-  const cols = visibleCols.filter(c => !c.noPdf);
-  return (rows || []).map((row, i) => Object.fromEntries(cols.map(c => [c.key, c.pdf ? c.pdf(row, i) : (row[c.key] ?? '')])));
 }
 
 export default function ColumnPicker({ columns, prefs, className = '' }) {

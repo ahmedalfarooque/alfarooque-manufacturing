@@ -299,3 +299,32 @@ test('test notification: recipientIds restricts the send; disabled ids are still
   r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0) });
   assert.equal(r.sent, 2);                                     // no subset → all enabled
 });
+
+test('test notification: multiple selected ids send to exactly those; duplicates collapse to one email', async () => {
+  const h = harness([car({ insurance_expiry: iso(10) })], { recipients: [{ email: 'a@x.com', types: ['insurance'] }, { email: 'b@x.com', types: ['insurance'] }, { email: 'c@x.com', types: ['insurance'] }] });
+  const send = async m => { h.sent.push(m); return { id: 'x' }; };
+  const r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), recipientIds: ['a@x.com:insurance', 'c@x.com:insurance', 'a@x.com:insurance'] });
+  assert.deepEqual([r.sent, h.sent.map(m => m.to).sort()], [2, ['a@x.com', 'c@x.com']]);
+});
+
+test('test notification: ids from another alert type or stale/unknown ids never add a recipient', async () => {
+  const h = harness([car({ insurance_expiry: iso(10) })], { recipients: [{ email: 'a@x.com', types: ['insurance'] }, { email: 'insp@x.com', types: ['inspection'] }] });
+  const send = async m => { h.sent.push(m); return { id: 'x' }; };
+  let r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), recipientIds: ['insp@x.com:inspection'] });
+  assert.equal(r.reason, 'no_enabled_recipients');
+  r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), recipientIds: ['00000000-0000-0000-0000-000000000000', 'attacker@evil.com'] });
+  assert.equal(r.reason, 'no_enabled_recipients');
+  r = await runTestNotification({ store: h.store, vehicles: h.vehicles, send, alertType: 'insurance', now: day(0), recipientIds: ['insp@x.com:inspection', 'a@x.com:insurance'] });
+  assert.deepEqual([r.sent, h.sent.map(m => m.to)], [1, ['a@x.com']]);
+});
+
+test('parseRecipientIds: validates shape, trims, dedupes, rejects empty', () => {
+  const { parseRecipientIds } = require('./alertSettings');
+  assert.deepEqual(parseRecipientIds(undefined), { ids: null });
+  assert.deepEqual(parseRecipientIds(['a', ' b ', 'a']), { ids: ['a', 'b'] });
+  assert.deepEqual(parseRecipientIds([]), { error: 'EMPTY' });
+  assert.deepEqual(parseRecipientIds(['', 'a']), { error: 'INVALID' });
+  assert.deepEqual(parseRecipientIds('a'), { error: 'INVALID' });
+  assert.deepEqual(parseRecipientIds([1]), { error: 'INVALID' });
+  assert.deepEqual(parseRecipientIds([{ email: 'x@y.com' }]), { error: 'INVALID' });
+});
