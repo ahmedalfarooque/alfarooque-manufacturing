@@ -33,4 +33,13 @@ function parseRecipientIds(raw) {
   return { ids };
 }
 
-module.exports = { MAX_RECIPIENTS, normalizeEmail, isValidEmail, parseRecipientIds };
+/* 30-second guard between test sends of the same alert type. */
+const TEST_COOLDOWN_MS = 30 * 1000;
+function isWithinCooldown(lastTest, nowMs = Date.now(), cooldownMs = TEST_COOLDOWN_MS) {
+  if (!lastTest || !lastTest.created_at) return false;
+  const t = new Date(lastTest.created_at).getTime();
+  if (!Number.isFinite(t)) return false;
+  return nowMs - t < cooldownMs;
+}
+
+module.exports = { MAX_RECIPIENTS, normalizeEmail, isValidEmail, parseRecipientIds, TEST_COOLDOWN_MS, isWithinCooldown };

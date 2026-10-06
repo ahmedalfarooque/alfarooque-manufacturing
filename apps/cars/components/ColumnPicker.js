@@ -15,7 +15,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { GlassIcon } from '@/components/GlassIcons';
-import { STORAGE_PREFIX, allKeys, defaultKeys, mergeSaved, toggleKey, visibleColumns, pdfColumns, pdfRows } from '@/lib/columnPrefs';
+import { allKeys, defaultKeys, toggleKey, visibleColumns, pdfColumns, pdfRows, loadPrefs, savePrefs } from '@/lib/columnPrefs';
 
 export { pdfColumns, pdfRows };
 
@@ -28,19 +28,14 @@ export function useColumnPrefs(pageKey, columns) {
      column appearing once the session loads) so new columns get their
      default visibility instead of staying hidden. */
   useEffect(() => {
-    let next = null;
-    try {
-      const raw = localStorage.getItem(STORAGE_PREFIX + pageKey);
-      next = mergeSaved(columns, raw ? JSON.parse(raw) : null);
-    } catch (_) {}
-    setVisibleKeys(next || defaultKeys(columns));
+    setVisibleKeys(loadPrefs(typeof localStorage !== 'undefined' ? localStorage : null, pageKey, columns));
     setLoaded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageKey, keyList]);
 
   const persist = useCallback(keys => {
     setVisibleKeys(keys);
-    try { localStorage.setItem(STORAGE_PREFIX + pageKey, JSON.stringify(keys)); } catch (_) {}
+    savePrefs(typeof localStorage !== 'undefined' ? localStorage : null, pageKey, keys);
   }, [pageKey]);
 
   const set = new Set(visibleKeys);

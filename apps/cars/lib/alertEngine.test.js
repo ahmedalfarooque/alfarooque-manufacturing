@@ -328,3 +328,13 @@ test('parseRecipientIds: validates shape, trims, dedupes, rejects empty', () => 
   assert.deepEqual(parseRecipientIds([1]), { error: 'INVALID' });
   assert.deepEqual(parseRecipientIds([{ email: 'x@y.com' }]), { error: 'INVALID' });
 });
+
+test('test-send cooldown: 30 s guard per alert type, tolerant of missing/invalid timestamps', () => {
+  const { isWithinCooldown, TEST_COOLDOWN_MS } = require('./alertSettings');
+  const now = Date.UTC(2026, 9, 6, 12, 0, 0);
+  assert.equal(TEST_COOLDOWN_MS, 30000);
+  assert.equal(isWithinCooldown({ created_at: new Date(now - 5000).toISOString() }, now), true);
+  assert.equal(isWithinCooldown({ created_at: new Date(now - 31000).toISOString() }, now), false);
+  assert.equal(isWithinCooldown(null, now), false);
+  assert.equal(isWithinCooldown({ created_at: 'garbage' }, now), false);
+});

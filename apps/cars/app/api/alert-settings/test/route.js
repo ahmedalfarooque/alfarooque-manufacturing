@@ -6,7 +6,7 @@ const { sendEmail, emailConfig } = require('@/lib/email');
 const { createSupabaseStore, isSchemaMissing, TYPES } = require('@/lib/alertStore');
 const { runTestNotification } = require('@/lib/alertEngine');
 const { loadActiveVehicles } = require('@/lib/fleetData');
-const { parseRecipientIds } = require('@/lib/alertSettings');
+const { parseRecipientIds, isWithinCooldown } = require('@/lib/alertSettings');
 
 /* POST { alert_type, recipient_ids? } — manual "Send test notification" for one alert
    type. Admin only. Sends the real template (marked TEST) to that type's
@@ -15,7 +15,6 @@ const { parseRecipientIds } = require('@/lib/alertSettings');
    car_alert_test_sends, never to the real delivery log. A 30-second
    per-type cooldown guards against accidental double sends. */
 
-const COOLDOWN_MS = 30 * 1000;
 
 export async function POST(req) {
   const { response, session } = await requireAction(req, 'edit');
@@ -35,7 +34,7 @@ export async function POST(req) {
     const sb = getDb();
     const store = createSupabaseStore(sb);
     const last = await store.lastTestSend(body.alert_type);
-    if (last && Date.now() - new Date(last.created_at).getTime() < COOLDOWN_MS) {
+    if (isWithinCooldown(last)) {
       return json({ error: 'A test was sent moments ago. Please wait 30 seconds before sending another.', code: 'COOLDOWN' }, 429);
     }
     const report = await runTestNotification({

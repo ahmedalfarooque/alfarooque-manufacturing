@@ -51,4 +51,17 @@ function pdfRows(visibleCols, rows) {
   return (rows || []).map((row, i) => Object.fromEntries(cols.map(c => [c.key, c.pdf ? c.pdf(row, i) : (row[c.key] ?? '')])));
 }
 
-module.exports = { STORAGE_PREFIX, allKeys, defaultKeys, mergeSaved, toggleKey, visibleColumns, pdfColumns, pdfRows };
+/* Storage helpers. `storage` is anything with getItem/setItem (localStorage
+   in the browser, a Map-backed stub in tests). Each page has its own key, so
+   preferences never leak between pages; corrupt/missing data → defaults. */
+function loadPrefs(storage, pageKey, columns) {
+  let saved = null;
+  try { const raw = storage && storage.getItem(STORAGE_PREFIX + pageKey); saved = raw ? JSON.parse(raw) : null; } catch (_) { saved = null; }
+  return mergeSaved(columns, saved) || defaultKeys(columns);
+}
+
+function savePrefs(storage, pageKey, keys) {
+  try { storage && storage.setItem(STORAGE_PREFIX + pageKey, JSON.stringify(keys)); } catch (_) {}
+}
+
+module.exports = { STORAGE_PREFIX, allKeys, defaultKeys, mergeSaved, toggleKey, visibleColumns, pdfColumns, pdfRows, loadPrefs, savePrefs };
