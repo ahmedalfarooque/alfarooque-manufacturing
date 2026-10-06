@@ -276,6 +276,7 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
   const [formErr, setFormErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmTest, setConfirmTest] = useState(false);
+  const [removing, setRemoving] = useState(null);   // recipient awaiting removal confirmation
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState(null);
 
@@ -304,7 +305,7 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
   }
   async function toggleRecipient(r) { try { await api('/api/alert-settings/recipients', 'PATCH', { id: r.id, enabled: !r.enabled }, t); onChanged(); } catch (err) { onError(err.message); } }
   async function removeRecipient(r) {
-    if (!confirm(t('al.confirmRemove', { email: r.email }))) return;
+    setRemoving(null);
     try { await api('/api/alert-settings/recipients?id=' + encodeURIComponent(r.id), 'DELETE', null, t); onChanged(); } catch (err) { onError(err.message); }
   }
   async function sendTest() {
@@ -375,7 +376,7 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
                 {canManage && (
                   <span className="flex gap-1.5">
                     <Button variant="ghost" size="sm" onClick={() => toggleRecipient(r)} aria-label={(r.enabled ? t('al.disable') : t('al.enable')) + ' ' + r.email}>{r.enabled ? t('al.disable') : t('al.enable')}</Button>
-                    <Button variant="danger" size="sm" onClick={() => removeRecipient(r)} aria-label={t('al.remove') + ' ' + r.email}>{t('al.remove')}</Button>
+                    <Button variant="danger" size="sm" onClick={() => setRemoving(r)} aria-label={t('al.remove') + ' ' + r.email}>{t('al.remove')}</Button>
                   </span>
                 )}
               </li>
@@ -393,6 +394,12 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
             {formErr && <div role="alert" className="text-xs text-red-600 dark:text-red-400">{formErr}</div>}
           </form>
         ) : <div className="mt-3"><Button variant="secondary" size="sm" onClick={() => setAdding(true)}>{t('al.addEmail')}</Button></div>)}
+        {removing && (
+          <Modal title={t('al.remove') + ' — ' + title} onClose={() => setRemoving(null)}
+            footer={<><Button variant="ghost" onClick={() => setRemoving(null)}>{t('al.cancel')}</Button><Button variant="danger" onClick={() => removeRecipient(removing)}>{t('al.remove')}</Button></>}>
+            <p className="text-sm">{t('al.confirmRemove', { email: removing.email })}</p>
+          </Modal>
+        )}
       </div>
 
       {/* test send */}
@@ -409,6 +416,7 @@ function TypeCard({ type, data, canManage, emailMode, onChanged, onError }) {
               footer={<><Button variant="ghost" onClick={() => setConfirmTest(false)}>{t('al.cancel')}</Button><Button onClick={sendTest}>{t('as.confirmSend')}</Button></>}>
               <p className="text-sm">{t('as.testConfirmBody', { n: enabledRecipients.length })}</p>
               <ul className="mt-3 text-sm space-y-1" dir="ltr">{enabledRecipients.map(r => <li key={r.id} className="font-medium">{r.email}</li>)}</ul>
+              <p className="text-xs text-[color:var(--tx-3)] mt-3">{t('as.testNoStateNote')}</p>
               {emailMode !== 'live' && <p className="text-xs text-amber-700 dark:text-amber-300 mt-3">{t('as.testMockNote')}</p>}
             </Modal>
           )}

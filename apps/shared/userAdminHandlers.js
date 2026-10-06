@@ -125,6 +125,19 @@ function createAdminUsersHandlers({ getDb, readSession, appId }) {
     }
     if (body.app_id) {
       if (!APPS.includes(body.app_id)) return json({ error: 'Unknown application.' }, 400);
+      /* revoke_app: remove the user's grant for this app entirely (the
+         opposite of assigning a role). Platform admins have no per-app
+         grant to remove, and nobody can revoke their own access. */
+      if (body.revoke_app === true) {
+        if (body.user_id === gate.session.sub) return json({ error: 'You cannot revoke your own access.' }, 400);
+        const { data: target, error: tErr } = await sb.from('platform_users').select('role').eq('id', body.user_id).maybeSingle();
+        if (tErr) return json({ error: tErr.message }, 500);
+        if (!target) return json({ error: 'User not found.' }, 404);
+        if (target.role === 'admin') return json({ error: 'Platform administrators always have access; change their platform role instead.' }, 400);
+        const { error: dErr } = await sb.from('app_permissions').delete().eq('user_id', body.user_id).eq('app_id', body.app_id);
+        if (dErr) return json({ error: dErr.message }, 500);
+        return json({ ok: true, revoked: body.app_id });
+      }
       const patch = { user_id: body.user_id, app_id: body.app_id, granted_by: gate.session.sub };
       if (body.role !== undefined) {
         if (!ROLES.includes(body.role)) return json({ error: 'Unknown role.' }, 400);

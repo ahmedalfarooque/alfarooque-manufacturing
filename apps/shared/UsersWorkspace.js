@@ -31,6 +31,7 @@ const STRINGS = {
     moduleAccess: 'Module Access', delete: 'Delete', deactivate: 'Deactivate', activate: 'Activate', editName: 'Edit',
     statusActive: 'Active', statusInactive: 'Inactive', platformAdmin: 'Platform admin',
     hasAccess: 'Has access', noAccess: 'No access', noAccessHint: 'Assign a role to grant access to {app}.', custom: 'Custom',
+    revokeAccess: 'Revoke access', confirmRevoke: 'Remove {name}’s access to {app}? They keep access to other applications.', revoked: 'Access to {app} removed.', accessGranted: 'Role saved — access to {app} granted.',
     rolePermissions: 'Role Permissions', rolePermSubtitle: 'Permissions are saved independently for {app}.',
     roleLegend: 'Admin: full control · Manager: full operational access, no user administration · Read Only: view only · Module Access: custom per-module permissions.',
     colRole2: 'Role', colPermissions: 'Permissions', colAction: 'Action',
@@ -56,6 +57,7 @@ const STRINGS = {
     moduleAccess: 'صلاحيات الوحدات', delete: 'حذف', deactivate: 'إيقاف', activate: 'تفعيل', editName: 'تعديل',
     statusActive: 'نشط', statusInactive: 'موقوف', platformAdmin: 'مسؤول المنصة',
     hasAccess: 'لديه وصول', noAccess: 'لا يوجد وصول', noAccessHint: 'عيّن دورًا لمنح الوصول إلى {app}.', custom: 'مخصص',
+    revokeAccess: 'إلغاء الوصول', confirmRevoke: 'إزالة وصول {name} إلى {app}؟ يحتفظ بالوصول إلى التطبيقات الأخرى.', revoked: 'تمت إزالة الوصول إلى {app}.', accessGranted: 'تم حفظ الدور — تم منح الوصول إلى {app}.',
     rolePermissions: 'صلاحيات الأدوار', rolePermSubtitle: 'يتم حفظ الصلاحيات بشكل مستقل لـ {app}.',
     roleLegend: 'مسؤول: تحكم كامل · مدير: وصول تشغيلي كامل دون إدارة المستخدمين · قراءة فقط: عرض فقط · صلاحيات الوحدات: صلاحيات مخصصة لكل وحدة.',
     colRole2: 'الدور', colPermissions: 'الصلاحيات', colAction: 'إجراء',
@@ -146,6 +148,17 @@ export default function UsersWorkspace({ appId, t, lang = 'en' }) {
     catch (e) { setError(e.message); }
   }
 
+  async function revokeAccess(user) {
+    if (!confirm(tr('confirmRevoke', { name: user.full_name || user.email, app: appLabel }))) return;
+    try { await patchUser({ user_id: user.id, app_id: appId, revoke_app: true }); setMessage(tr('revoked', { app: appLabel })); }
+    catch (e) { setError(e.message); }
+  }
+
+  async function assignRole(user, role) {
+    try { await patchUser({ user_id: user.id, app_id: appId, role }); if (user.has_app_access === false) setMessage(tr('accessGranted', { app: appLabel })); }
+    catch (e) { setError(e.message); }
+  }
+
   async function removeUser(user) {
     if (!confirm(tr('confirmDelete', { name: user.full_name || user.email }))) return;
     setError('');
@@ -188,7 +201,7 @@ export default function UsersWorkspace({ appId, t, lang = 'en' }) {
                   </span>
                   {user.has_app_access === false && <div className="mt-1 text-[11px] text-[color:var(--tx-4)]">{tr('noAccessHint', { app: appLabel })}</div>}
                 </td>
-                <td className="px-4 py-3"><select aria-label={tr('roleFor', { name })} disabled={user.platform_admin || busy} value={user.app_role} onChange={e => patchUser({ user_id: user.id, app_id: appId, role: e.target.value }).catch(e2 => setError(e2.message))} className={SELECT}>
+                <td className="px-4 py-3"><select aria-label={tr('roleFor', { name })} disabled={user.platform_admin || busy} value={user.app_role} onChange={e => assignRole(user, e.target.value)} className={SELECT}>
                   {(data.roles || []).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
                 </select>{Object.keys(user.module_access || {}).length > 0 && <div className="mt-1 text-[11px] text-[color:var(--tx-4)]">{tr('custom')}</div>}</td>
                 <td className="px-4 py-3"><span className={'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ' + (inactive ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-600')}><span className="h-1.5 w-1.5 rounded-full" style={{ background: inactive ? '#dc2626' : '#059669' }} aria-hidden="true" />{inactive ? tr('statusInactive') : tr('statusActive')}</span></td>
@@ -197,6 +210,7 @@ export default function UsersWorkspace({ appId, t, lang = 'en' }) {
                 <td className="px-4 py-3 whitespace-nowrap space-x-3 rtl:space-x-reverse">
                   <button type="button" onClick={() => setEditing(user)} className={LINK} disabled={busy}>{tr('editName')}</button>
                   <button type="button" onClick={() => setAccessUser(user)} className={LINK} disabled={busy}>{tr('moduleAccess')}</button>
+                  {!user.platform_admin && user.has_app_access !== false && <button type="button" onClick={() => revokeAccess(user)} className="text-amber-600 hover:underline disabled:opacity-50" disabled={busy}>{tr('revokeAccess')}</button>}
                   {!user.platform_admin && <button type="button" onClick={() => setActive(user, inactive)} className={inactive ? LINK : 'text-amber-600 hover:underline disabled:opacity-50'} disabled={busy}>{inactive ? tr('activate') : tr('deactivate')}</button>}
                   {!user.platform_admin && <button type="button" onClick={() => removeUser(user)} className="text-red-500 hover:underline disabled:opacity-50" disabled={busy}>{tr('delete')}</button>}
                 </td>
