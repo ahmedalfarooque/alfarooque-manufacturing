@@ -14,7 +14,7 @@ function ssoSecret() {
 
 function signSsoSession(user) {
   return jwt.sign(
-    { sub: user.id, email: user.email, role: user.role, sso: true },
+    { sub: user.id, email: user.email, role: user.role, sso: true, ...(Array.isArray(user.apps) ? { apps: user.apps } : {}) },
     ssoSecret(),
     { expiresIn: SSO_TTL_SECONDS }
   );

@@ -11,6 +11,8 @@ const {
   isLoginRateLimited, recordLoginAttempt,
 } = require('@/lib/auth');
 const { signSsoSession, ssoCookieHeader, clearSsoCookieHeaders, clearAllAppCookieHeaders, cookieDomainFromReq } = require('@/lib/sso');
+const { isSuperAdminEmail } = require('@/lib/superAdmin');
+const { loginDecision, sessionRoleFor } = require('../../../../shared/appAccess');
 
 function otpEmailHtml(code) {
   return '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">' +
@@ -18,6 +20,17 @@ function otpEmailHtml(code) {
     '<p style="color:#333;font-size:14px;line-height:1.6;">Use this code to finish signing in to the AL FAROOQUE Accounting dashboard. It expires in 5 minutes and can only be used once.</p>' +
     '<div style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f2f2f2;padding:16px 24px;border-radius:8px;text-align:center;margin:20px 0;">' + code + '</div>' +
     '<p style="color:#888;font-size:12px;">If you did not request this, you can safely ignore this email.</p></div>';
+}
+
+/* Application access denied at sign-in: no session is minted. The reply
+   names the applications the account does have so the login page can
+   point the user there. */
+function accessDenied(decision) {
+  const noApps = decision.reason === 'no_apps';
+  return json({
+    error: noApps ? 'No applications have been assigned to your account. Please contact your administrator.' : 'Your account does not have access to this application.',
+    code: noApps ? 'NO_APPS' : 'APP_NOT_GRANTED', apps: decision.apps,
+  }, 403);
 }
 
 export async function GET(req) {
@@ -63,8 +76,12 @@ export async function POST(req) {
     await recordLoginAttempt(email, ip, true);
 
     // Check accounting role
-    const { data: roleRow } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'accounting').maybeSingle();
-    const appRole = user.role === 'admin' ? 'admin' : (roleRow?.app_role || 'readonly');
+    /* Application access: no Accounting grant → no OTP, no session. */
+    const superAdmin = isSuperAdminEmail(user.email);
+    const { data: grants } = await sb.from('app_permissions').select('app_id, app_role').eq('user_id', user.id);
+    const decision = loginDecision({ user, grants: grants || [], appId: APP, isSuperAdmin: superAdmin });
+    if (!decision.allowed) return accessDenied(decision);
+    const appRole = sessionRoleFor({ user, grant: (grants || []).find(g => g.app_id === APP) || null, isSuperAdmin: superAdmin });
 
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
@@ -103,10 +120,14 @@ export async function POST(req) {
     }
     await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otpRow.id);
 
-    const { data: roleRow } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'accounting').maybeSingle();
-    const appRole = user.role === 'admin' ? 'admin' : (roleRow?.app_role || 'readonly');
+    /* Application access: no Accounting grant → no OTP, no session. */
+    const superAdmin = isSuperAdminEmail(user.email);
+    const { data: grants } = await sb.from('app_permissions').select('app_id, app_role').eq('user_id', user.id);
+    const decision = loginDecision({ user, grants: grants || [], appId: APP, isSuperAdmin: superAdmin });
+    if (!decision.allowed) return accessDenied(decision);
+    const appRole = sessionRoleFor({ user, grant: (grants || []).find(g => g.app_id === APP) || null, isSuperAdmin: superAdmin });
 
-    const sessionUser = { id: user.id, email: user.email, role: appRole };
+    const sessionUser = { id: user.id, email: user.email, role: appRole, apps: decision.apps };
     const token = signSession(sessionUser);
     const { error: sessionError } = await sb.from('platform_sessions').insert({
       user_id: user.id, app: APP, token_hash: sha256Hex(token), ip,
@@ -118,7 +139,7 @@ export async function POST(req) {
     const headers = new Headers({ 'Content-Type': 'application/json' });
     headers.append('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, domain));
     headers.append('Set-Cookie', ssoCookieHeader(ssoToken, domain));
-    return new Response(JSON.stringify({ user: sessionUser }), { status: 200, headers });
+    return new Response(JSON.stringify({ user: { id: sessionUser.id, email: sessionUser.email, role: sessionUser.role }, apps: decision.apps, next: decision.next }), { status: 200, headers });
   }
 
   if (action === 'resend-otp') {

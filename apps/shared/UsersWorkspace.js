@@ -37,7 +37,7 @@ const STRINGS = {
     colRole2: 'Role', colPermissions: 'Permissions', colAction: 'Action',
     fullAccess: 'Full Access', edit: 'Edit',
     addUserTitle: 'Add User', editUserTitle: 'Edit User', name: 'Name', email: 'Email', role: 'Role', adminApproved: 'Admin Approved',
-    appAccess: 'Application access', cancel: 'Cancel', save: 'Save', saving: 'Saving…', close: 'Close',
+    appAccess: 'Application access', colApps: 'Applications', allApps: 'All applications', noApps: 'None', editApps: 'Edit access', appsTitle: '{name} · Application access', appsHint: 'Choose which applications this user can open. What they can do inside each application is set by its role.', selectAll: 'Select all', clearAll: 'Clear all', appsSaved: 'Application access saved.', appsSaveError: 'Could not save application access.', thisApp: 'this application', cancel: 'Cancel', save: 'Save', saving: 'Saving…', close: 'Close',
     createError: 'Could not create user.', existingIdentityGranted: 'Existing identity granted application access.',
     userCreatedTempPassword: 'User created. Temporary password: {pwd}', tempPasswordHint: 'Share it securely — it is shown once and must be changed at first login.',
     moduleAccessTitle: '{name} · Module Access', moduleAccessSaveError: 'Could not save module access.',
@@ -63,7 +63,7 @@ const STRINGS = {
     colRole2: 'الدور', colPermissions: 'الصلاحيات', colAction: 'إجراء',
     fullAccess: 'وصول كامل', edit: 'تعديل',
     addUserTitle: 'إضافة مستخدم', editUserTitle: 'تعديل المستخدم', name: 'الاسم', email: 'البريد الإلكتروني', role: 'الدور', adminApproved: 'موافقة المسؤول',
-    appAccess: 'الوصول إلى التطبيقات', cancel: 'إلغاء', save: 'حفظ', saving: 'جارٍ الحفظ…', close: 'إغلاق',
+    appAccess: 'الوصول إلى التطبيقات', colApps: 'التطبيقات', allApps: 'جميع التطبيقات', noApps: 'لا شيء', editApps: 'تعديل الوصول', appsTitle: '{name} · الوصول إلى التطبيقات', appsHint: 'اختر التطبيقات التي يمكن لهذا المستخدم فتحها. ما يمكنه فعله داخل كل تطبيق يحدده دوره فيه.', selectAll: 'تحديد الكل', clearAll: 'مسح الكل', appsSaved: 'تم حفظ الوصول إلى التطبيقات.', appsSaveError: 'تعذر حفظ الوصول إلى التطبيقات.', thisApp: 'هذا التطبيق', cancel: 'إلغاء', save: 'حفظ', saving: 'جارٍ الحفظ…', close: 'إغلاق',
     createError: 'تعذر إنشاء المستخدم.', existingIdentityGranted: 'تم منح الهوية الحالية صلاحية الوصول إلى التطبيق.',
     userCreatedTempPassword: 'تم إنشاء المستخدم. كلمة المرور المؤقتة: {pwd}', tempPasswordHint: 'شاركها بأمان — تُعرض مرة واحدة ويجب تغييرها عند أول تسجيل دخول.',
     moduleAccessTitle: '{name} · صلاحيات الوحدات', moduleAccessSaveError: 'تعذر حفظ صلاحيات الوحدات.',
@@ -119,6 +119,7 @@ export default function UsersWorkspace({ appId, t, lang = 'en' }) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(null);
   const [accessUser, setAccessUser] = useState(null);
+  const [appsUser, setAppsUser] = useState(null);
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -184,17 +185,27 @@ export default function UsersWorkspace({ appId, t, lang = 'en' }) {
     <section className="overflow-hidden rounded-2xl border border-[color:var(--bd)] bg-[color:var(--bg-card)]">
       <div className="overflow-x-auto"><table className="w-full min-w-[1000px] text-sm">
         <thead className="bg-[color:var(--nav-bg)] text-start text-xs uppercase tracking-wide text-[color:var(--tx-3)]"><tr>
-          {[tr('colName'), tr('colEmail'), tr('colApp', { app: appLabel }), tr('colRole'), tr('colStatus'), tr('colApproved'), tr('colSince'), tr('colActions')].map(h => <th key={h} className="px-4 py-3 text-start">{h}</th>)}
+          {[tr('colName'), tr('colEmail'), tr('colApps'), tr('colApp', { app: appLabel }), tr('colRole'), tr('colStatus'), tr('colApproved'), tr('colSince'), tr('colActions')].map(h => <th key={h} className="px-4 py-3 text-start">{h}</th>)}
         </tr></thead>
         <tbody className="divide-y divide-[color:var(--bd)]">
-          {!data ? <tr><td colSpan="8" className="px-4 py-10 text-center text-[color:var(--tx-3)]">{tr('loading')}</td></tr>
-            : rows.length === 0 ? <tr><td colSpan="8" className="px-4 py-10 text-center text-[color:var(--tx-3)]">{tr('empty')}</td></tr>
+          {!data ? <tr><td colSpan="9" className="px-4 py-10 text-center text-[color:var(--tx-3)]">{tr('loading')}</td></tr>
+            : rows.length === 0 ? <tr><td colSpan="9" className="px-4 py-10 text-center text-[color:var(--tx-3)]">{tr('empty')}</td></tr>
             : rows.map(user => {
               const name = user.full_name || user.email;
               const inactive = user.is_active === false;
               return <tr key={user.id} className={'hover:bg-cyan-500/5' + (inactive ? ' opacity-60' : '')}>
                 <td className="px-4 py-3 font-medium">{user.full_name || '—'}{user.platform_admin && <span className="ms-2 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[11px] font-semibold text-cyan-600">{tr('platformAdmin')}</span>}</td>
                 <td className="px-4 py-3" dir="ltr">{user.email}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-1 max-w-[260px]">
+                    {user.platform_admin
+                      ? <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-[11px] font-medium text-cyan-600">{tr('allApps')}</span>
+                      : (user.apps || []).length === 0
+                        ? <span className="text-[11px] text-[color:var(--tx-4)]">{tr('noApps')}</span>
+                        : (user.apps || []).map(id => <span key={id} className={'rounded-full px-2 py-0.5 text-[11px] font-medium ' + (id === appId ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-500/10 text-[color:var(--tx-2)]')}>{APP_LABELS[id] || id}</span>)}
+                  </div>
+                  {!user.platform_admin && <button type="button" onClick={() => setAppsUser(user)} className={LINK + ' mt-1 text-[12px]'} disabled={busy}>{tr('editApps')}</button>}
+                </td>
                 <td className="px-4 py-3">
                   <span className={'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ' + (user.has_app_access !== false ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-500/10 text-[color:var(--tx-3)]')}>
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: user.has_app_access !== false ? '#059669' : '#94a3b8' }} aria-hidden="true" />{user.has_app_access !== false ? tr('hasAccess') : tr('noAccess')}
@@ -231,8 +242,45 @@ export default function UsersWorkspace({ appId, t, lang = 'en' }) {
 
     {adding && <AddUserModal appId={appId} roles={data?.roles || []} apps={data?.apps || []} tr={tr} roleLabel={roleLabel} onClose={() => setAdding(false)} onCreated={(result) => { setAdding(false); setMessage(result.reused_identity ? tr('existingIdentityGranted') : tr('userCreatedTempPassword', { pwd: result.temp_password }) + ' ' + tr('tempPasswordHint')); load(); }} />}
     {editing && <EditUserModal user={editing} tr={tr} onClose={() => setEditing(null)} onSave={async full_name => { await patchUser({ user_id: editing.id, full_name }); setEditing(null); setMessage(tr('nameSaved')); }} />}
+    {appsUser && <AppsModal appId={appId} user={appsUser} apps={data?.apps || []} tr={tr} onClose={() => setAppsUser(null)} onSave={async set_apps => { await patchUser({ user_id: appsUser.id, set_apps }); setAppsUser(null); setMessage(tr('appsSaved')); }} />}
     {accessUser && <AccessModal appId={appId} user={accessUser} modules={data?.modules || []} tr={tr} onClose={() => setAccessUser(null)} onSave={async module_access => { await patchUser({ user_id: accessUser.id, app_id: appId, module_access }); setAccessUser(null); setMessage(tr('moduleAccessSaved')); }} />}
   </div>;
+}
+
+/* Application Access editor — which applications the user may enter.
+   Saves the full list (server adds/removes by difference, keeping the
+   in-app role of every grant that stays). */
+function AppsModal({ appId, user, apps, tr, onClose, onSave }) {
+  const [selected, setSelected] = useState(user.apps || []);
+  const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+  const name = user.full_name || user.email;
+  async function submit(e) {
+    e.preventDefault(); setBusy(true); setError('');
+    try { await onSave(selected); } catch (err) { setError(err.message || tr('appsSaveError')); setBusy(false); }
+  }
+  return <Modal title={tr('appsTitle', { name })} onClose={onClose} tr={tr}>
+    <form onSubmit={submit} className="space-y-4">
+      <p className="text-sm text-[color:var(--tx-3)]">{tr('appsHint')}</p>
+      <div className="flex flex-wrap gap-3 text-xs">
+        <button type="button" className={LINK} onClick={() => setSelected([...apps])}>{tr('selectAll')}</button>
+        <button type="button" className={LINK} onClick={() => setSelected([])}>{tr('clearAll')}</button>
+      </div>
+      <fieldset><legend className="sr-only">{tr('appAccess')}</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {apps.map(id => <label key={id} className={'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm cursor-pointer ' + (selected.includes(id) ? 'border-cyan-500/60 bg-cyan-500/5' : 'border-[color:var(--bd)]')}>
+            <input type="checkbox" className="h-4 w-4" checked={selected.includes(id)} onChange={() => setSelected(list => list.includes(id) ? list.filter(x => x !== id) : [...list, id])} />
+            <span className="font-medium">{APP_LABELS[id] || id}</span>
+            {id === appId && <span className="ms-auto text-[11px] text-[color:var(--tx-4)]">{tr('thisApp')}</span>}
+          </label>)}
+        </div>
+      </fieldset>
+      {error && <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-500">{error}</div>}
+      <div className="flex flex-wrap justify-end gap-2">
+        <button type="button" onClick={onClose} className={BTN} disabled={busy}>{tr('cancel')}</button>
+        <button type="submit" className={BTN_PRIMARY} disabled={busy}>{busy ? tr('saving') : tr('save')}</button>
+      </div>
+    </form>
+  </Modal>;
 }
 
 function AddUserModal({ appId, roles, apps, tr, roleLabel, onClose, onCreated }) {

@@ -1,10 +1,14 @@
 import { jwtVerify } from 'jose';
 import { NextResponse } from 'next/server';
+import { isSuperAdminEmail } from './lib/superAdmin';
+import { sessionCanEnterApp } from '../shared/appAccess';
+
+const APP_ID = 'crm';
 
 const COOKIE_NAME = 'af_crm_session';
 const SSO_COOKIE_NAME = 'af_sso_session';
 
-const PROTECTED = ['/dashboard', '/contacts', '/deals', '/activities', '/pipeline', '/integrations', '/reports', '/settings', '/users'];
+const PROTECTED = ['/launch', '/dashboard', '/contacts', '/deals', '/activities', '/pipeline', '/integrations', '/reports', '/settings', '/users'];
 const ADMIN_ONLY = ['/settings', '/users'];
 
 export async function middleware(req) {
@@ -38,15 +42,27 @@ export async function middleware(req) {
   const appToken = cookies.get(COOKIE_NAME)?.value;
   const ssoToken = cookies.get(SSO_COOKIE_NAME)?.value;
 
-  const session = (await verifyJwt(appToken)) || (await verifySso(ssoToken));
-  if (!session) return NextResponse.redirect(new URL('/login', req.url));
+  const appSession = await verifyJwt(appToken);
+  const rawSession = appSession || (await verifySso(ssoToken));
+  const viaSso = !appSession && !!rawSession;
+  if (!rawSession) return NextResponse.redirect(new URL('/login', req.url));
+  /* Effective role must match lib/auth.js readSession (super-admin override). */
+  const session = isSuperAdminEmail(rawSession.email) ? { ...rawSession, role: 'admin' } : rawSession;
+
+  /* Application access: sessions minted since the app-access release carry
+     an `apps` claim; a legacy SSO token from a sibling app is not trusted
+     to enter CRM. API routes enforce the grant independently. */
+  const can = sessionCanEnterApp(session, APP_ID);
+  if (can === false || (can === null && viaSso)) {
+    return NextResponse.redirect(new URL('/no-access', req.url));
+  }
 
   const isAdmin = ADMIN_ONLY.some(p => pathname === p || pathname.startsWith(p + '/'));
   if (isAdmin && session.role !== 'admin') {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    return NextResponse.redirect(new URL('/forbidden?from=' + encodeURIComponent(pathname), req.url));
   }
 
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/dashboard/:path*', '/contacts/:path*', '/deals/:path*', '/activities/:path*', '/pipeline/:path*', '/integrations/:path*', '/reports/:path*', '/settings/:path*', '/users/:path*'] };
+export const config = { matcher: ['/launch/:path*', '/dashboard/:path*', '/contacts/:path*', '/deals/:path*', '/activities/:path*', '/pipeline/:path*', '/integrations/:path*', '/reports/:path*', '/settings/:path*', '/users/:path*'] };

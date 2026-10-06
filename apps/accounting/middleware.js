@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
+import { isSuperAdminEmail } from './lib/superAdmin';
+import { sessionCanEnterApp } from '../shared/appAccess';
+
+const APP_ID = 'accounting';
 
 const COOKIE_NAME = 'af_accounting_session';
 const SSO_COOKIE_NAME = 'af_sso_session';
@@ -23,9 +27,10 @@ async function verifySso(token) {
 async function readAnySession(req) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = token ? await verify(token) : null;
-  if (session) return session;
+  if (session) return { session, viaSso: false };
   const ssoToken = req.cookies.get(SSO_COOKIE_NAME)?.value;
-  return ssoToken ? await verifySso(ssoToken) : null;
+  const sso = ssoToken ? await verifySso(ssoToken) : null;
+  return { session: sso, viaSso: !!sso };
 }
 
 const ADMIN_ONLY_PREFIXES = ['/settings', '/users'];
@@ -50,9 +55,18 @@ function redirectTo(req, path) {
   return NextResponse.redirect(new URL(req.nextUrl.basePath + path, req.url));
 }
 
+/* Effective role must match lib/auth.js readSession (super-admin
+   override) or the page gate and the API disagree — see apps/cars. */
+function effectiveSession(session) {
+  if (!session) return null;
+  if (isSuperAdminEmail(session.email)) return { ...session, role: 'admin' };
+  return session;
+}
+
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
-  const session = await readAnySession(req);
+  const { session: rawSession, viaSso } = await readAnySession(req);
+  const session = effectiveSession(rawSession);
 
   if (LOCAL_FINANCIAL_APIS.some(p => pathname.startsWith(p))) {
     return NextResponse.json({ error: 'This local financial API is retired. SmartLife is the financial source of truth.' }, { status: 410 });
@@ -72,15 +86,27 @@ export async function middleware(req) {
     return redirectTo(req, target);
   }
 
+  /* Application access ("may this user enter accounting at all?"). Sessions
+     minted since the app-access release carry an `apps` claim; a session
+     without the claim is a legacy token — the app's own cookie is still
+     honoured (its login already checked the grant), but a legacy SSO
+     token from a sibling app is not. The API layer enforces the grant
+     independently (shared moduleAuthorization). */
+  const can = sessionCanEnterApp(session, APP_ID);
+  if (can === false || (can === null && viaSso)) {
+    return redirectTo(req, '/no-access');
+  }
+
+  /* Admin-only pages: a clear forbidden page, never a silent bounce. */
   if (ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p)) && session.role !== 'admin') {
-    return redirectTo(req, '/dashboard');
+    return redirectTo(req, '/forbidden?from=' + encodeURIComponent(pathname));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
+  matcher: ['/launch/:path*',
     '/dashboard/:path*', '/chart-of-accounts/:path*', '/journal-entries/:path*',
     '/invoices/:path*', '/bills/:path*', '/payments/:path*', '/banking/:path*',
     '/expenses/:path*', '/assets/:path*', '/reports/:path*', '/vat/:path*', '/settings/:path*', '/users/:path*',

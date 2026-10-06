@@ -31,6 +31,8 @@ function cleanAccess(access, fallbackApp, fallbackRole) {
   }));
 }
 
+const { diffAppGrants, DEFAULT_GRANT_ROLE } = require('./appAccess');
+
 function createAdminUsersHandlers({ getDb, readSession, appId }) {
   async function GET(req) {
     const gate = adminSession(readSession, req);
@@ -62,6 +64,9 @@ function createAdminUsersHandlers({ getDb, readSession, appId }) {
              use it at all until an admin assigns a role (which creates
              the grant). Platform admins always have access. */
           has_app_access: user.role === 'admin' || !!current,
+          /* Application access (which apps the user may enter) — one id per
+             app_permissions row; platform admins may enter every app. */
+          apps: user.role === 'admin' ? [...APPS] : APPS.filter(id => access.some(row => row.app_id === id)),
           module_access: current?.module_access || {},
           can_delete: user.role === 'admin' || !!current?.can_delete,
         };
@@ -122,6 +127,31 @@ function createAdminUsersHandlers({ getDb, readSession, appId }) {
     if (Object.keys(userPatch).length) {
       const result = await sb.from('platform_users').update(userPatch).eq('id', body.user_id);
       if (result.error) return json({ error: result.error.message }, 500);
+    }
+    /* set_apps: the Application Access editor — the full list of apps the
+       user may enter. Rows are added/removed by difference so existing
+       grants keep their in-app role and module overrides; the unique
+       (user_id, app_id) key plus the diff make duplicates impossible. */
+    if (body.set_apps !== undefined) {
+      if (!Array.isArray(body.set_apps)) return json({ error: 'set_apps must be a list of application ids.' }, 400);
+      const { data: target, error: tErr } = await sb.from('platform_users').select('role').eq('id', body.user_id).maybeSingle();
+      if (tErr) return json({ error: tErr.message }, 500);
+      if (!target) return json({ error: 'User not found.' }, 404);
+      if (target.role === 'admin') return json({ error: 'Platform administrators always have access to every application; change their platform role instead.' }, 400);
+      const { data: current, error: cErr } = await sb.from('app_permissions').select('app_id').eq('user_id', body.user_id);
+      if (cErr) return json({ error: cErr.message }, 500);
+      const diff = diffAppGrants((current || []).map(r => r.app_id), body.set_apps);
+      if (!diff) return json({ error: 'Unknown application.' }, 400);
+      if (body.user_id === gate.session.sub && diff.remove.includes(appId)) return json({ error: 'You cannot revoke your own access.' }, 400);
+      for (const app_id of diff.remove) {
+        const { error: dErr } = await sb.from('app_permissions').delete().eq('user_id', body.user_id).eq('app_id', app_id);
+        if (dErr) return json({ error: dErr.message }, 500);
+      }
+      for (const app_id of diff.add) {
+        const { error: uErr } = await sb.from('app_permissions').upsert({ user_id: body.user_id, app_id, app_role: DEFAULT_GRANT_ROLE, granted_by: gate.session.sub }, { onConflict: 'user_id,app_id' });
+        if (uErr) return json({ error: uErr.message }, 500);
+      }
+      return json({ ok: true, apps: diff.apps, added: diff.add, removed: diff.remove });
     }
     if (body.app_id) {
       if (!APPS.includes(body.app_id)) return json({ error: 'Unknown application.' }, 400);

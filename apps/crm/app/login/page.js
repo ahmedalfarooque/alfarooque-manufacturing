@@ -1,6 +1,7 @@
 'use client';
 import { useLang } from '@/lib/i18n';
 import UnifiedErpLogin from '../../../shared/UnifiedErpLogin';
+import { getAppUrl } from '@/lib/appLinks';
 export default function LoginPage() {
   const context = useLang();
   const labels = context.lang === 'ar' ? {
@@ -9,5 +10,5 @@ export default function LoginPage() {
     'shell.toggleLanguage':'Toggle language','shell.toggleTheme':'Toggle theme','login.user':'User','login.admin':'Admin','login.email':'Email','login.password':'Password','login.continue':'Continue','login.signingIn':'Signing in…','login.verifying':'Verifying…','login.verifyAndSignIn':'Verify & Sign In','login.resendCode':'Resend code','login.backToEmail':'Back to email','login.backToEmailPassword':'Back to email and password','login.codeSentTo':'Code sent to','login.successRedirect':'Success — redirecting…','login.genericError':'Something went wrong. Please try again.'
   };
   const language = { ...context, t: key => labels[key] || context.t(key) };
-  return <UnifiedErpLogin {...language} title="CRM" subtitle={language.lang === 'ar' ? 'إدارة علاقات العملاء' : 'Customer Relationship Management'} themeKey="af-crm-theme" userActions={{ login:'email-login', verify:'verify-otp', resend:'resend-otp' }} adminActions={{ login:'login', verify:'verify-otp', resend:'resend-otp' }} />;
+  return <UnifiedErpLogin {...language} title="CRM" subtitle={language.lang === 'ar' ? 'إدارة علاقات العملاء' : 'Customer Relationship Management'} themeKey="af-crm-theme" userActions={{ login:'email-login', verify:'verify-otp', resend:'resend-otp' }} adminActions={{ login:'login', verify:'verify-otp', resend:'resend-otp' }} getAppUrl={getAppUrl} />;
 }

@@ -125,3 +125,39 @@ test('activate / deactivate updates platform_users.is_active', async () => {
   await h.PATCH(req({ user_id: 'v1', is_active: true }));
   assert.equal(db.tables.platform_users.find(u => u.id === 'v1').is_active, true);
 });
+
+test('GET: every row carries `apps` (admins: all applications; others: exactly their grants)', async () => {
+  const { h } = setup();
+  const body = await (await h.GET(req(null))).json();
+  const admin = body.rows.find(r => r.id === 'a1'); const viewer = body.rows.find(r => r.id === 'v1');
+  assert.deepEqual(admin.apps, body.apps);
+  assert.deepEqual(viewer.apps, []);
+});
+
+test('PATCH set_apps: grants are added/removed by difference, roles of untouched grants survive, duplicates impossible', async () => {
+  const { db, h } = setup();
+  db.tables.app_permissions.push({ user_id: 'v1', app_id: 'inventory', app_role: 'manager', module_access: { stock: 'view_only' }, can_delete: false });
+  let res = await h.PATCH(req({ user_id: 'v1', set_apps: ['inventory', 'cars', 'cars'] }));
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { ok: true, apps: ['cars', 'inventory'], added: ['cars'], removed: [] });
+  const inv = db.tables.app_permissions.find(r => r.user_id === 'v1' && r.app_id === 'inventory');
+  assert.equal(inv.app_role, 'manager');                                   // untouched grant keeps its in-app role
+  assert.deepEqual(inv.module_access, { stock: 'view_only' });
+  const cars = db.tables.app_permissions.find(r => r.user_id === 'v1' && r.app_id === 'cars');
+  assert.equal(cars.app_role, 'readonly');                                 // new grant → default in-app role
+  assert.equal(db.tables.app_permissions.filter(r => r.user_id === 'v1' && r.app_id === 'cars').length, 1);
+  res = await h.PATCH(req({ user_id: 'v1', set_apps: ['cars'] }));        // remove inventory, keep cars
+  assert.deepEqual(await res.json(), { ok: true, apps: ['cars'], added: [], removed: ['inventory'] });
+  assert.deepEqual(db.tables.app_permissions.filter(r => r.user_id === 'v1').map(r => r.app_id), ['cars']);
+  res = await h.PATCH(req({ user_id: 'v1', set_apps: [] }));              // revoke everything
+  assert.deepEqual(db.tables.app_permissions.filter(r => r.user_id === 'v1'), []);
+});
+
+test('PATCH set_apps: unknown app 400, non-array 400, platform admin 400, self-revoke of this app 400, viewer 403', async () => {
+  const { h } = setup();
+  assert.equal((await h.PATCH(req({ user_id: 'v1', set_apps: ['cars', 'website'] }))).status, 400);
+  assert.equal((await h.PATCH(req({ user_id: 'v1', set_apps: 'cars' }))).status, 400);
+  assert.equal((await h.PATCH(req({ user_id: 'a1', set_apps: ['cars'] }))).status, 400);
+  assert.equal((await h.PATCH(req({ user_id: 'a1', set_apps: [] }, 'admin'))).status, 400);
+  assert.equal((await h.PATCH(req({ user_id: 'v1', set_apps: ['cars'] }, 'viewer'))).status, 403);
+});

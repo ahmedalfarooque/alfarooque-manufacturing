@@ -26,6 +26,9 @@ const {
   signSsoSession, ssoCookieHeader, clearSsoCookieHeaders, clearAllAppCookieHeaders, cookieDomainFromReq,
 } = require('@/lib/sso');
 
+const { isSuperAdminEmail } = require('@/lib/superAdmin');
+const { loginDecision, sessionRoleFor, grantedAppIds } = require('../../../../shared/appAccess');
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VIEW_LOGIN_ALLOWED_DOMAIN = '@alfarooque.com';
 
@@ -45,7 +48,18 @@ function viewOtpEmailHtml(code) {
     '<p style="color:#888;font-size:12px;">If you did not request this, you can safely ignore this email.</p>' +
   '</div>';
 }
-function sanitizeUser(u) { return { id: u.id, email: u.email, full_name: u.full_name, role: u.role }; }
+function sanitizeUser(u) { return { id: u.id, email: u.email, full_name: u.full_name, role: isSuperAdminEmail(u.email) ? 'admin' : u.role }; }
+
+/* Application access denied at sign-in: no session is minted. The reply
+   names the applications the account does have so the login page can
+   point the user there. */
+function accessDenied(decision) {
+  const noApps = decision.reason === 'no_apps';
+  return json({
+    error: noApps ? 'No applications have been assigned to your account. Please contact your administrator.' : 'Your account does not have access to this application.',
+    code: noApps ? 'NO_APPS' : 'APP_NOT_GRANTED', apps: decision.apps,
+  }, 403);
+}
 function json(data, status) { return new Response(JSON.stringify(data), { status: status || 200, headers: { 'Content-Type': 'application/json' } }); }
 function getIp(req) { return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || ''; }
 function getUa(req) { return req.headers.get('user-agent') || ''; }
@@ -56,7 +70,8 @@ export async function GET(req) {
   const sb = getDb();
   const { data: user } = await sb.from('platform_users').select('*').eq('id', session.sub).maybeSingle();
   if (!user || !user.is_active) return json({ error: 'Account disabled.' }, 401);
-  return json({ user: sanitizeUser(user) });
+  const { data: grants } = await sb.from('app_permissions').select('app_id').eq('user_id', user.id);
+  return json({ user: sanitizeUser(user), apps: grantedAppIds(user, grants || [], { isSuperAdmin: isSuperAdminEmail(user.email) }) });
 }
 
 export async function POST(req) {
@@ -141,8 +156,15 @@ async function handleVerifyOtp(sb, body, ip, ua, req) {
 
   await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
-  const { data: grant } = user.role === 'admin' ? { data: null } : await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'cars').maybeSingle();
-  const sessionUser = { ...user, role: user.role === 'admin' ? 'admin' : (grant?.app_role || user.role || 'readonly') };
+  /* Application access: a user who was not granted Cars gets no Cars
+     session, whatever their platform role. Admins / the super-admin may
+     enter every application. */
+  const superAdmin = isSuperAdminEmail(user.email);
+  const { data: grants } = await sb.from('app_permissions').select('app_id, app_role').eq('user_id', user.id);
+  const decision = loginDecision({ user, grants: grants || [], appId: APP, isSuperAdmin: superAdmin });
+  if (!decision.allowed) return accessDenied(decision);
+  const grant = (grants || []).find(g => g.app_id === APP) || null;
+  const sessionUser = { ...user, role: sessionRoleFor({ user, grant, isSuperAdmin: superAdmin }), apps: decision.apps };
   const token = signSession(sessionUser);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,
@@ -154,14 +176,14 @@ async function handleVerifyOtp(sb, body, ip, ua, req) {
   }
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
-  const res = json({ ok: true, user: sanitizeUser(sessionUser) });
+  const res = json({ ok: true, user: sanitizeUser(sessionUser), apps: decision.apps, next: decision.next });
   const cookieDomain = cookieDomainFromReq(req);
   res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomain));
   /* Admin SSO — one extra parent-domain cookie signs the Admin into the
      sibling apps too (QuotePro / Projects / Car Inventory behave as one
      ERP). Only ever minted for admins; every other role is untouched. */
   if (user.role === 'admin') {
-    res.headers.append('Set-Cookie', ssoCookieHeader(signSsoSession(user), cookieDomain));
+    res.headers.append('Set-Cookie', ssoCookieHeader(signSsoSession(sessionUser), cookieDomain));
   }
   return res;
 }
@@ -282,9 +304,15 @@ async function handleViewVerifyOtp(sb, body, ip, ua, req) {
 
   await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
-  // Role is always forced to "viewer" for a session minted via this route — see the header comment above.
-  const { data: grant } = await sb.from('app_permissions').select('app_role').eq('user_id', user.id).eq('app_id', 'cars').maybeSingle();
-  const sessionUser = { ...user, role: grant?.app_role || 'readonly' };
+  /* OTP-only sign-in keeps the in-app role of the user's Cars grant (it
+     never promotes a platform admin by itself); the super-admin account is
+     always admin, matching readSession. No Cars grant → no session. */
+  const superAdmin = isSuperAdminEmail(user.email);
+  const { data: grants } = await sb.from('app_permissions').select('app_id, app_role').eq('user_id', user.id);
+  const decision = loginDecision({ user, grants: grants || [], appId: APP, isSuperAdmin: superAdmin, dashboard: '/view' });
+  if (!decision.allowed) return accessDenied(decision);
+  const grant = (grants || []).find(g => g.app_id === APP) || null;
+  const sessionUser = { ...user, role: sessionRoleFor({ user, grant, isSuperAdmin: superAdmin, viewLogin: true }), apps: decision.apps };
   const token = signSession(sessionUser);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,
@@ -297,7 +325,7 @@ async function handleViewVerifyOtp(sb, body, ip, ua, req) {
   await sb.from('platform_users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
   /* Never mints an SSO cookie — this session's role is always 'viewer'. */
-  const res = json({ ok: true, user: sanitizeUser(sessionUser) });
+  const res = json({ ok: true, user: sanitizeUser(sessionUser), apps: decision.apps, next: decision.next });
   res.headers.set('Set-Cookie', sessionCookieHeader(token, SESSION_TTL_SECONDS, cookieDomainFromReq(req)));
   return res;
 }

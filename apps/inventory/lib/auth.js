@@ -30,7 +30,7 @@ function generateOtp() { return String(crypto.randomInt(0, 1000000)).padStart(6,
 
 function signSession(user) {
   return jwt.sign(
-    { sub: user.id, email: user.email, role: user.role, app: APP },
+    { sub: user.id, email: user.email, role: user.role, app: APP, ...(Array.isArray(user.apps) ? { apps: user.apps } : {}) },
     jwtSecret(),
     { expiresIn: SESSION_TTL_SECONDS }
   );

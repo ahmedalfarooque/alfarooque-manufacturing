@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { APP_LABELS } from './appAccess';
 
 const Icon = ({ name }) => {
   const common = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
@@ -24,6 +25,7 @@ async function request(action, payload, fallbackError) {
   if (!response.ok) {
     const error = new Error(data.error || fallbackError || 'Something went wrong.');
     error.retryAfter = data.retryAfter;
+    error.code = data.code; error.apps = Array.isArray(data.apps) ? data.apps : null;
     throw error;
   }
   return data;
@@ -31,7 +33,7 @@ async function request(action, payload, fallbackError) {
 
 export default function UnifiedErpLogin({
   t, lang, setLang, title, subtitle, themeKey,
-  userActions, adminActions, userRedirect = '/dashboard', adminRedirect = '/dashboard',
+  userActions, adminActions, userRedirect = '/dashboard', adminRedirect = '/dashboard', getAppUrl = null,
 }) {
   const [mode, setMode] = useState('user');
   const [step, setStep] = useState('credentials');
@@ -103,10 +105,20 @@ export default function UnifiedErpLogin({
   async function submitOtp(event) {
     event.preventDefault(); setBusy(true); setMessage(null);
     try {
-      await request(actions.verify, { email, code }, t('login.genericError'));
+      const data = await request(actions.verify, { email, code }, t('login.genericError'));
       setMessage({ type: 'success', text: t('login.successRedirect') });
-      setTimeout(() => { window.location.href = mode === 'admin' ? adminRedirect : userRedirect; }, 400);
-    } catch (error) { setMessage({ type: 'error', text: error.message }); setBusy(false); }
+      /* The server decides where a signed-in user goes: the application
+         launcher when they may enter several apps, otherwise this app. */
+      const explicit = new URLSearchParams(window.location.search).get('redirect');
+      const target = (!explicit && data && data.next === '/launch') ? '/launch' : (mode === 'admin' ? adminRedirect : userRedirect);
+      setTimeout(() => { window.location.href = target; }, 400);
+    } catch (error) {
+      /* Application access denied: say which applications the account
+         does have (links when this app knows the sibling URLs). */
+      const apps = error.apps && error.apps.length ? error.apps : null;
+      setMessage({ type: 'error', text: error.message, apps });
+      setBusy(false);
+    }
   }
 
   async function resend() {
@@ -142,7 +154,13 @@ export default function UnifiedErpLogin({
         <button type="button" role="tab" aria-selected={mode === 'admin'} className={mode === 'admin' ? 'active' : ''} onClick={() => selectMode('admin')}>{lang === 'ar' ? 'مسؤول' : 'Admin'}</button>
       </div>}
 
-      {message && <div className={`erp-message ${message.type}`}>{message.text}</div>}
+      {message && <div className={`erp-message ${message.type}`}>{message.text}
+        {message.apps && <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+          {message.apps.map(id => getAppUrl
+            ? <a key={id} href={getAppUrl(id)} style={{ textDecoration: 'underline', fontWeight: 600 }}>{APP_LABELS[id] || id}</a>
+            : <span key={id} style={{ fontWeight: 600 }}>{APP_LABELS[id] || id}</span>)}
+        </div>}
+      </div>}
 
       {step === 'credentials' ? <form onSubmit={submitCredentials} className="erp-form">
         <label>{t('login.email')}<span className="erp-input"><b><Icon name="mail" /></b><input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></span></label>
