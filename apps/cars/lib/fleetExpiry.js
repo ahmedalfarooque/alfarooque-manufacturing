@@ -213,5 +213,5 @@ function validateVehicleDates(v) {
 module.exports = {
   WITHIN_DAYS, DEFAULT_TIMEZONE, ALERT_TYPES, STATUS, SEVERITY, SEVERITY_RANK, BUCKETS,
   todayInZone, parseDateOnly, normalizeDate, daysBetween, severityFor,
-  computeExpiry, buildVehicleExpiry, vehicleSummary, collectAlerts, summarizeFleet, validateVehicleDates,
+  computeExpiry, buildVehicleExpiry, collectAlerts, summarizeFleet, validateVehicleDates,
 };

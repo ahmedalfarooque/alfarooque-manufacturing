@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Shell from '@/components/Shell';
 import Dropdown from '@/components/Dropdown';
 import { GlassIcon } from '@/components/GlassIcons';
-import { EmptyState, Input, IconButton, Th, Td } from '@/components/ui';
+import { EmptyState, Input, IconButton, Button, Th, Td } from '@/components/ui';
 import { useLiveData } from '@/lib/useLiveData';
 import { useLanguage } from '@/lib/i18n';
 import { StatusPill, SeverityPill, DaysText, VehicleStatusPill, NotifyLine, Notice, sortRows, matchesFilter, matchesSearch } from '@/components/ExpiryUi';
@@ -18,11 +18,11 @@ import { StatusPill, SeverityPill, DaysText, VehicleStatusPill, NotifyLine, Noti
 const CONFIG = {
   insurance: {
     api: '/api/insurance', active: '/insurance', titleKey: 'ins.title', subKey: 'ins.subtitle',
-    filters: ['all', 'valid', 'expiring30', 'expired', 'missing'],
+    filters: ['all', 'valid', 'expiring30', 'critical', 'urgent', 'warning', 'expired', 'missing'],
   },
   inspection: {
     api: '/api/inspection', active: '/inspection', titleKey: 'insp.title', subKey: 'insp.subtitle',
-    filters: ['all', 'expiring30', 'expired', 'valid', 'missingDates'],
+    filters: ['all', 'expiring30', 'critical', 'urgent', 'warning', 'expired', 'valid', 'missingDates'],
   },
 };
 
@@ -72,7 +72,10 @@ export default function ExpiryListPage({ kind }) {
           <h2 className="text-lg font-semibold">{t(cfg.titleKey)}</h2>
           <p className="text-xs text-[color:var(--tx-3)]">{t(cfg.subKey)}</p>
         </div>
-        {data?.today && <div className="text-xs text-[color:var(--tx-3)]">{t('dx.today')}: <span className="font-medium text-[color:var(--tx-2)]">{formatDateOnly(data.today)}</span></div>}
+        <div className="flex items-center gap-3 print:hidden">
+          {data?.today && <div className="text-xs text-[color:var(--tx-3)]">{t('dx.today')}: <span className="font-medium text-[color:var(--tx-2)]">{formatDateOnly(data.today)}</span></div>}
+          <Button variant="ghost" size="sm" onClick={() => window.print()}>{t('common.print')}</Button>
+        </div>
       </div>
 
       {error && <Notice tone="red">{error}</Notice>}

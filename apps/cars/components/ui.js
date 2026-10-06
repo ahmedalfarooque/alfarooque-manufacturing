@@ -93,7 +93,7 @@ export function Modal({ title, children, onClose, wide, footer }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 lg:p-10">
       <div className="gmodal-backdrop" onClick={onClose} />
-      <div className={'gmodal-panel relative w-full ' + (wide ? 'max-w-3xl' : 'max-w-xl')}>
+      <div role="dialog" aria-modal="true" aria-label={typeof title === 'string' ? title : undefined} className={'gmodal-panel relative w-full ' + (wide ? 'max-w-3xl' : 'max-w-xl')}>
         <div className="flex items-center justify-between gap-4 px-5 lg:px-6 py-4 border-b border-[color:var(--bd)]">
           <div className="font-semibold text-[15px] text-[color:var(--tx)]">{title}</div>
           <button onClick={onClose} aria-label="Close"

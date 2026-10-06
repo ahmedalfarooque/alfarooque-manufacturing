@@ -66,6 +66,7 @@ export function VehicleStatusPill({ status }) {
 export function NotifyLine({ rec, schemaReady }) {
   const { t, formatDateOnly } = useLanguage();
   if (!rec.isActive) return <span className="text-[color:var(--tx-4)]">{t('fleet.noAlert')}</span>;
+  if (schemaReady === false) return <span className="text-[11px] text-[color:var(--tx-4)]">{t('fleet.emailUnavailable')}</span>;
   const n = rec.notification || {};
   return (
     <div className="leading-tight">
@@ -112,6 +113,7 @@ export function matchesFilter(row, filter) {
     case 'expired': return row.status === 'expired';
     case 'missing': return row.status === 'missing_date' || !!row.detailsMissing;
     case 'missingDates': return row.status === 'missing_date';
+    case 'critical': case 'urgent': case 'warning': return row.isActive && row.severity === filter;
     default: return true;
   }
 }

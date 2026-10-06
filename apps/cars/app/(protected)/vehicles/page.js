@@ -244,7 +244,8 @@ export function VehicleModal({ modal, drivers, onClose, onSave }) {
     catch (e2) {
       /* Server-side date rejection comes back with { field, code }. */
       if (e2.field && e2.code) { setFieldErrors({ [e2.field]: 'vf.err.' + e2.code }); setErr(t('vf.fixErrors')); }
-      else setErr(e2.message);
+      else if (e2.code === 'SCHEMA_MISSING') setErr(t('vf.err.schemaMissing'));
+      else setErr(t('vf.err.generic'));
     }
     finally { setBusy(false); }
   }

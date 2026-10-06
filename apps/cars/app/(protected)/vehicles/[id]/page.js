@@ -108,10 +108,14 @@ export default function VehicleViewPage() {
                   <Mini label={t('fleet.col.expiry')}>{formatDateOnly(r.expiryDate)}</Mini>
                   <Mini label={t('fleet.col.days')}><DaysText days={r.daysRemaining} /></Mini>
                   <Mini label={t('vd.emailNotification')}>
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: r.notification?.emailActive ? '#059669' : '#94a3b8' }} aria-hidden="true" />
-                      {r.notification?.emailActive ? t('vd.on') : t('vd.off')}
-                    </span>
+                    {expiry.schemaReady === false ? (
+                      <span className="text-[color:var(--tx-4)] font-normal text-xs">{t('fleet.emailUnavailable')}</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: r.notification?.emailActive ? '#059669' : '#94a3b8' }} aria-hidden="true" />
+                        {r.notification?.emailActive ? t('vd.on') : t('vd.off')}
+                      </span>
+                    )}
                     {expiry.schemaReady !== false && (
                       <span className="block text-[11px] text-[color:var(--tx-4)] mt-0.5">
                         {r.notification?.lastNotifiedOn ? t('vd.lastNotified') + ': ' + formatDateOnly(r.notification.lastNotifiedOn) : t('vd.neverNotified')}

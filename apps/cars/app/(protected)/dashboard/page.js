@@ -76,14 +76,14 @@ export default function DashboardPage() {
       {/* KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5 gfade-up" data-testid="kpi-strip">
         <Kpi href="/vehicles" label={t('dx.kpi.total')} value={kpi(stats.totalVehicles)} icon="truck" />
-        <Kpi href="/vehicles?status=Running" label={t('dash.running')} value={kpi(stats.running)} dot={STATUS_COLORS.Running} />
-        <Kpi href="/vehicles?status=Idle" label={t('dash.idle')} value={kpi(stats.idle)} dot={STATUS_COLORS.Idle} />
-        <Kpi href="/vehicles?status=Stopped" label={t('dash.stopped')} value={kpi(stats.stopped)} dot={STATUS_COLORS.Stopped} />
-        <Kpi href="/alerts" label={t('dx.kpi.activeAlerts')} value={kpi(stats.activeAlerts)} sub={t('dx.kpi.activeAlertsSub', { expiry: stats.expiryAlertCount, system: stats.unreadSystemAlerts })} tone={stats.activeAlerts ? 'red' : null} icon="bell" />
         <Kpi href="/insurance?filter=expiring30" label={t('dx.kpi.insExpiring')} value={kpi(ins.expiringSoon)} sub={t('dx.kpi.within30')} tone={ins.expiringSoon ? 'amber' : null} icon="shield" />
         <Kpi href="/inspection?filter=expiring30" label={t('dx.kpi.inspExpiring')} value={kpi(insp.expiringSoon)} sub={t('dx.kpi.within30')} tone={insp.expiringSoon ? 'amber' : null} icon="target" />
         <Kpi href="/insurance?filter=expired" label={t('dx.kpi.insExpired')} value={kpi(ins.expired)} tone={ins.expired ? 'red' : null} icon="shield" />
         <Kpi href="/inspection?filter=expired" label={t('dx.kpi.inspExpired')} value={kpi(insp.expired)} tone={insp.expired ? 'red' : null} icon="target" />
+        <Kpi href="/vehicles?status=Running" label={t('dash.running')} value={kpi(stats.running)} dot={STATUS_COLORS.Running} />
+        <Kpi href="/vehicles?status=Idle" label={t('dash.idle')} value={kpi(stats.idle)} dot={STATUS_COLORS.Idle} />
+        <Kpi href="/vehicles?status=Stopped" label={t('dash.stopped')} value={kpi(stats.stopped)} dot={STATUS_COLORS.Stopped} />
+        <Kpi href="/alerts" label={t('dx.kpi.activeAlerts')} value={kpi(stats.activeAlerts)} sub={t('dx.kpi.activeAlertsSub', { expiry: stats.expiryAlertCount, system: stats.unreadSystemAlerts })} tone={stats.activeAlerts ? 'red' : null} icon="bell" />
         <Kpi href="/maintenance-schedule" label={t('dx.kpi.maintDue')} value={kpi(stats.maintenanceDueVehicleCount)} sub={t('dx.kpi.maintDueSub', { items: stats.maintenanceDueCount, vehicles: stats.maintenanceDueVehicleCount })} tone={stats.maintenanceDueVehicleCount ? 'amber' : null} icon="wrench" />
       </div>
 
@@ -96,7 +96,7 @@ export default function DashboardPage() {
           </div>
           <span className={'px-3 py-1 rounded-full text-sm font-semibold tabular-nums ' + (fe.expiringWithin30.length ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300')}>{fe.expiringWithin30.length}</span>
         </div>
-        <AlertTable rows={fe.expiringWithin30} empty={t('dx.expiring30.empty')} isAdmin={isAdmin} />
+        <Expiring30Body rows={fe.expiringWithin30} isAdmin={isAdmin} />
       </section>
 
       {fe.expired.length > 0 && (
@@ -323,6 +323,35 @@ function DistributionCard({ title, href, summary, ct, tip, t, icon }) {
         </ResponsiveContainer>
       )}
     </Card>
+  );
+}
+
+/* Severity counts + Insurance / Inspection tabs above the 30-day table. */
+function Expiring30Body({ rows, isAdmin }) {
+  const { t } = useLanguage();
+  const [type, setType] = useState('all');
+  const count = k => rows.filter(a => a.severity === k).length;
+  const shown = type === 'all' ? rows : rows.filter(a => a.alertType === type);
+  const tabs = [['all', t('fleet.filter.all'), rows.length], ['insurance', t('alertType.insurance'), rows.filter(a => a.alertType === 'insurance').length], ['inspection', t('alertType.inspection'), rows.filter(a => a.alertType === 'inspection').length]];
+  return (
+    <>
+      <div className="flex items-center justify-between gap-3 flex-wrap px-4 lg:px-5 mt-3">
+        <div role="tablist" aria-label={t('dx.expiring30.title')} className="flex gap-1">
+          {tabs.map(([k, label, n]) => (
+            <button key={k} role="tab" aria-selected={type === k} onClick={() => setType(k)}
+              className={'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--pr)] ' + (type === k ? 'bg-[color:var(--pr-soft)] border-[color:var(--pr)] text-[color:var(--tx)]' : 'border-[color:var(--bd)] text-[color:var(--tx-3)] hover:text-[color:var(--tx)]')}>
+              {label} <span className="tabular-nums opacity-80">({n})</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 flex-wrap" aria-label={t('dx.sevSummary')}>
+          {['critical', 'urgent', 'warning'].map(k => (
+            <span key={k} className="inline-flex items-center gap-1.5"><SeverityPill severity={k} /><span className="tabular-nums text-sm font-semibold">{count(k)}</span></span>
+          ))}
+        </div>
+      </div>
+      <AlertTable rows={shown} empty={t('dx.expiring30.empty')} isAdmin={isAdmin} />
+    </>
   );
 }
 

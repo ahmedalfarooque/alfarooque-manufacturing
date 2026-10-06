@@ -328,7 +328,7 @@ function Switch({ label, on, onChange, disabled }) {
     <div className="flex items-center justify-between gap-3">
       <span className="text-sm">{label}</span>
       <button type="button" role="switch" aria-checked={!!on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)}
-        className={'relative h-6 w-11 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ' + (on ? 'bg-[color:var(--pr)]' : 'bg-slate-400/50')}>
+        className={'relative h-6 w-11 rounded-full transition-colors shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--pr)] disabled:opacity-50 disabled:cursor-not-allowed ' + (on ? 'bg-[color:var(--pr)]' : 'bg-slate-400/50')}>
         <span className={'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ' + (on ? 'start-[22px]' : 'start-0.5')} />
       </button>
     </div>
