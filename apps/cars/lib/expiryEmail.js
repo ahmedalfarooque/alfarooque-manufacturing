@@ -2,7 +2,7 @@
 
 /* Email content for the daily expiry digest. Pure function: items in,
    { subject, html, text } out — no I/O, so it is unit-testable and the
-   same template serves the mock (console) and live (Resend) paths.
+   same template serves the daily digest and the manual test send.
    Languages: 'en', 'ar' (RTL), or 'both' (bilingual — English block, then
    Arabic block). Table-based layout with inline styles so it renders in
    Outlook/Gmail on desktop and mobile. */

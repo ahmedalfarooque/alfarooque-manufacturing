@@ -40,9 +40,9 @@ async function loadNotificationState(sb = getDb()) {
   }
   for (const a of alerts || []) out.byKey.set(`${a.car_id}:${a.alert_type}:${String(a.expiry_date).slice(0, 10)}`, a);
   for (const d of deliveries || []) {
-    /* Worst status wins for the day: failed > pending > sent/mocked. */
+    /* Worst status wins for the day: failed > pending > sent. */
     const prev = out.todayDeliveries.get(d.alert_id);
-    const rank = { failed: 3, pending: 2, sent: 1, mocked: 1 };
+    const rank = { failed: 3, pending: 2, sent: 1 };
     if (!prev || (rank[d.status] || 0) > (rank[prev] || 0)) out.todayDeliveries.set(d.alert_id, d.status);
   }
   return out;
