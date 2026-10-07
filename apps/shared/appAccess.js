@@ -51,14 +51,14 @@ function loginDecision({ user, grants, appId, isSuperAdmin = false, dashboard = 
   return { allowed: true, reason: 'ok', apps, next: apps.length > 1 ? '/launch' : dashboard };
 }
 
-/* The role baked into the app session JWT. The super-admin is always
-   'admin' (every server route already treats that account as admin via
-   readSession — the JWT must say the same, or edge middleware and the API
-   disagree). The OTP-only "User" login never promotes a platform admin by
-   itself; it keeps the in-app role of the grant. */
-function sessionRoleFor({ user, grant, isSuperAdmin = false, viewLogin = false }) {
-  if (isSuperAdmin) return 'admin';
-  if (!viewLogin && user && user.role === 'admin') return 'admin';
+/* The role baked into the app session JWT. Platform admins and the
+   super-admin are always 'admin', on BOTH login tabs — every server route
+   already treats them as admin via readSession, so the JWT must say the
+   same or the edge page gate and the API disagree (that disagreement was
+   the Cars "Users -> Dashboard" bug). Everyone else gets the in-app role of
+   their grant for this application. */
+function sessionRoleFor({ user, grant, isSuperAdmin = false }) {
+  if (isSuperAdmin || (user && user.role === 'admin')) return 'admin';
   return (grant && grant.app_role) || DEFAULT_GRANT_ROLE;
 }
 
@@ -86,4 +86,35 @@ function sessionCanEnterApp(session, appId) {
   return null;
 }
 
-module.exports = { APP_LABELS, DEFAULT_GRANT_ROLE, isPlatformAdmin, grantedAppIds, loginDecision, sessionRoleFor, diffAppGrants, sessionCanEnterApp };
+/* Page gate shared by every app's middleware. Pure: takes the verified
+   session payload (already run through the super-admin override) and
+   returns what to do, so the exact rules are unit-tested once.
+     'next'      render the page
+     'login'     no session
+     'dashboard' signed-in visitor on the login page
+     'no-access' session may not enter this application
+     'forbidden' admin-only page, non-admin session
+   User management is an ADMIN capability: it never depends on the
+   application-access rows (an admin must be able to open Users to grant
+   access to someone who has none). */
+function pageGate({ session, viaSso = false, pathname, appId, adminOnlyPrefixes = [], loginPrefixes = ['/login'] }) {
+  const isLogin = loginPrefixes.some(p => pathname.startsWith(p));
+  if (isLogin) return session ? { action: 'dashboard' } : { action: 'next' };
+  if (!session) return { action: 'login' };
+  if (session.role !== 'admin') {
+    const can = sessionCanEnterApp(session, appId);
+    if (can === false || (can === null && viaSso)) return { action: 'no-access' };
+  }
+  const adminOnly = adminOnlyPrefixes.some(p => pathname === p || pathname.startsWith(p + '/'));
+  if (adminOnly && session.role !== 'admin') return { action: 'forbidden' };
+  return { action: 'next' };
+}
+
+/* Effective session for the page gate: identical to lib/auth.js
+   readSession, the super-admin account is admin whatever the JWT says. */
+function effectiveSession(session, isSuperAdmin) {
+  if (!session) return null;
+  return isSuperAdmin ? { ...session, role: 'admin' } : session;
+}
+
+module.exports = { APP_LABELS, DEFAULT_GRANT_ROLE, isPlatformAdmin, grantedAppIds, loginDecision, sessionRoleFor, diffAppGrants, sessionCanEnterApp, pageGate, effectiveSession };

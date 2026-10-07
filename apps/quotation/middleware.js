@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { isSuperAdminEmail } from './lib/superAdmin';
-import { sessionCanEnterApp } from '../shared/appAccess';
+import { pageGate, effectiveSession } from '../shared/appAccess';
 
 const APP_ID = 'quotation';
 
@@ -49,18 +49,11 @@ function redirectTo(req, path) {
   return NextResponse.redirect(new URL(req.nextUrl.basePath + path, req.url));
 }
 
-/* Effective role must match lib/auth.js readSession (super-admin
-   override) or the page gate and the API disagree — see apps/cars. */
-function effectiveSession(session) {
-  if (!session) return null;
-  if (isSuperAdminEmail(session.email)) return { ...session, role: 'admin' };
-  return session;
-}
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
   const { session: rawSession, viaSso } = await readAnySession(req);
-  const session = effectiveSession(rawSession);
+  const session = effectiveSession(rawSession, isSuperAdminEmail(rawSession && rawSession.email));
 
   if (pathname.startsWith('/login')) {
     if (session) return redirectTo(req, '/dashboard');
@@ -71,21 +64,14 @@ export async function middleware(req) {
     return redirectTo(req, '/login');
   }
 
-  /* Application access ("may this user enter quotation at all?"). Sessions
-     minted since the app-access release carry an `apps` claim; a session
-     without the claim is a legacy token — the app's own cookie is still
-     honoured (its login already checked the grant), but a legacy SSO
-     token from a sibling app is not. The API layer enforces the grant
-     independently (shared moduleAuthorization). */
-  const can = sessionCanEnterApp(session, APP_ID);
-  if (can === false || (can === null && viaSso)) {
-    return redirectTo(req, '/no-access');
-  }
-
-  /* Admin-only pages: a clear forbidden page, never a silent bounce. */
-  if (ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p)) && session.role !== 'admin') {
-    return redirectTo(req, '/forbidden?from=' + encodeURIComponent(pathname));
-  }
+  /* Shared, unit-tested page gate (apps/shared/appAccess.js): application
+     access first (non-admins only), then admin-only pages. Never a silent
+     bounce to the dashboard: no access -> /no-access, non-admin on an
+     admin page -> /forbidden. User management never depends on the
+     application-access rows. */
+  const gate = pageGate({ session, viaSso, pathname, appId: APP_ID, adminOnlyPrefixes: ADMIN_ONLY_PREFIXES, loginPrefixes: [] });
+  if (gate.action === 'no-access') return redirectTo(req, '/no-access');
+  if (gate.action === 'forbidden') return redirectTo(req, '/forbidden?from=' + encodeURIComponent(pathname));
 
   return NextResponse.next();
 }

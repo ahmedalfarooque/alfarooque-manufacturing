@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { APPS } = require('./permissionRegistry');
-const { grantedAppIds, loginDecision, sessionRoleFor, diffAppGrants, sessionCanEnterApp, isPlatformAdmin } = require('./appAccess');
+const { grantedAppIds, loginDecision, sessionRoleFor, diffAppGrants, sessionCanEnterApp, isPlatformAdmin, pageGate, effectiveSession } = require('./appAccess');
 
 const viewer = { id: 'v1', email: 'v@x.test', role: 'viewer' };
 const admin = { id: 'a1', email: 'admin@x.test', role: 'admin' };
@@ -39,12 +39,48 @@ test('login: platform admins and the super-admin keep full access to every app',
   assert.equal(loginDecision({ user: viewer, grants: [], appId: 'crm', isSuperAdmin: true }).allowed, true);
 });
 
-test('session role: super-admin is admin on every path; admin tab honours platform admin; user tab keeps the grant role', () => {
+test('session role: platform admins and the super-admin are admin on every login tab; others keep the grant role', () => {
   assert.equal(sessionRoleFor({ user: viewer, grant: { app_role: 'manager' } }), 'manager');
   assert.equal(sessionRoleFor({ user: viewer, grant: null }), 'readonly');
   assert.equal(sessionRoleFor({ user: admin, grant: null }), 'admin');
-  assert.equal(sessionRoleFor({ user: admin, grant: null, viewLogin: true }), 'readonly');
-  assert.equal(sessionRoleFor({ user: viewer, grant: { app_role: 'readonly' }, isSuperAdmin: true, viewLogin: true }), 'admin');
+  assert.equal(sessionRoleFor({ user: viewer, grant: { app_role: 'readonly' }, isSuperAdmin: true }), 'admin');
+});
+
+/* Regression: Cars "Users -> Dashboard" */
+const GATE = { appId: 'cars', adminOnlyPrefixes: ['/users'] };
+
+test('REGRESSION: ADMIN can open /users and is not redirected to /dashboard', () => {
+  const adminSession = { sub: 'a1', email: 'admin@x.test', role: 'admin', apps: ['cars'] };
+  assert.deepEqual(pageGate({ ...GATE, session: adminSession, pathname: '/users' }), { action: 'next' });
+  assert.deepEqual(pageGate({ ...GATE, session: adminSession, pathname: '/users/roles/manager' }), { action: 'next' });
+  assert.deepEqual(pageGate({ ...GATE, session: adminSession, pathname: '/dashboard' }), { action: 'next' });
+});
+
+test('REGRESSION: direct /users with a super-admin session minted by the OTP-only tab (JWT role readonly) opens Users', () => {
+  const raw = { sub: 'a1', email: 'arshad@example.test', role: 'readonly' };   // what the User tab used to mint
+  const session = effectiveSession(raw, true);                                // same override as readSession
+  assert.equal(session.role, 'admin');
+  assert.deepEqual(pageGate({ ...GATE, session, pathname: '/users' }), { action: 'next' });
+  // without the override this is an explicit forbidden page, never a silent /dashboard bounce
+  assert.deepEqual(pageGate({ ...GATE, session: raw, pathname: '/users' }), { action: 'forbidden' });
+});
+
+test('REGRESSION: Users never depends on application-access data: admin with no apps claim / no grants still opens it', () => {
+  assert.deepEqual(pageGate({ ...GATE, session: { sub: 'a1', role: 'admin' }, pathname: '/users' }), { action: 'next' });
+  assert.deepEqual(pageGate({ ...GATE, session: { sub: 'a1', role: 'admin', apps: [] }, pathname: '/users' }), { action: 'next' });
+});
+
+test('page gate: non-admins get forbidden (never a dashboard bounce); app access is enforced first; login/legacy rules', () => {
+  const ro = apps => ({ sub: 'v1', role: 'readonly', ...(apps ? { apps } : {}) });
+  assert.deepEqual(pageGate({ ...GATE, session: ro(['cars']), pathname: '/users' }), { action: 'forbidden' });
+  assert.deepEqual(pageGate({ ...GATE, session: ro(['cars']), pathname: '/dashboard' }), { action: 'next' });
+  assert.deepEqual(pageGate({ ...GATE, session: ro(['inventory']), pathname: '/dashboard' }), { action: 'no-access' });
+  assert.deepEqual(pageGate({ ...GATE, session: ro(null), pathname: '/dashboard' }), { action: 'next' });                 // legacy app cookie
+  assert.deepEqual(pageGate({ ...GATE, session: ro(null), viaSso: true, pathname: '/dashboard' }), { action: 'no-access' }); // legacy SSO token
+  assert.deepEqual(pageGate({ ...GATE, session: null, pathname: '/users' }), { action: 'login' });
+  assert.deepEqual(pageGate({ ...GATE, session: { role: 'admin' }, pathname: '/login' }), { action: 'dashboard' });
+  assert.deepEqual(pageGate({ ...GATE, session: null, pathname: '/login' }), { action: 'next' });
+  assert.deepEqual(pageGate({ ...GATE, session: ro(['cars']), pathname: '/users-report' }), { action: 'next' });          // prefix must be a path segment
 });
 
 test('grant diff: adds/removes exactly the difference, prevents duplicates, rejects unknown apps', () => {

@@ -1,7 +1,7 @@
 import { jwtVerify } from 'jose';
 import { NextResponse } from 'next/server';
 import { isSuperAdminEmail } from './lib/superAdmin';
-import { sessionCanEnterApp } from '../shared/appAccess';
+import { pageGate, effectiveSession } from '../shared/appAccess';
 
 const APP_ID = 'crm';
 
@@ -47,20 +47,14 @@ export async function middleware(req) {
   const viaSso = !appSession && !!rawSession;
   if (!rawSession) return NextResponse.redirect(new URL('/login', req.url));
   /* Effective role must match lib/auth.js readSession (super-admin override). */
-  const session = isSuperAdminEmail(rawSession.email) ? { ...rawSession, role: 'admin' } : rawSession;
+  const session = effectiveSession(rawSession, isSuperAdminEmail(rawSession.email));
 
-  /* Application access: sessions minted since the app-access release carry
-     an `apps` claim; a legacy SSO token from a sibling app is not trusted
-     to enter CRM. API routes enforce the grant independently. */
-  const can = sessionCanEnterApp(session, APP_ID);
-  if (can === false || (can === null && viaSso)) {
-    return NextResponse.redirect(new URL('/no-access', req.url));
-  }
-
-  const isAdmin = ADMIN_ONLY.some(p => pathname === p || pathname.startsWith(p + '/'));
-  if (isAdmin && session.role !== 'admin') {
-    return NextResponse.redirect(new URL('/forbidden?from=' + encodeURIComponent(pathname), req.url));
-  }
+  /* Shared, unit-tested page gate (apps/shared/appAccess.js): application
+     access first (non-admins only), then admin-only pages. Never a silent
+     bounce to the dashboard. */
+  const gate = pageGate({ session, viaSso, pathname, appId: APP_ID, adminOnlyPrefixes: ADMIN_ONLY, loginPrefixes: [] });
+  if (gate.action === 'no-access') return NextResponse.redirect(new URL('/no-access', req.url));
+  if (gate.action === 'forbidden') return NextResponse.redirect(new URL('/forbidden?from=' + encodeURIComponent(pathname), req.url));
 
   return NextResponse.next();
 }

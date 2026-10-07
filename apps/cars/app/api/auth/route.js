@@ -304,15 +304,16 @@ async function handleViewVerifyOtp(sb, body, ip, ua, req) {
 
   await sb.from('platform_otp_codes').update({ consumed_at: new Date().toISOString() }).eq('id', otp.id);
 
-  /* OTP-only sign-in keeps the in-app role of the user's Cars grant (it
-     never promotes a platform admin by itself); the super-admin account is
-     always admin, matching readSession. No Cars grant → no session. */
+  /* OTP-only sign-in: platform admins / the super-admin are admin (same
+     as readSession and the other apps, so the page gate and the API never
+     disagree); everyone else gets the in-app role of their Cars grant. No
+     Cars grant → no session. */
   const superAdmin = isSuperAdminEmail(user.email);
   const { data: grants } = await sb.from('app_permissions').select('app_id, app_role').eq('user_id', user.id);
   const decision = loginDecision({ user, grants: grants || [], appId: APP, isSuperAdmin: superAdmin, dashboard: '/view' });
   if (!decision.allowed) return accessDenied(decision);
   const grant = (grants || []).find(g => g.app_id === APP) || null;
-  const sessionUser = { ...user, role: sessionRoleFor({ user, grant, isSuperAdmin: superAdmin, viewLogin: true }), apps: decision.apps };
+  const sessionUser = { ...user, role: sessionRoleFor({ user, grant, isSuperAdmin: superAdmin }), apps: decision.apps };
   const token = signSession(sessionUser);
   const { error: sessionInsertErr } = await sb.from('platform_sessions').insert({
     user_id: user.id, app: APP, token_hash: sha256Hex(token), ip, user_agent: ua,

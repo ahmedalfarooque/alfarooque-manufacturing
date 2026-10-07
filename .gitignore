@@ -150,3 +150,8 @@ vite.config.ts.timestamp-*
 # local dev server logs
 devlog*.txt
 apps/*/devlog.txt
+
+# scratch build output used for local verification builds
+.next-verify/
+
+apps/accounting/.next-verify/
