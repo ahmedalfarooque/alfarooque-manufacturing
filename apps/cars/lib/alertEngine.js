@@ -154,23 +154,36 @@ async function runExpiryAlertJob({ store, vehicles, send, now, dryRun = false, b
 
     const language = languageFor(settings, new Set(claimed.map(a => a.alertType)));
     const digest = buildExpiryDigest(claimed, { language, company, baseUrl, withinDays: WITHIN_DAYS });
+    /* Sending and bookkeeping are separate on purpose: once the provider has
+       accepted the message, a database error while logging it must not mark
+       the delivery failed (a retry would send a duplicate digest) nor abort
+       the remaining recipients. */
+    let res;
     try {
       /* `send` resolves only when the provider accepted the message. */
-      const res = await send({ to, subject: digest.subject, html: digest.html, text: digest.text });
-      for (const a of claimed) {
-        await store.finishDelivery({ alertId: a.alertId, recipient: to, day: today, status: 'sent', providerId: res && res.id ? res.id : null });
-        sentAlertIds.add(a.alertId);
-      }
-      report.emailsSent++;
+      res = await send({ to, subject: digest.subject, html: digest.html, text: digest.text });
     } catch (err) {
       /* Never log credentials or the provider body — only a safe message. */
       const msg = String(err && err.message ? err.message : err).slice(0, 200);
-      for (const a of claimed) await store.finishDelivery({ alertId: a.alertId, recipient: to, day: today, status: 'failed', error: msg });
+      for (const a of claimed) {
+        try { await store.finishDelivery({ alertId: a.alertId, recipient: to, day: today, status: 'failed', error: msg }); }
+        catch (e) { report.errors.push({ to: maskEmail(to), message: 'Could not record failed delivery.' }); }
+      }
       report.emailsFailed++;
       report.errors.push({ to: maskEmail(to), message: msg });
+      continue;
+    }
+    report.emailsSent++;
+    for (const a of claimed) {
+      sentAlertIds.add(a.alertId);
+      try { await store.finishDelivery({ alertId: a.alertId, recipient: to, day: today, status: 'sent', providerId: res && res.id ? res.id : null }); }
+      catch (e) { report.errors.push({ to: maskEmail(to), message: 'Email sent but the delivery log could not be updated.' }); }
     }
   }
-  for (const id of sentAlertIds) await store.markSent(id, today);
+  for (const id of sentAlertIds) {
+    try { await store.markSent(id, today); }
+    catch (e) { report.errors.push({ message: 'Could not update last-notified date for an alert.' }); }
+  }
   return report;
 }
 

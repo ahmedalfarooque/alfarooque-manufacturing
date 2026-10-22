@@ -338,3 +338,27 @@ test('test-send cooldown: 30 s guard per alert type, tolerant of missing/invalid
   assert.equal(isWithinCooldown(null, now), false);
   assert.equal(isWithinCooldown({ created_at: 'garbage' }, now), false);
 });
+
+test('a delivery-log DB error after a successful send is not counted as a failed send and does not abort the run', async () => {
+  const h = harness([car()], { recipients: ['a@x.com', 'b@x.com'] });
+  const realFinish = h.store.finishDelivery;
+  h.store.finishDelivery = async (args) => { if (args.recipient === 'a@x.com') throw new Error('db down'); return realFinish(args); };
+  const r = await h.run(0);
+  assert.equal(r.emailsSent, 2);            // both providers accepted the mail
+  assert.equal(r.emailsFailed, 0);          // a log error is not a failed send
+  assert.deepEqual(h.sent.map(m => m.to).sort(), ['a@x.com', 'b@x.com']);
+  assert.ok(r.errors.some(e => /delivery log/i.test(e.message)));
+  assert.equal(h.store.alerts[0].last_sent_on, iso(0));
+});
+
+test('isSchemaMissing: only v13 objects count as "migration not applied"', () => {
+  const { isSchemaMissing } = require('./alertStore');
+  assert.equal(isSchemaMissing({ code: '42P01', message: 'relation "public.car_expiry_alerts" does not exist' }), true);
+  assert.equal(isSchemaMissing({ code: 'PGRST205', message: "Could not find the table 'public.car_alert_recipients' in the schema cache" }), true);
+  assert.equal(isSchemaMissing({ code: '42703', message: 'column "periodic_inspection_expiry" of relation "cars" does not exist' }), true);
+  assert.equal(isSchemaMissing({ code: 'PGRST204', message: "Could not find the 'insurance_start_date' column of 'cars' in the schema cache" }), true);
+  assert.equal(isSchemaMissing({ code: '42P01', message: 'relation "public.some_other_table" does not exist' }), false);
+  assert.equal(isSchemaMissing({ code: '42703', message: 'column "colour" of relation "cars" does not exist' }), false);
+  assert.equal(isSchemaMissing({ code: '08006', message: 'connection failure' }), false);
+  assert.equal(isSchemaMissing(null), false);
+});
