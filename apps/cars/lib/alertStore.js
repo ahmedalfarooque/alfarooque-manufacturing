@@ -9,13 +9,19 @@ const { getDb } = require('./db');
 const STALE_PENDING_MS = 15 * 60 * 1000;
 const TYPES = ['insurance', 'inspection'];
 
-/* PostgREST / Postgres signals for "migration v13 has not been applied". */
+/* Objects created by supabase/apps-schema-v13-cars-expiry-alerts.sql. */
+const V13_OBJECTS = /car_alert_type_settings|car_alert_recipients|car_expiry_alerts|car_expiry_alert_deliveries|car_alert_job_runs|car_alert_test_sends|insurance_start_date|periodic_inspection_last_date|periodic_inspection_expiry/i;
+
+/* "Migration v13 has not been applied" — only when the missing table/column is
+   one v13 creates. A missing object from anywhere else is a different fault and
+   must not be reported as "apply v13". */
 function isSchemaMissing(err) {
   if (!err) return false;
   const code = String(err.code || '');
   const msg = String(err.message || '');
-  return code === '42P01' || code === '42703' || code === 'PGRST205' || code === 'PGRST204' ||
+  const missingObject = code === '42P01' || code === '42703' || code === 'PGRST205' || code === 'PGRST204' ||
     /could not find the (table|'[^']+' column)/i.test(msg) || /does not exist/i.test(msg);
+  return missingObject && V13_OBJECTS.test(msg);
 }
 
 function fail(error, what) {
